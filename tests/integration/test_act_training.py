@@ -74,6 +74,7 @@ def test_real_act_forward_backward_optimizer_and_local_reload(tmp_path: Path) ->
     torch.manual_seed(3)
     config = build_fixture_act_config()
     policy, preprocessor, postprocessor = build_policy_and_processors(config, _stats())
+    assert {parameter.device for parameter in policy.parameters()} == {torch.device("cpu")}
     projected = prepare_raw_batch(_batch())
     assert "task" not in projected
     processed = preprocessor(projected)
@@ -121,6 +122,27 @@ def test_real_act_forward_backward_optimizer_and_local_reload(tmp_path: Path) ->
     actual = loaded_post(reloaded.select_action(loaded_pre(observation)))
     assert expected.shape == actual.shape == (1, 8)
     torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+
+
+@pytest.mark.fixture
+@pytest.mark.integration
+def test_policy_builder_explicitly_invokes_module_device_transfer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[torch.device] = []
+    original_to = ACTPolicy.to
+
+    def tracked_to(
+        self: ACTPolicy,
+        device: torch.device,
+    ) -> ACTPolicy:
+        calls.append(device)
+        return original_to(self, device)
+
+    monkeypatch.setattr(ACTPolicy, "to", tracked_to)
+    policy, _, _ = build_policy_and_processors(build_fixture_act_config(), _stats())
+    assert calls == [torch.device("cpu")]
+    assert {parameter.device for parameter in policy.parameters()} == {torch.device("cpu")}
 
 
 @pytest.mark.fixture

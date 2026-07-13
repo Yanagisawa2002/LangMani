@@ -246,6 +246,18 @@ def build_policy_and_processors(
         for feature, values in train_statistics.items()
     }
     policy = ACTPolicy(config)
+    requested_device = torch.device(str(config.device))
+    if requested_device.type == "cuda":
+        requested_device = torch.device("cuda", torch.cuda.current_device())
+    policy.to(requested_device)
+    module_devices = {
+        value.device for value in (*tuple(policy.parameters()), *tuple(policy.buffers()))
+    }
+    if module_devices != {requested_device}:
+        observed = sorted(str(device) for device in module_devices)
+        raise TrainingContractError(
+            f"ACT policy did not move completely to {requested_device}; observed={observed}"
+        )
     preprocessor, postprocessor = make_act_pre_post_processors(config, dataset_stats=stats)
     return policy, preprocessor, postprocessor
 

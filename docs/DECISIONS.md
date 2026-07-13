@@ -820,6 +820,22 @@ still use disjoint M3B train, validation, and locked-test scene-group splits; va
 checkpoint selection and test locking are unchanged. The target smoke must be rerun from this clean
 commit before any CUDA training, learned rollout, or physical M4 acceptance is claimed.
 
+## D-034 — Explicitly migrate direct ACT construction to the configured device
+
+After D-033 allowed target smoke to reach the first real offline-loss forward pass, both tiny ACT
+runs failed with CUDA inputs and CPU policy weights. Inspection of installed LeRobot 0.6.0 showed
+that `ACTPolicy(config)` only constructs `self.model = ACT(config)` and does not migrate the module.
+The public LeRobot `make_policy` factory separately calls `policy.to(cfg.device)` after direct or
+pretrained construction. LangMani intentionally constructs ACT directly to bind its fixed project
+configuration and therefore must perform that public migration step itself.
+
+The project-owned builder now moves the complete policy to the effective configured device before
+constructing the optimizer and verifies every parameter and buffer is on exactly that device. The
+preprocessor continues to move input tensors independently. CPU fixture coverage tracks the
+explicit module transfer call; the native target smoke remains the required CUDA forward/backward
+and checkpoint evidence. No dependency, model architecture, precision, dataset, split, loss, or
+quality threshold changes.
+
 ## Local bootstrap evidence
 
 The bootstrap was authored on Windows 11, which is not an acceptance platform. In an isolated

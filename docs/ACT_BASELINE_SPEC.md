@@ -187,7 +187,11 @@ uses its action queue. `ACTPolicy.reset()` clears that queue. Policy and process
 `from_pretrained`, `save_pretrained`, `reset`, and `__call__`. All M4 reloads use local paths and
 never contact or authenticate to the Hub.
 
-The ACT preprocessor performs renaming, batch insertion, device transfer, and normalization; the
+Direct `ACTPolicy(config)` construction leaves the module on CPU even when `config.device` is CUDA;
+the inspected public LeRobot factory explicitly calls `policy.to(cfg.device)`. LangMani mirrors
+that required public step and rejects construction unless every policy parameter and buffer reaches
+the configured device. The ACT preprocessor performs renaming, batch insertion, device transfer,
+and normalization; the
 postprocessor unnormalizes actions and returns them to CPU. Installed ACT preprocessing does not
 divide uint8 images by 255. The official LeRobot trainer performs that conversion before the
 preprocessor, so LangMani explicitly converts decoded uint8 CHW images to float32 [0, 1] and also
