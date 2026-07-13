@@ -17,7 +17,7 @@ import tempfile
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 import numpy as np
 import torch
@@ -70,6 +70,15 @@ ProcessorLoader = Callable[[object, Path], tuple[object, object]]
 
 
 @dataclass(frozen=True, slots=True)
+class CheckpointComponentFingerprints:
+    """Content fingerprints for independently reloaded runtime components."""
+
+    model: str
+    preprocessor: str
+    postprocessor: str
+
+
+@dataclass(frozen=True, slots=True)
 class LoadedActCheckpoint:
     """Compact result of one integrity-checked, local-only checkpoint load."""
 
@@ -82,6 +91,7 @@ class LoadedActCheckpoint:
     record: CheckpointRecord
     checkpoint_root: Path
     training_metric: Mapping[str, object] | None
+    component_fingerprints: CheckpointComponentFingerprints
 
 
 def save_act_checkpoint(
@@ -250,6 +260,7 @@ def load_act_checkpoint(
     if marker.get("checkpoint_fingerprint") != record.checkpoint_fingerprint:
         raise ActCheckpointError("completion marker checkpoint fingerprint mismatch")
     _validate_artifacts(checkpoint_root, manifest)
+    component_fingerprints = _component_fingerprints(manifest)
 
     should_restore_rng = for_resume if restore_rng is None else restore_rng
     if for_resume:
@@ -323,6 +334,7 @@ def load_act_checkpoint(
         record=record,
         checkpoint_root=checkpoint_root,
         training_metric=training_metric,
+        component_fingerprints=component_fingerprints,
     )
 
 
@@ -573,6 +585,40 @@ def _validate_artifacts(root: Path, manifest: Mapping[str, object]) -> None:
         raise ActCheckpointError("checkpoint contains unmanifested or missing files")
 
 
+def _component_fingerprints(
+    manifest: Mapping[str, object],
+) -> CheckpointComponentFingerprints:
+    raw_records = manifest.get("artifacts")
+    if not isinstance(raw_records, list):
+        raise ActCheckpointError("checkpoint artifact list is malformed")
+    groups: dict[str, list[dict[str, object]]] = {
+        "model": [],
+        "preprocessor": [],
+        "postprocessor": [],
+    }
+    for raw in raw_records:
+        if not isinstance(raw, dict) or not isinstance(raw.get("path"), str):
+            raise ActCheckpointError("checkpoint artifact entry is malformed")
+        path = cast(str, raw["path"])
+        name = PurePosixPath(path).name
+        if name == PREPROCESSOR_CONFIG or name.startswith("policy_preprocessor_step_"):
+            group = "preprocessor"
+        elif name == POSTPROCESSOR_CONFIG or name.startswith("policy_postprocessor_step_"):
+            group = "postprocessor"
+        elif path.startswith(f"{PRETRAINED_MODEL_DIRECTORY}/"):
+            group = "model"
+        else:
+            continue
+        groups[group].append(dict(raw))
+    if any(not records for records in groups.values()):
+        raise ActCheckpointError("checkpoint lacks model or policy processor artifacts")
+    return CheckpointComponentFingerprints(
+        model=_prefixed_digest(groups["model"]),
+        preprocessor=_prefixed_digest(groups["preprocessor"]),
+        postprocessor=_prefixed_digest(groups["postprocessor"]),
+    )
+
+
 def _reject_existing_completed_step(checkpoints_root: Path, global_step: int) -> None:
     if not checkpoints_root.is_dir():
         return
@@ -679,6 +725,7 @@ __all__ = [
     "CHECKPOINT_MANIFEST",
     "CHECKPOINT_SCHEMA_VERSION",
     "ActCheckpointError",
+    "CheckpointComponentFingerprints",
     "LoadedActCheckpoint",
     "assert_resume_compatible",
     "load_act_checkpoint",

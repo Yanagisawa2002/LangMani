@@ -6,9 +6,10 @@ import argparse
 import hashlib
 import json
 import os
-import shutil
+import tempfile
 import traceback
 from collections.abc import Mapping
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,15 @@ from langmani.datasets.lerobot_types import DatasetSplit, EpisodeExportRecord
 from langmani.datasets.schedule import CANONICAL_TASK_SPECS
 from langmani.environments.pick_place_by_instruction import ENV_ID
 from langmani.environments.specs import TaskSpec, stable_scene_id, stable_task_id
+from langmani.policies.act_action_bounds import (
+    ActionBoundConfig,
+    ActionBoundMode,
+    ActionBoundProcessingError,
+    ActionProjectionRecord,
+    BoundedActionEnvPostprocessorV0,
+    EvaluationRuntimeIdentity,
+    EvaluationRuntimeManifest,
+)
 from langmani.policies.act_analysis import (
     CounterfactualDemonstration,
     compute_counterfactual_sensitivity,
@@ -57,6 +67,7 @@ from langmani.policies.act_runtime import (
     validate_git_for_run,
 )
 from langmani.policies.act_types import (
+    TASK_ONEHOT_MAPPING_VERSION,
     ActExperimentConfig,
     ActExperimentManifest,
     ActRunIdentity,
@@ -76,6 +87,8 @@ DEFAULT_DATASET_ROOT = (
 DEFAULT_REPORT = PROJECT_ROOT / "outputs" / "diagnostics" / "m4" / "evaluate_act.json"
 EVALUATION_OWNER_FILE = "evaluation_owner.json"
 EVALUATION_ANALYSIS_FILE = "analysis.json"
+EVALUATION_RUNTIME_MANIFEST_FILE = "evaluation_runtime_manifest.json"
+ACTION_PROJECTION_RECORDS_FILE = "action_projection_records.jsonl"
 
 
 def _is_link_like(path: Path) -> bool:
@@ -108,6 +121,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--lock-selection", action="store_true")
     parser.add_argument("--counterfactual-sensitivity", action="store_true")
     parser.add_argument("--rollout-video", action="store_true")
+    parser.add_argument(
+        "--action-bound-mode",
+        choices=tuple(mode.value for mode in ActionBoundMode),
+        default=ActionBoundMode.REJECT.value,
+        help="explicit environment-action handling after the ACT policy postprocessor",
+    )
+    parser.add_argument(
+        "--strict-bound-probe",
+        action="store_true",
+        help=(
+            "reproduce the first strict bound rejection, verify deterministic projection, "
+            "and execute exactly one projected environment step without a rollout"
+        ),
+    )
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     return parser.parse_args()
 
@@ -129,6 +156,81 @@ def _write_or_validate_immutable(path: Path, payload: dict[str, object]) -> None
             raise RuntimeError(f"existing immutable evaluation artifact differs: {path}")
         return
     atomic_write_json(path, payload, immutable=True)
+
+
+def _write_projection_records(
+    path: Path,
+    records: list[tuple[str, ActionProjectionRecord]],
+) -> dict[str, object]:
+    """Write per-step raw/executed evidence outside compact benchmark JSON."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        raise RuntimeError(f"refusing to replace action-projection artifact: {path}")
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", suffix=".tmp", dir=path.parent
+    )
+    os.close(descriptor)
+    temporary = Path(temporary_name)
+    try:
+        with temporary.open("w", encoding="utf-8", newline="\n") as stream:
+            for evaluation_id, record in records:
+                stream.write(
+                    json.dumps(
+                        {"evaluation_id": evaluation_id, **record.to_dict()},
+                        sort_keys=True,
+                        separators=(",", ":"),
+                        allow_nan=False,
+                    )
+                    + "\n"
+                )
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return {
+        "relative_path": path.name,
+        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        "record_count": len(records),
+    }
+
+
+def _validate_projection_artifact(
+    output: Path,
+    payload: object,
+    *,
+    expected_runtime_fingerprint: str,
+) -> None:
+    if not isinstance(payload, Mapping):
+        raise RuntimeError("benchmark lacks action-projection artifact metadata")
+    relative = payload.get("relative_path")
+    digest = payload.get("sha256")
+    count = payload.get("record_count")
+    if (
+        relative != ACTION_PROJECTION_RECORDS_FILE
+        or not isinstance(digest, str)
+        or not isinstance(count, int)
+    ):
+        raise RuntimeError("action-projection artifact metadata is malformed")
+    path = output / relative
+    if _is_link_like(path) or not path.is_file() or path.resolve().parent != output.resolve():
+        raise RuntimeError("action-projection artifact is missing or unsafe")
+    if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+        raise RuntimeError("action-projection artifact checksum mismatch")
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if len(lines) != count:
+        raise RuntimeError("action-projection artifact record count mismatch")
+    for line in lines:
+        value = json.loads(line)
+        if not isinstance(value, dict) or not isinstance(value.get("evaluation_id"), str):
+            raise RuntimeError("action-projection artifact record is malformed")
+        record = dict(value)
+        record.pop("evaluation_id")
+        ActionProjectionRecord.from_dict(record)
+    runtime = EvaluationRuntimeManifest.from_dict(_read(output / EVALUATION_RUNTIME_MANIFEST_FILE))
+    if runtime.identity.runtime_fingerprint != expected_runtime_fingerprint:
+        raise RuntimeError("evaluation runtime manifest fingerprint mismatch")
 
 
 def _checkpoint_context(
@@ -247,6 +349,153 @@ def _create_environment(sim_backend: str, *, record_video: bool, output: Path) -
     )
 
 
+def _raw_first_action(
+    *,
+    env: object,
+    loaded: LoadedActCheckpoint,
+    identity: ActRunIdentity,
+    scene_seed: int,
+    task_spec: TaskSpec,
+) -> torch.Tensor:
+    base = getattr(env, "unwrapped", env)
+    loaded.policy.reset()
+    loaded.preprocessor.reset()
+    loaded.postprocessor.reset()
+    observation, _ = env.reset(seed=scene_seed, options={"task_spec": task_spec.to_dict()})
+    raw = build_policy_observation(
+        observation,
+        base_environment=base,
+        variant=identity.variant,
+        task_id=stable_task_id(task_spec),
+        task_conditioner=(
+            append_canonical_task_onehot
+            if identity.variant is ActVariant.MIXED_TASK_ONEHOT
+            else None
+        ),
+    )
+    processed = loaded.preprocessor(raw)
+    if not isinstance(processed, Mapping):
+        raise RuntimeError("reloaded ACT preprocessor did not return a tensor mapping")
+    with torch.inference_mode():
+        predicted = loaded.policy.select_action(dict(processed))
+        action = loaded.postprocessor(predicted)
+    if (
+        not isinstance(action, torch.Tensor)
+        or action.dtype != torch.float32
+        or action.shape
+        != (
+            1,
+            8,
+        )
+    ):
+        raise RuntimeError("reloaded ACT stack did not produce float32[1,8]")
+    return action.detach().clone()
+
+
+def _evaluation_runtime_manifest(
+    *,
+    env: object,
+    loaded: LoadedActCheckpoint,
+    run_root: Path,
+    checkpoint_relative_path: str,
+    identity: ActRunIdentity,
+    config: ActExperimentConfig,
+    action_bound_config: ActionBoundConfig,
+    evaluation_git: dict[str, object],
+    split: EvaluationSplit,
+    sim_backend: str,
+    record_video: bool,
+    first_episode: tuple[int, TaskSpec],
+    output: Path,
+) -> tuple[EvaluationRuntimeManifest, torch.Tensor]:
+    processor = BoundedActionEnvPostprocessorV0.from_environment(
+        env,
+        action_bound_config,
+        expected_action_components=8,
+    )
+    reloaded_bound_processor = BoundedActionEnvPostprocessorV0.from_environment(
+        env,
+        ActionBoundConfig.from_dict(action_bound_config.to_dict()),
+        expected_action_components=8,
+    )
+    if processor.action_space_contract() != reloaded_bound_processor.action_space_contract():
+        raise RuntimeError("serialized action-bound processor changed the action-space contract")
+    fresh_loaded = load_act_checkpoint(
+        run_root=run_root,
+        checkpoint_relative_path=checkpoint_relative_path,
+        expected_identity=identity,
+    )
+    first_seed, first_task = first_episode
+    first_raw = _raw_first_action(
+        env=env,
+        loaded=loaded,
+        identity=identity,
+        scene_seed=first_seed,
+        task_spec=first_task,
+    )
+    second_raw = _raw_first_action(
+        env=env,
+        loaded=fresh_loaded,
+        identity=identity,
+        scene_seed=first_seed,
+        task_spec=first_task,
+    )
+    tolerance = action_bound_config.comparison_tolerance
+    raw_match = bool(torch.allclose(first_raw, second_raw, atol=tolerance, rtol=0))
+    if not raw_match:
+        raise RuntimeError("fresh checkpoint/processor reload changed deterministic raw action")
+
+    def process(processor_value: BoundedActionEnvPostprocessorV0) -> object:
+        try:
+            return processor_value.process(first_raw, rollout_step=1)
+        except ActionBoundProcessingError as error:
+            return error
+
+    first_bound = process(processor)
+    second_bound = process(reloaded_bound_processor)
+    if type(first_bound) is not type(second_bound):
+        raise RuntimeError("reloaded action-bound processor changed first-action behavior")
+    if hasattr(first_bound, "audit_record"):
+        first_record = first_bound.audit_record.to_dict()
+        second_record = second_bound.audit_record.to_dict()
+    else:
+        first_record = getattr(first_bound, "record", None)
+        second_record = getattr(second_bound, "record", None)
+        first_record = None if first_record is None else first_record.to_dict()
+        second_record = None if second_record is None else second_record.to_dict()
+    if first_record != second_record:
+        raise RuntimeError("reloaded action-bound processor changed projection audit output")
+
+    runtime_identity = EvaluationRuntimeIdentity(
+        checkpoint_fingerprint=loaded.record.checkpoint_fingerprint,
+        policy_preprocessor_fingerprint=loaded.component_fingerprints.preprocessor,
+        policy_postprocessor_fingerprint=loaded.component_fingerprints.postprocessor,
+        action_bound_config=action_bound_config,
+        environment_id=ENV_ID,
+        action_space_contract=processor.action_space_contract(),
+        task_conditioning_mapping_version=TASK_ONEHOT_MAPPING_VERSION,
+        rollout_config={
+            "evaluation": config.evaluation.to_dict(),
+            "sim_backend": sim_backend,
+            "split": split.value,
+            "rollout_video": record_video,
+        },
+        code_git_commit=str(evaluation_git["commit"]),
+    )
+    return (
+        EvaluationRuntimeManifest(
+            identity=runtime_identity,
+            checkpoint_model_reload_validated=True,
+            policy_processor_reload_validated=True,
+            action_bound_processor_reload_validated=True,
+            deterministic_raw_action_matched=raw_match,
+            raw_action_match_tolerance=tolerance,
+            evaluation_output_path=str(output.resolve()),
+        ),
+        first_raw,
+    )
+
+
 def _offline_validation_loss(
     run_root: Path,
     checkpoint_step: int,
@@ -287,6 +536,32 @@ def _result_directory(
     return run_root / split.value
 
 
+def _runtime_result_directory(
+    base: Path,
+    *,
+    runtime_fingerprint: str,
+) -> Path:
+    """Keep immutable evaluation evidence addressable across runtime revisions."""
+
+    if not base.exists():
+        return base
+    manifest_path = base / EVALUATION_RUNTIME_MANIFEST_FILE
+    if manifest_path.is_file():
+        existing = EvaluationRuntimeManifest.from_dict(_read(manifest_path))
+        if existing.identity.runtime_fingerprint == runtime_fingerprint:
+            return base
+    suffix = runtime_fingerprint.removeprefix("sha256:")[:12]
+    candidate = base.with_name(f"{base.name}-{suffix}")
+    if candidate.exists():
+        candidate_manifest = candidate / EVALUATION_RUNTIME_MANIFEST_FILE
+        if not candidate_manifest.is_file():
+            raise RuntimeError("runtime-specific evaluation directory lacks its manifest")
+        existing = EvaluationRuntimeManifest.from_dict(_read(candidate_manifest))
+        if existing.identity.runtime_fingerprint != runtime_fingerprint:
+            raise RuntimeError("runtime evaluation prefix collision")
+    return candidate
+
+
 def _validate_evaluation_output_path(run_root: Path, output: Path) -> None:
     if _is_link_like(run_root) or not run_root.is_dir():
         raise RuntimeError("evaluation run root must be a real directory")
@@ -308,6 +583,38 @@ def _validate_evaluation_output_path(run_root: Path, output: Path) -> None:
         _is_link_like(output) or not output.is_dir() or not output.resolve().is_relative_to(root)
     ):
         raise RuntimeError("existing evaluation output is not an owned directory")
+
+
+def _archive_interrupted_evaluation(run_root: Path, staging_output: Path) -> Path:
+    """Preserve an interrupted rollout instead of deleting its diagnostic evidence."""
+
+    if (
+        _is_link_like(staging_output)
+        or not staging_output.is_dir()
+        or staging_output.resolve().parent != run_root.resolve()
+        or not (staging_output / EVALUATION_OWNER_FILE).is_file()
+    ):
+        raise RuntimeError("unsafe evaluation staging directory")
+    owner = _read(staging_output / EVALUATION_OWNER_FILE)
+    runtime = owner.get("evaluation_runtime_fingerprint")
+    if not isinstance(runtime, str) or not runtime.startswith("sha256:"):
+        raise RuntimeError("interrupted evaluation lacks a runtime fingerprint")
+    archive_root = run_root / "failed_evaluations"
+    if archive_root.exists() and (
+        _is_link_like(archive_root)
+        or not archive_root.is_dir()
+        or archive_root.resolve().parent != run_root.resolve()
+    ):
+        raise RuntimeError("unsafe interrupted-evaluation archive")
+    archive_root.mkdir(exist_ok=True)
+    base = f"{staging_output.name.removeprefix('.')}-{runtime.removeprefix('sha256:')[:12]}"
+    destination = archive_root / base
+    suffix = 0
+    while destination.exists():
+        suffix += 1
+        destination = archive_root / f"{base}-{suffix:04d}"
+    os.replace(staging_output, destination)
+    return destination
 
 
 def _validate_owned_artifact_path(run_root: Path, path: Path) -> None:
@@ -405,10 +712,14 @@ def _maybe_lock_selection(
 def _validated_final_benchmark(
     payload: dict[str, object],
     *,
+    output: Path,
     identity: ActRunIdentity,
     checkpoint_fingerprint: str,
     split: EvaluationSplit,
 ) -> dict[str, object]:
+    runtime_manifest = EvaluationRuntimeManifest.from_dict(
+        _read(output / EVALUATION_RUNTIME_MANIFEST_FILE)
+    )
     raw_episodes = payload.get("episodes")
     if not isinstance(raw_episodes, list):
         raise RuntimeError(f"{split.value} benchmark lacks raw episode evidence")
@@ -430,6 +741,7 @@ def _validated_final_benchmark(
             or episode.split is not split
             or episode.run_fingerprint != identity.run_fingerprint
             or episode.checkpoint_fingerprint != checkpoint_fingerprint
+            or episode.runtime_fingerprint != runtime_manifest.identity.runtime_fingerprint
             or episode.scene_id != stable_scene_id(episode.scene_seed)
             for index, episode in enumerate(episodes)
         )
@@ -463,16 +775,23 @@ def _validated_final_benchmark(
         raise RuntimeError(f"{split.value} benchmark schedule differs from the run identity")
     evaluation_git = payload.get("evaluation_git")
     if (
-        payload.get("schema_version") != "langmani-m4-rollout-benchmark-v1"
+        payload.get("schema_version") != "langmani-m4.1-rollout-benchmark-v2"
         or payload.get("passed") is not True
         or payload.get("quality_validated") is not False
         or payload.get("infrastructure_failure_count") != 0
         or payload.get("environment_action_applied") is not True
         or not isinstance(evaluation_git, dict)
-        or evaluation_git.get("commit") != identity.git_commit
-        or evaluation_git.get("dirty") != identity.git_dirty
+        or evaluation_git.get("commit") != runtime_manifest.identity.code_git_commit
+        or evaluation_git.get("dirty") is not False
+        or payload.get("evaluation_runtime_fingerprint")
+        != runtime_manifest.identity.runtime_fingerprint
     ):
         raise RuntimeError(f"{split.value} benchmark metadata is not final-eligible")
+    _validate_projection_artifact(
+        output,
+        payload.get("action_projection_artifact"),
+        expected_runtime_fingerprint=runtime_manifest.identity.runtime_fingerprint,
+    )
     return payload
 
 
@@ -509,6 +828,7 @@ def _maybe_finalize_run(
     benchmark_payloads = {
         split: _validated_final_benchmark(
             _read(path),
+            output=path.parent,
             identity=identity,
             checkpoint_fingerprint=selection.selected_checkpoint_fingerprint,
             split=split,
@@ -526,11 +846,10 @@ def _maybe_finalize_run(
         raise RuntimeError("final sensitivity artifact does not use the selected checkpoint")
     if any(
         not isinstance(payload.get("evaluation_git"), dict)
-        or payload["evaluation_git"].get("commit") != identity.git_commit
-        or payload["evaluation_git"].get("dirty") != identity.git_dirty
+        or payload["evaluation_git"].get("dirty") is not False
         for payload in required_payloads
     ):
-        raise RuntimeError("final evaluation artifacts do not match the training Git state")
+        raise RuntimeError("final evaluation artifacts do not use clean runtime Git evidence")
     for split in (EvaluationSplit.TEST, EvaluationSplit.FRESH_SEED):
         payload = benchmark_payloads[split]
         authorization = payload.get("test_authorization")
@@ -760,6 +1079,8 @@ def _validated_published_benchmark(
     schedule: tuple[tuple[int, TaskSpec], ...],
     evaluation_git: dict[str, object],
     authorization: dict[str, object] | None,
+    runtime_manifest: EvaluationRuntimeManifest,
+    output: Path,
 ) -> tuple[tuple[RolloutEpisodeResult, ...], RolloutBenchmarkResult]:
     raw_episodes = payload.get("episodes")
     if not isinstance(raw_episodes, list) or len(raw_episodes) != len(schedule):
@@ -772,6 +1093,8 @@ def _validated_published_benchmark(
             episode.evaluation_id != f"{split.value}:{index:04d}"
             or episode.run_fingerprint != identity.run_fingerprint
             or episode.checkpoint_fingerprint != checkpoint_fingerprint
+            or episode.runtime_fingerprint != runtime_manifest.identity.runtime_fingerprint
+            or episode.action_bound_mode is not runtime_manifest.identity.action_bound_config.mode
             or episode.schedule_digest != digest
             or episode.split is not split
             or episode.scene_seed != scene_seed
@@ -789,18 +1112,27 @@ def _validated_published_benchmark(
     environment_action_applied = any(episode.episode_steps > 0 for episode in episodes)
     passed = infrastructure_failure_count == 0 and environment_action_applied
     expected_metadata = {
-        "schema_version": "langmani-m4-rollout-benchmark-v1",
+        "schema_version": "langmani-m4.1-rollout-benchmark-v2",
         "passed": passed,
         "quality_validated": False,
         "infrastructure_failure_count": infrastructure_failure_count,
         "environment_action_applied": environment_action_applied,
         "evaluation_git": evaluation_git,
         "test_authorization": authorization,
+        "evaluation_runtime_fingerprint": runtime_manifest.identity.runtime_fingerprint,
+        "action_bound_mode": runtime_manifest.identity.action_bound_config.mode.value,
     }
     if any(payload.get(key) != expected for key, expected in expected_metadata.items()):
         raise RuntimeError("published benchmark metadata disagrees with rollout evidence")
     if not passed:
         raise RuntimeError("published benchmark is not eligible physical execution evidence")
+    if _read(output / EVALUATION_RUNTIME_MANIFEST_FILE) != runtime_manifest.to_dict():
+        raise RuntimeError("published evaluation runtime manifest differs from active runtime")
+    _validate_projection_artifact(
+        output,
+        payload.get("action_projection_artifact"),
+        expected_runtime_fingerprint=runtime_manifest.identity.runtime_fingerprint,
+    )
     return episodes, rebuilt
 
 
@@ -909,6 +1241,7 @@ def _resume_existing_evaluation(
     schedule: tuple[tuple[int, TaskSpec], ...],
     evaluation_git: dict[str, object],
     authorization: dict[str, object] | None,
+    runtime_manifest: EvaluationRuntimeManifest,
 ) -> dict[str, object]:
     payload = _read(output / "benchmark.json")
     checkpoint_fingerprint = loaded.record.checkpoint_fingerprint
@@ -921,6 +1254,8 @@ def _resume_existing_evaluation(
         schedule=schedule,
         evaluation_git=evaluation_git,
         authorization=authorization,
+        runtime_manifest=runtime_manifest,
+        output=output,
     )
     if split is EvaluationSplit.VALIDATION:
         validation = ValidationResult(**_read(output / "validation_result.json"))
@@ -983,8 +1318,94 @@ def _resume_existing_evaluation(
         "physical_execution": payload["environment_action_applied"],
         "infrastructure_failure_count": 0,
         "evaluation_git": payload["evaluation_git"],
+        "evaluation_runtime_fingerprint": runtime_manifest.identity.runtime_fingerprint,
+        "action_bound_mode": runtime_manifest.identity.action_bound_config.mode.value,
+        "checkpoint_model_reload_validated": (runtime_manifest.checkpoint_model_reload_validated),
+        "policy_processor_reload_validated": (runtime_manifest.policy_processor_reload_validated),
+        "action_bound_processor_reload_validated": (
+            runtime_manifest.action_bound_processor_reload_validated
+        ),
+        "raw_action_bounds_validated": payload["raw_action_bounds_validated"],
+        "projected_action_bounds_validated": payload["projected_action_bounds_validated"],
+        "task_success_count": payload["task_success_count"],
+        "strict_unprojected_success_count": payload["strict_unprojected_success_count"],
+        "action_projection_summary": payload["action_projection_summary"],
         "run_finalized": finalized,
         "reused_existing_evaluation": True,
+    }
+
+
+def _strict_bound_probe(
+    *,
+    env: object,
+    raw_action: torch.Tensor,
+    runtime_manifest: EvaluationRuntimeManifest,
+) -> dict[str, object]:
+    """Reproduce strict rejection, then execute one explicitly projected action."""
+
+    reject_config = runtime_manifest.identity.action_bound_config
+    if reject_config.mode is not ActionBoundMode.REJECT:
+        raise RuntimeError("strict bound probe requires --action-bound-mode reject")
+    reject_processor = BoundedActionEnvPostprocessorV0.from_environment(
+        env,
+        ActionBoundConfig.from_dict(reject_config.to_dict()),
+        expected_action_components=raw_action.shape[-1],
+    )
+    rejected_record: ActionProjectionRecord | None = None
+    try:
+        reject_processor.process(raw_action, rollout_step=1)
+    except ActionBoundProcessingError as error:
+        rejected_record = error.record
+    if rejected_record is None or not rejected_record.was_rejected:
+        raise RuntimeError("strict bound probe did not reproduce an out-of-bounds action")
+
+    project_config = ActionBoundConfig.from_dict(
+        ActionBoundConfig(mode=ActionBoundMode.PROJECT).to_dict()
+    )
+    project_processor = BoundedActionEnvPostprocessorV0.from_environment(
+        env,
+        project_config,
+        expected_action_components=raw_action.shape[-1],
+    )
+    project_result = project_processor.process(raw_action, rollout_step=1)
+    if not project_result.audit_record.was_projected:
+        raise RuntimeError("project bound probe did not project the known invalid action")
+    project_identity = replace(
+        runtime_manifest.identity,
+        action_bound_config=project_config,
+        runtime_fingerprint="",
+    )
+    project_manifest = EvaluationRuntimeManifest(
+        identity=project_identity,
+        checkpoint_model_reload_validated=(runtime_manifest.checkpoint_model_reload_validated),
+        policy_processor_reload_validated=(runtime_manifest.policy_processor_reload_validated),
+        action_bound_processor_reload_validated=True,
+        deterministic_raw_action_matched=(runtime_manifest.deterministic_raw_action_matched),
+        raw_action_match_tolerance=runtime_manifest.raw_action_match_tolerance,
+    )
+    executed = project_result.executed_action
+    if not isinstance(executed, torch.Tensor):
+        raise RuntimeError("strict bound probe expected a Torch action")
+    # Conversion occurs only after complete bound processing, immediately before env.step.
+    env.step(executed.detach().cpu().numpy()[0])
+    return {
+        "schema_version": "langmani-m4.1-strict-bound-probe-v0",
+        "passed": True,
+        "checkpoint_fingerprint": runtime_manifest.identity.checkpoint_fingerprint,
+        "checkpoint_model_reload_validated": (runtime_manifest.checkpoint_model_reload_validated),
+        "policy_processor_reload_validated": (runtime_manifest.policy_processor_reload_validated),
+        "action_bound_processor_reload_validated": True,
+        "deterministic_raw_action_matched": (runtime_manifest.deterministic_raw_action_matched),
+        "reject_blocked_before_env_step": True,
+        "raw_action_bounds_validated": False,
+        "projected_action_bounds_validated": True,
+        "real_projected_env_step_executed": True,
+        "raw_action": rejected_record.to_dict()["raw_action"],
+        "executed_action": project_result.audit_record.to_dict()["executed_action"],
+        "reject_record": rejected_record.to_dict(),
+        "project_record": project_result.audit_record.to_dict(),
+        "reject_runtime_manifest": runtime_manifest.to_dict(),
+        "project_runtime_manifest": project_manifest.to_dict(),
     }
 
 
@@ -997,8 +1418,8 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
         mode=config.mode,
         allow_dirty_development=config.allow_dirty_development,
     )
-    if evaluation_git.commit != identity.git_commit or evaluation_git.dirty != identity.git_dirty:
-        raise RuntimeError("evaluation Git state differs from the checkpoint training identity")
+    if evaluation_git.dirty:
+        raise RuntimeError("M4.1 evaluation-runtime evidence requires a clean Git worktree")
     completed = load_completed_m3b_dataset(
         args.dataset_root,
         require_full=config.mode is ExperimentMode.FULL,
@@ -1053,7 +1474,57 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
     _validate_evaluation_output_path(run_root, output)
     evaluation_git_payload = evaluation_git.to_dict()
     authorization_payload = authorization.to_dict() if authorization is not None else None
+    action_bound_config = ActionBoundConfig(mode=ActionBoundMode(args.action_bound_mode))
+    probe_env = _create_environment(
+        args.sim_backend,
+        record_video=False,
+        output=output,
+    )
+    strict_probe_result: dict[str, object] | None = None
+    try:
+        runtime_manifest, deterministic_raw_action = _evaluation_runtime_manifest(
+            env=probe_env,
+            loaded=loaded,
+            run_root=run_root,
+            checkpoint_relative_path=relative,
+            identity=identity,
+            config=config,
+            action_bound_config=action_bound_config,
+            evaluation_git=evaluation_git_payload,
+            split=split,
+            sim_backend=args.sim_backend,
+            record_video=args.rollout_video,
+            first_episode=schedule[0],
+            output=output,
+        )
+        if args.strict_bound_probe:
+            strict_probe_result = _strict_bound_probe(
+                env=probe_env,
+                raw_action=deterministic_raw_action,
+                runtime_manifest=runtime_manifest,
+            )
+    finally:
+        probe_env.close()
+    if strict_probe_result is not None:
+        return strict_probe_result
+    runtime_fingerprint = runtime_manifest.identity.runtime_fingerprint
+    output = _runtime_result_directory(
+        output,
+        runtime_fingerprint=runtime_fingerprint,
+    )
+    _validate_evaluation_output_path(run_root, output)
+    runtime_manifest = replace(
+        runtime_manifest,
+        evaluation_output_path=str(output.resolve()),
+    )
     if output.exists():
+        existing_runtime = EvaluationRuntimeManifest.from_dict(
+            _read(output / EVALUATION_RUNTIME_MANIFEST_FILE)
+        )
+        if existing_runtime != runtime_manifest:
+            raise RuntimeError(
+                "existing immutable evaluation uses a different action-bound runtime"
+            )
         analysis_file = output / EVALUATION_ANALYSIS_FILE
         if args.counterfactual_sensitivity and not analysis_file.is_file():
             _validated_published_benchmark(
@@ -1065,6 +1536,8 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
                 schedule=schedule,
                 evaluation_git=evaluation_git_payload,
                 authorization=authorization_payload,
+                runtime_manifest=runtime_manifest,
+                output=output,
             )
             analysis_env = _create_environment(
                 args.sim_backend,
@@ -1094,6 +1567,7 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
             schedule=schedule,
             evaluation_git=evaluation_git_payload,
             authorization=authorization_payload,
+            runtime_manifest=runtime_manifest,
         )
     staging_output = output.with_name(f".{output.name}.staging")
     owner = {
@@ -1102,19 +1576,19 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
         "checkpoint_fingerprint": loaded.record.checkpoint_fingerprint,
         "split": split.value,
         "schedule_digest": digest,
+        "evaluation_runtime_fingerprint": runtime_fingerprint,
+        "action_bound_mode": action_bound_config.mode.value,
     }
     if staging_output.exists():
-        if (
-            _is_link_like(staging_output)
-            or not staging_output.is_dir()
-            or staging_output.resolve().parent != output.parent.resolve()
-            or not (staging_output / EVALUATION_OWNER_FILE).is_file()
-            or _read(staging_output / EVALUATION_OWNER_FILE) != owner
-        ):
-            raise RuntimeError("unsafe evaluation staging directory")
-        shutil.rmtree(staging_output)
+        archived = _archive_interrupted_evaluation(run_root, staging_output)
+        print(f"[INFO] preserved interrupted evaluation at {archived}")
     staging_output.mkdir(parents=True)
     atomic_write_json(staging_output / EVALUATION_OWNER_FILE, owner, immutable=True)
+    atomic_write_json(
+        staging_output / EVALUATION_RUNTIME_MANIFEST_FILE,
+        runtime_manifest.to_dict(),
+        immutable=True,
+    )
     env = _create_environment(
         args.sim_backend,
         record_video=args.rollout_video,
@@ -1122,6 +1596,7 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
     )
     analysis_payload: dict[str, object] | None = None
     validation: ValidationResult | None = None
+    projection_records: list[tuple[str, ActionProjectionRecord]] = []
     try:
         adapter = ActManiSkillRolloutAdapter(
             env=env,
@@ -1132,11 +1607,16 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
             run_fingerprint=identity.run_fingerprint,
             checkpoint_fingerprint=loaded.record.checkpoint_fingerprint,
             schedule_digest=digest,
+            runtime_fingerprint=runtime_fingerprint,
+            action_bound_config=action_bound_config,
             evaluation=config.evaluation,
             task_conditioner=(
                 append_canonical_task_onehot
                 if identity.variant is ActVariant.MIXED_TASK_ONEHOT
                 else None
+            ),
+            projection_record_sink=lambda evaluation_id, record: projection_records.append(
+                (evaluation_id, record)
             ),
         )
         episodes = tuple(
@@ -1155,15 +1635,26 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
         )
         environment_action_applied = any(episode.episode_steps > 0 for episode in episodes)
         benchmark_passed = infrastructure_failure_count == 0 and environment_action_applied
+        projection_artifact = _write_projection_records(
+            staging_output / ACTION_PROJECTION_RECORDS_FILE,
+            projection_records,
+        )
         payload = {
             **benchmark.to_dict(),
-            "schema_version": "langmani-m4-rollout-benchmark-v1",
+            "schema_version": "langmani-m4.1-rollout-benchmark-v2",
             "passed": benchmark_passed,
             "quality_validated": False,
             "infrastructure_failure_count": infrastructure_failure_count,
             "environment_action_applied": environment_action_applied,
             "evaluation_git": evaluation_git_payload,
             "test_authorization": authorization_payload,
+            "evaluation_runtime_fingerprint": runtime_fingerprint,
+            "action_bound_mode": action_bound_config.mode.value,
+            "action_projection_artifact": projection_artifact,
+            "deterministic_reload_raw_action": deterministic_raw_action.detach()
+            .cpu()
+            .numpy()[0]
+            .tolist(),
         }
         atomic_write_json(staging_output / "benchmark.json", payload, immutable=True)
         if not benchmark_passed:
@@ -1222,6 +1713,8 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
         schedule=schedule,
         evaluation_git=evaluation_git_payload,
         authorization=authorization_payload,
+        runtime_manifest=runtime_manifest,
+        output=staging_output,
     )
     if (
         validation is not None
@@ -1270,6 +1763,18 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
         "physical_execution": environment_action_applied,
         "infrastructure_failure_count": infrastructure_failure_count,
         "evaluation_git": evaluation_git_payload,
+        "evaluation_runtime_fingerprint": runtime_fingerprint,
+        "action_bound_mode": action_bound_config.mode.value,
+        "checkpoint_model_reload_validated": (runtime_manifest.checkpoint_model_reload_validated),
+        "policy_processor_reload_validated": runtime_manifest.policy_processor_reload_validated,
+        "action_bound_processor_reload_validated": (
+            runtime_manifest.action_bound_processor_reload_validated
+        ),
+        "raw_action_bounds_validated": benchmark.raw_action_bounds_validated,
+        "projected_action_bounds_validated": benchmark.projected_action_bounds_validated,
+        "task_success_count": benchmark.task_success_count,
+        "strict_unprojected_success_count": benchmark.strict_unprojected_success_count,
+        "action_projection_summary": benchmark.to_dict()["action_projection_summary"],
         "run_finalized": finalized,
     }
 

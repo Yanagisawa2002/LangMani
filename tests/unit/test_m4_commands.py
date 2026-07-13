@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import json
 import sys
@@ -15,6 +16,11 @@ import pytest
 from langmani.datasets.lerobot_types import IMAGE_FEATURE_KEY, STATE_FEATURE_KEY, DatasetSplit
 from langmani.datasets.schedule import CANONICAL_TASK_SPECS
 from langmani.environments.specs import stable_scene_id
+from langmani.policies.act_action_bounds import (
+    ActionBoundConfig,
+    EvaluationRuntimeIdentity,
+    EvaluationRuntimeManifest,
+)
 from langmani.policies.act_analysis import compute_counterfactual_sensitivity, task_identity_effects
 from langmani.policies.act_conditioning import CANONICAL_TASK_IDS
 from langmani.policies.act_data import DatasetEpisodeView
@@ -44,6 +50,35 @@ from langmani.policies.act_types import (
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _runtime_manifest(
+    *, checkpoint_fingerprint: str, split: EvaluationSplit
+) -> EvaluationRuntimeManifest:
+    identity = EvaluationRuntimeIdentity(
+        checkpoint_fingerprint=checkpoint_fingerprint,
+        policy_preprocessor_fingerprint="sha256:" + "a" * 64,
+        policy_postprocessor_fingerprint="sha256:" + "b" * 64,
+        action_bound_config=ActionBoundConfig(),
+        environment_id="LangMani-PickPlaceByInstruction-v0",
+        action_space_contract={
+            "shape": [8],
+            "dtype": "float32",
+            "low": [-1.0] * 8,
+            "high": [1.0] * 8,
+        },
+        task_conditioning_mapping_version=TASK_ONEHOT_MAPPING_VERSION,
+        rollout_config={"split": split.value, "sim_backend": "fixture"},
+        code_git_commit="1" * 40,
+    )
+    return EvaluationRuntimeManifest(
+        identity=identity,
+        checkpoint_model_reload_validated=True,
+        policy_processor_reload_validated=True,
+        action_bound_processor_reload_validated=True,
+        deterministic_raw_action_matched=True,
+        raw_action_match_tolerance=1e-6,
+    )
 
 
 def _load(name: str, relative: str) -> ModuleType:
@@ -222,7 +257,14 @@ def test_verify_report_exposes_independent_flags_and_structural_is_not_physical(
         "cuda_training_validated",
         "tiny_overfit_validated",
         "checkpoint_reload_validated",
+        "checkpoint_model_reload_validated",
+        "policy_processor_reload_validated",
+        "action_bound_processor_reload_validated",
+        "raw_action_bounds_validated",
+        "projected_action_bounds_validated",
         "closed_loop_inference_validated",
+        "strict_unprojected_rollout_validated",
+        "tiny_overfit_task_success_validated",
         "train_stats_leakage_validated",
         "validation_selection_validated",
         "test_lock_validated",
@@ -247,6 +289,10 @@ def _benchmark_payload(
     task_id: str | None,
     split: EvaluationSplit,
 ) -> dict[str, object]:
+    runtime_manifest = _runtime_manifest(
+        checkpoint_fingerprint=checkpoint_fingerprint,
+        split=split,
+    )
     task_ids = (task_id,) if variant is ActVariant.PER_TASK else CANONICAL_TASK_IDS
     scene_count = 30 if split is EvaluationSplit.FRESH_SEED else 6
     task_specs = dict(zip(CANONICAL_TASK_IDS, CANONICAL_TASK_SPECS, strict=True))
@@ -305,6 +351,7 @@ def _benchmark_payload(
             environment_step_latency_ms=(1.0,),
             total_episode_duration_s=0.1,
             failure_reason="fixture timeout",
+            runtime_fingerprint=runtime_manifest.identity.runtime_fingerprint,
         )
         for index, (item, current_task) in enumerate(
             zip(schedule, task_ids * scene_count, strict=True)
@@ -313,11 +360,17 @@ def _benchmark_payload(
     benchmark = summarize_rollout_benchmark(episodes)
     return {
         **benchmark.to_dict(),
-        "schema_version": "langmani-m4-rollout-benchmark-v1",
+        "schema_version": "langmani-m4.1-rollout-benchmark-v2",
         "passed": True,
         "quality_validated": False,
         "infrastructure_failure_count": 0,
         "environment_action_applied": True,
+        "evaluation_runtime_fingerprint": (runtime_manifest.identity.runtime_fingerprint),
+        "action_projection_artifact": {
+            "relative_path": evaluate_cli.ACTION_PROJECTION_RECORDS_FILE,
+            "sha256": hashlib.sha256(b"").hexdigest(),
+            "record_count": 0,
+        },
         "evaluation_git": {
             "commit": "1" * 40,
             "dirty": False,
@@ -486,6 +539,14 @@ def _write_run(
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(benchmark), encoding="utf-8")
+        runtime_manifest = _runtime_manifest(
+            checkpoint_fingerprint=selected,
+            split=split,
+        )
+        (path.parent / evaluate_cli.EVALUATION_RUNTIME_MANIFEST_FILE).write_text(
+            json.dumps(runtime_manifest.to_dict()), encoding="utf-8"
+        )
+        (path.parent / evaluate_cli.ACTION_PROJECTION_RECORDS_FILE).write_text("", encoding="utf-8")
     report_path = (
         root
         / "reports"
@@ -812,3 +873,38 @@ def test_verify_target_modes_are_mutually_exclusive(monkeypatch: pytest.MonkeyPa
     with pytest.raises(SystemExit) as error:
         verify_m4.parse_args()
     assert error.value.code == 2
+
+
+def test_strict_probe_rejects_then_executes_one_explicit_projection() -> None:
+    class Space:
+        low = np.full(8, -1.0, dtype=np.float32)
+        high = np.full(8, 1.0, dtype=np.float32)
+        shape = (8,)
+        dtype = np.dtype(np.float32)
+
+    class Environment:
+        action_space = Space()
+        calls: list[np.ndarray]
+
+        def __init__(self) -> None:
+            self.calls = []
+
+        def step(self, action: np.ndarray) -> tuple[None, float, bool, bool, dict[str, object]]:
+            self.calls.append(action.copy())
+            return None, 0.0, False, False, {}
+
+    env = Environment()
+    raw = np.zeros((1, 8), dtype=np.float32)
+    raw[0, -1] = 1.0508
+    result = evaluate_cli._strict_bound_probe(
+        env=env,
+        raw_action=evaluate_cli.torch.from_numpy(raw),
+        runtime_manifest=_runtime_manifest(
+            checkpoint_fingerprint="sha256:" + "e" * 64,
+            split=EvaluationSplit.TRAIN,
+        ),
+    )
+    assert result["reject_blocked_before_env_step"] is True
+    assert result["real_projected_env_step_executed"] is True
+    assert len(env.calls) == 1
+    assert env.calls[0][-1] == 1.0

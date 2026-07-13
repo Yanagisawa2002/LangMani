@@ -355,16 +355,19 @@ The adapter creates the M1 environment with `num_envs=1`, RGB policy observation
 `pd_joint_pos`, and 20 Hz control. It does not import or invoke M2. Each query reads only
 `base_camera` RGB and `PandaPolicyStateV0`; the task-one-hot variant additionally encodes the active
 nonprivileged command `TaskSpec`. It applies the saved preprocessor, calls installed
-`ACTPolicy.select_action`, applies the saved postprocessor, and checks float32 `[1,8]`, finiteness,
-and M1 bounds. Single-action bounds are resolved through Gymnasium's wrapper attribute contract or
+`ACTPolicy.select_action`, applies the saved postprocessor, then applies the explicit M4.1
+environment-action processor to float32 `[1,8]`. Single-action bounds are resolved through
+Gymnasium's wrapper attribute contract or
 the unwrapped ManiSkill environment because ManiSkill 3.0.1's `TimeLimitWrapper` does not expose
 `single_action_space` as a direct wrapper attribute.
 
-Out-of-bounds actions are recorded as `invalid_action` and terminate the episode. They are never
-silently clipped. Inference failures, environment failures, off-table outcomes, truncation, and
-timeouts remain distinct. Inference, environment-step, and whole-episode timing are measured
-separately. Raw records retain conservative M1 evaluation fields, grasp/wrong-grasp events, action
-magnitudes and per-joint ranges, event times, latency samples, and failure reasons.
+In `reject` mode, out-of-bounds actions are recorded as `invalid_action` and terminate before a
+step. In `project` mode, finite violations are recorded and explicitly projected; malformed and
+nonfinite actions still terminate. Inference failures, environment failures, off-table outcomes,
+truncation, and timeouts remain distinct. Inference, environment-step, and whole-episode timing are
+measured separately. Raw records retain conservative M1 evaluation fields, grasp/wrong-grasp
+events, raw/executed action audits and compact projection metrics, per-joint ranges, event times,
+latency samples, and failure reasons.
 
 Validation and test use the exact six M3B scene groups: mixed variants run 36 episodes per split,
 while each per-task policy runs its matching six episodes. The fresh benchmark fixes 30 unseen
@@ -423,6 +426,47 @@ per-task failures, counterfactual sensitivity, inference latency, and checkpoint
 evidence. It distinguishes control learning, ambiguity without a condition, oracle task
 conditioning, and language understanding (not tested).
 
+## M4.1 environment-action boundary
+
+ACT is a continuous regression model. Even when every source action lies inside the finite M1
+space, denormalized predictions can overshoot a bound; the target smoke observed raw gripper
+outputs around `1.0508`--`1.0684` for Mixed-TaskOneHot and `1.1280` for PerTask while the active
+gripper upper bound was `1.0`. The LeRobot policy postprocessor owns normalization inversion. It
+does not own simulator admissibility. LangMani therefore applies the separately versioned
+`BoundedActionEnvPostprocessorV0` after LeRobot postprocessing and immediately before `env.step`:
+
+```text
+model -> LeRobot policy postprocessor -> raw environment action
+      -> BoundedActionEnvPostprocessorV0 -> executed action -> env.step
+```
+
+The configured mode is always explicit. `reject` preserves the strict audit: malformed,
+nonfinite, unsupported-space, and finite bound violations fail before `env.step`. `project`
+retains malformed/nonfinite actions as hard failures and deterministically computes each finite
+component as `executed = min(max(raw, low), high)`, using the active environment action space rather
+than hard-coded `[-1, 1]`. In-range values are returned unchanged. Projection is not described as
+raw validity and is never hidden as implicit clipping. Binary gripper thresholding is not part of
+M4.1; a future `BinaryGripperEnvPostprocessorV0` would be a separate ablation.
+
+Each policy action has a machine-readable record containing the raw and executed arrays, actual
+bounds, violation mask, projection count, lower/upper/maximum excess, L1/L2/L-infinity correction,
+dtype, shape, step, and mode. Long per-step evidence is stored in a checksummed JSONL sidecar;
+episode and benchmark JSON keep compact totals, rates, per-dimension counts, first projection,
+maximum/mean excess and correction, and malformed/nonfinite flags. `task_success` means M1 success
+under the executed actions. `strict_unprojected_success` additionally requires zero projected
+actions. Projected task success is eligible for the M4.1 tiny-overfit task gate but never for the
+strict metric.
+
+Checkpoint identity remains unchanged. Every evaluation writes a separate runtime manifest whose
+canonical SHA-256 identity binds the checkpoint fingerprint, saved preprocessor and postprocessor
+fingerprints, serialized action-bound configuration, environment ID and actual action-space
+contract, task-one-hot mapping version, rollout configuration, current code commit, and M4.1
+runtime schema. Paths, hostname, wall time, and output location are nonsemantic. Reload validation
+loads the model and both saved LeRobot processors locally, reconstructs the bound processor from
+serialized configuration, checks deterministic raw output, then records the runtime fingerprint.
+Interrupted evaluation staging is preserved under the owning run as failure evidence before a
+new runtime is attempted.
+
 ## Commands and verification
 
 The M4 command boundary is:
@@ -454,9 +498,14 @@ fingerprints, fixture forward/backward/optimizer work, checkpoint/processor loca
 test lock, rollout serialization, and truthful physical flags. Fixture success is not real dataset,
 CUDA, model-quality, or physical evidence.
 
-Target smoke first requires the M0/M1/M2 target gate, M3A target smoke, M3B target smoke, and one
-real six-episode M3B group. It then requires CUDA forward/backward, both declared tiny-overfit
-paths, checkpoint/processor reload, and real closed-loop M1 steps. Full target mode requires the
+M4.1 target smoke requires explicit `--action-bound-mode project`. It validates the already
+completed M0--M3B smoke report and six-episode M3B dataset, then reuses the existing 5000-step
+PerTask and 10000-step Mixed-TaskOneHot checkpoints without training. Before full rollouts it runs
+one strict probe: reproduce the known raw violation, prove reject blocks the step, reconstruct and
+validate project mode, and execute exactly one projected legal M1 action. It then attempts one
+PerTask rollout and all six one-hot counterfactual tasks from the shared scene group, retains raw
+and executed action evidence, proves the rollout source has no M2 expert dependency, and uses 6/6
+one-hot `task_success` as the primary quality gate. Full target mode requires the
 completed 360-episode M3B dataset, offline counterfactual audit, all six per-task policies and both
 mixed policies, validation-only selection, locked test, the 180-episode fresh benchmark, and the
 final comparison/provenance audit. Both target modes reject a dirty current worktree before reusing
@@ -469,19 +518,33 @@ The structured report keeps these flags independent:
 ```text
 implementation_validated, git_baseline_validated, source_dataset_validated,
 fixture_training_validated, cuda_training_validated, tiny_overfit_validated,
-checkpoint_reload_validated, closed_loop_inference_validated,
+checkpoint_reload_validated, checkpoint_model_reload_validated,
+policy_processor_reload_validated, action_bound_processor_reload_validated,
+raw_action_bounds_validated, projected_action_bounds_validated,
+closed_loop_inference_validated, strict_unprojected_rollout_validated,
+tiny_overfit_task_success_validated,
 train_stats_leakage_validated, validation_selection_validated, test_lock_validated,
 per_task_experiment_completed, mixed_unconditioned_experiment_completed,
 mixed_task_onehot_experiment_completed, fresh_seed_benchmark_completed,
 full_experiment_validated, baseline_quality_validated, physical_target_validated
 ```
 
+The backward-compatible `checkpoint_reload_validated` aggregate is true only when the model,
+LeRobot processors, and action-bound processor reload checks all pass (and its pre-M4.1 structural
+checkpoint check remains true). `tiny_overfit_validated` mirrors the M4.1 task-success gate.
+`raw_action_bounds_validated` can remain false while `projected_action_bounds_validated` and
+`closed_loop_inference_validated` are true; that combination means the declared runtime corrected
+audited finite regression overshoot before physical execution. `strict_unprojected_rollout_validated`
+is intentionally independent and remains false if any successful episode required projection.
+
 `full_experiment_validated` means the declared experiment completed correctly; it does not promise
 good model quality. `baseline_quality_validated` remains separate and may be false with truthful
-results. As of this implementation review, no authoritative M3B target dataset, CUDA training,
-tiny-overfit 6/6 result, real learned-policy rollout, GPU-memory/throughput measurement, locked
-test/fresh benchmark, or physical target acceptance has been produced. Those items remain pending
-the native Linux RTX 4090 target.
+results. The RTX 4090 smoke chain has produced one real six-episode M3B dataset and the two CUDA
+tiny-overfit checkpoints; their losses converged and one-hot changes predictions. The original
+strict rollout correctly stopped on raw bound overshoot before its first step. M4.1 projected
+closed-loop results remain pending until the clean committed runtime is rerun. The 360-episode
+dataset, eight full experiments, locked test/fresh benchmark, and full acceptance also remain
+pending and are outside M4.1.
 
 ## Handoff
 

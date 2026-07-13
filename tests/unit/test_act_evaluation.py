@@ -8,6 +8,10 @@ import numpy as np
 import pytest
 
 from langmani.datasets.lerobot_types import IMAGE_FEATURE_KEY, STATE_FEATURE_KEY
+from langmani.policies.act_action_bounds import (
+    ActionBoundMode,
+    ActionProjectionSummary,
+)
 from langmani.policies.act_analysis import (
     CounterfactualAnalysisError,
     CounterfactualDemonstration,
@@ -424,6 +428,15 @@ def _episode(
         inference_latency_ms=(1.0, 2.0),
         environment_step_latency_ms=(3.0, 4.0),
         total_episode_duration_s=0.5,
+        runtime_fingerprint=_digest("d"),
+        action_bound_mode=ActionBoundMode.REJECT,
+        task_success=success,
+        strict_unprojected_success=success,
+        action_projection_summary=ActionProjectionSummary.from_records(
+            (),
+            action_dimension=8,
+            total_policy_actions=10,
+        ).to_dict(),
         failure_reason=None if success else status.value,
     )
 

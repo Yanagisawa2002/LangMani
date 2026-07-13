@@ -244,9 +244,9 @@ success or the known off-table failure still stops execution with a classified e
 These commands are not evidence of physical acceptance merely because they import or perform
 structural checks on a non-target host. ManiSkill 3.0.1's Linux mplib wheel is isolated behind the
 explicit `LANGMANI_PLANNER_PYTHON` runtime described below; running mplib beside the main NumPy 2
-stack is rejected before native planner construction. M0/M1 target acceptance has passed. A
-180-rollout M2 parameter trial reached 177/180 classified successes, but formal M2 acceptance and
-diagnostic rendering remain pending until the committed `verify_m2.py --target` report passes.
+stack is rejected before native planner construction. The clean M0/M1/M2 target gates have passed;
+M2 completed its six-task smoke and 177/180 balanced benchmark (98.33%) with zero wrong-target
+successes, unclassified failures, or crashes.
 
 ## M3A raw demonstrations
 
@@ -539,9 +539,12 @@ offline action loss, then earlier step. An immutable selection record must exist
 test access; test results cannot change selection or resume training.
 
 Closed-loop inference reads only M1 `base_camera` RGB and Panda qpos, optionally appends the oracle
-one-hot, calls installed `select_action`, and applies the postprocessed `pd_joint_pos` action. It
-does not call M2. Nonfinite or out-of-bounds actions are classified and terminate; they are never
-silently clipped. Validation/test each use the fixed six M3B groups. The fresh benchmark fixes 30
+one-hot, calls installed `select_action`, and applies the declared M4.1 action-bound processor after
+the LeRobot postprocessor. It does not call M2. `reject` blocks malformed, nonfinite, or
+out-of-bounds actions before `env.step`; `project` retains malformed/nonfinite hard failures and
+explicitly projects finite values into the actual environment bounds while recording raw and
+executed actions. This is auditable projection, not silent clipping, and it does not binarize the
+gripper. Validation/test each use the fixed six M3B groups. The fresh benchmark fixes 30
 unseen source-excluded seeds and all six tasks, giving 180 episodes per mixed model and 30 per
 per-task model. Reports keep implementation completion, experiment validity, model quality, and
 physical acceptance separate. Evaluation directories use owned staging and atomic promotion; resume
@@ -552,19 +555,21 @@ The non-target verifier exercises contracts and a small CPU fixture only. It is 
 CUDA, model-quality, or physical evidence. Native target modes are:
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-smoke
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py \
+  --target-smoke --action-bound-mode project
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --output-root outputs/models/act
 ```
 
-Target smoke must first pass M0/M1/M2 plus M3A/M3B smoke and then perform real CUDA
-forward/backward, declared tiny-overfit gates, local checkpoint/processor reload, and learned-policy
-M1 rollouts. Full mode requires the real finalized 360-episode dataset, all six per-task policies,
+M4.1 target smoke validates the completed M0--M3B smoke evidence, reuses the existing PerTask and
+Mixed-TaskOneHot checkpoints without training, reproduces strict rejection, executes one projected
+legal action, and attempts one plus six learned-policy M1 rollouts. Reports separate raw validity,
+projected legality, task success, and strict-unprojected success. Full mode requires the real
+finalized 360-episode dataset, all six per-task policies,
 both mixed policies, the complete counterfactual audit, validation-only selection, locked test, and
-the 180-episode fresh benchmark. These target runs, real model results, peak GPU memory, throughput,
-and physical acceptance have not been performed on this Windows review host. Target modes also
-require the current worktree to be clean before any completed run is reused.
+the 180-episode fresh benchmark. Target modes require the current worktree to be clean before any
+completed run is reused. M4.1 does not start M4 full or retrain the smoke checkpoints.
 
 ## Target-machine setup
 
@@ -652,7 +657,8 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m3b.py --target-smoke
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m3b.py --target-full \
   --source-root outputs/datasets/m3a/langmani-pick-place-raw-v1 \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1
-CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-smoke
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py \
+  --target-smoke --action-bound-mode project
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --output-root outputs/models/act
@@ -746,7 +752,7 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 | `python environment/verify_m3b.py --target-smoke` | Yes | Yes | Yes |
 | `python environment/verify_m3b.py --target-full` | Yes | Yes | Yes |
 | `python environment/verify_m4.py` | No | No | No; CPU ACT fixture only |
-| `python environment/verify_m4.py --target-smoke` | Yes | Yes | Via prior M3B gate |
+| `python environment/verify_m4.py --target-smoke --action-bound-mode project` | Yes | Yes | Validates completed prior M3B smoke evidence |
 | `python environment/verify_m4.py --target-full` | Yes | Yes | Via dataset and rollout gates |
 | `scripts/export_lerobot_dataset.py` | Real export: yes | According to source/render backend | Yes |
 | `scripts/validate_lerobot_dataset.py` | Full source alignment: yes | According to source/render backend | Yes |

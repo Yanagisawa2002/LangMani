@@ -15,6 +15,14 @@ from langmani.datasets.observation_reconstruction import extract_base_camera_rgb
 from langmani.datasets.policy_state import extract_panda_policy_state_v0
 from langmani.environments.pick_place_by_instruction import ENV_ID
 from langmani.environments.specs import TaskSpec, stable_task_id
+from langmani.policies.act_action_bounds import (
+    ActionBoundConfig,
+    ActionBoundErrorKind,
+    ActionBoundProcessingError,
+    ActionProjectionRecord,
+    ActionProjectionSummary,
+    BoundedActionEnvPostprocessorV0,
+)
 from langmani.policies.act_training import image_to_policy_float
 from langmani.policies.act_types import (
     ACT_ACTION_COMPONENTS,
@@ -37,6 +45,7 @@ class StatefulPolicy(Protocol):
 
 
 TaskConditioner = Callable[[np.ndarray, str], np.ndarray]
+ProjectionRecordSink = Callable[[str, ActionProjectionRecord], None]
 
 
 def _single_bool(value: object, *, label: str) -> bool:
@@ -77,41 +86,6 @@ def _base_environment(env: object) -> Any:
     return getattr(env, "unwrapped", env)
 
 
-def _single_action_bounds(env: object, base_environment: Any) -> tuple[np.ndarray, np.ndarray]:
-    """Resolve ManiSkill single-action bounds through the public wrapper contract."""
-
-    action_space = None
-    getter = getattr(env, "get_wrapper_attr", None)
-    if callable(getter):
-        try:
-            action_space = getter("single_action_space")
-        except (AttributeError, LookupError):
-            action_space = None
-    for owner, name in (
-        (env, "single_action_space"),
-        (base_environment, "single_action_space"),
-        (env, "action_space"),
-        (base_environment, "action_space"),
-    ):
-        if action_space is None:
-            action_space = getattr(owner, name, None)
-    if (
-        action_space is None
-        or not hasattr(action_space, "low")
-        or not hasattr(action_space, "high")
-    ):
-        raise RolloutContractError("M1 rollout environment must expose explicit action bounds")
-    low = np.asarray(action_space.low, dtype=np.float32)
-    high = np.asarray(action_space.high, dtype=np.float32)
-    if low.shape == (1, ACT_ACTION_COMPONENTS):
-        low = low[0]
-    if high.shape == (1, ACT_ACTION_COMPONENTS):
-        high = high[0]
-    if low.shape != (ACT_ACTION_COMPONENTS,) or high.shape != (ACT_ACTION_COMPONENTS,):
-        raise RolloutContractError("M1 single-action bounds must have shape (8,)")
-    return np.array(low, copy=True), np.array(high, copy=True)
-
-
 def _reset_component(component: object, name: str) -> None:
     reset = getattr(component, "reset", None)
     if not callable(reset):
@@ -148,34 +122,15 @@ def build_policy_observation(
     }
 
 
-def _validated_action(
-    value: object,
-    *,
-    low: np.ndarray,
-    high: np.ndarray,
-) -> np.ndarray:
+def _raw_environment_action(value: object) -> torch.Tensor:
     if not isinstance(value, torch.Tensor):
         raise RolloutContractError("ACT postprocessor must return a torch tensor")
-    tensor = value.detach().cpu()
+    tensor = value.detach()
     if tensor.dtype != torch.float32 or tuple(tensor.shape) != (1, ACT_ACTION_COMPONENTS):
         raise RolloutContractError(
             f"postprocessed action must be float32[1,8], got {tensor.dtype}{tuple(tensor.shape)}"
         )
-    action = tensor.numpy()[0].copy()
-    if not np.all(np.isfinite(action)):
-        raise RolloutContractError("postprocessed action contains NaN or infinity")
-    if low.shape != action.shape or high.shape != action.shape:
-        raise RolloutContractError("M1 single-action bounds must have shape (8,)")
-    if np.any(action < low) or np.any(action > high):
-        raise RolloutContractError(
-            "postprocessed action lies outside M1 bounds; action="
-            + repr(action.tolist())
-            + ", low="
-            + repr(low.tolist())
-            + ", high="
-            + repr(high.tolist())
-        )
-    return action
+    return tensor
 
 
 class ActManiSkillRolloutAdapter:
@@ -192,8 +147,11 @@ class ActManiSkillRolloutAdapter:
         run_fingerprint: str,
         checkpoint_fingerprint: str,
         schedule_digest: str,
+        runtime_fingerprint: str,
+        action_bound_config: ActionBoundConfig,
         evaluation: ActEvaluationConfig | None = None,
         task_conditioner: TaskConditioner | None = None,
+        projection_record_sink: ProjectionRecordSink | None = None,
     ) -> None:
         self.env = env
         self.base = _base_environment(env)
@@ -204,9 +162,17 @@ class ActManiSkillRolloutAdapter:
         self.run_fingerprint = run_fingerprint
         self.checkpoint_fingerprint = checkpoint_fingerprint
         self.schedule_digest = schedule_digest
+        self.runtime_fingerprint = runtime_fingerprint
+        self.action_bound_config = action_bound_config
         self.evaluation = evaluation or ActEvaluationConfig()
         self.task_conditioner = task_conditioner
+        self.projection_record_sink = projection_record_sink
         self._validate_environment()
+        self.action_bound_processor = BoundedActionEnvPostprocessorV0.from_environment(
+            env,
+            action_bound_config,
+            expected_action_components=ACT_ACTION_COMPONENTS,
+        )
 
     def _validate_environment(self) -> None:
         spec = getattr(self.env, "spec", None)
@@ -246,7 +212,7 @@ class ActManiSkillRolloutAdapter:
         scene_seed: int,
         task_spec: TaskSpec,
     ) -> RolloutEpisodeResult:
-        """Run one bounded episode; invalid actions terminate and are never clipped."""
+        """Run one episode through the declared reject or audited projection boundary."""
         self.reset_policy_state()
         task_id = stable_task_id(task_spec)
         reset_result = self.env.reset(
@@ -267,11 +233,14 @@ class ActManiSkillRolloutAdapter:
         ):
             raise RolloutContractError("M1 reset metadata disagrees with rollout schedule")
 
-        action_low, action_high = _single_action_bounds(self.env, self.base)
         final_evaluation = _current_evaluation(self.base, reset_info)
         inference_latencies: list[float] = []
         environment_latencies: list[float] = []
         actions: list[np.ndarray] = []
+        projection_records: list[ActionProjectionRecord] = []
+        total_policy_actions = 0
+        any_nonfinite_action = False
+        any_malformed_action = False
         target_grasped_any = final_evaluation.get("target_is_grasped", False)
         wrong_grasped_any = final_evaluation.get("wrong_object_is_grasped", False)
         target_in_target_bin = final_evaluation.get("target_in_target_bin", False)
@@ -286,6 +255,7 @@ class ActManiSkillRolloutAdapter:
         steps = 0
 
         for step in range(1, self.evaluation.maximum_episode_steps + 1):
+            total_policy_actions += 1
             try:
                 raw_input = build_policy_observation(
                     observation,
@@ -305,7 +275,28 @@ class ActManiSkillRolloutAdapter:
                 ).startswith("cuda"):
                     torch.cuda.synchronize()
                 inference_latencies.append((time.perf_counter() - inference_start) * 1000.0)
-                action = _validated_action(postprocessed, low=action_low, high=action_high)
+                raw_environment_action = _raw_environment_action(postprocessed)
+                bounded = self.action_bound_processor.process(
+                    raw_environment_action,
+                    rollout_step=step,
+                )
+                projection_records.append(bounded.audit_record)
+                if self.projection_record_sink is not None:
+                    self.projection_record_sink(evaluation_id, bounded.audit_record)
+                executed = bounded.executed_action
+                if not isinstance(executed, torch.Tensor):
+                    raise RolloutContractError("ACT tensor action processing changed array type")
+                action = executed.detach().cpu().numpy()[0].copy()
+            except ActionBoundProcessingError as error:
+                if error.record is not None:
+                    projection_records.append(error.record)
+                    if self.projection_record_sink is not None:
+                        self.projection_record_sink(evaluation_id, error.record)
+                any_nonfinite_action |= error.kind is ActionBoundErrorKind.NONFINITE_ACTION
+                any_malformed_action |= error.kind is ActionBoundErrorKind.MALFORMED_ACTION
+                status = RolloutStatus.INVALID_ACTION
+                reason = f"{type(error).__name__}[{error.kind.value}]: {error}"
+                break
             except Exception as error:  # noqa: BLE001 - classify inference command boundary
                 status = (
                     RolloutStatus.INVALID_ACTION
@@ -372,6 +363,14 @@ class ActManiSkillRolloutAdapter:
             action_min = (0.0,) * ACT_ACTION_COMPONENTS
             action_max = (0.0,) * ACT_ACTION_COMPONENTS
         hz = float(self.evaluation.control_frequency_hz)
+        projection_summary = ActionProjectionSummary.from_records(
+            projection_records,
+            action_dimension=ACT_ACTION_COMPONENTS,
+            any_nonfinite_action=any_nonfinite_action,
+            any_malformed_action=any_malformed_action,
+            total_policy_actions=total_policy_actions,
+        )
+        task_success = status is RolloutStatus.SUCCESS
         return RolloutEpisodeResult(
             evaluation_id=evaluation_id,
             run_fingerprint=self.run_fingerprint,
@@ -382,7 +381,7 @@ class ActManiSkillRolloutAdapter:
             scene_id=episode_spec.scene_id,
             task_id=task_id,
             status=status,
-            success=status is RolloutStatus.SUCCESS,
+            success=task_success,
             episode_steps=steps,
             final_evaluation=final_evaluation,
             target_in_target_bin=target_in_target_bin,
@@ -405,6 +404,13 @@ class ActManiSkillRolloutAdapter:
             inference_latency_ms=tuple(inference_latencies),
             environment_step_latency_ms=tuple(environment_latencies),
             total_episode_duration_s=total_duration,
+            runtime_fingerprint=self.runtime_fingerprint,
+            action_bound_mode=self.action_bound_config.mode,
+            task_success=task_success,
+            strict_unprojected_success=(
+                task_success and projection_summary.projected_action_count == 0
+            ),
+            action_projection_summary=projection_summary.to_dict(),
             failure_reason=reason,
         )
 
@@ -426,6 +432,7 @@ def latency_percentiles(values: tuple[float, ...]) -> dict[str, float | None]:
 __all__ = [
     "ActManiSkillRolloutAdapter",
     "RolloutContractError",
+    "ProjectionRecordSink",
     "TaskConditioner",
     "build_policy_observation",
     "latency_percentiles",

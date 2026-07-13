@@ -13,6 +13,7 @@ from langmani.datasets.policy_state import PANDA_POLICY_STATE_COMPONENTS
 from langmani.datasets.schedule import CANONICAL_TASK_SPECS
 from langmani.environments.pick_place_by_instruction import ENV_ID
 from langmani.environments.specs import EpisodeSpec
+from langmani.policies.act_action_bounds import ActionBoundConfig, ActionBoundMode
 from langmani.policies.act_rollout import ActManiSkillRolloutAdapter, RolloutContractError
 from langmani.policies.act_types import ActVariant, EvaluationSplit, RolloutStatus
 
@@ -78,6 +79,7 @@ class _Env:
             high=np.full(8, 1.0, dtype=np.float32),
         )
         self.step_calls = 0
+        self.last_action: np.ndarray | None = None
         self._episode: EpisodeSpec | None = None
 
     def get_policy_rollout_evaluation(self) -> dict[str, torch.Tensor]:
@@ -110,6 +112,7 @@ class _Env:
 
     def step(self, action: np.ndarray) -> tuple[object, float, object, object, dict[str, object]]:
         assert action.shape == (8,)
+        self.last_action = np.array(action, copy=True)
         self.step_calls += 1
         success = self.step_calls == 2
         info = {
@@ -146,7 +149,10 @@ class _TimeLimitLikeWrapper:
 
 
 def _adapter(
-    env: object, policy: _Policy
+    env: object,
+    policy: _Policy,
+    *,
+    action_bound_mode: ActionBoundMode = ActionBoundMode.REJECT,
 ) -> tuple[ActManiSkillRolloutAdapter, _Processor, _Processor]:
     pre = _Processor(add_batch=True)
     post = _Processor()
@@ -159,6 +165,8 @@ def _adapter(
         run_fingerprint=SHA,
         checkpoint_fingerprint=SHA,
         schedule_digest=SHA,
+        runtime_fingerprint=SHA,
+        action_bound_config=ActionBoundConfig(mode=action_bound_mode),
     )
     return adapter, pre, post
 
@@ -200,6 +208,9 @@ def test_rollout_resets_all_state_and_executes_raw_actions() -> None:
     assert policy.inputs[0][IMAGE_FEATURE_KEY].shape == (1, 3, 256, 256)
     assert policy.inputs[0][IMAGE_FEATURE_KEY].dtype == torch.float32
     assert policy.inputs[0][STATE_FEATURE_KEY].shape == (1, 9)
+    assert result.task_success
+    assert result.strict_unprojected_success
+    assert result.action_projection_summary["projected_action_count"] == 0
 
 
 @pytest.mark.fixture
@@ -233,6 +244,27 @@ def test_out_of_bounds_action_is_rejected_without_environment_step() -> None:
     assert result.status is RolloutStatus.INVALID_ACTION
     assert result.invalid_action
     assert env.step_calls == 0
+    assert result.action_projection_summary["maximum_bound_excess"] == 1.0
+
+
+@pytest.mark.fixture
+@pytest.mark.evaluation
+def test_project_mode_sends_the_explicitly_bounded_action_to_environment() -> None:
+    env = _Env()
+    action = torch.zeros((1, 8), dtype=torch.float32)
+    action[0, -1] = 1.0508
+    adapter, _, _ = _adapter(env, _Policy(action), action_bound_mode=ActionBoundMode.PROJECT)
+    result = adapter.run_episode(
+        evaluation_id="fixture-projected-action",
+        split=EvaluationSplit.VALIDATION,
+        scene_seed=4,
+        task_spec=CANONICAL_TASK_SPECS[1],
+    )
+    assert result.success
+    assert env.step_calls == 2
+    assert env.last_action is not None and env.last_action[-1] == 1.0
+    assert result.action_projection_summary["projected_action_count"] == 2
+    assert not result.strict_unprojected_success
 
 
 @pytest.mark.fixture
@@ -257,6 +289,8 @@ def test_task_onehot_adapter_uses_command_task_id_only() -> None:
         run_fingerprint=SHA,
         checkpoint_fingerprint=SHA,
         schedule_digest=SHA,
+        runtime_fingerprint=SHA,
+        action_bound_config=ActionBoundConfig(mode=ActionBoundMode.REJECT),
         task_conditioner=conditioner,
     )
     result = adapter.run_episode(

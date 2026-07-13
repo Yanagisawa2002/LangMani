@@ -852,6 +852,39 @@ actions remain float32 `[1,8]`, are reduced to one raw `[8]` environment action,
 rather than clipped when out of bounds. No action scale, control mode, environment wrapper, success
 criterion, model, dataset, or quality threshold changes.
 
+## D-036 — Separate raw ACT output from explicit environment-action projection
+
+The completed RTX 4090 target smoke produced immutable 5000-step PerTask and 10000-step
+Mixed-TaskOneHot checkpoints. Their validation losses fell from 0.9983 to 0.0590 and from 0.9899
+to 0.0414, and changing only the canonical one-hot changed predictions. The 1068 M3B source
+actions were independently audited: the gripper component is exactly `-1` or `+1`, every episode
+begins at `+1`, state/action indexing is aligned, and saved train-only processor statistics reload
+correctly. The first closed-loop outputs nevertheless overshot the finite gripper upper bound:
+Mixed-TaskOneHot was approximately `1.0508`--`1.0684`, and PerTask approximately `1.1280`.
+Therefore the failure is continuous regression overshoot, not M3B corruption, temporal shift, or
+an invalid source-action contract.
+
+LangMani adds project-owned `BoundedActionEnvPostprocessorV0` after the installed LeRobot policy
+postprocessor and directly before `env.step`. Its explicit `reject` mode retains D-035 strict
+behavior. Its explicit `project` mode rejects malformed/nonfinite values but computes finite
+componentwise projection from the active environment action space as
+`min(max(raw, low), high)`. The observed eight-dimensional M1 bounds are
+`[-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973, -1.0]` through
+`[2.8973, 1.7628, 2.8973, -0.0698, 2.8973, 3.7525, 2.8973, 1.0]`. These values are evidence, not
+hard-coded processor constants. Raw and executed actions, violation masks, excesses, corrections,
+and aggregate projection rates remain separately auditable. Binary gripper conversion is deferred
+as a distinct future ablation.
+
+Checkpoint files and fingerprints are immutable. Evaluation instead receives a new canonical
+runtime fingerprint covering checkpoint, saved preprocessor/postprocessor, action-bound config,
+environment/action-space contract, task mapping, rollout configuration, code commit, and M4.1
+schema. Runtime manifests and checksummed per-step audits live beside evaluation results. Target
+smoke reuses the two existing checkpoints and completed M3B smoke dataset; it may not train or
+rewrite earlier artifacts. It first reproduces strict rejection and executes one projected legal
+step, then attempts one PerTask and six same-scene one-hot rollouts. Until that clean committed rerun
+finishes, projected closed-loop task results and M4.1 physical flags remain pending; this decision
+will record the actual outcome rather than infer success from the implementation.
+
 ## Local bootstrap evidence
 
 The bootstrap was authored on Windows 11, which is not an acceptance platform. In an isolated
@@ -958,27 +991,21 @@ workaround.
    with the main NumPy 2 runtime on the target. Exact side-runtime pins, the adapter preflight, and
    manifest fingerprints prevent silent ABI drift, but every new target image must rerun
    `verify_planner_runtime.py`; a future upstream ABI-compatible planner could revisit this split.
-7. **Formal M2 physical acceptance is pending.** The isolated runtime has executed real Panda
-   screw plans, grasps, transport, placement, and the 180-rollout matrix at 98.3%, but that
-   pre-commit trial did not include the authoritative repeatability and rendered-phase checks. Only
-   the clean committed ordered target gate can close this risk.
+7. **M2 planner success is high but not perfect.** The clean target gate passed its six-task smoke
+   and 177/180 balanced benchmark (98.33%) with three classified planning failures, zero wrong-target
+   successes, zero unclassified failures, and zero crashes. Downstream collection must retain its
+   bounded retry and complete-group rules rather than assume every seed succeeds first try.
 8. **Dual-runtime replay identity must remain exact.** M3A collection and independent action replay
    must use the same ten-field planner runtime fingerprint. Main-runtime inspection may not be used
    to admit a trajectory whose real action replay was skipped or executed under a different ABI.
-9. **No authoritative M3A target archive exists yet.** The deterministic schedule, recorder adapter,
-   transaction recovery, archive validation, and replay audit passed synthetic and structural tests,
-   but no native Linux Panda expert has recorded, inspected, and independently replayed all 360
-   accepted episodes. `environment/verify_m3a.py --target-smoke` must first validate the six-task
-   physical chain; only `--target-full` can close the full-archive risk after the ordered M0, M1, and
-   M2 target gates pass.
-10. **No real M3B target export exists yet.** Local generated-array LeRobot/PyAV/Parquet/DataLoader
-    integration passes, but the Windows repository path cannot instantiate the Panda renderer and
-    no authoritative M3A source exists. `verify_m3b.py --target-smoke` must prove six real
-    state-restoration videos and source alignments; only `--target-full` can validate all 60 groups,
-    360 episodes, scene-level splits, every decoded video, and the first training-ready derived
-    dataset.
-11. **No real M4 target experiment exists yet.** Fixture forward/backward and local checkpoint
-    reload can validate implementation paths only. CUDA bfloat16 training, tiny-overfit 6/6,
-    learned-policy M1 stepping, validation selection, locked test, the fixed fresh-seed benchmark,
-    actual GPU memory/throughput, model quality, and physical target acceptance all require the
-    ordered native Linux RTX 4090 target gates and a real completed M3B dataset.
+9. **The full 360-episode M3A archive remains pending.** The target smoke has recorded and action-
+   replayed one real six-task group, but only `verify_m3a.py --target-full` can produce and validate
+   the authoritative 60 complete groups.
+10. **The full 360-episode M3B dataset remains pending.** Target smoke exported, finalized, decoded,
+    source-aligned, and publicly reloaded six real H.264 episodes. Full scene splits and every video
+    remain subject to `verify_m3b.py --target-full` after the full M3A archive exists.
+11. **M4.1 projected closed-loop quality is not yet known.** Real CUDA PerTask and TaskOneHot
+    tiny-overfit training and local reload completed, but strict inference exposed finite ACT
+    regression overshoot before the first environment step. The explicit projection implementation
+    must be rerun from a clean commit. Full eight-model training, selection, locked test, fresh-seed
+    benchmark, peak-memory/throughput comparison, and full acceptance remain outside M4.1.

@@ -22,6 +22,10 @@ from langmani.datasets.lerobot_types import (
     STATE_FEATURE_KEY,
 )
 from langmani.environments.specs import TaskSpec, stable_task_id
+from langmani.policies.act_action_bounds import (
+    ActionBoundMode,
+    ActionProjectionSummary,
+)
 
 M4_SCHEMA_VERSION = "langmani-m4-act-v1"
 TASK_ONEHOT_MAPPING_VERSION = "CanonicalTaskOneHotV0"
@@ -661,6 +665,14 @@ class ValidationResult(_JsonRecord):
         _finite(self.offline_validation_action_loss, "offline_validation_action_loss")
 
 
+def _empty_action_projection_summary() -> Mapping[str, object]:
+    """Return the legacy-compatible zero-action audit used by in-memory fixtures."""
+
+    return ActionProjectionSummary.from_records(
+        (), action_dimension=ACT_ACTION_COMPONENTS
+    ).to_dict()
+
+
 @dataclass(frozen=True, slots=True)
 class RolloutEpisodeResult(_JsonRecord):
     evaluation_id: str
@@ -694,16 +706,41 @@ class RolloutEpisodeResult(_JsonRecord):
     environment_step_latency_ms: tuple[float, ...]
     total_episode_duration_s: float
     failure_reason: str | None = None
+    runtime_fingerprint: str = ""
+    action_bound_mode: ActionBoundMode = ActionBoundMode.REJECT
+    task_success: bool | None = None
+    strict_unprojected_success: bool | None = None
+    action_projection_summary: Mapping[str, object] = field(
+        default_factory=_empty_action_projection_summary
+    )
 
     def __post_init__(self) -> None:
-        for name in ("run_fingerprint", "checkpoint_fingerprint", "schedule_digest"):
+        if not self.runtime_fingerprint:
+            object.__setattr__(self, "runtime_fingerprint", self.run_fingerprint)
+        if self.task_success is None:
+            object.__setattr__(self, "task_success", self.success)
+        if self.strict_unprojected_success is None:
+            object.__setattr__(self, "strict_unprojected_success", self.success)
+        for name in (
+            "run_fingerprint",
+            "checkpoint_fingerprint",
+            "schedule_digest",
+            "runtime_fingerprint",
+        ):
             _digest(cast(str, getattr(self, name)), name)
         object.__setattr__(self, "split", EvaluationSplit(self.split))
         object.__setattr__(self, "status", RolloutStatus(self.status))
+        object.__setattr__(self, "action_bound_mode", ActionBoundMode(self.action_bound_mode))
         object.__setattr__(
             self,
             "final_evaluation",
             _frozen_mapping(self.final_evaluation, "final_evaluation"),
+        )
+        summary = ActionProjectionSummary.from_dict(self.action_projection_summary)
+        object.__setattr__(
+            self,
+            "action_projection_summary",
+            _frozen_mapping(summary.to_dict(), "action_projection_summary"),
         )
         _positive_int(self.scene_seed, "scene_seed", allow_zero=True)
         _positive_int(self.episode_steps, "episode_steps", allow_zero=True)
@@ -712,8 +749,16 @@ class RolloutEpisodeResult(_JsonRecord):
             or len(self.action_max) != ACT_ACTION_COMPONENTS
         ):
             raise ValueError("rollout action ranges must contain eight components")
-        if self.success != (self.status is RolloutStatus.SUCCESS):
+        if (
+            self.success != (self.status is RolloutStatus.SUCCESS)
+            or self.task_success != self.success
+        ):
             raise ValueError("success must agree with rollout status")
+        expected_strict = self.task_success and summary.projected_action_count == 0
+        if self.strict_unprojected_success != expected_strict:
+            raise ValueError(
+                "strict_unprojected_success requires task success without projected actions"
+            )
         for value in (
             self.cumulative_action_magnitude,
             self.total_episode_duration_s,
@@ -740,9 +785,18 @@ class RolloutBenchmarkResult(_JsonRecord):
     failure_counts: Mapping[str, int]
     inference_latency_ms: Mapping[str, float | None]
     environment_step_latency_ms: Mapping[str, float | None]
+    runtime_fingerprint: str
+    action_bound_mode: ActionBoundMode
+    task_success_count: int
+    strict_unprojected_success_count: int
+    raw_action_bounds_validated: bool
+    projected_action_bounds_validated: bool
+    action_projection_summary: Mapping[str, object]
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "split", EvaluationSplit(self.split))
+        object.__setattr__(self, "action_bound_mode", ActionBoundMode(self.action_bound_mode))
+        _digest(self.runtime_fingerprint, "runtime_fingerprint")
         object.__setattr__(
             self,
             "per_task_success_rates",
@@ -758,6 +812,7 @@ class RolloutBenchmarkResult(_JsonRecord):
             "metric_rates",
             "inference_latency_ms",
             "environment_step_latency_ms",
+            "action_projection_summary",
         ):
             object.__setattr__(
                 self,
@@ -766,6 +821,12 @@ class RolloutBenchmarkResult(_JsonRecord):
             )
         if not self.episodes:
             raise ValueError("benchmark result requires episode records")
+        if self.task_success_count != sum(item.task_success for item in self.episodes):
+            raise ValueError("task_success_count disagrees with episode records")
+        if self.strict_unprojected_success_count != sum(
+            item.strict_unprojected_success for item in self.episodes
+        ):
+            raise ValueError("strict_unprojected_success_count disagrees with episode records")
         for value in (self.success_rate, self.success_wilson_low, self.success_wilson_high):
             if not 0.0 <= value <= 1.0:
                 raise ValueError("benchmark rates must be between zero and one")

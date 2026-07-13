@@ -73,28 +73,26 @@ M3B adds no training, policy configuration, Hub upload, failure trajectories, ad
 language generation, or parallel export. Real state-restoration rendering and the first complete
 360-episode derived dataset remain pending target-machine acceptance.
 
-## M4 — Reproducible ACT baselines and closed-loop evaluation (active)
+## M4.1 — Auditable ACT action-bound handling (active)
 
 Train and compare exactly three controls on one completed M3B dataset: six `per_task` ACT policies
 with image plus 9D Panda state; one `mixed_unconditioned` ACT with the same 9D input and deliberate
 counterfactual ambiguity; and one `mixed_task_onehot` ACT with image plus a 15D state consisting of
 the same Panda state and a project-owned canonical six-way oracle command.
 
-M4 owns the completed-M3B-only gate, explicit scene-safe episode views, train-only normalization,
-stable Git/data/config run identities, installed LeRobot 0.6.0 ACT/processors, deterministic bounded
-training, atomic local checkpoints and resume rejection, counterfactual audits, learned-policy M1
-rollouts, validation-only checkpoint ranking, immutable test lock, fixed unseen-seed schedule, and
-comparison reports. Standard ACT consumes no task text, so M4 does not claim language
-understanding. M4 does not reopen M3A in normal training, rewrite M3B, invoke M2 during rollouts,
-upload to Hub, or add SmolVLA, RL, DAgger, multi-GPU training, new tasks, or data augmentation.
+M4.1 owns a versioned environment-action postprocessor after the saved LeRobot postprocessor and
+before `env.step`. `reject` preserves strict failure; `project` deterministically bounds finite
+actions using the actual M1 action space while retaining raw/executed audits and independent
+`task_success` versus `strict_unprojected_success`. A separate runtime fingerprint binds checkpoint
+and processor fingerprints, bound configuration, environment/action-space contract, task mapping,
+rollout configuration, schema, and current code commit. Existing checkpoint fingerprints remain
+unchanged.
 
-Local completion means typed/fixture/API tests and truthful pending flags. Target smoke additionally
-requires the ordered M0-through-M3B smoke chain, a real six-task derived group, CUDA
-forward/backward, declared tiny-overfit controls, local checkpoint reload, and closed-loop M1
-execution. Full acceptance requires the finalized 60-group/360-episode M3B dataset, all eight ACT
-runs, validation-only selection, locked test evaluation, the fixed 30-seed x six-task benchmark,
-and a provenance-complete comparison. Experiment completion and baseline quality are reported
-separately.
+Local completion means typed/fixture/API tests and truthful pending flags. M4.1 target smoke
+validates the completed M0-through-M3B evidence, reuses the existing PerTask and TaskOneHot
+checkpoints without training, reproduces strict bound rejection, executes a projected legal step,
+then attempts one PerTask and six same-scene TaskOneHot rollouts. It does not start the finalized
+60-group dataset, eight full ACT runs, M4 full selection/test/fresh-seed protocol, or M5.
 
 ## M5 — SmolVLA baseline (planned)
 

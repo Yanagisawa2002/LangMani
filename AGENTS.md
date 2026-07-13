@@ -2,18 +2,17 @@
 
 ## Purpose
 
-LangMani supports language-conditioned robotic manipulation in ManiSkill. M0 through M3B are
-implemented. The active M4 scope is reproducible ACT behavioral-cloning controls and closed-loop
-evaluation on a completed M3B LeRobotDataset v3: six per-task policies, one deliberately ambiguous
-mixed unconditioned policy, and one mixed policy conditioned by a canonical six-way task one-hot.
+LangMani supports language-conditioned robotic manipulation in ManiSkill. M0 through M3B and the
+M4 implementation are complete. The active M4.1 scope is explicit, auditable action-bound handling
+for existing ACT checkpoints during closed-loop evaluation.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
-Standard ACT is not language conditioned; the task one-hot is an oracle command condition. Do not
-add SmolVLA, text encoders, paraphrases, new demonstrations or tasks, M2 expert use during policy
-rollouts, Hub upload, distributed/multi-GPU training, reinforcement learning, DAgger, domain
-randomization, or test-driven tuning during M4.
+Standard ACT is not language conditioned; the task one-hot is an oracle command condition. M4.1
+must not change M1 bounds/success, M3A/M3B data, train-only statistics, ACT weights/loss, or existing
+checkpoint fingerprints. Do not retrain, add binary-gripper conversion, start M4 full or M5, add
+new data/tasks, invoke M2 during rollout, or hide projection as clipping.
 
 ## Directory ownership
 
@@ -115,9 +114,10 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m3b.py --target-full \
   --source-root outputs/datasets/m3a/langmani-pick-place-raw-v1 \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1
 
-# M4 target smoke: ordered prior gates, one real six-task M3B group, CUDA training,
-# tiny-overfit controls, local checkpoint reload, and learned-policy M1 rollouts.
-CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-smoke
+# M4.1 target smoke: validate prior evidence, reuse existing checkpoints,
+# reproduce strict rejection, then execute explicit projected rollouts.
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py \
+  --target-smoke --action-bound-mode project
 
 # M4 full experiment: completed 360-episode M3B input, all eight ACT runs,
 # validation-only selection, locked test, fresh seeds, and comparison report.

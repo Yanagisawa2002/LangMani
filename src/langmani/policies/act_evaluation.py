@@ -22,6 +22,7 @@ from uuid import uuid4
 import numpy as np
 
 from langmani.datasets.identity import sha256_hex
+from langmani.policies.act_action_bounds import ActionBoundMode, ActionProjectionSummary
 from langmani.policies.act_types import (
     ExperimentMode,
     RolloutBenchmarkResult,
@@ -744,7 +745,14 @@ def summarize_rollout_benchmark(
     if not all(isinstance(item, RolloutEpisodeResult) for item in episodes):
         raise TypeError("benchmark episodes must be RolloutEpisodeResult values")
     identities = {
-        (item.run_fingerprint, item.checkpoint_fingerprint, item.schedule_digest, item.split)
+        (
+            item.run_fingerprint,
+            item.checkpoint_fingerprint,
+            item.schedule_digest,
+            item.split,
+            item.runtime_fingerprint,
+            item.action_bound_mode,
+        )
         for item in episodes
     }
     if len(identities) != 1:
@@ -754,7 +762,14 @@ def summarize_rollout_benchmark(
     evaluation_ids = [item.evaluation_id for item in episodes]
     if len(set(evaluation_ids)) != len(evaluation_ids):
         raise EvaluationContractError("rollout evaluation IDs must be unique")
-    run_fingerprint, checkpoint_fingerprint, schedule_digest, split = identities.pop()
+    (
+        run_fingerprint,
+        checkpoint_fingerprint,
+        schedule_digest,
+        split,
+        runtime_fingerprint,
+        action_bound_mode,
+    ) = identities.pop()
     successes = sum(item.success for item in episodes)
     interval = wilson_interval(successes, len(episodes), confidence_level)
     task_ids = sorted({item.task_id for item in episodes})
@@ -781,7 +796,55 @@ def summarize_rollout_benchmark(
         "timeout": sum(item.timeout for item in episodes) / len(episodes),
         "invalid_action": sum(item.invalid_action for item in episodes) / len(episodes),
         "inference_failure": sum(item.inference_failure for item in episodes) / len(episodes),
+        "strict_unprojected_success": sum(item.strict_unprojected_success for item in episodes)
+        / len(episodes),
     }
+
+    projection_summaries = tuple(
+        ActionProjectionSummary.from_dict(item.action_projection_summary) for item in episodes
+    )
+    total_policy_actions = sum(item.total_policy_actions for item in projection_summaries)
+    projected_action_count = sum(item.projected_action_count for item in projection_summaries)
+    projected_component_count = sum(item.projected_component_count for item in projection_summaries)
+    projected_excess_sum = sum(
+        item.mean_bound_excess_among_projected_actions * item.projected_action_count
+        for item in projection_summaries
+    )
+    l1_sum = sum(
+        item.mean_l1_correction * item.total_policy_actions for item in projection_summaries
+    )
+    dimension = len(projection_summaries[0].per_action_dimension_projection_counts)
+    if any(
+        len(item.per_action_dimension_projection_counts) != dimension
+        for item in projection_summaries
+    ):
+        raise EvaluationContractError("projection summaries have inconsistent action dimensions")
+    projected_steps = tuple(
+        item.first_projected_rollout_step
+        for item in projection_summaries
+        if item.first_projected_rollout_step is not None
+    )
+    projection_summary = ActionProjectionSummary(
+        total_policy_actions=total_policy_actions,
+        projected_action_count=projected_action_count,
+        projected_action_rate=(
+            projected_action_count / total_policy_actions if total_policy_actions else 0.0
+        ),
+        projected_component_count=projected_component_count,
+        maximum_bound_excess=max(item.maximum_bound_excess for item in projection_summaries),
+        mean_bound_excess_among_projected_actions=(
+            projected_excess_sum / projected_action_count if projected_action_count else 0.0
+        ),
+        maximum_linf_correction=max(item.maximum_linf_correction for item in projection_summaries),
+        mean_l1_correction=l1_sum / total_policy_actions if total_policy_actions else 0.0,
+        per_action_dimension_projection_counts=tuple(
+            sum(item.per_action_dimension_projection_counts[index] for item in projection_summaries)
+            for index in range(dimension)
+        ),
+        first_projected_rollout_step=min(projected_steps) if projected_steps else None,
+        any_nonfinite_action=any(item.any_nonfinite_action for item in projection_summaries),
+        any_malformed_action=any(item.any_malformed_action for item in projection_summaries),
+    )
 
     def latency_summary(values: list[float]) -> dict[str, float | None]:
         if not values:
@@ -805,6 +868,7 @@ def summarize_rollout_benchmark(
             "schedule_digest": schedule_digest,
             "split": split.value,
             "ordered_evaluation_ids": evaluation_ids,
+            "runtime_fingerprint": runtime_fingerprint,
         }
     )
     return RolloutBenchmarkResult(
@@ -827,6 +891,22 @@ def summarize_rollout_benchmark(
         environment_step_latency_ms=latency_summary(
             [value for item in episodes for value in item.environment_step_latency_ms]
         ),
+        runtime_fingerprint=runtime_fingerprint,
+        action_bound_mode=action_bound_mode,
+        task_success_count=successes,
+        strict_unprojected_success_count=sum(item.strict_unprojected_success for item in episodes),
+        raw_action_bounds_validated=(
+            projection_summary.maximum_bound_excess == 0.0
+            and not projection_summary.any_nonfinite_action
+            and not projection_summary.any_malformed_action
+        ),
+        projected_action_bounds_validated=(
+            action_bound_mode is ActionBoundMode.PROJECT
+            and not any(item.invalid_action for item in episodes)
+            and not projection_summary.any_nonfinite_action
+            and not projection_summary.any_malformed_action
+        ),
+        action_projection_summary=projection_summary.to_dict(),
     )
 
 
