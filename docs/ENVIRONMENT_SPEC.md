@@ -118,4 +118,7 @@ success. `fail` is reserved for the target falling below the table threshold. Sp
 success tensor converted to float; `none` emits no task reward.
 
 Native Linux simulator, CUDA, Vulkan, and camera visibility acceptance remains governed by
-`environment/verify_m1.py --target`; Windows structural checks are not physical validation.
+`environment/verify_m1.py --target`; Windows structural checks are not physical validation. The M1
+command runs CPU and GPU PhysX checks in separate child processes and merges their validated check
+records into one report. This process boundary is required by SAPIEN's one-process GPU PhysX
+initialization rule and does not change the environment, task, observation, or success contracts.

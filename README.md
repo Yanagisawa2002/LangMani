@@ -655,9 +655,12 @@ The M1 target diagnostic separately verifies the custom environment's seeded cou
 positive and rejected placements in the real CPU scene, sparse reward and a real step,
 six-environment GPU vectorization plus partial reset masks, all numeric evaluation fields, visual
 no-leakage, per-actor policy-camera visibility, Panda-hand visibility, and the separate human camera.
-It writes a machine-readable report and two
-frames under `outputs/diagnostics/m1/`. Outside native Linux, its simulator work is explicitly
-skipped; that is a contract review, not physical task or camera validation.
+CPU and GPU PhysX checks run in separate child processes because SAPIEN does not permit enabling
+GPU PhysX after another PhysX backend has initialized in the same process. The parent merges their
+validated JSON check records into one machine-readable report and writes two frames under
+`outputs/diagnostics/m1/`. A worker crash, missing result, nonzero exit, or ten-minute timeout is a
+required failure. Outside native Linux, simulator work is explicitly skipped; that is a contract
+review, not physical task or camera validation.
 
 On native Linux, the plain diagnostic uses `physx_cpu` and `render_backend="none"` for its required
 simulator check. It also attempts CPU rendering when a Vulkan probe succeeds, but reports that

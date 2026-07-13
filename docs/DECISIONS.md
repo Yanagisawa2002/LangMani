@@ -727,6 +727,21 @@ episode, CUDA training, tiny-overfit 6/6, learned-policy closed-loop rollout, lo
 result, measured GPU memory/throughput, baseline-quality acceptance, or physical M4 acceptance has
 been produced.
 
+## D-031 — Isolate M1 CPU and GPU PhysX acceptance processes
+
+The first native Linux RTX 4090 run exposed a verifier defect rather than an environment defect:
+`environment/verify_m1.py --target` created its required CPU PhysX scene and then attempted to
+enable GPU PhysX in the same Python process. SAPIEN 3.0.3 rejects that sequence with `GPU PhysX can
+only be enabled once before any other code involving PhysX`.
+
+M1 now executes its CPU simulation checks and its GPU vectorization/rendering checks in two fresh
+child processes. Each worker writes a compact JSON check record to a temporary path; the parent
+validates and merges those checks into the existing authoritative M1 report. Missing output,
+malformed output, a nonzero exit, or the fixed ten-minute worker timeout is a required failure, and
+child stdout/stderr remains visible. Contract-only checks and target prerequisites remain in the
+parent. This changes only the diagnostic process boundary: environment geometry, observations,
+success evaluation, control modes, dependency versions, and acceptance thresholds are unchanged.
+
 ## Local bootstrap evidence
 
 The bootstrap was authored on Windows 11, which is not an acceptance platform. In an isolated
