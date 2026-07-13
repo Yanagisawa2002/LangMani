@@ -494,6 +494,22 @@ class PickPlaceByInstructionEnv(BaseEnv):
         """Return canonical English instructions for single or batched environments."""
         return tuple(spec.canonical_instruction for spec in self.get_episode_specs())
 
+    def get_policy_rollout_evaluation(self) -> dict[str, torch.Tensor]:
+        """Return M1 evaluation plus rollout-only wrong-grasp diagnostics.
+
+        The extra field is an evaluator oracle used only after a learned policy
+        chooses its action.  It is absent from observations and from the stable
+        M1/M3A step-info contract, so it cannot become a policy input or change
+        historical demonstration schemas.
+        """
+        evaluation = dict(self.evaluate())
+        cube_is_grasped = torch.stack([self.agent.is_grasping(cube) for cube in self.cubes], dim=1)
+        object_indices = torch.arange(len(self.cubes), device=self.device)[None, :]
+        evaluation["wrong_object_is_grasped"] = (
+            cube_is_grasped & (object_indices != self._target_object_indices[:, None])
+        ).any(dim=1)
+        return evaluation
+
     def get_expert_task_context(self) -> ExpertTaskContext:
         """Return the explicit privileged context for a single-environment expert.
 

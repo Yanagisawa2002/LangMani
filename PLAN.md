@@ -1,7 +1,9 @@
 # LangMani roadmap
 
-Milestone M3B is active. M0, M1, M2, and the M3A implementation are complete. Later milestones
-describe intended sequencing, not authorization to implement those systems now.
+Milestone M4 is active. M0 through M3B are implemented. Native target acceptance and the first real
+M3A/M3B datasets remain pending; M4 local work may use fixtures but must not treat them as policy
+quality or physical evidence. Later milestones describe intended sequencing, not authorization to
+implement those systems now.
 
 ## M0 — Reproducible environment foundation (complete)
 
@@ -55,7 +57,7 @@ inspection commands, and target verification. It does not create LeRobotDataset,
 videos, training data transformations, or policies. Native Linux collection and the first
 authoritative 60-group archive remain pending until the target gate passes.
 
-## M3B — LeRobotDataset v3 export (active)
+## M3B — LeRobotDataset v3 export (implementation complete)
 
 Deterministically convert accepted episodes from a content-bound, validated M3A source into one
 local LeRobotDataset v3. M3B restores each recorded pre-action state in a fresh M1 environment,
@@ -71,10 +73,28 @@ M3B adds no training, policy configuration, Hub upload, failure trajectories, ad
 language generation, or parallel export. Real state-restoration rendering and the first complete
 360-episode derived dataset remain pending target-machine acceptance.
 
-## M4 — ACT baseline (planned)
+## M4 — Reproducible ACT baselines and closed-loop evaluation (active)
 
-Add an ACT training and evaluation baseline using versioned configurations, held-out evaluation,
-and traceable dataset inputs.
+Train and compare exactly three controls on one completed M3B dataset: six `per_task` ACT policies
+with image plus 9D Panda state; one `mixed_unconditioned` ACT with the same 9D input and deliberate
+counterfactual ambiguity; and one `mixed_task_onehot` ACT with image plus a 15D state consisting of
+the same Panda state and a project-owned canonical six-way oracle command.
+
+M4 owns the completed-M3B-only gate, explicit scene-safe episode views, train-only normalization,
+stable Git/data/config run identities, installed LeRobot 0.6.0 ACT/processors, deterministic bounded
+training, atomic local checkpoints and resume rejection, counterfactual audits, learned-policy M1
+rollouts, validation-only checkpoint ranking, immutable test lock, fixed unseen-seed schedule, and
+comparison reports. Standard ACT consumes no task text, so M4 does not claim language
+understanding. M4 does not reopen M3A in normal training, rewrite M3B, invoke M2 during rollouts,
+upload to Hub, or add SmolVLA, RL, DAgger, multi-GPU training, new tasks, or data augmentation.
+
+Local completion means typed/fixture/API tests and truthful pending flags. Target smoke additionally
+requires the ordered M0-through-M3B smoke chain, a real six-task derived group, CUDA
+forward/backward, declared tiny-overfit controls, local checkpoint reload, and closed-loop M1
+execution. Full acceptance requires the finalized 60-group/360-episode M3B dataset, all eight ACT
+runs, validation-only selection, locked test evaluation, the fixed 30-seed x six-task benchmark,
+and a provenance-complete comparison. Experiment completion and baseline quality are reported
+separately.
 
 ## M5 — SmolVLA baseline (planned)
 

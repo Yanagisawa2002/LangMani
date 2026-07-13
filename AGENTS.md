@@ -2,17 +2,18 @@
 
 ## Purpose
 
-LangMani supports language-conditioned robotic manipulation in ManiSkill. M0 through M3A are
-implemented. The active M3B scope is deterministic, audited derivation of accepted M3A episodes
-into one local LeRobotDataset v3 with reconstructed policy observations, scene-level splits,
-source-to-derived provenance, staged finalization, independent validation, and target gates.
+LangMani supports language-conditioned robotic manipulation in ManiSkill. M0 through M3B are
+implemented. The active M4 scope is reproducible ACT behavioral-cloning controls and closed-loop
+evaluation on a completed M3B LeRobotDataset v3: six per-task policies, one deliberately ambiguous
+mixed unconditioned policy, and one mixed policy conditioned by a canonical six-way task one-hot.
 
-M3A remains the sole authority. M3B must keep `num_envs=1`, `pd_joint_pos`, the existing semantic
-`TaskSpec`, canonical language, M1 camera/no-leakage contract, exact raw actions, and the T actions
-to T+1 states time contract. Do not add ACT, SmolVLA, training, Hub publication, augmentation,
-paraphrases, depth/segmentation/wrist cameras, failure trajectories, multiprocessing, distributed
-export, new tasks/shapes, LLM/VLM calls, teleoperation, reinforcement learning, domain
-randomization, or policy evaluation during M3B.
+M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
+`num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
+splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
+Standard ACT is not language conditioned; the task one-hot is an oracle command condition. Do not
+add SmolVLA, text encoders, paraphrases, new demonstrations or tasks, M2 expert use during policy
+rollouts, Hub upload, distributed/multi-GPU training, reinforcement learning, DAgger, domain
+randomization, or test-driven tuning during M4.
 
 ## Directory ownership
 
@@ -22,9 +23,11 @@ randomization, or policy evaluation during M3B.
 | `src/langmani/collection/` | M3A recorder integration, collection orchestration, replay, manifests, and inspection |
 | `src/langmani/datasets/` | M3A raw schemas, stable IDs, schedules, and native archive validation |
 | `src/langmani/datasets/lerobot_*.py` | M3B source gate, contracts, writer/export, and validation |
-| `scripts/` | M3B export, validation, and read-only episode inspection commands |
+| `src/langmani/policies/` | M4 ACT contracts, completed-data views, conditioning, training, checkpoints, rollout, and evaluation |
+| `scripts/` | M3B data commands plus M4 train, evaluate, compare, and checkpoint-inspection commands |
 | `environment/` | Environment declaration, diagnostics, expert rollout, benchmark, and verification commands |
 | `tests/unit/` | Fast tests of project-owned behavior |
+| `tests/integration/` | LeRobot and ACT cross-package fixture/target integration |
 | `tests/smoke/` | Cross-package, simulator, GPU, and rendering smoke tests |
 | `docs/` | Architecture boundaries and append-only decision rationale |
 | `outputs/` | Generated diagnostics and experiments; never source-controlled |
@@ -62,6 +65,9 @@ python environment/verify_m3a.py
 # M3B structural contracts plus a generated-array LeRobot/PyAV fixture
 python environment/verify_m3b.py
 
+# M4 contracts plus a real CPU ACT fixture forward/backward and local reload
+python environment/verify_m4.py
+
 # One expert rollout and the six-combination benchmark (native Linux target runtime)
 python environment/run_expert.py
 python environment/benchmark_expert.py
@@ -75,6 +81,12 @@ python environment/replay_raw_demos.py
 python scripts/export_lerobot_dataset.py --help
 python scripts/validate_lerobot_dataset.py --help
 python scripts/inspect_lerobot_episode.py --help
+
+# ACT baseline commands
+python scripts/train_act.py --help
+python scripts/evaluate_act.py --help
+python scripts/compare_act_baselines.py --help
+python scripts/inspect_act_checkpoint.py --help
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates first, in that exact order.
@@ -98,6 +110,16 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m3b.py --target-smoke
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m3b.py --target-full \
   --source-root outputs/datasets/m3a/langmani-pick-place-raw-v1 \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1
+
+# M4 target smoke: ordered prior gates, one real six-task M3B group, CUDA training,
+# tiny-overfit controls, local checkpoint reload, and learned-policy M1 rollouts.
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-smoke
+
+# M4 full experiment: completed 360-episode M3B input, all eight ACT runs,
+# validation-only selection, locked test, fresh seeds, and comparison report.
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --output-root outputs/models/act
 ```
 
 The exact environment creation commands are maintained in `README.md`.
@@ -113,6 +135,11 @@ The exact environment creation commands are maintained in `README.md`.
 - Do not copy or vendor ManiSkill or LeRobot source.
 - Do not commit generated data, downloaded assets, videos, model checkpoints, caches, experiment
   outputs, or fabricated results.
+- Record the full Git commit in every M4 training/evaluation run. Full and tiny-overfit evidence
+  requires a clean worktree; only an explicitly labeled development run may record a dirty-tree
+  override, and that run is never final evidence.
+- M4 normalization must be computed from its exact train episode view. Never use M3B whole-dataset
+  `meta.stats`, expose test episodes to training/selection, or reopen M3A in normal training.
 - Do not describe a skipped, metadata-only, structural-only, or CPU-only check as physical GPU or
   rendering validation.
 
@@ -128,7 +155,14 @@ M2 target commands to pass in the documented order. M3A smoke acceptance require
 before one fresh complete group and six independent action replays. Full-dataset acceptance is a
 separate command requiring exactly 60 complete groups (360 accepted episodes, 60 per TaskSpec),
 inspection of every shard/checksum, and independent replay of every action sequence. When that
-machine is unavailable, physical M2/M3A/M3B verification, the first authoritative archive, and the
-first full derived dataset remain explicitly pending. M3B target acceptance additionally requires
-a content-bound M3A target report, real state-restoration rendering, exact scene-level splits, all
-videos decoded, source/action/state alignment, a local LeRobot reload, and a DataLoader batch.
+machine is unavailable, physical M2/M3A/M3B/M4 verification, the first authoritative archive, and
+the first full derived dataset remain explicitly pending. M3B target acceptance additionally
+requires a content-bound M3A target report, real state-restoration rendering, exact scene-level
+splits, all videos decoded, source/action/state alignment, a local LeRobot reload, and a DataLoader
+batch. M4 implementation or fixture checks are not model-quality evidence. Target smoke requires
+the complete M0-through-M3B smoke chain before real CUDA forward/backward, tiny-overfit,
+checkpoint/processor reload, and learned-policy M1 rollouts. Full acceptance requires a completed
+real 360-episode M3B dataset, six per-task and two mixed runs, validation-only checkpoint selection,
+locked test evaluation, the fixed 180-episode fresh-seed benchmark, and provenance-complete reports.
+`full_experiment_validated`, `baseline_quality_validated`, and `physical_target_validated` remain
+independent flags.

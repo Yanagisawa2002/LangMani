@@ -38,9 +38,12 @@ markers = [
     "fixture: uses generated local data and never counts as physical validation",
     "gpu: requires native Linux and a working NVIDIA CUDA device",
     "integration: crosses package or simulator boundaries",
+    "linux: requires a native Linux runtime",
     "rendering: requires a working Vulkan-backed ManiSkill renderer",
     "slow: performs a long-running collection, export, or validation workflow",
     "target: requires an explicitly provisioned native Linux target runtime",
+    "training: executes a real policy optimization path",
+    "evaluation: executes learned-policy evaluation behavior",
     "video: encodes or decodes video through the installed PyAV stack",
 ]
 

@@ -159,6 +159,12 @@ def test_single_env_seeded_reset_counterfactual_and_privileged_state() -> None:
         assert expected_evaluation_keys <= info_b.keys()
         assert all(info_b[key].shape == (1,) for key in expected_evaluation_keys)
         assert all(info_b[key].dtype == torch.bool for key in expected_evaluation_keys)
+        rollout_evaluation = base_env.get_policy_rollout_evaluation()
+        assert set(rollout_evaluation) == {
+            *expected_evaluation_keys,
+            "wrong_object_is_grasped",
+        }
+        assert rollout_evaluation["wrong_object_is_grasped"].shape == (1,)
 
         state_before_invalid_reset = _cube_poses(base_env).clone()
         with pytest.raises(ValueError, match="unknown target_object_id"):

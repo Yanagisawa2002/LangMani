@@ -2,11 +2,14 @@
 
 LangMani is a language-conditioned robotic manipulation research repository. M0 established the
 runtime foundation, M1 added the environment/language contracts, M2 added a deterministic
-privileged Panda expert, and M3A implemented the authoritative ManiSkill-native raw archive. Active
-M3B deterministically derives accepted episodes into a validated local LeRobotDataset v3.
+privileged Panda expert, M3A implemented the authoritative ManiSkill-native raw archive, and M3B
+implemented its validated local LeRobotDataset v3 derivation. Active M4 adds reproducible ACT
+behavioral-cloning controls and closed-loop policy evaluation.
 
-M3B does not train ACT or SmolVLA, publish to the Hub, change M3A acceptance, export failure
-trajectories, add sensors or language paraphrases, use multiprocessing, or change the M1/M2 task.
+M4 implements six per-task ACT policies, one mixed unconditioned ACT, and one mixed ACT with an
+oracle six-way task one-hot. Standard ACT consumes no natural-language text, so M4 is not a language
+understanding milestone. It does not add SmolVLA, rewrite M3B, reopen M3A during normal training,
+invoke M2 during policy rollouts, publish to Hub, or change the M1/M2 task.
 
 ## Target platform
 
@@ -447,6 +450,118 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m3b.py --target-full \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1
 ```
 
+## M4 ACT baselines
+
+The normative contract is [`docs/ACT_BASELINE_SPEC.md`](docs/ACT_BASELINE_SPEC.md). M4 accepts only
+a completed, locally reloadable M3B root with the exact 60-group/360-episode full contract. Its
+normal gate checks the content-bound M3B marker, manifest, summary, validation report, source
+mapping, scene-level 48/6/6 splits, local Parquet/video files, 20 FPS, and the exact policy feature
+allowlist. It does not rerun M3A or change M3B admission.
+
+The three controls are:
+
+| Variant | Models | Input |
+| --- | ---: | --- |
+| `per_task` | six | base-camera RGB + `PandaPolicyStateV0[9]` |
+| `mixed_unconditioned` | one | the same RGB + 9D state, with no task condition |
+| `mixed_task_onehot` | one | RGB + Panda 9D + `CanonicalTaskOneHotV0[6]` = 15D |
+
+The one-hot follows the M3A/M3B red-left, red-right, green-left, green-right, blue-left, blue-right
+ordering and is appended by one project-owned component used for both training and inference. It is
+an oracle command, not a language embedding. Neither standard ACT variant receives task text, ID,
+scene seed, privileged poses, success state, or expert information.
+
+M4 derives train/validation/test and per-task views from the M3B manifest. Normalization is
+recomputed from only the 48 per-task train episodes or all 288 mixed train episodes with
+deterministic float64 Welford accumulation. Images are float32 [0,1] per-channel statistics; state
+and exact eight-dimensional actions use componentwise population statistics. The 15D suffix uses
+mean 0/std 1 so the installed mean/std processor preserves the binary one-hot. M3B's whole-dataset
+`meta.stats` is never a training fallback.
+
+Installed LeRobot 0.6.0 public `ACTConfig`, `ACTPolicy`, `make_act_pre_post_processors`,
+`PolicyProcessorPipeline`, `LeRobotDataset`, and `resolve_delta_timestamps` are the runtime
+boundary. The installed processor does not divide uint8 images by 255, so LangMani performs that
+explicit conversion before preprocessing. Public delta resolution keeps observations at the
+current frame and creates the configured 50-action chunk with episode-end padding. Installed ACT's
+queue executes ten actions per query, and the policy plus both processors are reset at every
+episode boundary.
+
+The fixed primary model is ResNet-18 without downloaded pretrained weights, model dimension 512,
+eight heads, 3200-dimensional feedforward layers, four encoder/one decoder layers, VAE latent 32,
+four VAE encoder layers, dropout 0.1, and KL weight 10. Optimization is AdamW at `1e-5` (including
+the backbone), weight decay `1e-4`, no scheduler/warmup, global gradient clipping at 10, CUDA
+bfloat16 autocast, batch size 32, 100000 steps, and checkpoint/validation every 5000 steps. The
+model/source tensors remain float32. The target must support bfloat16; M4 does not silently switch
+precision. GPU memory and throughput remain pending measurement on the target.
+
+Every run records the actual full Git commit. The tracked M3B baseline is
+`6920b52c1f48c278e669cd71b69b8949dd900f3a` (`m3b-implementation`). Full and tiny-overfit evidence
+requires a clean tree; a dirty run is allowed only as an explicitly labeled, nonfinal development
+override. Canonical SHA-256 run identity binds data/split/statistics fingerprints, episode views,
+variant/task, effective model/optimization, seed, runtime versions, Git commit, and schema while
+excluding paths, timestamps, hostname, and filesystem order.
+
+Train or inspect the command contracts with:
+
+```bash
+python scripts/train_act.py --help
+python scripts/evaluate_act.py --help
+python scripts/compare_act_baselines.py --help
+python scripts/inspect_act_checkpoint.py --help
+python environment/verify_m4.py
+```
+
+For example:
+
+```bash
+python scripts/train_act.py \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --variant mixed_task_onehot --seed 0 --output-root outputs/models/act --dry-run
+
+python scripts/train_act.py \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --variant per_task --task-id red_cube__left_bin --seed 0 \
+  --output-root outputs/models/act --dry-run
+```
+
+Checkpoints stage and atomically promote the public ACT weights, preprocessor/postprocessor,
+optimizer and optional scheduler state, RNG/training state, and content checksums. Processor state
+is bound to the train-statistics fingerprint; the run manifest is updated separately with an atomic
+file replacement. Reload is local-only and resume rejects any semantic mismatch or completed run.
+The sole valid promoted orphan, including the first checkpoint, is recoverable; a pre-checkpoint
+interruption is preserved under an ignored diagnostic directory before deterministic restart.
+Validation alone ranks checkpoints by success, wrong-object interaction, target-off-table rate,
+offline action loss, then earlier step. An immutable selection record must exist before full-mode
+test access; test results cannot change selection or resume training.
+
+Closed-loop inference reads only M1 `base_camera` RGB and Panda qpos, optionally appends the oracle
+one-hot, calls installed `select_action`, and applies the postprocessed `pd_joint_pos` action. It
+does not call M2. Nonfinite or out-of-bounds actions are classified and terminate; they are never
+silently clipped. Validation/test each use the fixed six M3B groups. The fresh benchmark fixes 30
+unseen source-excluded seeds and all six tasks, giving 180 episodes per mixed model and 30 per
+per-task model. Reports keep implementation completion, experiment validity, model quality, and
+physical acceptance separate. Evaluation directories use owned staging and atomic promotion; resume
+reconstructs raw rollout records and rechecks aggregates, schedules, Git state, and test
+authorization before selection, analysis publication, or idempotent finalization.
+
+The non-target verifier exercises contracts and a small CPU fixture only. It is not real M3B,
+CUDA, model-quality, or physical evidence. Native target modes are:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-smoke
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --output-root outputs/models/act
+```
+
+Target smoke must first pass M0/M1/M2 plus M3A/M3B smoke and then perform real CUDA
+forward/backward, declared tiny-overfit gates, local checkpoint/processor reload, and learned-policy
+M1 rollouts. Full mode requires the real finalized 360-episode dataset, all six per-task policies,
+both mixed policies, the complete counterfactual audit, validation-only selection, locked test, and
+the 180-episode fresh benchmark. These target runs, real model results, peak GPU memory, throughput,
+and physical acceptance have not been performed on this Windows review host. Target modes also
+require the current worktree to be clean before any completed run is reused.
+
 ## Target-machine setup
 
 Install [Miniforge](https://github.com/conda-forge/miniforge) first so `conda` is available. Then
@@ -501,6 +616,7 @@ python environment/verify_m1.py
 python environment/verify_m2.py
 python environment/verify_m3a.py
 python environment/verify_m3b.py
+python environment/verify_m4.py
 ```
 
 The actual target-machine gate is stricter. The M2 command itself invokes the M0 installation gate
@@ -516,6 +632,10 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m3b.py --target-smoke
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m3b.py --target-full \
   --source-root outputs/datasets/m3a/langmani-pick-place-raw-v1 \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-smoke
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --output-root outputs/models/act
 pytest
 ```
 
@@ -575,6 +695,7 @@ python environment/verify_m1.py
 python environment/verify_m2.py
 python environment/verify_m3a.py
 python environment/verify_m3b.py
+python environment/verify_m4.py
 ```
 
 The same documented OpenCV dual-wheel risk applies to this review environment.
@@ -598,9 +719,16 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 | `python environment/verify_m3b.py` | No | No | No; generated-array video fixture only |
 | `python environment/verify_m3b.py --target-smoke` | Yes | Yes | Yes |
 | `python environment/verify_m3b.py --target-full` | Yes | Yes | Yes |
+| `python environment/verify_m4.py` | No | No | No; CPU ACT fixture only |
+| `python environment/verify_m4.py --target-smoke` | Yes | Yes | Via prior M3B gate |
+| `python environment/verify_m4.py --target-full` | Yes | Yes | Via dataset and rollout gates |
 | `scripts/export_lerobot_dataset.py` | Real export: yes | According to source/render backend | Yes |
 | `scripts/validate_lerobot_dataset.py` | Full source alignment: yes | According to source/render backend | Yes |
 | `scripts/inspect_lerobot_episode.py` | No | No | No |
+| `scripts/train_act.py --dry-run` | No | No | No |
+| `scripts/train_act.py --full` | Yes | Yes | No rendering during offline training |
+| `scripts/evaluate_act.py` closed loop | Yes | According to checkpoint/device | Yes |
+| `scripts/compare_act_baselines.py`, `scripts/inspect_act_checkpoint.py` | No | No | No |
 | `python environment/run_expert.py`, `python environment/benchmark_expert.py` | Yes | As required by configured backend | As required by rendering mode |
 | `collect_raw_demos.py`, `replay_raw_demos.py` | Yes | According to stored backend | No rendering |
 | `inspect_raw_demos.py` | No | No | No |
@@ -618,12 +746,14 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 - `src/langmani/collection/`: M3A recorder, collector, replay, manifests, and inspection.
 - `src/langmani/datasets/`: M3A immutable types, stable IDs, schedules, and native archive checks.
 - `src/langmani/datasets/lerobot_*.py`: M3B source gate, contracts, export, and validation.
-- `scripts/`: M3B export, validation, and read-only episode inspection.
-- `environment/`: reproducible declaration plus M0/M1/M2/M3A/M3B diagnostics and commands.
-- `tests/unit/`: metadata, no-leakage, expert, archive, corruption, replay, resume, and CLI checks.
+- `src/langmani/policies/`: M4 ACT data, conditioning, training, checkpoint, rollout, evaluation, and analysis boundaries.
+- `scripts/`: M3B data commands plus M4 train/evaluate/compare/checkpoint inspection.
+- `environment/`: reproducible declaration plus M0/M1/M2/M3A/M3B/M4 diagnostics and commands.
+- `tests/unit/`: environment/expert/data plus ACT identity, leakage, conditioning, checkpoint, and evaluation checks.
+- `tests/integration/`: LeRobot data/export plus ACT preprocessing, optimization, reload, and rollout boundaries.
 - `tests/smoke/`: dependency, simulator, vectorization, rendering, expert, and raw collection acceptance.
 - `docs/`: subsystem boundaries and decision records.
-- `outputs/`: ignored generated diagnostics and future experiment outputs.
+- `outputs/`: ignored generated diagnostics, datasets, checkpoints, and experiment outputs.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for planned boundaries and
 [docs/DECISIONS.md](docs/DECISIONS.md) for tested assumptions and unresolved risks.

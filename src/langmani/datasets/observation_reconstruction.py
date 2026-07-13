@@ -144,7 +144,7 @@ class ManiSkillObservationReconstructor:
             raise ObservationReconstructionError(
                 f"state restoration or sensor capture failed: {type(error).__name__}: {error}"
             ) from error
-        rgb = _extract_base_camera_rgb(observation)
+        rgb = extract_base_camera_rgb(observation)
         try:
             policy_state = extract_panda_policy_state_v0(base.agent.robot)
         except (AttributeError, TypeError, ValueError) as error:
@@ -167,7 +167,8 @@ class ManiSkillObservationReconstructor:
         return self._base
 
 
-def _extract_base_camera_rgb(observation: object) -> npt.NDArray[np.uint8]:
+def extract_base_camera_rgb(observation: object) -> npt.NDArray[np.uint8]:
+    """Extract the deployed-policy RGB frame from a single M1 observation."""
     if not isinstance(observation, dict):
         raise ObservationReconstructionError("rgb observation must be a dictionary")
     sensor_data = observation.get("sensor_data")
@@ -215,4 +216,5 @@ __all__ = [
     "ManiSkillObservationReconstructor",
     "ObservationReconstructionError",
     "ReconstructedPolicyFrame",
+    "extract_base_camera_rgb",
 ]

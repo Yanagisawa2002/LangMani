@@ -1,6 +1,6 @@
 # Environment and dependency decisions
 
-This file records M0 through M3B decisions as of 2026-07-13. “Metadata-compatible” means official package
+This file records M0 through M4 decisions as of 2026-07-13. “Metadata-compatible” means official package
 requirements have a non-empty version intersection; it is not a claim of native Linux GPU or
 rendering success.
 
@@ -570,6 +570,163 @@ from the Unicode final path. Windows therefore stages at a documented ASCII dire
 volume; Linux uses destination-adjacent staging. No LeRobot private implementation is copied or
 patched. This is a host-path workaround for derived temporary files, not target acceptance.
 
+## D-027 — Bind every M4 run to a tracked Git baseline and completed M3B evidence
+
+The repository now has one honest implementation baseline through M3B rather than a fabricated
+per-milestone history: commit `6920b52c1f48c278e669cd71b69b8949dd900f3a`, tagged
+`m3b-implementation`. M4 records the actual full `HEAD` in every training/evaluation identity and
+checkpoint. Full and tiny-overfit evidence requires a clean worktree. Only an explicitly labeled
+development run may record a dirty-tree override; that run is ineligible for final experiment,
+quality, or physical flags. Canonical run fingerprints include the commit but exclude paths,
+timestamps, hostname, and filesystem order.
+
+Normal M4 training accepts only a completed M3B root. It validates the typed completion marker,
+export manifest, summary, independent validation report, export/source fingerprints, full `v3.0`
+mode, exact local feature contract, source mapping and split sidecars, all stored alignment/video
+results, and local Parquet/video frame totals. It requires 60 complete groups, 360 episodes, 60 per
+TaskSpec, and 48/6/6 scene-group splits (288/36/36 episodes). This is deliberately narrower than
+rerunning the M3B exporter/validator: M3B has already bound its M3A provenance and normal M4 does not
+reopen M3A, recalculate admission, or mutate the derived dataset. Real target M3B validation remains
+a prerequisite; an M4 fixture can test code only.
+
+No dependency version changes in M4. LeRobot remains `lerobot[dataset]==0.6.0`; M4 uses the policy
+code already present in that installed package. The only test-metadata change adds explicit
+`linux`, `training`, and `evaluation` markers so platform and execution scope are reported honestly.
+
+## D-028 — Use installed LeRobot 0.6.0 ACT/processors with one fixed primary configuration
+
+Installed-source inspection established the public M4 boundary:
+
+```text
+from lerobot.configs import FeatureType, PolicyFeature
+from lerobot.datasets import LeRobotDataset, LeRobotDatasetMetadata, resolve_delta_timestamps
+from lerobot.policies import make_policy, make_policy_config, make_pre_post_processors
+from lerobot.policies.act import ACTConfig, ACTPolicy, make_act_pre_post_processors
+from lerobot.processor import PolicyProcessorPipeline
+```
+
+The inspected factory signatures are `make_policy_config(policy_type, **kwargs)`,
+`make_policy(cfg, ds_meta=None, env_cfg=None, rename_map=None)`, and
+`make_pre_post_processors(policy_cfg, pretrained_path=None, pretrained_revision=None, **kwargs)`.
+`ACTPolicy(config, **kwargs)` exposes `forward(batch)`, `select_action(batch)`, `reset()`,
+`save_pretrained(...)`, and local `from_pretrained(...)`.
+`PolicyProcessorPipeline` exposes `__call__`, `reset`, `save_pretrained`, and `from_pretrained`.
+The installed ACT-specific factory accepts `make_act_pre_post_processors(config,
+dataset_stats=...)`. Runtime code uses these public APIs and does not import example runners, copy
+ACT source, edit LeRobot files, authenticate, or push to Hub.
+
+Inspection found three relevant deviations from unsafe assumptions. First, `ACTConfig` defaults
+`push_to_hub=True`, so M4 always pins it false. Second, the ACT processor renames, batches, moves,
+normalizes, unnormalizes, and returns actions to CPU but does not convert uint8 RGB to float [0,1];
+the official trainer does that before preprocessing. M4 therefore performs and validates the same
+explicit conversion. Third, `use_amp` does not itself own the complete training autocast/gradient
+path, so the project loop owns it and records it.
+
+Installed default ACT architecture is ResNet-18 with ImageNet weights, 100/100 action chunk/query,
+model dimension 512, eight heads, feedforward 3200, four encoder/one decoder layers, VAE latent 32
+with four VAE encoder layers, dropout 0.1, KL weight 10, AdamW `1e-5`/`1e-4`, and no scheduler. M4
+retains those architecture dimensions but pins no pretrained weights, chunk 50, ten actions per
+query, one observation step, AdamW learning/backbone rates `1e-5`, weight decay `1e-4`, no
+scheduler/warmup, global clipping 10, batch 32, 100000 steps, and checkpoint/validation every 5000
+steps. It also pins visual/state/action `MEAN_STD`, no final-stride dilation, ReLU feedforward,
+current-only observations, action deltas `range(50)`, PEFT off, and every Hub/pretrained reference
+null. All variants share the configuration except the required 9D/15D state width.
+
+The primary target precision is bfloat16 autocast on CUDA with float32 parameters/source tensors.
+M4 deliberately avoids float16 and therefore does not carry a `GradScaler`; a GPU without bfloat16
+support fails rather than changing precision. Strict Torch deterministic algorithms, deterministic
+cuDNN, disabled cuDNN benchmarking/TF32, and seeded Python/NumPy/Torch/workers are recorded. CUDA
+kernels can still expose unsupported deterministic operations, which are failures rather than
+silently accepted nondeterminism. Actual peak GPU memory and training throughput are unknown until
+the native target run and must come from structured metrics.
+
+## D-029 — Train-only normalization, public temporal sampling, and oracle task conditioning
+
+LeRobot's episode-filtered dataset retains full-dataset `meta.stats`; M4 therefore never uses it for
+training. It constructs explicit scene-safe global and per-task views from M3B stable sidecars and
+checks the actual episode set returned by public `LeRobotDataset(episodes=...)`. Per-task statistics
+use the selected 48 train episodes; mixed statistics use all 288 train episodes. Deterministic
+float64 batched Welford accumulation produces population min/max/mean/std for image channels on
+float [0,1], nine Panda qpos components, and eight actions. Saved indices and an independent set
+audit prove validation/test contributed no frame.
+
+`CanonicalTaskOneHotV0` uses the existing M3A object-major/bin-minor order and stable TaskSpec IDs.
+One shared project component appends it during training from M3B episode provenance and during
+inference from the active M1 command. It never parses language or reads physical target state. The
+15D normalizer uses the train-only nine Panda statistics plus synthetic one-hot mean 0/std 1, so
+conditioning before the installed processor preserves exactly one binary active component. M3B is
+not rewritten and standard ACT receives no text or task condition.
+
+The public `resolve_delta_timestamps(ACTConfig, LeRobotDatasetMetadata)` helper is authoritative.
+Installed ACT reports no future observation deltas and action indices `range(chunk_size)`. At 20
+FPS the primary 50-action chunk is `0.00..2.45` seconds; LeRobot clamps at an episode end and emits
+`action_is_pad` rather than crossing the boundary. M4 tests first/final samples and `[50,8]` plus
+`[50]` padding shapes instead of manually recreating sampling. Installed `select_action` queries a
+new chunk only when its queue is empty and executes `n_action_steps`; M4 resets policy and both
+processors at every episode boundary.
+
+## D-030 — Atomic ACT evidence, validation-only selection, and separately locked test
+
+M4 owns semantic compatibility around LeRobot's public serializers. Each checkpoint and its
+completion marker are fully written and flushed in same-filesystem staging, checksummed, then made
+visible by one atomic directory promotion. It contains or binds
+the policy/config, preprocess/postprocess pipelines, train-only statistics, optimizer/optional
+scheduler and RNG/training state, data/split/run fingerprints, seed, Git commit, and versions.
+Reload is local-only and revalidates all semantic inputs. Resume rejects any mismatch and any
+completed immutable run. Target-full reuse and every evaluation also require the current LeRobot,
+PyTorch, and CUDA versions to exactly match the versions bound into the training identity; matching
+Git and dataset fingerprints alone is insufficient.
+
+Validation checkpoints are ranked before test access by highest task success, lowest wrong-object
+interaction, lowest off-table rate, lower offline action loss, then earlier step. The selection
+record is atomically published and immutable. Full-mode test evaluation requires its exact selected
+checkpoint and exact predeclared schedule; test evidence is separate and cannot change selection or
+resume training. Development bypasses are labeled nonfinal.
+
+The checkpoint fingerprint also binds the structured metric for that step. Selection cross-checks
+the external JSONL record against this checkpoint copy before reading offline validation loss, so a
+mutable metrics file cannot alter ranking evidence.
+
+Scheduled training metrics include the promoted checkpoint path. Uninterrupted summaries measure
+wall time across optimization, validation, and checkpoint serialization; resumed summaries leave
+full wall time null and retain a clearly named measured lower bound. Resume restores the latest
+checkpoint RNG/optimizer state and uses an addressable deterministic batch sampler; regression tests
+compare uninterrupted and resumed batch order, parameters, optimizer state, and RNG continuations.
+The sole next-step checkpoint promoted before a process interruption may be adopted on resume;
+this includes the first scheduled checkpoint when the manifest still has an empty checkpoint list.
+Multiple, stale, or out-of-order orphan directories are rejected. If interruption occurs before any
+checkpoint is promoted, target orchestration atomically preserves the incomplete directory under an
+ignored diagnostic area and restarts the deterministic run from step zero.
+
+Evaluation evidence uses the same transactional principle. An identity owner file guards a fixed
+same-filesystem staging directory. The benchmark, raw episode records, validation record, and any
+counterfactual analysis are fully written there before the evaluation directory is promoted. Raw
+episodes are reconstructed and all aggregates, schedule identities, Git evidence, authorization,
+and action-execution status are revalidated on recovery. Only after promotion may the command lock
+selection, publish the global analysis report, or idempotently finalize the run. This prevents an
+interruption from publishing a selection or completion marker backed by partial evaluation data.
+
+Closed-loop ACT rollout uses only M1 base-camera RGB and Panda qpos, plus the active command one-hot
+for the oracle variant; it never calls M2. Installed policy queue semantics are preserved. Invalid
+or out-of-bounds actions are classified and terminate instead of being clipped. Validation/test use
+the exact M3B scene groups, while a canonical digest fixes 30 unseen source-excluded seeds paired
+with all six tasks. Counterfactual audits hold physical observations fixed, compare every predicted
+chunk with its task-matched expert chunk, and separately summarize target-object and destination-bin
+effects. The final report distinguishes control learning, unconditioned one-to-many ambiguity, and
+oracle discrete conditioning. None of these is a claim of language understanding.
+
+Non-target verification may prove contracts and a small real CPU ACT fixture, including
+forward/backward and local reload. Target smoke must first pass M0/M1/M2, M3A smoke, and M3B smoke,
+then use real M3B data and CUDA for tiny-overfit and learned-policy M1 rollout. Full target requires
+the real 360-episode M3B dataset, all six per-task plus two mixed runs, validation selection, locked
+test, the 180-episode fresh benchmark, and final comparison. Target orchestration checks the current
+worktree is clean before reusing earlier evidence, resumes the latest compatible checkpoint, and
+revalidates promoted evaluations rather than skipping them based on a shallow success flag. As of
+this decision, no real M3B
+episode, CUDA training, tiny-overfit 6/6, learned-policy closed-loop rollout, locked test/fresh
+result, measured GPU memory/throughput, baseline-quality acceptance, or physical M4 acceptance has
+been produced.
+
 ## Local bootstrap evidence
 
 The bootstrap was authored on Windows 11, which is not an acceptance platform. In an isolated
@@ -691,3 +848,8 @@ workaround.
     state-restoration videos and source alignments; only `--target-full` can validate all 60 groups,
     360 episodes, scene-level splits, every decoded video, and the first training-ready derived
     dataset.
+11. **No real M4 target experiment exists yet.** Fixture forward/backward and local checkpoint
+    reload can validate implementation paths only. CUDA bfloat16 training, tiny-overfit 6/6,
+    learned-policy M1 stepping, validation selection, locked test, the fixed fresh-seed benchmark,
+    actual GPU memory/throughput, model quality, and physical target acceptance all require the
+    ordered native Linux RTX 4090 target gates and a real completed M3B dataset.

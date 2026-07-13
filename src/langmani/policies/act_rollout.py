@@ -1,0 +1,398 @@
+"""Closed-loop ACT-to-ManiSkill adapter for the single M1 environment."""
+
+from __future__ import annotations
+
+import time
+from collections.abc import Callable, Mapping
+from typing import Any, Protocol, cast
+
+import numpy as np
+import torch
+from lerobot.processor import PolicyProcessorPipeline
+
+from langmani.datasets.lerobot_types import IMAGE_FEATURE_KEY, STATE_FEATURE_KEY
+from langmani.datasets.observation_reconstruction import extract_base_camera_rgb
+from langmani.datasets.policy_state import extract_panda_policy_state_v0
+from langmani.environments.pick_place_by_instruction import ENV_ID
+from langmani.environments.specs import TaskSpec, stable_task_id
+from langmani.policies.act_training import image_to_policy_float
+from langmani.policies.act_types import (
+    ACT_ACTION_COMPONENTS,
+    ActEvaluationConfig,
+    ActVariant,
+    EvaluationSplit,
+    RolloutEpisodeResult,
+    RolloutStatus,
+)
+
+
+class RolloutContractError(RuntimeError):
+    """Raised when policy inference cannot safely drive the M1 environment."""
+
+
+class StatefulPolicy(Protocol):
+    def reset(self) -> None: ...
+
+    def select_action(self, batch: dict[str, torch.Tensor]) -> torch.Tensor: ...
+
+
+TaskConditioner = Callable[[np.ndarray, str], np.ndarray]
+
+
+def _single_bool(value: object, *, label: str) -> bool:
+    candidate = value
+    detach = getattr(candidate, "detach", None)
+    if callable(detach):
+        candidate = detach()
+    cpu = getattr(candidate, "cpu", None)
+    if callable(cpu):
+        candidate = cpu()
+    array = np.asarray(candidate)
+    if array.size != 1:
+        raise RolloutContractError(f"{label} must contain one boolean value")
+    return bool(array.reshape(-1)[0])
+
+
+def _evaluation_bools(value: object) -> dict[str, bool]:
+    if not isinstance(value, Mapping):
+        return {}
+    result: dict[str, bool] = {}
+    for key, item in value.items():
+        if isinstance(key, str):
+            try:
+                result[key] = _single_bool(item, label=key)
+            except (TypeError, ValueError, RolloutContractError):
+                continue
+    return result
+
+
+def _current_evaluation(base_environment: Any, fallback: object) -> dict[str, bool]:
+    accessor = getattr(base_environment, "get_policy_rollout_evaluation", None)
+    if callable(accessor):
+        return _evaluation_bools(accessor())
+    return _evaluation_bools(fallback)
+
+
+def _base_environment(env: object) -> Any:
+    return getattr(env, "unwrapped", env)
+
+
+def _reset_component(component: object, name: str) -> None:
+    reset = getattr(component, "reset", None)
+    if not callable(reset):
+        raise RolloutContractError(f"{name} must expose reset()")
+    reset()
+
+
+def build_policy_observation(
+    observation: object,
+    *,
+    base_environment: Any,
+    variant: ActVariant,
+    task_id: str,
+    task_conditioner: TaskConditioner | None,
+) -> dict[str, torch.Tensor]:
+    rgb_hwc = extract_base_camera_rgb(observation)
+    rgb = torch.from_numpy(np.transpose(rgb_hwc, (2, 0, 1)).copy())
+    image = image_to_policy_float(rgb)
+    state = extract_panda_policy_state_v0(base_environment.agent.robot)
+    if variant is ActVariant.MIXED_TASK_ONEHOT:
+        if task_conditioner is None:
+            raise RolloutContractError("mixed_task_onehot requires the canonical conditioner")
+        state = task_conditioner(state, task_id)
+    elif task_conditioner is not None:
+        raise RolloutContractError("standard ACT variants must not receive task conditioning")
+    expected_state = 15 if variant is ActVariant.MIXED_TASK_ONEHOT else 9
+    if state.shape != (expected_state,) or state.dtype != np.dtype(np.float32):
+        raise RolloutContractError(
+            f"raw policy state must be float32[{expected_state}], got {state.dtype}{state.shape}"
+        )
+    return {
+        IMAGE_FEATURE_KEY: image,
+        STATE_FEATURE_KEY: torch.from_numpy(np.array(state, copy=True)),
+    }
+
+
+def _validated_action(
+    value: object,
+    *,
+    low: np.ndarray,
+    high: np.ndarray,
+) -> np.ndarray:
+    if not isinstance(value, torch.Tensor):
+        raise RolloutContractError("ACT postprocessor must return a torch tensor")
+    tensor = value.detach().cpu()
+    if tensor.dtype != torch.float32 or tuple(tensor.shape) != (1, ACT_ACTION_COMPONENTS):
+        raise RolloutContractError(
+            f"postprocessed action must be float32[1,8], got {tensor.dtype}{tuple(tensor.shape)}"
+        )
+    action = tensor.numpy()[0].copy()
+    if not np.all(np.isfinite(action)):
+        raise RolloutContractError("postprocessed action contains NaN or infinity")
+    if low.shape != action.shape or high.shape != action.shape:
+        raise RolloutContractError("M1 single-action bounds must have shape (8,)")
+    if np.any(action < low) or np.any(action > high):
+        raise RolloutContractError(
+            "postprocessed action lies outside M1 bounds; action="
+            + repr(action.tolist())
+            + ", low="
+            + repr(low.tolist())
+            + ", high="
+            + repr(high.tolist())
+        )
+    return action
+
+
+class ActManiSkillRolloutAdapter:
+    """Execute installed ACT queue semantics without planner or hidden state."""
+
+    def __init__(
+        self,
+        *,
+        env: object,
+        policy: StatefulPolicy,
+        preprocessor: PolicyProcessorPipeline,
+        postprocessor: PolicyProcessorPipeline,
+        variant: ActVariant,
+        run_fingerprint: str,
+        checkpoint_fingerprint: str,
+        schedule_digest: str,
+        evaluation: ActEvaluationConfig | None = None,
+        task_conditioner: TaskConditioner | None = None,
+    ) -> None:
+        self.env = env
+        self.base = _base_environment(env)
+        self.policy = policy
+        self.preprocessor = preprocessor
+        self.postprocessor = postprocessor
+        self.variant = ActVariant(variant)
+        self.run_fingerprint = run_fingerprint
+        self.checkpoint_fingerprint = checkpoint_fingerprint
+        self.schedule_digest = schedule_digest
+        self.evaluation = evaluation or ActEvaluationConfig()
+        self.task_conditioner = task_conditioner
+        self._validate_environment()
+
+    def _validate_environment(self) -> None:
+        spec = getattr(self.env, "spec", None)
+        environment_id = getattr(spec, "id", None)
+        if environment_id != ENV_ID:
+            raise RolloutContractError(f"rollout requires {ENV_ID}, got {environment_id!r}")
+        num_envs = getattr(self.base, "num_envs", None)
+        if num_envs is None or int(num_envs) != 1:
+            raise RolloutContractError("M4 policy rollouts require num_envs=1")
+        control_mode = getattr(self.base, "control_mode", None)
+        if control_mode != "pd_joint_pos":
+            raise RolloutContractError("M4 policy rollouts require pd_joint_pos")
+        control_frequency = getattr(self.base, "control_freq", None)
+        if (
+            control_frequency is None
+            or int(control_frequency) != self.evaluation.control_frequency_hz
+        ):
+            raise RolloutContractError(
+                "M4 policy rollouts require the declared 20 Hz environment control frequency"
+            )
+        if self.variant is ActVariant.MIXED_TASK_ONEHOT and self.task_conditioner is None:
+            raise RolloutContractError("task-conditioned ACT requires CanonicalTaskOneHotV0")
+        if self.variant is not ActVariant.MIXED_TASK_ONEHOT and self.task_conditioner is not None:
+            raise RolloutContractError("standard ACT must not receive a task conditioner")
+
+    def reset_policy_state(self) -> None:
+        """Drop every queued action and any processor state at episode boundaries."""
+        _reset_component(self.policy, "policy")
+        _reset_component(self.preprocessor, "preprocessor")
+        _reset_component(self.postprocessor, "postprocessor")
+
+    def run_episode(
+        self,
+        *,
+        evaluation_id: str,
+        split: EvaluationSplit,
+        scene_seed: int,
+        task_spec: TaskSpec,
+    ) -> RolloutEpisodeResult:
+        """Run one bounded episode; invalid actions terminate and are never clipped."""
+        self.reset_policy_state()
+        task_id = stable_task_id(task_spec)
+        reset_result = self.env.reset(
+            seed=scene_seed,
+            options={"task_spec": task_spec.to_dict()},
+        )
+        if not isinstance(reset_result, tuple) or len(reset_result) != 2:
+            raise RolloutContractError("M1 reset must return the Gymnasium two-tuple")
+        observation, reset_info = reset_result
+        specs = self.base.get_episode_specs()
+        if len(specs) != 1:
+            raise RolloutContractError("M1 metadata must contain one episode spec")
+        episode_spec = specs[0]
+        if (
+            episode_spec.scene_seed != scene_seed
+            or episode_spec.task_id != task_id
+            or episode_spec.task_spec != task_spec
+        ):
+            raise RolloutContractError("M1 reset metadata disagrees with rollout schedule")
+
+        action_low = np.asarray(self.env.single_action_space.low, dtype=np.float32)
+        action_high = np.asarray(self.env.single_action_space.high, dtype=np.float32)
+        final_evaluation = _current_evaluation(self.base, reset_info)
+        inference_latencies: list[float] = []
+        environment_latencies: list[float] = []
+        actions: list[np.ndarray] = []
+        target_grasped_any = final_evaluation.get("target_is_grasped", False)
+        wrong_grasped_any = final_evaluation.get("wrong_object_is_grasped", False)
+        target_in_target_bin = final_evaluation.get("target_in_target_bin", False)
+        target_in_wrong_bin = final_evaluation.get("target_in_wrong_bin", False)
+        wrong_object_in_target_bin = final_evaluation.get("wrong_object_in_target_bin", False)
+        first_grasp_step: int | None = 0 if target_grasped_any else None
+        release_step: int | None = None
+        success_step: int | None = None
+        status = RolloutStatus.TIMEOUT
+        reason: str | None = None
+        episode_start = time.perf_counter()
+        steps = 0
+
+        for step in range(1, self.evaluation.maximum_episode_steps + 1):
+            try:
+                raw_input = build_policy_observation(
+                    observation,
+                    base_environment=self.base,
+                    variant=self.variant,
+                    task_id=task_id,
+                    task_conditioner=self.task_conditioner,
+                )
+                inference_start = time.perf_counter()
+                processed = self.preprocessor(raw_input)
+                if not isinstance(processed, Mapping):
+                    raise RolloutContractError("preprocessor must return a tensor mapping")
+                predicted = self.policy.select_action(cast(dict[str, torch.Tensor], processed))
+                postprocessed = self.postprocessor(predicted)
+                if torch.cuda.is_available() and str(
+                    getattr(predicted, "device", "cpu")
+                ).startswith("cuda"):
+                    torch.cuda.synchronize()
+                inference_latencies.append((time.perf_counter() - inference_start) * 1000.0)
+                action = _validated_action(postprocessed, low=action_low, high=action_high)
+            except Exception as error:  # noqa: BLE001 - classify inference command boundary
+                status = (
+                    RolloutStatus.INVALID_ACTION
+                    if isinstance(error, RolloutContractError) and "action" in str(error).lower()
+                    else RolloutStatus.INFERENCE_FAILURE
+                )
+                reason = f"{type(error).__name__}: {error}"
+                break
+
+            actions.append(action)
+            environment_start = time.perf_counter()
+            try:
+                step_result = self.env.step(action)
+            except Exception as error:  # noqa: BLE001 - classify simulator boundary
+                status = RolloutStatus.ENVIRONMENT_FAILURE
+                reason = f"{type(error).__name__}: {error}"
+                break
+            environment_latencies.append((time.perf_counter() - environment_start) * 1000.0)
+            if not isinstance(step_result, tuple) or len(step_result) != 5:
+                status = RolloutStatus.ENVIRONMENT_FAILURE
+                reason = "environment step did not return the Gymnasium five-tuple"
+                break
+            observation, _, terminated, truncated, info = step_result
+            steps = step
+            final_evaluation = _current_evaluation(self.base, info)
+            target_grasped = final_evaluation.get("target_is_grasped", False)
+            if target_grasped and first_grasp_step is None:
+                first_grasp_step = step
+            if first_grasp_step is not None and not target_grasped and release_step is None:
+                release_step = step
+            target_grasped_any |= target_grasped
+            wrong_grasped_any |= final_evaluation.get("wrong_object_is_grasped", False)
+            target_in_target_bin |= final_evaluation.get("target_in_target_bin", False)
+            target_in_wrong_bin |= final_evaluation.get("target_in_wrong_bin", False)
+            wrong_object_in_target_bin |= final_evaluation.get("wrong_object_in_target_bin", False)
+            if final_evaluation.get("success", False):
+                success_step = step
+                status = RolloutStatus.SUCCESS
+                break
+            if final_evaluation.get("target_off_table", False):
+                status = RolloutStatus.TARGET_OFF_TABLE
+                reason = "M1 evaluator reported target_off_table"
+                break
+            if _single_bool(truncated, label="truncated"):
+                status = RolloutStatus.TRUNCATED
+                reason = "M1 time limit truncated the episode"
+                break
+            if _single_bool(terminated, label="terminated"):
+                status = RolloutStatus.ENVIRONMENT_FAILURE
+                reason = "M1 terminated without success or target_off_table"
+                break
+        else:
+            status = RolloutStatus.TIMEOUT
+            reason = f"policy step budget {self.evaluation.maximum_episode_steps} exhausted"
+
+        total_duration = time.perf_counter() - episode_start
+        if actions:
+            action_matrix = np.stack(actions)
+            cumulative = float(np.linalg.norm(action_matrix, axis=1).sum())
+            action_min = tuple(float(value) for value in action_matrix.min(axis=0))
+            action_max = tuple(float(value) for value in action_matrix.max(axis=0))
+        else:
+            cumulative = 0.0
+            action_min = (0.0,) * ACT_ACTION_COMPONENTS
+            action_max = (0.0,) * ACT_ACTION_COMPONENTS
+        hz = float(self.evaluation.control_frequency_hz)
+        return RolloutEpisodeResult(
+            evaluation_id=evaluation_id,
+            run_fingerprint=self.run_fingerprint,
+            checkpoint_fingerprint=self.checkpoint_fingerprint,
+            schedule_digest=self.schedule_digest,
+            split=split,
+            scene_seed=scene_seed,
+            scene_id=episode_spec.scene_id,
+            task_id=task_id,
+            status=status,
+            success=status is RolloutStatus.SUCCESS,
+            episode_steps=steps,
+            final_evaluation=final_evaluation,
+            target_in_target_bin=target_in_target_bin,
+            target_in_wrong_bin=target_in_wrong_bin,
+            wrong_object_in_target_bin=wrong_object_in_target_bin,
+            target_grasped_any=target_grasped_any,
+            wrong_object_grasped_any=wrong_grasped_any,
+            target_off_table=final_evaluation.get("target_off_table", False),
+            timeout=status in {RolloutStatus.TIMEOUT, RolloutStatus.TRUNCATED},
+            invalid_action=status is RolloutStatus.INVALID_ACTION,
+            inference_failure=status is RolloutStatus.INFERENCE_FAILURE,
+            time_to_first_target_grasp_s=(
+                first_grasp_step / hz if first_grasp_step is not None else None
+            ),
+            time_to_release_s=release_step / hz if release_step is not None else None,
+            time_to_success_s=success_step / hz if success_step is not None else None,
+            cumulative_action_magnitude=cumulative,
+            action_min=action_min,
+            action_max=action_max,
+            inference_latency_ms=tuple(inference_latencies),
+            environment_step_latency_ms=tuple(environment_latencies),
+            total_episode_duration_s=total_duration,
+            failure_reason=reason,
+        )
+
+
+def latency_percentiles(values: tuple[float, ...]) -> dict[str, float | None]:
+    """Return p50/p95/p99 without inventing values for empty samples."""
+    if not values:
+        return {"p50": None, "p95": None, "p99": None}
+    array = np.asarray(values, dtype=np.float64)
+    if not np.all(np.isfinite(array)) or np.any(array < 0):
+        raise ValueError("latency samples must be finite and non-negative")
+    return {
+        "p50": float(np.percentile(array, 50)),
+        "p95": float(np.percentile(array, 95)),
+        "p99": float(np.percentile(array, 99)),
+    }
+
+
+__all__ = [
+    "ActManiSkillRolloutAdapter",
+    "RolloutContractError",
+    "TaskConditioner",
+    "build_policy_observation",
+    "latency_percentiles",
+]

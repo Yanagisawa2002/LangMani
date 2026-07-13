@@ -1,23 +1,23 @@
 # Architecture
 
 This document defines current and future ownership boundaries. M0 and M1 established the runtime
-foundation and environment boundary, M2 added the privileged expert, and M3A implemented the
-authoritative ManiSkill-native raw archive. Active M3B owns deterministic LeRobotDataset v3
-derivation and validation. Deployable policies and training remain future work. The root package
-stays lightweight, and importing `langmani.environments` is still the explicit registration
-boundary.
+foundation and environment boundary, M2 added the privileged expert, M3A implemented the
+authoritative ManiSkill-native raw archive, and M3B added deterministic LeRobotDataset v3
+derivation and validation. Active M4 owns three reproducible ACT controls, their checkpoints, and
+closed-loop evaluation. The root package stays lightweight, and importing
+`langmani.environments` is still the explicit registration boundary.
 
 ## Dependency direction
 
 The dependency flow is deliberately one-way:
 
 ```text
-diagnostic commands -> collection / environments / experts / datasets
+diagnostic commands -> collection / environments / experts / datasets / policies
 collection -> environments / experts / datasets
 experts -> environments
 datasets -> M3A authority plus one-way M3B derived representation
-policies -> dataset schemas and policy interfaces
-evaluation -> environments and policy interfaces
+policies -> completed M3B schemas plus installed LeRobot policy interfaces
+policy evaluation -> environments and policy interfaces
 ```
 
 Shared schemas should live at the narrowest neutral boundary. ManiSkill-specific objects must not
@@ -55,8 +55,9 @@ only after reset and before expert execution to materialize actual cube poses, s
 Panda qpos. The explicit bin values are necessary because ManiSkill's native simulator-state tree
 omits static actors; the accessor still exposes nothing through policy observations.
 
-The environment still does not own planning, expert phase behavior, dataset persistence, or
-training.
+The environment still does not own planning, expert phase behavior, dataset persistence, training,
+checkpoint selection, or policy metrics. M4 adds only a narrow policy-rollout evaluation accessor;
+it does not change observations or expose privileged values.
 
 ## Experts
 
@@ -159,21 +160,45 @@ Fingerprint-owned staging is restarted, never resumed; independent validation pr
 promotion and the completion marker is written last. M3A remains authoritative and M3B never
 changes its acceptance. Dataset code does not choose actions or train policies.
 
+M4 consumes only the completed M3B marker, typed manifest/summary/validation report, local
+Parquet/video files, and sidecars. Its normal training gate never reopens M3A or recomputes M3B
+acceptance. It derives global and per-task views from validated scene-group splits and recomputes
+normalization statistics from the selected train frames only; M3B's whole-dataset `meta.stats` is
+not a training input.
+
 ## Policies
 
-`langmani.policies` will own project-level policy interfaces, configuration adapters, checkpoints,
-and ACT/SmolVLA integration boundaries. Algorithm-specific optional dependencies will be introduced
-only when their milestone becomes active.
+`langmani.policies` owns M4's project-level ACT boundary:
 
-It will not define task physics or mutate source datasets.
+```text
+langmani.policies
+├── act_types.py          # frozen configs, run/checkpoint/result contracts
+├── act_data.py           # completed-M3B gate, episode views, train-only statistics
+├── act_conditioning.py   # CanonicalTaskOneHotV0 shared by train and inference
+├── act_training.py       # public ACT/processors and bounded optimization loop
+├── act_checkpoint.py     # staged local save/reload and resume compatibility
+├── act_rollout.py        # ACT queue to single M1 pd_joint_pos environment
+├── act_evaluation.py     # schedules, validation ranking, test lock, summaries
+├── act_analysis.py       # counterfactual action sensitivity
+└── act_runtime.py        # Git/runtime identity and safe immutable output helpers
+```
+
+The package wraps installed LeRobot 0.6.0 public interfaces rather than copying ACT. It implements
+exactly `per_task`, `mixed_unconditioned`, and `mixed_task_onehot`; it is not a generic future-policy
+framework. The first two use image plus 9D Panda state. The third appends a six-way oracle task
+condition in memory for a 15D state and does not rewrite M3B. Task text remains metadata and is not
+an ACT tensor input. Policies do not define task physics, accept privileged state, invoke M2 during
+rollout, upload to Hub, or mutate source datasets.
 
 ## Evaluation
 
-`langmani.evaluation` will own rollout protocols, seeding, success aggregation, metric definitions,
-and comparable result artifacts. It will distinguish physical GPU/render validation from CPU,
-structural, metadata-only, and skipped checks.
-
-It will not fabricate missing runs or treat training metrics as task success.
+M4 keeps its algorithm-specific evaluation in `langmani.policies.act_evaluation` and
+`act_rollout`; no generic `langmani.evaluation` package is introduced. The boundary owns exact
+scene schedules, Wilson intervals, validation-only checkpoint selection, immutable test
+authorization, fresh-seed exclusion, and compact rollout/comparison records. It distinguishes
+implementation, fixture training, CUDA training, model quality, and physical target acceptance.
+It does not fabricate missing runs, treat offline loss as task success, or use test results to tune
+or resume training.
 
 ## CLI
 
@@ -207,11 +232,23 @@ six-episode export; target full consumes the real 60-group archive and may indep
 an existing immutable completed output instead of rebuilding it. Fixture video checks remain
 separate from physical flags. These commands do not upload, train, or parallelize.
 
+M4 adds `scripts/train_act.py`, `scripts/evaluate_act.py`,
+`scripts/compare_act_baselines.py`, `scripts/inspect_act_checkpoint.py`, and
+`environment/verify_m4.py`. Training owns the completed-data/Git gates, explicit variant, train-only
+statistics, stable run directory, bounded optimization, and atomic checkpoints. Evaluation resets
+the ACT and processor queues at every episode, never clips invalid actions, and never invokes the
+expert. Full-mode test access requires the immutable validation-selected checkpoint and predeclared
+schedule. Target smoke chains the prior target gates before real CUDA/tiny-overfit/rollout work;
+full target additionally runs all eight policies, locked test, and the fixed 180-episode fresh
+benchmark. Fixture work cannot set physical or model-quality flags.
+
 ## Cross-cutting rules
 
 - Project-owned interfaces use static typing and tests.
 - Generated datasets, assets, videos, checkpoints, caches, and results stay outside the package.
 - Third-party APIs are wrapped at boundaries rather than copied or patched in-tree.
 - Dependency and interface changes require an entry in `docs/DECISIONS.md`.
+- Every M4 run records the full Git commit; a dirty tree is development-only and never final.
+- M4 train statistics and checkpoint selection may use train/validation only; test remains locked.
 - Simulator, CUDA, Vulkan, or rendering failures remain visible and cause strict verification to
   fail.
