@@ -6,7 +6,7 @@ import json
 import os
 import subprocess
 import uuid
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from importlib.metadata import version
 from pathlib import Path
 
@@ -27,7 +27,12 @@ class GitState:
     baseline_tracked: bool
 
     def to_dict(self) -> dict[str, object]:
-        return asdict(self)
+        return {
+            "commit": self.commit,
+            "dirty": self.dirty,
+            "changed_paths": list(self.changed_paths),
+            "baseline_tracked": self.baseline_tracked,
+        }
 
 
 def _git(project_root: Path, *arguments: str) -> str:

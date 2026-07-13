@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import json
 
 import pytest
 
@@ -197,6 +198,8 @@ def test_dirty_git_full_run_is_rejected_and_development_is_recorded() -> None:
         mode=ExperimentMode.DEVELOPMENT,
         allow_dirty_development=True,
     )
+    assert state.to_dict()["changed_paths"] == [" M file.py"]
+    assert json.loads(json.dumps(state.to_dict())) == state.to_dict()
 
 
 def test_output_path_is_contained_by_root(tmp_path) -> None:
