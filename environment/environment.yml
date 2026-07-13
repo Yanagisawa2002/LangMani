@@ -1,0 +1,24 @@
+name: langmani
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12.13
+  - pip=26.1.2
+  - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cu128
+      - setuptools==80.9.0
+      - torch==2.11.0+cu128
+      - torchvision==0.26.0+cu128
+      - numpy==2.2.6
+      - gymnasium==1.2.3
+      - h5py==3.16.0
+      - Pillow==12.3.0
+      - opencv-python==4.13.0.92
+      - opencv-python-headless==4.13.0.92
+      - sapien==3.0.3
+      - mani-skill==3.0.1
+      - lerobot[dataset]==0.6.0
+      - build==1.3.0
+      - pytest==8.4.2
+      - ruff==0.15.21

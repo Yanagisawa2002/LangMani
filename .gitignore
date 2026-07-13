@@ -1,0 +1,41 @@
+# Python bytecode and tooling caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Local environments and packaging artifacts
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+
+# IDE and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Generated robotics and ML artifacts
+/data/
+/datasets/
+/checkpoints/
+/wandb/
+*.arrow
+*.avi
+*.ckpt
+*.h5
+*.hdf5
+*.mov
+*.mp4
+*.parquet
+*.pth
+*.pt
+*.safetensors
+*.webm
+
+# All runtime outputs are generated. Keep only the directory placeholder.
+/outputs/*
+!/outputs/.gitkeep
