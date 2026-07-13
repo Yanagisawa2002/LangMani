@@ -908,3 +908,27 @@ def test_strict_probe_rejects_then_executes_one_explicit_projection() -> None:
     assert result["real_projected_env_step_executed"] is True
     assert len(env.calls) == 1
     assert env.calls[0][-1] == 1.0
+
+
+def test_pre_m41_interrupted_evaluation_is_preserved_with_stable_legacy_identity(
+    tmp_path: Path,
+) -> None:
+    run_root = tmp_path / "run"
+    staging = run_root / ".train.staging"
+    staging.mkdir(parents=True)
+    legacy_owner = {
+        "schema_version": "langmani-m4-evaluation-owner-v1",
+        "run_fingerprint": "sha256:" + "a" * 64,
+        "checkpoint_fingerprint": "sha256:" + "b" * 64,
+        "split": "train",
+        "schedule_digest": "sha256:" + "c" * 64,
+    }
+    (staging / evaluate_cli.EVALUATION_OWNER_FILE).write_text(
+        json.dumps(legacy_owner), encoding="utf-8"
+    )
+    (staging / "failure.txt").write_text("preserve me", encoding="utf-8")
+    archived = evaluate_cli._archive_interrupted_evaluation(run_root, staging)
+    assert not staging.exists()
+    assert archived.parent == run_root / "failed_evaluations"
+    assert "legacy-" in archived.name
+    assert (archived / "failure.txt").read_text(encoding="utf-8") == "preserve me"

@@ -597,8 +597,22 @@ def _archive_interrupted_evaluation(run_root: Path, staging_output: Path) -> Pat
         raise RuntimeError("unsafe evaluation staging directory")
     owner = _read(staging_output / EVALUATION_OWNER_FILE)
     runtime = owner.get("evaluation_runtime_fingerprint")
-    if not isinstance(runtime, str) or not runtime.startswith("sha256:"):
-        raise RuntimeError("interrupted evaluation lacks a runtime fingerprint")
+    if isinstance(runtime, str) and runtime.startswith("sha256:"):
+        archive_identity = runtime.removeprefix("sha256:")[:12]
+    else:
+        # Pre-M4.1 staging has no runtime fingerprint. Preserve it under a
+        # stable digest of its complete legacy owner instead of deleting it.
+        archive_identity = (
+            "legacy-"
+            + hashlib.sha256(
+                json.dumps(
+                    owner,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    allow_nan=False,
+                ).encode("utf-8")
+            ).hexdigest()[:12]
+        )
     archive_root = run_root / "failed_evaluations"
     if archive_root.exists() and (
         _is_link_like(archive_root)
@@ -607,7 +621,7 @@ def _archive_interrupted_evaluation(run_root: Path, staging_output: Path) -> Pat
     ):
         raise RuntimeError("unsafe interrupted-evaluation archive")
     archive_root.mkdir(exist_ok=True)
-    base = f"{staging_output.name.removeprefix('.')}-{runtime.removeprefix('sha256:')[:12]}"
+    base = f"{staging_output.name.removeprefix('.')}-{archive_identity}"
     destination = archive_root / base
     suffix = 0
     while destination.exists():
