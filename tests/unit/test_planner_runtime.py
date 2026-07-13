@@ -33,6 +33,22 @@ def test_planner_python_defaults_to_current_interpreter_and_honors_explicit_env(
         resolve_planner_python()
 
 
+def test_planner_python_preserves_virtual_environment_launcher_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    side_python = tmp_path / "side-python"
+    side_python.write_text("placeholder", encoding="utf-8")
+    expected = str(side_python.absolute())
+    monkeypatch.setattr(
+        Path,
+        "resolve",
+        lambda self: (_ for _ in ()).throw(AssertionError("must not dereference venv symlink")),
+    )
+
+    assert resolve_planner_python(side_python) == expected
+
+
 def test_runtime_probe_returns_the_complete_stable_version_mapping() -> None:
     versions = query_planner_runtime_versions(sys.executable)
 

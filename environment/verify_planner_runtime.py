@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import platform
 import sys
 import traceback
@@ -41,7 +42,7 @@ class Report:
     def write(self, *, versions: dict[str, str | None]) -> None:
         payload = {
             "schema_version": "langmani-planner-runtime-verification-v0",
-            "interpreter": str(Path(sys.executable).resolve()),
+            "interpreter": os.path.abspath(sys.executable),
             "python_version": platform.python_version(),
             "runtime_versions": versions,
             "expected_versions": dict(EXPECTED_PLANNER_RUNTIME_VERSIONS),

@@ -51,8 +51,10 @@ def resolve_planner_python(value: str | os.PathLike[str] | None = None) -> str:
     """Resolve the explicit side-runtime interpreter, falling back to this Python."""
 
     configured = value if value is not None else os.environ.get(PLANNER_PYTHON_ENV)
-    candidate = (
-        Path(configured if configured is not None else sys.executable).expanduser().resolve()
+    candidate = Path(
+        os.path.abspath(
+            os.fspath(Path(configured if configured is not None else sys.executable).expanduser())
+        )
     )
     if not candidate.is_file():
         raise PlannerRuntimeError(

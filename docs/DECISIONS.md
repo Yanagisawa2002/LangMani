@@ -775,7 +775,9 @@ ManiSkill, mplib, NumPy, OpenCV, Pillow, SAPIEN, SciPy, and PyTorch and checks t
 versions before constructing and synchronizing the Panda planner. Importing modules is deliberate:
 `importlib.metadata` can select inherited main-environment distribution metadata instead of the
 overlay actually used by Python. `MplibPandaPlannerAdapter` separately rejects a non-1.26.4 NumPy
-runtime before the unsafe native constructor.
+runtime before the unsafe native constructor. Interpreter selection preserves the virtual
+environment launcher path instead of resolving its `bin/python` symlink back to the main Conda
+binary, because that launcher path determines Python's overlay prefix and import search order.
 
 `verify_m2.py --target` keeps M0 and M1 in the main runtime, then runs the planner gate and all M2
 expert commands in the side runtime. M3A uses that same interpreter for expert collection and real
