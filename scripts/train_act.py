@@ -264,6 +264,11 @@ def parse_args() -> argparse.Namespace:
     modes.add_argument("--tiny-overfit", action="store_true")
     modes.add_argument("--development", action="store_true")
     modes.add_argument("--full", action="store_true")
+    parser.add_argument(
+        "--planned-mode",
+        choices=tuple(mode.value for mode in ExperimentMode),
+        help=("semantic experiment mode to validate without training; valid only with --dry-run"),
+    )
     parser.add_argument("--allow-dirty-development", action="store_true")
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
     parser.add_argument("--batch-size", type=_positive_int)
@@ -277,7 +282,11 @@ def parse_args() -> argparse.Namespace:
 
 def _mode(args: argparse.Namespace) -> ExperimentMode:
     if args.dry_run:
-        return ExperimentMode.DRY_RUN
+        return (
+            ExperimentMode(args.planned_mode)
+            if args.planned_mode is not None
+            else ExperimentMode.DRY_RUN
+        )
     if args.tiny_overfit:
         return ExperimentMode.TINY_OVERFIT
     if args.development:
@@ -326,6 +335,8 @@ def _tiny_view(
 
 
 def _configs(args: argparse.Namespace) -> tuple[ActExperimentConfig, str | None]:
+    if args.planned_mode is not None and not args.dry_run:
+        raise ValueError("--planned-mode is valid only with --dry-run")
     variant = ActVariant(args.variant)
     selected_task = _task_id(args.task_id)
     model_values: dict[str, object] = {}
@@ -705,8 +716,10 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
         ),
         "git": git.to_dict(),
         "fixture_evidence": config.mode is ExperimentMode.DRY_RUN,
+        "dry_run": bool(args.dry_run),
+        "planned_experiment_mode": config.mode.value,
     }
-    if config.mode is ExperimentMode.DRY_RUN:
+    if args.dry_run:
         return {**dry_report, "passed": True, "training_started": False}
     if config.mode is ExperimentMode.FULL and config.device != "cuda":
         raise RuntimeError("full M4 training requires explicit CUDA execution")

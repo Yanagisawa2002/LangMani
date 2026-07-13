@@ -246,11 +246,15 @@ M4 adds `scripts/train_act.py`, `scripts/evaluate_act.py`,
 `scripts/compare_act_baselines.py`, `scripts/inspect_act_checkpoint.py`, and
 `environment/verify_m4.py`. Training owns the completed-data/Git gates, explicit variant, train-only
 statistics, stable run directory, bounded optimization, and atomic checkpoints. Evaluation resets
-the ACT and processor queues at every episode, never clips invalid actions, and never invokes the
-expert. Full-mode test access requires the immutable validation-selected checkpoint and predeclared
-schedule. Target smoke chains the prior target gates before real CUDA/tiny-overfit/rollout work;
-full target additionally runs all eight policies, locked test, and the fixed 180-episode fresh
-benchmark. Fixture work cannot set physical or model-quality flags.
+the ACT and processor queues at every episode, invokes the explicit versioned action-bound
+postprocessor directly before `env.step`, and never invokes the expert. Full-mode test access
+requires the immutable validation-selected checkpoint and predeclared schedule. Target smoke chains
+the prior target gates before real CUDA/tiny-overfit/rollout work. Full target requires explicit
+`project` mode and supports a no-training preflight that validates the completed M3B evidence and
+computes all eight exact future `full` run fingerprints, split views, train-only statistics,
+effective configurations, and schedules without creating a model directory or starting rollout.
+The subsequent non-dry command additionally runs all eight policies, locked test, and the fixed
+180-episode fresh benchmark. Fixture work cannot set physical or model-quality flags.
 
 ## Cross-cutting rules
 

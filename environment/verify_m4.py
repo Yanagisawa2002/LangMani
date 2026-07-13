@@ -119,6 +119,8 @@ class Report:
     mixed_unconditioned_experiment_completed: bool = False
     mixed_task_onehot_experiment_completed: bool = False
     fresh_seed_benchmark_completed: bool = False
+    full_dry_run_validated: bool = False
+    planned_full_run_count: int = 0
     full_experiment_validated: bool = False
     baseline_quality_validated: bool = False
     physical_target_validated: bool = False
@@ -132,7 +134,7 @@ class Report:
     def failed(self) -> bool:
         return any(item["status"] == "fail" for item in self.checks)
 
-    def accepted(self, mode: VerificationMode) -> bool:
+    def accepted(self, mode: VerificationMode, *, dry_run: bool = False) -> bool:
         if self.failed or not all(
             (
                 self.implementation_validated,
@@ -162,6 +164,15 @@ class Report:
                     self.physical_target_validated,
                 )
             )
+        if dry_run:
+            return all(
+                (
+                    self.source_dataset_validated,
+                    self.full_dry_run_validated,
+                    self.planned_full_run_count == 8,
+                    not self.physical_target_validated,
+                )
+            )
         return all(
             (
                 self.source_dataset_validated,
@@ -176,14 +187,15 @@ class Report:
             )
         )
 
-    def write(self, *, mode: VerificationMode, dataset_root: Path) -> None:
+    def write(self, *, mode: VerificationMode, dataset_root: Path, dry_run: bool = False) -> None:
         payload = {
-            "schema_version": "langmani-m4.1-verification-v2",
+            "schema_version": "langmani-m4.1-verification-v3",
             "verification_mode": mode,
+            "dry_run": dry_run,
             "dataset_root": str(dataset_root.resolve()),
             **{key: value for key, value in asdict(self).items() if key != "checks"},
             "checks": self.checks,
-            "passed": self.accepted(mode),
+            "passed": self.accepted(mode, dry_run=dry_run),
         }
         atomic_write_json(REPORT_PATH, payload)
 
@@ -193,6 +205,11 @@ def parse_args() -> argparse.Namespace:
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument("--target-smoke", action="store_true")
     modes.add_argument("--target-full", action="store_true")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="validate the exact eight-run full plan without training or rollout",
+    )
     parser.add_argument("--dataset-root", type=Path, default=DEFAULT_DATASET_ROOT)
     parser.add_argument(
         "--model-root",
@@ -205,11 +222,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--action-bound-mode",
         choices=tuple(mode.value for mode in ActionBoundMode),
-        help="required explicit environment-action behavior for target smoke",
+        help="required explicit environment-action behavior for target smoke and full",
     )
     parser.add_argument("--per-task-checkpoint", type=Path)
     parser.add_argument("--onehot-checkpoint", type=Path)
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.dry_run and not args.target_full:
+        parser.error("--dry-run requires --target-full")
+    return args
 
 
 def _mode(args: argparse.Namespace) -> VerificationMode:
@@ -529,7 +549,11 @@ def _run(arguments: list[str]) -> tuple[bool, dict[str, object] | None]:
 
 
 def _run_prior_target_gate(
-    report: Report, mode: VerificationMode, args: argparse.Namespace
+    report: Report,
+    mode: VerificationMode,
+    args: argparse.Namespace,
+    *,
+    dry_run: bool = False,
 ) -> Path:
     if mode == "target_smoke":
         if not M3B_REPORT.is_file():
@@ -569,6 +593,39 @@ def _run_prior_target_gate(
         if not passed:
             raise RuntimeError("completed M3B smoke evidence is invalid")
         return dataset_root
+    if dry_run:
+        if not M3B_REPORT.is_file():
+            report.check("completed M3B full target gate", False, "M3B report is missing")
+            raise RuntimeError("full dry-run requires a completed M3B target-full report")
+        payload = json.loads(M3B_REPORT.read_text(encoding="utf-8"))
+        dataset_root = Path(str(payload.get("dataset_root", ""))).resolve()
+        requested_root = args.dataset_root.resolve()
+        required_flags = (
+            "implementation_validated",
+            "source_archive_validated",
+            "full_export_validated",
+            "lerobot_load_validated",
+            "parquet_validated",
+            "video_decode_validated",
+            "source_alignment_validated",
+            "split_integrity_validated",
+            "privileged_leakage_validated",
+            "physical_target_validated",
+        )
+        passed = (
+            payload.get("verification_mode") == "target_full"
+            and payload.get("passed") is True
+            and all(payload.get(name) is True for name in required_flags)
+            and dataset_root == requested_root
+        )
+        report.check(
+            "completed M3B full target gate",
+            passed,
+            f"validated existing report and requested dataset at {dataset_root}",
+        )
+        if not passed:
+            raise RuntimeError("completed M3B full evidence is missing, stale, or for another root")
+        return dataset_root
     M3B_REPORT.unlink(missing_ok=True)
     command = [sys.executable, "environment/verify_m3b.py"]
     if mode == "target_smoke":
@@ -603,6 +660,7 @@ def _training_command(
     mode: str,
     steps: int,
     report_path: Path,
+    planned_mode: ExperimentMode | None = None,
 ) -> list[str]:
     command = [
         sys.executable,
@@ -621,9 +679,37 @@ def _training_command(
         "--report",
         str(report_path),
     ]
+    if planned_mode is not None:
+        command.extend(["--planned-mode", planned_mode.value])
     if task_id is not None:
         command.extend(["--task-id", task_id])
     return command
+
+
+def _evaluation_command(
+    *,
+    checkpoint: Path,
+    dataset_root: Path,
+    split: str,
+    action_bound_mode: str,
+    report_path: Path,
+) -> list[str]:
+    """Build one rollout command with an explicit environment-action boundary."""
+
+    return [
+        sys.executable,
+        "scripts/evaluate_act.py",
+        "--checkpoint",
+        str(checkpoint),
+        "--dataset-root",
+        str(dataset_root),
+        "--split",
+        split,
+        "--action-bound-mode",
+        action_bound_mode,
+        "--report",
+        str(report_path),
+    ]
 
 
 def _full_training_command_or_reuse(
@@ -1059,7 +1145,145 @@ def _run_target_smoke(
         )
 
 
-def _run_target_full(report: Report, dataset_root: Path, model_root: Path) -> None:
+def _run_target_full_dry_run(
+    report: Report,
+    dataset_root: Path,
+    model_root: Path,
+    *,
+    action_bound_mode: str,
+) -> None:
+    """Validate all semantic full-run inputs without creating model artifacts."""
+
+    completed = load_completed_m3b_dataset(dataset_root, require_full=True, validate_storage=True)
+    report.source_dataset_validated = completed.summary.total_episodes == 360
+    report.check(
+        "completed real M3B full dataset",
+        report.source_dataset_validated,
+        f"episodes={completed.summary.total_episodes}",
+    )
+    full_dir = REPORT_PATH.parent / "target_full"
+    full_dir.mkdir(parents=True, exist_ok=True)
+    runs: list[tuple[ActVariant, str | None]] = [
+        *[(ActVariant.PER_TASK, task_id) for task_id in CANONICAL_TASK_IDS],
+        (ActVariant.MIXED_UNCONDITIONED, None),
+        (ActVariant.MIXED_TASK_ONEHOT, None),
+    ]
+    expected_optimization = ActOptimizationConfig().to_dict()
+    expected_checkpoints = list(range(5_000, 100_001, 5_000))
+    git = inspect_git_state(PROJECT_ROOT)
+    planned: list[dict[str, object]] = []
+    plan_valid = report.source_dataset_validated
+    for index, (variant, task_id) in enumerate(runs):
+        report_path = full_dir / f"dry_run_{index:02d}.json"
+        command = _training_command(
+            dataset_root=dataset_root,
+            model_root=model_root,
+            variant=variant,
+            task_id=task_id,
+            mode="dry-run",
+            planned_mode=ExperimentMode.FULL,
+            steps=100_000,
+            report_path=report_path,
+        )
+        ok, train_report = _run(command)
+        if not ok or train_report is None:
+            report.check("eight ACT full dry-run identities", False, f"failed run index={index}")
+            return
+        expected_model = ActModelConfig.for_variant(variant).to_dict()
+        expected_train_count = 48 if variant is ActVariant.PER_TASK else 288
+        expected_validation_count = 6 if variant is ActVariant.PER_TASK else 36
+        expected_state_dimension = 15 if variant is ActVariant.MIXED_TASK_ONEHOT else 9
+        fingerprint = train_report.get("run_fingerprint")
+        output_directory = Path(str(train_report.get("expected_output_directory", ""))).resolve()
+        act_config = train_report.get("act_config")
+        model_contract_matches = isinstance(act_config, dict) and all(
+            act_config.get(key) == value for key, value in expected_model.items()
+        )
+        run_valid = all(
+            (
+                train_report.get("passed") is True,
+                train_report.get("dry_run") is True,
+                train_report.get("training_started") is False,
+                train_report.get("fixture_evidence") is False,
+                train_report.get("planned_experiment_mode") == ExperimentMode.FULL.value,
+                train_report.get("dataset_fingerprint") == completed.export_fingerprint,
+                train_report.get("split_digest") == completed.split_manifest_digest,
+                train_report.get("variant") == variant.value,
+                train_report.get("task_id") == task_id,
+                train_report.get("train_episode_count") == expected_train_count,
+                train_report.get("validation_episode_count") == expected_validation_count,
+                train_report.get("offline_loss_episode_count") == expected_validation_count,
+                train_report.get("offline_loss_role") == "held_out_validation",
+                train_report.get("optimization") == expected_optimization,
+                train_report.get("checkpoint_schedule") == expected_checkpoints,
+                train_report.get("evaluation_schedule") == expected_checkpoints,
+                train_report.get("input_shapes", {}).get(STATE_FEATURE_KEY)
+                == [expected_state_dimension],
+                train_report.get("output_shape") == [8],
+                model_contract_matches,
+                train_report.get("git") == git.to_dict(),
+                isinstance(fingerprint, str),
+                output_directory.parent == model_root.resolve(),
+                isinstance(fingerprint, str)
+                and output_directory.name == fingerprint.removeprefix("sha256:"),
+            )
+        )
+        plan_valid &= run_valid
+        planned.append(
+            {
+                "index": index,
+                "variant": variant.value,
+                "task_id": task_id,
+                "run_fingerprint": fingerprint,
+                "expected_output_directory": str(output_directory),
+                "output_directory_exists": output_directory.exists(),
+                "train_episode_count": expected_train_count,
+                "validation_episode_count": expected_validation_count,
+                "train_statistics_fingerprint": train_report.get("train_statistics_fingerprint"),
+                "state_dimension": expected_state_dimension,
+                "action_dimension": 8,
+                "contract_validated": run_valid,
+                "command_report": str(report_path.resolve()),
+            }
+        )
+    fingerprints = [item["run_fingerprint"] for item in planned]
+    directories = [item["expected_output_directory"] for item in planned]
+    plan_valid &= len(planned) == 8 and len(set(fingerprints)) == 8 and len(set(directories)) == 8
+    plan_payload = {
+        "schema_version": "langmani-m4-full-dry-run-plan-v1",
+        "passed": plan_valid,
+        "training_started": False,
+        "rollout_started": False,
+        "action_bound_mode": action_bound_mode,
+        "dataset_root": str(dataset_root.resolve()),
+        "dataset_fingerprint": completed.export_fingerprint,
+        "split_digest": completed.split_manifest_digest,
+        "git": git.to_dict(),
+        "optimization": expected_optimization,
+        "checkpoint_schedule": expected_checkpoints,
+        "evaluation_schedule": expected_checkpoints,
+        "runs": planned,
+    }
+    atomic_write_json(full_dir / "dry_run_plan.json", plan_payload)
+    report.planned_full_run_count = len(planned)
+    report.full_dry_run_validated = plan_valid
+    report.check(
+        "eight ACT full dry-run identities",
+        plan_valid,
+        (
+            f"runs={len(planned)}; unique_fingerprints={len(set(fingerprints))}; "
+            f"action_bound_mode={action_bound_mode}; training_started=false"
+        ),
+    )
+
+
+def _run_target_full(
+    report: Report,
+    dataset_root: Path,
+    model_root: Path,
+    *,
+    action_bound_mode: str,
+) -> None:
     completed = load_completed_m3b_dataset(dataset_root, require_full=True, validate_storage=True)
     report.source_dataset_validated = completed.summary.total_episodes == 360
     report.check(
@@ -1145,18 +1369,13 @@ def _run_target_full(report: Report, dataset_root: Path, model_root: Path) -> No
                 if not all(path.is_file() for path in required_completed_artifacts):
                     raise RuntimeError("completed full run is missing immutable final evidence")
                 for split in ("validation", "test", "fresh_seed"):
-                    command = [
-                        sys.executable,
-                        "scripts/evaluate_act.py",
-                        "--checkpoint",
-                        str(run_root / selected_records[0].relative_path),
-                        "--dataset-root",
-                        str(dataset_root),
-                        "--split",
-                        split,
-                        "--report",
-                        str(full_dir / f"reuse_{split}_{index:02d}.json"),
-                    ]
+                    command = _evaluation_command(
+                        checkpoint=run_root / selected_records[0].relative_path,
+                        dataset_root=dataset_root,
+                        split=split,
+                        action_bound_mode=action_bound_mode,
+                        report_path=full_dir / f"reuse_{split}_{index:02d}.json",
+                    )
                     if split == "validation":
                         command.append("--lock-selection")
                     if split == "fresh_seed":
@@ -1192,18 +1411,13 @@ def _run_target_full(report: Report, dataset_root: Path, model_root: Path) -> No
             checkpoint_fingerprint = checkpoint_record.get("checkpoint_fingerprint")
             if not isinstance(checkpoint_fingerprint, str):
                 raise RuntimeError("checkpoint manifest lacks its fingerprint")
-            command = [
-                sys.executable,
-                "scripts/evaluate_act.py",
-                "--checkpoint",
-                str(marker.parent),
-                "--dataset-root",
-                str(dataset_root),
-                "--split",
-                "validation",
-                "--report",
-                str(full_dir / f"validation_{index:02d}_{checkpoint_index:03d}.json"),
-            ]
+            command = _evaluation_command(
+                checkpoint=marker.parent,
+                dataset_root=dataset_root,
+                split="validation",
+                action_bound_mode=action_bound_mode,
+                report_path=full_dir / f"validation_{index:02d}_{checkpoint_index:03d}.json",
+            )
             if checkpoint_index == len(checkpoints) - 1:
                 command.append("--lock-selection")
             ok, evaluation_report = _run(command)
@@ -1227,18 +1441,13 @@ def _run_target_full(report: Report, dataset_root: Path, model_root: Path) -> No
         selected = selection["selected_checkpoint_fingerprint"].removeprefix("sha256:")
         selected_dir = next((run_root / "checkpoints").glob(f"*-{selected[:12]}"))
         for split in ("test", "fresh_seed"):
-            command = [
-                sys.executable,
-                "scripts/evaluate_act.py",
-                "--checkpoint",
-                str(selected_dir),
-                "--dataset-root",
-                str(dataset_root),
-                "--split",
-                split,
-                "--report",
-                str(full_dir / f"{split}_{index:02d}.json"),
-            ]
+            command = _evaluation_command(
+                checkpoint=selected_dir,
+                dataset_root=dataset_root,
+                split=split,
+                action_bound_mode=action_bound_mode,
+                report_path=full_dir / f"{split}_{index:02d}.json",
+            )
             if split == "fresh_seed":
                 command.append("--counterfactual-sensitivity")
             ok, evaluation_report = _run(command)
@@ -1306,9 +1515,9 @@ def main() -> int:
     try:
         _structural_checks(report)
         if mode != "structural":
-            if mode == "target_smoke" and args.action_bound_mode != ActionBoundMode.PROJECT.value:
+            if args.action_bound_mode != ActionBoundMode.PROJECT.value:
                 raise RuntimeError(
-                    "M4.1 target smoke requires explicit --action-bound-mode project"
+                    "M4 target smoke/full requires explicit --action-bound-mode project"
                 )
             native_target = platform.system() == "Linux" and torch.cuda.is_available()
             report.check(
@@ -1328,7 +1537,7 @@ def main() -> int:
                     mode=ExperimentMode.FULL,
                     allow_dirty_development=False,
                 )
-                dataset_root = _run_prior_target_gate(report, mode, args)
+                dataset_root = _run_prior_target_gate(report, mode, args, dry_run=args.dry_run)
                 if mode == "target_smoke":
                     _run_target_smoke(
                         report,
@@ -1337,7 +1546,20 @@ def main() -> int:
                         args,
                     )
                 else:
-                    _run_target_full(report, dataset_root, args.model_root.resolve())
+                    if args.dry_run:
+                        _run_target_full_dry_run(
+                            report,
+                            dataset_root,
+                            args.model_root.resolve(),
+                            action_bound_mode=args.action_bound_mode,
+                        )
+                    else:
+                        _run_target_full(
+                            report,
+                            dataset_root,
+                            args.model_root.resolve(),
+                            action_bound_mode=args.action_bound_mode,
+                        )
         else:
             report.check(
                 "physical target status",
@@ -1351,9 +1573,9 @@ def main() -> int:
             False,
             f"{type(error).__name__}: {str(error) or repr(error)}",
         )
-    report.write(mode=mode, dataset_root=dataset_root)
+    report.write(mode=mode, dataset_root=dataset_root, dry_run=args.dry_run)
     print(f"[INFO] report: {REPORT_PATH}")
-    return 0 if report.accepted(mode) else 1
+    return 0 if report.accepted(mode, dry_run=args.dry_run) else 1
 
 
 if __name__ == "__main__":

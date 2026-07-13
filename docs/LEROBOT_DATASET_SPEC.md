@@ -365,11 +365,14 @@ independent.
 
 ## Known limitations and M4 handoff
 
-Native Linux RTX 4090 rendering and the first real 360-episode archive remain pending until the
-target commands pass. Windows fixture video writing/reading passes, but SAPIEN cannot instantiate
-the Panda from the current non-ASCII repository path, so no local fixture is described as real
-simulation validation. Both OpenCV wheels still share the `cv2` namespace; M3B does not import
-OpenCV and uses LeRobot/PyAV instead.
+Native Linux RTX 4090 full acceptance passed for all 60 groups, 360 episodes, and 64,548 frames.
+The exact 288/36/36 episode split, 48/6/6 scene-group split, per-task balance, video decode,
+source/action/state alignment, public reload, and DataLoader gate all passed; the export fingerprint
+is `sha256:3f4d81471ac7c3ecc034206bc207524c4cbfbd1f7874b25eca894a5b607acfb4`.
+Windows fixture video writing/reading also passes, but SAPIEN cannot instantiate the Panda from the
+current non-ASCII repository path, so no local fixture is described as real simulation validation.
+Both OpenCV wheels still share the `cv2` namespace; M3B does not import OpenCV and uses LeRobot/PyAV
+instead.
 
 The proposed M4 ACT baseline consumes only a completed local M3B root and project split manifest:
 

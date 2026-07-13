@@ -900,6 +900,38 @@ deterministically. Consequently raw-bound validity is false while projected-boun
 closed-loop inference, the 6/6 task gate, and M4.1 physical target validation are true. M4 full
 remains unstarted.
 
+## D-037 — Preflight exact full identities and bind the projected action runtime explicitly
+
+The RTX 4090 target completed the data gates at commit
+`29a90aa72468d7ef8dbdf4ecbccdb175d63c21af`. M3A accepted exactly 60 complete counterfactual
+groups and 360 action-replayed episodes, 60 per TaskSpec, after considering 65 ordered candidate
+scenes. Five groups were rejected; 404 expert attempts were recorded, with zero partial accepted
+groups, accepted replay failures, checksum/schema failures, or unclassified validation failures.
+M3B then accepted 360 episodes and 64,548 frames with 288/36/36 episodes and 48/6/6 scene groups
+across train/validation/test. Every TaskSpec has 48/6/6 episodes, no scene group crosses a split,
+all videos decode, and source/action/state alignment passes. Its export fingerprint is
+`sha256:3f4d81471ac7c3ecc034206bc207524c4cbfbd1f7874b25eca894a5b607acfb4`.
+
+Before spending the full eight-run training budget, `verify_m4.py --target-full --dry-run` must
+validate the existing completed M3B full report and storage, rather than rebuilding the accepted
+M3A/M3B artifacts. It invokes `train_act.py --dry-run --planned-mode full` in canonical run order.
+The planned mode is semantic: dataset/split/statistics, fixed model and optimization, runtime/Git,
+and the resulting SHA-256 run fingerprint are identical to the future non-dry full invocation.
+Execution still returns before creating a model directory. The outer verifier requires six
+per-task plus two mixed identities, eight unique output directories, exact 48/6 or 288/36
+train/validation views, fixed 100,000-step schedules, a clean Git baseline, and no training or
+rollout. It records `full_dry_run_validated` and `planned_full_run_count` independently and never
+sets `physical_target_validated` from planning evidence.
+
+M4.1 established that finite raw ACT gripper overshoot is expected and that the frozen full runtime
+uses the auditable `BoundedActionEnvPostprocessorV0` in `project` mode. The evaluator itself retains
+`reject` as its safe default, so relying on that default would silently run a different full
+experiment and fail before otherwise valid projected steps. Both target-full preflight and real
+execution therefore require explicit `--action-bound-mode project`, and the verifier passes it to
+every validation, locked-test, fresh-seed, and completed-run revalidation command. The preflight
+plan records the mode. No dependency, ACT weight/loss, data split, train statistic, M1 success
+geometry, checkpoint fingerprint, or source dataset changes.
+
 ## Local bootstrap evidence
 
 The bootstrap was authored on Windows 11, which is not an acceptance platform. In an isolated
@@ -985,9 +1017,9 @@ workaround.
 
 ## Unresolved risks
 
-1. **The native target chain is only partially accepted.** M0 and M1 passed on the RTX 4090, proving
-   CUDA, PhysX GPU, Vulkan rendering, vectorization, and saved policy/human diagnostic frames. The
-   committed M2 gate and all M3A/M3B/M4 physical gates remain pending.
+1. **M4 full remains pending.** The RTX 4090 has passed M0 through the authoritative M3A/M3B full
+   data gates and M4.1 target smoke. The eight full ACT runs, validation-only selection, locked test,
+   and fresh-seed comparison have not yet produced final evidence.
 2. **ManiSkill does not declare a PyTorch upper bound.** M0/M1 now prove the selected PyTorch 2.11
    CUDA build for installation, simulation, and rendering, but they do not prove M4 ACT training or
    the entire full-data chain.
@@ -995,8 +1027,9 @@ workaround.
    `opencv-python-headless`. OpenCV's publishers state that only one wheel sharing the `cv2`
    namespace should be installed. The environment pins both to the same version because both
    upstream metadata requirements must remain satisfied, but this is not an upstream-supported
-   resolution. Main-runtime `cv2` import and ManiSkill rendering passed M0/M1; real M3B LeRobot
-   video export/reload remains required. Uninstalling either wheel in-place may damage the other.
+   resolution. Main-runtime `cv2`, ManiSkill rendering, and the real 360-episode M3B video
+   export/decode/reload passed. A new image must still repeat those gates. Uninstalling either wheel
+   in-place may damage the other.
 4. **System components are not lockable here.** NVIDIA driver, Vulkan ICD, kernel, and distribution
    libraries can still invalidate a correct Python resolution.
 5. **No full transitive lockfile yet.** M0 pins the critical direct and renderer packages in the
@@ -1013,12 +1046,12 @@ workaround.
 8. **Dual-runtime replay identity must remain exact.** M3A collection and independent action replay
    must use the same ten-field planner runtime fingerprint. Main-runtime inspection may not be used
    to admit a trajectory whose real action replay was skipped or executed under a different ABI.
-9. **The full 360-episode M3A archive remains pending.** The target smoke has recorded and action-
-   replayed one real six-task group, but only `verify_m3a.py --target-full` can produce and validate
-   the authoritative 60 complete groups.
-10. **The full 360-episode M3B dataset remains pending.** Target smoke exported, finalized, decoded,
-    source-aligned, and publicly reloaded six real H.264 episodes. Full scene splits and every video
-    remain subject to `verify_m3b.py --target-full` after the full M3A archive exists.
+9. **M3A remains the immutable raw authority.** The accepted 60-group archive now exists; future
+   export or training code must continue to reject partial groups, changed checksums, changed replay
+   evidence, or a different collection fingerprint rather than silently repairing source data.
+10. **M3B remains a derived immutable view.** The accepted 360-episode export now exists; M4 must
+    bind its exact export/split fingerprints and must not recompute splits, normalization from
+    validation/test, or derived videos under the same identity.
 11. **M4.1 succeeds only under frequent explicit gripper projection.** Target smoke passed 1/1
     PerTask and 6/6 TaskOneHot, but 834/951 rollout actions projected the gripper and strict-
     unprojected success was 0/7. Raw ACT validity must remain reported false; future baselines should

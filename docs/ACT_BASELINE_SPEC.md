@@ -492,6 +492,15 @@ human-facing alias such as `red_cube__left_bin` and immediately resolves it to t
 Dry-run, test-only fixture probes, tiny-overfit, development, full, resume, device, batch-size, and step controls remain
 explicit and every failure returns nonzero.
 
+`scripts/train_act.py --dry-run --planned-mode full` is a no-training semantic preflight: it uses
+the exact `ExperimentMode.FULL` identity, fixed optimization, completed-data requirement, clean Git
+gate, split views, train-only statistics, and runtime versions that the future full run will use.
+It returns before creating the fingerprint-owned model directory. The outer
+`environment/verify_m4.py --target-full --dry-run --action-bound-mode project` executes this for the
+canonical six per-task runs and the two mixed runs, requires eight unique identities, and writes one
+ordered plan. It validates existing M3B full evidence instead of rebuilding M3A/M3B and does not
+train, select a checkpoint, access test rollouts, or claim physical M4 acceptance.
+
 Non-target verification covers installed imports, immutable contracts, completed-data/feature/split
 gates, train-only statistics and leakage audit, one-hot equality, shapes, public delta timestamps,
 fingerprints, fixture forward/backward/optimizer work, checkpoint/processor local reload, selection,
@@ -508,7 +517,9 @@ and executed action evidence, proves the rollout source has no M2 expert depende
 one-hot `task_success` as the primary quality gate. Full target mode requires the
 completed 360-episode M3B dataset, offline counterfactual audit, all six per-task policies and both
 mixed policies, validation-only selection, locked test, the 180-episode fresh benchmark, and the
-final comparison/provenance audit. Both target modes reject a dirty current worktree before reusing
+final comparison/provenance audit. Every target-full evaluation command receives explicit
+`--action-bound-mode project`; the evaluator's strict default is never allowed to silently select
+the full experiment runtime. Both target modes reject a dirty current worktree before reusing
 historical artifacts. Full mode resumes the latest identity-compatible checkpoint, recovers the sole
 valid promoted orphan, revalidates already promoted evaluation directories, and reuses only a fully
 completed immutable run instead of unconditionally retraining it.

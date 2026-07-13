@@ -1,9 +1,9 @@
 # LangMani roadmap
 
-Milestone M4 is active. M0 through M3B are implemented. Native target acceptance and the first real
-M3A/M3B datasets remain pending; M4 local work may use fixtures but must not treat them as policy
-quality or physical evidence. Later milestones describe intended sequencing, not authorization to
-implement those systems now.
+Milestone M4 is active. M0 through M3B are implemented, and the native target now has the accepted
+60-group M3A authority plus its validated 360-episode M3B derivative. M4.1 target smoke is complete;
+the eight-run M4 full experiment remains pending its exact dry-run preflight and execution. Later
+milestones describe intended sequencing, not authorization to implement those systems now.
 
 ## M0 — Reproducible environment foundation (complete)
 
@@ -53,7 +53,10 @@ M3A owns typed collection/replay contracts, cryptographic stable IDs, bounded re
 episode manifests, action replay, state audit, corruption/schema checks, resume behavior,
 inspection commands, and target verification. It does not create LeRobotDataset, Parquet, policy
 videos, training data transformations, or policies. One six-task native target smoke group passed
-recording and action replay; the authoritative 60-group archive remains pending full collection.
+recording and action replay. Native full acceptance then produced 60 complete groups and 360
+accepted/replayed episodes, exactly 60 per TaskSpec, from 65 ordered candidate scenes. Five groups
+were rejected and all 404 attempts remain accounted for; no partial group, accepted replay failure,
+schema/checksum failure, or unclassified failure was admitted.
 
 ## M3B — LeRobotDataset v3 export (implementation complete)
 
@@ -69,8 +72,11 @@ PyAV H.264/yuv444p video, all-or-nothing staging, independent source/action/stat
 DataLoader smoke tests, and structural/smoke/full verification modes. M3A remains authoritative.
 M3B adds no training, policy configuration, Hub upload, failure trajectories, additional sensors,
 language generation, or parallel export. One six-task target export passed real state-restoration
-rendering, H.264 decode, source alignment, finalization, and public reload; the complete 360-episode
-derived dataset remains pending full acceptance.
+rendering, H.264 decode, source alignment, finalization, and public reload. Native full acceptance
+then exported all 360 episodes and 64,548 frames with exact 288/36/36 episode and 48/6/6 scene-group
+splits. Every TaskSpec contributes 48/6/6 episodes; all videos decode, provenance and action/state
+alignment pass, and no scene group crosses a split. The accepted export fingerprint is
+`sha256:3f4d81471ac7c3ecc034206bc207524c4cbfbd1f7874b25eca894a5b607acfb4`.
 
 ## M4.1 — Auditable ACT action-bound handling (complete)
 
@@ -96,6 +102,11 @@ then attempts one PerTask and six same-scene TaskOneHot rollouts. It does not st
 The clean RTX 4090 smoke passed PerTask 1/1 and TaskOneHot 6/6. All seven task successes required
 at least one explicit gripper projection, so strict-unprojected success remains 0/7 and raw-action
 bounds validity remains false. This closes M4.1 without claiming M4 full acceptance.
+
+M4 full begins with a no-training target preflight that binds the completed dataset, exact split
+views and train-only statistics, fixed 100,000-step configuration, Git/runtime identity, and eight
+unique future full-run directories. Both preflight and execution require explicit action-bound mode
+`project`; every validation, locked-test, and fresh-seed rollout receives that value explicitly.
 
 ## M5 — SmolVLA baseline (planned)
 

@@ -522,6 +522,12 @@ python scripts/train_act.py \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --variant mixed_task_onehot --seed 0 --output-root outputs/models/act --dry-run
 
+# Predict the exact immutable identity/configuration of a future full run without training.
+python scripts/train_act.py \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --variant mixed_task_onehot --seed 0 --output-root outputs/models/act \
+  --dry-run --planned-mode full
+
 python scripts/train_act.py \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --variant per_task --task-id red_cube__left_bin --seed 0 \
@@ -559,7 +565,10 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py \
   --target-smoke --action-bound-mode project
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
-  --output-root outputs/models/act
+  --output-root outputs/models/act --dry-run --action-bound-mode project
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --output-root outputs/models/act --action-bound-mode project
 ```
 
 M4.1 target smoke validates the completed M0--M3B smoke evidence, reuses the existing PerTask and
@@ -567,11 +576,14 @@ Mixed-TaskOneHot checkpoints without training, reproduces strict rejection, exec
 legal action, and attempts one plus six learned-policy M1 rollouts. Reports separate raw validity,
 projected legality, task success, and strict-unprojected success. The clean RTX 4090 M4.1 run passed
 PerTask 1/1 and TaskOneHot 6/6; 834/951 rollout actions projected only the gripper, so raw-bound
-validity and strict-unprojected success correctly remain false. Full mode requires the real
-finalized 360-episode dataset, all six per-task policies,
+validity and strict-unprojected success correctly remain false. The real finalized 360-episode
+dataset is available. Full mode first dry-runs and records all eight exact full identities without
+training or rollout, then requires all six per-task policies,
 both mixed policies, the complete counterfactual audit, validation-only selection, locked test, and
 the 180-episode fresh benchmark. Target modes require the current worktree to be clean before any
-completed run is reused. M4.1 does not start M4 full or retrain the smoke checkpoints.
+completed run is reused. Every full evaluation explicitly uses the frozen `project` action-bound
+mode; no evaluator default may choose that behavior implicitly. M4.1 does not retrain the smoke
+checkpoints.
 
 ## Target-machine setup
 
@@ -663,7 +675,10 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py \
   --target-smoke --action-bound-mode project
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
-  --output-root outputs/models/act
+  --output-root outputs/models/act --dry-run --action-bound-mode project
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --output-root outputs/models/act --action-bound-mode project
 pytest
 ```
 
@@ -755,7 +770,8 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 | `python environment/verify_m3b.py --target-full` | Yes | Yes | Yes |
 | `python environment/verify_m4.py` | No | No | No; CPU ACT fixture only |
 | `python environment/verify_m4.py --target-smoke --action-bound-mode project` | Yes | Yes | Validates completed prior M3B smoke evidence |
-| `python environment/verify_m4.py --target-full` | Yes | Yes | Via dataset and rollout gates |
+| `python environment/verify_m4.py --target-full --dry-run --action-bound-mode project` | Metadata only | No | Existing M3B full gate plus exact eight-run plan |
+| `python environment/verify_m4.py --target-full --action-bound-mode project` | Yes | Yes | Via dataset and rollout gates |
 | `scripts/export_lerobot_dataset.py` | Real export: yes | According to source/render backend | Yes |
 | `scripts/validate_lerobot_dataset.py` | Full source alignment: yes | According to source/render backend | Yes |
 | `scripts/inspect_lerobot_episode.py` | No | No | No |

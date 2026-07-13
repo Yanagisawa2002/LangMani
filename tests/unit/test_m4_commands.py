@@ -8,7 +8,7 @@ import importlib.util
 import json
 import sys
 from pathlib import Path
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 
 import numpy as np
 import pytest
@@ -105,6 +105,43 @@ def test_train_cli_requires_one_explicit_mode(monkeypatch: pytest.MonkeyPatch) -
     with pytest.raises(SystemExit) as error:
         train_cli.parse_args()
     assert error.value.code == 2
+
+
+def test_train_dry_run_can_plan_the_exact_full_identity(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "train_act.py",
+            "--variant",
+            ActVariant.MIXED_TASK_ONEHOT.value,
+            "--dry-run",
+            "--planned-mode",
+            ExperimentMode.FULL.value,
+        ],
+    )
+    args = train_cli.parse_args()
+    config, task_id = train_cli._configs(args)
+    assert config.mode is ExperimentMode.FULL
+    assert config.optimization == ActOptimizationConfig()
+    assert task_id is None
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "train_act.py",
+            "--variant",
+            ActVariant.MIXED_UNCONDITIONED.value,
+            "--full",
+            "--planned-mode",
+            ExperimentMode.FULL.value,
+        ],
+    )
+    with pytest.raises(ValueError, match="valid only with --dry-run"):
+        train_cli._configs(train_cli.parse_args())
 
 
 def test_train_cli_resolves_semantic_alias_without_language_parsing() -> None:
@@ -272,6 +309,8 @@ def test_verify_report_exposes_independent_flags_and_structural_is_not_physical(
         "mixed_unconditioned_experiment_completed",
         "mixed_task_onehot_experiment_completed",
         "fresh_seed_benchmark_completed",
+        "full_dry_run_validated",
+        "planned_full_run_count",
         "full_experiment_validated",
         "baseline_quality_validated",
         "physical_target_validated",
@@ -279,6 +318,21 @@ def test_verify_report_exposes_independent_flags_and_structural_is_not_physical(
     assert expected <= payload.keys()
     assert payload["passed"] is True
     assert payload["physical_target_validated"] is False
+
+    dry_report = verify_m4.Report(
+        implementation_validated=True,
+        git_baseline_validated=True,
+        source_dataset_validated=True,
+        fixture_training_validated=True,
+        checkpoint_reload_validated=True,
+        train_stats_leakage_validated=True,
+        validation_selection_validated=True,
+        test_lock_validated=True,
+        full_dry_run_validated=True,
+        planned_full_run_count=8,
+    )
+    assert dry_report.accepted("target_full", dry_run=True)
+    assert not dry_report.accepted("target_full")
 
 
 def _benchmark_payload(
@@ -873,6 +927,125 @@ def test_verify_target_modes_are_mutually_exclusive(monkeypatch: pytest.MonkeyPa
     with pytest.raises(SystemExit) as error:
         verify_m4.parse_args()
     assert error.value.code == 2
+
+
+def test_verify_dry_run_requires_target_full(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(sys, "argv", ["verify_m4.py", "--dry-run"])
+    with pytest.raises(SystemExit) as error:
+        verify_m4.parse_args()
+    assert error.value.code == 2
+
+
+def test_full_commands_bind_planned_identity_and_projected_action_boundary(
+    tmp_path: Path,
+) -> None:
+    train_command = verify_m4._training_command(
+        dataset_root=tmp_path / "dataset",
+        model_root=tmp_path / "models",
+        variant=ActVariant.MIXED_TASK_ONEHOT,
+        task_id=None,
+        mode="dry-run",
+        planned_mode=ExperimentMode.FULL,
+        steps=100_000,
+        report_path=tmp_path / "train.json",
+    )
+    assert "--dry-run" in train_command
+    assert train_command[train_command.index("--planned-mode") + 1] == "full"
+    evaluation_command = verify_m4._evaluation_command(
+        checkpoint=tmp_path / "checkpoint",
+        dataset_root=tmp_path / "dataset",
+        split="fresh_seed",
+        action_bound_mode="project",
+        report_path=tmp_path / "evaluation.json",
+    )
+    assert evaluation_command[evaluation_command.index("--action-bound-mode") + 1] == "project"
+
+
+def test_full_dry_run_validates_eight_unique_semantic_runs_without_training(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    dataset_root = tmp_path / "dataset"
+    model_root = tmp_path / "models"
+    report_path = tmp_path / "diagnostics" / "verification.json"
+    monkeypatch.setattr(verify_m4, "REPORT_PATH", report_path)
+    completed = SimpleNamespace(
+        summary=SimpleNamespace(total_episodes=360),
+        export_fingerprint="sha256:" + "d" * 64,
+        split_manifest_digest="sha256:" + "e" * 64,
+    )
+    monkeypatch.setattr(
+        verify_m4, "load_completed_m3b_dataset", lambda *_args, **_kwargs: completed
+    )
+    git_payload = {
+        "commit": "1" * 40,
+        "dirty": False,
+        "changed_paths": [],
+        "baseline_tracked": True,
+    }
+    monkeypatch.setattr(
+        verify_m4,
+        "inspect_git_state",
+        lambda _root: SimpleNamespace(to_dict=lambda: git_payload),
+    )
+    commands: list[list[str]] = []
+
+    def fake_run(command: list[str]) -> tuple[bool, dict[str, object]]:
+        commands.append(command)
+        index = len(commands) - 1
+        variant = ActVariant(command[command.index("--variant") + 1])
+        task_id = command[command.index("--task-id") + 1] if "--task-id" in command else None
+        fingerprint = "sha256:" + f"{index + 1:064x}"
+        state_dimension = 15 if variant is ActVariant.MIXED_TASK_ONEHOT else 9
+        train_count = 48 if variant is ActVariant.PER_TASK else 288
+        validation_count = 6 if variant is ActVariant.PER_TASK else 36
+        return True, {
+            "passed": True,
+            "dry_run": True,
+            "training_started": False,
+            "fixture_evidence": False,
+            "planned_experiment_mode": "full",
+            "dataset_fingerprint": completed.export_fingerprint,
+            "split_digest": completed.split_manifest_digest,
+            "variant": variant.value,
+            "task_id": task_id,
+            "train_episode_count": train_count,
+            "validation_episode_count": validation_count,
+            "offline_loss_episode_count": validation_count,
+            "offline_loss_role": "held_out_validation",
+            "optimization": ActOptimizationConfig().to_dict(),
+            "checkpoint_schedule": list(range(5_000, 100_001, 5_000)),
+            "evaluation_schedule": list(range(5_000, 100_001, 5_000)),
+            "input_shapes": {STATE_FEATURE_KEY: [state_dimension]},
+            "output_shape": [8],
+            "act_config": ActModelConfig.for_variant(variant).to_dict(),
+            "git": git_payload,
+            "run_fingerprint": fingerprint,
+            "expected_output_directory": str(
+                model_root.resolve() / fingerprint.removeprefix("sha256:")
+            ),
+            "train_statistics_fingerprint": "sha256:" + f"{index + 20:064x}",
+        }
+
+    monkeypatch.setattr(verify_m4, "_run", fake_run)
+    report = verify_m4.Report()
+    verify_m4._run_target_full_dry_run(
+        report,
+        dataset_root,
+        model_root,
+        action_bound_mode="project",
+    )
+    assert report.full_dry_run_validated
+    assert report.planned_full_run_count == 8
+    assert len(commands) == 8
+    assert all("--dry-run" in command and "--full" not in command for command in commands)
+    plan = json.loads(
+        (report_path.parent / "target_full" / "dry_run_plan.json").read_text(encoding="utf-8")
+    )
+    assert plan["passed"] is True
+    assert plan["training_started"] is False
+    assert plan["action_bound_mode"] == "project"
+    assert len({item["run_fingerprint"] for item in plan["runs"]}) == 8
 
 
 def test_strict_probe_rejects_then_executes_one_explicit_projection() -> None:
