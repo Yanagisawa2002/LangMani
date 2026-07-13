@@ -435,7 +435,7 @@ def test_planner_failure_classification(
         (
             lambda env: None,
             ExpertConfig(max_episode_steps=1),
-            ExpertPhase.MOVE_TO_PREGRASP,
+            ExpertPhase.APPROACH_TARGET,
             ExpertStatus.TIMEOUT,
         ),
         (

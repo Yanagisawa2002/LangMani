@@ -67,6 +67,7 @@ phase execution, and compact expert results:
 ```text
 langmani.experts
 ├── types.py            # ExpertConfig/Status/Phase, PhaseResult, ExpertResult
+├── runtime.py          # explicit NumPy-1 planner-interpreter selection and pin probe
 ├── planner.py          # lazy, direct mplib 0.1.1 Panda adapter
 ├── pick_place.py       # explicit 12-phase PickPlaceExpert orchestration
 └── command_support.py  # output-confined diagnostic helpers
@@ -84,6 +85,13 @@ planner in M2: mplib 0.1.1 offers no planner seed and no screw-planner timeout, 
 must leave those capabilities unset and no unseeded RRT fallback exists. The adapter synchronizes
 the Panda base pose and nine-joint simulator state, plans seven arm joints, and keeps gripper control
 in the expert's `pd_joint_pos` action path.
+
+The main environment retains NumPy 2.2.6. `runtime.py` selects an explicit inherited virtual
+environment that overlays the NumPy 1.26.4 ABI required by mplib 0.1.1 and validates the complete
+planner-side package set. M0/M1 and M3A inspection stay in the main interpreter; planner creation,
+expert commands, M3A collection, and action replay use the selected interpreter. These are bounded,
+sequential command processes. The planner itself remains in-process with `num_envs=1`; M2/M3A add
+neither planner multiprocessing nor vectorization.
 
 The stable phase sequence is `initialize`, `move_to_pregrasp`, `approach_target`, `close_gripper`,
 `verify_grasp`, `lift_target`, `move_above_destination`, `descend_to_place`, `open_gripper`,
@@ -206,8 +214,9 @@ M2 uses thin scripts under `environment/`: `run_expert.py` for one rollout,
 `benchmark_expert.py` for the explicit six-task matrix, and `verify_m2.py` for contract and target
 acceptance. They validate configuration, call expert APIs, preserve unexpected exception type and
 message at the outer boundary, surface failures, and write only to ignored diagnostic output paths.
-The strict M2 verifier invokes the M0 installation and M1 environment target gates before starting
-M2 physical rollouts. It keeps the original repeatable six-task smoke and separately applies the
+The strict M2 verifier invokes the M0 installation and M1 environment target gates in the main
+runtime, then invokes the planner-runtime gate before starting M2 physical rollouts in the selected
+side runtime. It keeps the original repeatable six-task smoke and separately applies the
 statistical acceptance policy to a seed-major 180-episode matrix with 30 episodes per TaskSpec;
 that verifier policy does not alter expert phase behavior or M1 success geometry. Business logic
 remains in `langmani.experts`. A future general `langmani.cli` may replace these milestone commands
@@ -221,8 +230,9 @@ compatible in-progress archive, or creates a missing run only with `--create-new
 passes overwrite and never recollects an existing complete 60-group archive. Full mode inspects all
 checksums and schemas and independently replays all 360 accepted episodes. Stale command reports are
 invalidated before execution; final replay evidence must match the ordered manifest identities and
-strictly validate action plus state audit for every episode. These commands are sequential and
-introduce no multiprocessing.
+strictly validate action plus state audit for every episode. Collection and replay use the same
+fingerprinted planner-side interpreter as the expert; offline inspection remains in the main
+runtime. These commands are sequential and introduce no multiprocessing.
 
 M3B adds `scripts/export_lerobot_dataset.py`, `scripts/validate_lerobot_dataset.py`,
 `scripts/inspect_lerobot_episode.py`, and `environment/verify_m3b.py`. Export dry-run validates the

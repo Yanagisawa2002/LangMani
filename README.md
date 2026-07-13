@@ -124,7 +124,8 @@ The policy camera and human diagnostic camera are separate:
 
 There is no wrist camera and no domain randomization. The target diagnostic uses actor
 segmentation to require all three cubes and both bins to be visible in `base_camera`; this physical
-visibility claim remains pending until that diagnostic passes on the native Linux target.
+visibility check passed on the native Linux RTX 4090 target together with the separate 512×512
+human-render camera. The report remains the authoritative evidence for the exact machine/run.
 
 ## M2 privileged expert
 
@@ -203,9 +204,10 @@ using the opposite closing sign would create an exact 180-degree first screw rot
 0.1.1 rejects. Planner
 poses are seven-vectors `[x, y, z, qw, qx, qy, qz]`. The grasp center is the cube center; the
 pre-grasp and approach offsets move only opposite the downward approach direction and retain table
-clearance. Every planned phase repeats the final joint target for two deterministic control steps,
-then requires TCP position error at most 0.01 m and quaternion angular error at most 0.08 rad. The
-fixed cube collision size is 0.05 m on each side.
+clearance. A planned path is executed exactly once with no added terminal waypoint repetition, then
+requires TCP position error at most 0.015 m and quaternion angular error at most 0.08 rad. The
+15 mm bound covers the measured `pd_joint_pos` tracking residual without changing the M1 success
+geometry. The fixed cube collision size is 0.05 m on each side.
 
 Placement targets the selected bin's interior center, never an actor-order-derived destination. The
 bin interior half-width is 0.085 m and the cube half extent is 0.025 m, leaving 0.060 m nominal
@@ -240,9 +242,11 @@ retreat and final verification phases; truncation, off-table failure, or termina
 success or the known off-table failure still stops execution with a classified error.
 
 These commands are not evidence of physical acceptance merely because they import or perform
-structural checks on a non-target host. The current Windows review environment has no mplib
-installation because ManiSkill 3.0.1 declares `mplib==0.1.1` only on Linux. Physical expert
-execution and diagnostic rendering therefore remain pending for the native Linux RTX 4090 target.
+structural checks on a non-target host. ManiSkill 3.0.1's Linux mplib wheel is isolated behind the
+explicit `LANGMANI_PLANNER_PYTHON` runtime described below; running mplib beside the main NumPy 2
+stack is rejected before native planner construction. M0/M1 target acceptance has passed. A
+180-rollout M2 parameter trial reached 177/180 classified successes, but formal M2 acceptance and
+diagnostic rendering remain pending until the committed `verify_m2.py --target` report passes.
 
 ## M3A raw demonstrations
 
@@ -580,6 +584,15 @@ conda env create -f environment/environment.yml
 conda activate langmani
 python -m pip install --no-deps -e .
 python -m pip check
+
+# Isolate the NumPy-1 ABI required by mplib 0.1.1 while inheriting the exact base runtime.
+PLANNER_VENV="$HOME/.venvs/langmani-planner"
+python -m venv --system-site-packages "$PLANNER_VENV"
+"$PLANNER_VENV/bin/python" -m pip install -r environment/planner-runtime.txt
+conda env config vars set LANGMANI_PLANNER_PYTHON="$PLANNER_VENV/bin/python"
+conda deactivate
+conda activate langmani
+"$LANGMANI_PLANNER_PYTHON" environment/verify_planner_runtime.py
 ```
 
 M3B activates `lerobot[dataset]==0.6.0`; the base package alone deliberately refuses
@@ -589,8 +602,13 @@ writing and reading because the installed Windows TorchCodec DLL chain is not lo
 LeRobot/PyAV/libavcodec values are checked and stored in every export fingerprint and manifest.
 
 On native Linux, ManiSkill 3.0.1's package metadata installs `mplib==0.1.1`; Windows does not receive
-that conditional dependency. LangMani does not change or duplicate the upstream pin. The M2 adapter
-checks the exact installed version at runtime and fails clearly when it is missing or changed.
+that conditional dependency. LangMani does not change or duplicate the upstream pin. The main
+environment retains its pinned NumPy 2 stack. The planner virtual environment inherits that exact
+environment and overlays only NumPy 1.26.4, SciPy 1.15.3, and OpenCV 4.11.0.86. Do not run
+`pip check` inside this intentional overlay: inherited LeRobot metadata describes the main runtime.
+Instead, `verify_planner_runtime.py` checks the complete exact planner package set and constructs and
+synchronizes the installed Panda planner. The adapter also checks mplib and NumPy before entering
+the native constructor and fails clearly when either version changes.
 
 `environment/environment.yml` selects PyTorch 2.11.0 and torchvision 0.26.0 from the official
 CUDA 12.8 wheel index. That path requires an NVIDIA driver new enough for CUDA 12.8; the current
@@ -639,12 +657,13 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
 pytest
 ```
 
-For auditability, the orchestrated command prints and records its six subprocesses:
-`verify_install.py --target`, then `verify_m1.py --target`, two repeatability runs of the M2
-six-episode all-task smoke, one balanced 180-episode benchmark, and one rendered expert rollout
-whose 12 phase PNGs are checked. A failed prerequisite stops the later stages. The balanced run
-uses the ordered scene seeds `0..29`, visits the canonical six TaskSpecs for every seed, and thus
-contains exactly 30 episodes per TaskSpec.
+For auditability, the orchestrated command prints and records its seven subprocesses:
+`verify_install.py --target`, then `verify_m1.py --target`, the isolated planner-runtime gate, two
+repeatability runs of the M2 six-episode all-task smoke, one balanced 180-episode benchmark, and one
+rendered expert rollout whose 12 phase PNGs are checked. M0/M1 always use the main interpreter;
+planner construction and every expert rollout use `LANGMANI_PLANNER_PYTHON`. A failed prerequisite
+stops the later stages. The balanced run uses ordered scene seeds `0..29`, visits the canonical six
+TaskSpecs for every seed, and thus contains exactly 30 episodes per TaskSpec.
 
 `--target` returns a nonzero exit code if any of these are unavailable or invalid: native Linux,
 PyTorch CUDA, the CUDA runtime reported by PyTorch, an NVIDIA GPU, `vulkaninfo`, the Vulkan probe,
@@ -670,7 +689,8 @@ terminate a review run on an out-of-scope platform.
 
 The M2 verifier checks project-owned expert contracts and, on native Linux, runs the privileged
 `pd_joint_pos` expert across all three cubes and both bins with explicit seeded task overrides. In
-target mode it first runs the M0 and M1 target gates. It
+target mode it first runs the M0 and M1 target gates in the main runtime, then verifies the isolated
+planner runtime before any expert command. It
 requires every rollout to complete all 12 phases and finish with the environment's conservative
 `success` evaluation during the six-episode smoke. The 180-episode balanced benchmark then requires
 at least 95% overall success, at least 90% success for each TaskSpec, zero successful completions
@@ -715,6 +735,7 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 | `pytest -m "not gpu and not rendering"` | No | No | No |
 | `python environment/verify_install.py` | No | No | Optional attempt |
 | `python environment/verify_m1.py` | Simulator only on native Linux | No | No |
+| `python environment/verify_planner_runtime.py` | Yes | No | No |
 | `python environment/verify_m2.py` | Physical expert on native Linux | Target mode | Target mode |
 | `python environment/verify_m3a.py` | Structural only | No | No |
 | `python environment/verify_m3a.py --target-smoke` | Yes | Yes | Via prior gates |
@@ -745,7 +766,7 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 ## Repository map
 
 - `src/langmani/environments/`: M1 registration, typed metadata, environment, pure tensor task logic, and narrow expert-only state accessors.
-- `src/langmani/experts/`: M2 types, direct lazy mplib adapter, and phase-based Panda expert.
+- `src/langmani/experts/`: M2 types, isolated-runtime selection, direct lazy mplib adapter, and phase-based Panda expert.
 - `src/langmani/collection/`: M3A recorder, collector, replay, manifests, and inspection.
 - `src/langmani/datasets/`: M3A immutable types, stable IDs, schedules, and native archive checks.
 - `src/langmani/datasets/lerobot_*.py`: M3B source gate, contracts, export, and validation.

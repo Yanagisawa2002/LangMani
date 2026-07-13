@@ -29,7 +29,8 @@ Direct project dependencies were pinned after checking published metadata inters
 installing the CPU variants together locally and passing `pip check` plus import tests. The target
 CUDA wheel choices also match LeRobot 0.6.0's published constraints and PyTorch's official version
 pairing. This establishes resolver/import compatibility only; the CUDA/renderer combination remains
-a candidate until the native Linux gate passes.
+a candidate until the native Linux gate passes. The table records the original bootstrap status;
+subsequent native-target evidence and the planner ABI split are recorded in D-032.
 
 | Component | Selected version | Decision status |
 | --- | --- | --- |
@@ -265,6 +266,9 @@ is a 0.025 m half extent on each axis. Pre-grasp/approach offsets are along the 
 downward approach and retain table clearance. Each planned motion repeats its final joint target
 for two deterministic control steps before checking 0.01 m TCP position and 0.08 rad sign-invariant
 quaternion-angle tolerances.
+
+D-032 supersedes only those final-waypoint repetition and TCP-position constants after native target
+evidence; the grasp/orientation construction and every M1 success threshold remain unchanged.
 
 Placement uses the selected bin's interior center and floor height, never actor ordering. The
 0.085 m bin interior half-width minus the 0.025 m cube half extent leaves 0.060 m nominal clearance
@@ -742,6 +746,59 @@ child stdout/stderr remains visible. Contract-only checks and target prerequisit
 parent. This changes only the diagnostic process boundary: environment geometry, observations,
 success evaluation, control modes, dependency versions, and acceptance thresholds are unchanged.
 
+## D-032 — Isolate mplib 0.1.1 behind a NumPy 1.26.4 planner runtime
+
+The first native target run used Ubuntu 22.04.5, an RTX 4090, NVIDIA driver 570.124.04, Python
+3.12.13, PyTorch 2.11.0+cu128, ManiSkill 3.0.1, SAPIEN 3.0.3, mplib 0.1.1, and main-environment
+NumPy 2.2.6. M0 passed CUDA, Vulkan, PhysX GPU, and RGB-render acceptance. After D-031 separated
+PhysX backends, M1 passed CPU scene/evaluation checks, six-environment GPU vectorization and partial
+reset, visual no-leakage, actor/Panda camera visibility, and both policy and human rendering.
+
+M2 then terminated with a native segmentation fault while constructing
+`mplib.pymp.ArticulatedModel`. The same crash reproduced through ManiSkill's installed official
+Panda motion-planning solver, so it was not caused by LangMani actor geometry or adapter ordering.
+On the same machine, both mplib 0.1.1 and 0.2.1 crashed beside NumPy 2.2.6, while the unchanged mplib
+0.1.1 extension constructed the Panda model successfully beside NumPy 1.26.4 with the explicit
+installed link/joint lists. This agrees with the upstream reports for the same silent planner exit
+under NumPy 2 and the ManiSkill maintainer recommendation to use NumPy 1.26.4:
+
+- [ManiSkill issue #1100](https://github.com/haosulab/ManiSkill/issues/1100)
+- [ManiSkill issue #426](https://github.com/haosulab/ManiSkill/issues/426)
+- [mplib published releases](https://pypi.org/project/mplib/)
+
+The main environment is not downgraded: doing so would change the already pinned and M1-validated
+M0/M3B/M4 dependency surface. Instead, native planner construction uses an explicit Python 3.12.13
+virtual environment created with `--system-site-packages`. It inherits the exact main runtime and
+overlays only NumPy 1.26.4, SciPy 1.15.3, and OpenCV 4.11.0.86. The selected interpreter is stored in
+`LANGMANI_PLANNER_PYTHON`; `environment/verify_planner_runtime.py` checks exact Gymnasium, h5py,
+ManiSkill, mplib, NumPy, OpenCV, Pillow, SAPIEN, SciPy, and PyTorch versions before constructing and
+synchronizing the Panda planner. `MplibPandaPlannerAdapter` separately rejects a non-1.26.4 NumPy
+runtime before the unsafe native constructor.
+
+`verify_m2.py --target` keeps M0 and M1 in the main runtime, then runs the planner gate and all M2
+expert commands in the side runtime. M3A uses that same interpreter for expert collection and real
+action replay, while its offline archive inspection remains in the main runtime. This is sequential
+command orchestration, not an expert architecture change: mplib remains in-process with
+`num_envs=1`, and no planner multiprocessing or vectorization is introduced. M3A manifests now bind
+all ten planner-side distribution versions. Because no authoritative M3A archive existed before
+this change, the v1 schema is retained; older/incomplete mappings fail strict parsing and cannot be
+silently resumed.
+
+Target execution also showed that two repeated final-waypoint control steps per planned phase spent
+12 of the fixed 200-step episode budget without adding a new path waypoint. They are removed, so
+every planned path is executed exactly once and M3A cannot inherit artificial terminal repetitions.
+The TCP completion tolerance changes from 10 mm to 15 mm because successful `pd_joint_pos` motions
+showed 11.7–12.1 mm residual tracking error at the prior bound. This does not alter object/bin
+geometry, release/static checks, false-success checks, or any M1 success threshold.
+
+A bounded pre-commit trial over the exact 180-rollout M2 matrix produced 177 classified successes
+(98.3% overall): red-left, green-left, and green-right were 29/30; the other three TaskSpecs were
+30/30. The three failures were classified `planning_failure`; wrong-object successes, wrong-bin
+successes, unexpected exceptions, and unclassified failures were all zero. This meets the numeric
+M2 benchmark thresholds and justifies committing the constants, but it is diagnostic evidence only.
+Formal M2 acceptance still requires the clean committed `verify_m2.py --target` run and rendered
+12-phase artifact check.
+
 ## Local bootstrap evidence
 
 The bootstrap was authored on Windows 11, which is not an acceptance platform. In an isolated
@@ -814,10 +871,11 @@ For M3A on the same non-target Windows host:
   and after manifest commit. These are contract tests, not a produced or physically replayed
   360-episode archive.
 
-These are non-physical contract, fake-planner, serialization, command-boundary, and build checks.
-mplib is absent because the ManiSkill 3.0.1 dependency marker installs it only on Linux. No real
-Panda IK/screw plan, grasp, transport, placement, six-task benchmark, M2 renderer, PhysX GPU run,
-or RTX 4090 execution has been physically validated; the full ordered target gate remains pending.
+The preceding bootstrap paragraphs are specifically the Windows review record. D-032 supersedes
+their former global pending status: a later native RTX 4090 run passed the M0 and M1 target gates,
+constructed and executed the planner in the isolated runtime, completed a 177/180 M2 parameter
+trial, and established the remaining formal M2/M3A/M3B/M4 gates described below. The parameter trial
+is not a substitute for the committed M2 target report.
 
 Before the non-Linux boundary guard was added, directly constructing PickCube on this Windows host
 terminated the Python process with a SAPIEN access violation in `actor_builder.py`. This is recorded
@@ -826,31 +884,34 @@ workaround.
 
 ## Unresolved risks
 
-1. **No native Linux RTX 4090 execution yet.** The selected set is metadata-compatible, but CUDA,
-   PhysX GPU, Vulkan rendering, and a saved diagnostic frame remain physically unverified.
-2. **ManiSkill does not declare a PyTorch upper bound.** Its metadata cannot prove that PyTorch
-   2.11 is runtime-compatible; the strict target run is required.
+1. **The native target chain is only partially accepted.** M0 and M1 passed on the RTX 4090, proving
+   CUDA, PhysX GPU, Vulkan rendering, vectorization, and saved policy/human diagnostic frames. The
+   committed M2 gate and all M3A/M3B/M4 physical gates remain pending.
+2. **ManiSkill does not declare a PyTorch upper bound.** M0/M1 now prove the selected PyTorch 2.11
+   CUDA build for installation, simulation, and rendering, but they do not prove M4 ACT training or
+   the entire full-data chain.
 3. **OpenCV wheel collision.** SAPIEN 3.0.3 requires `opencv-python`, while LeRobot 0.6.0 requires
    `opencv-python-headless`. OpenCV's publishers state that only one wheel sharing the `cv2`
    namespace should be installed. The environment pins both to the same version because both
    upstream metadata requirements must remain satisfied, but this is not an upstream-supported
-   resolution. `import cv2`, ManiSkill rendering, and LeRobot import must all pass on the target;
-   uninstalling either wheel in-place may damage the other.
+   resolution. Main-runtime `cv2` import and ManiSkill rendering passed M0/M1; real M3B LeRobot
+   video export/reload remains required. Uninstalling either wheel in-place may damage the other.
 4. **System components are not lockable here.** NVIDIA driver, Vulkan ICD, kernel, and distribution
    libraries can still invalidate a correct Python resolution.
 5. **No full transitive lockfile yet.** M0 pins the critical direct and renderer packages in the
    environment declaration. Generate and review a platform lock only after the first successful
    target run, so it captures a physically verified rather than merely resolvable environment.
-6. **Optional SAPIEN Pinocchio bindings are absent on the review host.** M2 uses the separately
-   packaged mplib planner rather than SAPIEN's optional Pinocchio wrapper, so this warning does not
-   justify a dependency change. The native target must still prove the selected mplib path works.
-7. **M2 physical planning is unverified.** The public mplib 0.1.1 API and ManiSkill 3.0.1 Panda
-   examples were inspected, but the current Windows host cannot import Linux-only mplib. Kinematic
-   reach, collision behavior, gripper execution, release settling, all six task combinations, and
-   diagnostic rendering remain pending until the ordered target gate passes.
-8. **The Linux mplib wheel has not been imported beside NumPy 2.2.6 on the target.** Metadata has no
-   conflicting bound, but binary-extension compatibility cannot be established from the downloaded
-   wheel's Python source. The strict target import and physical benchmark must prove this exact pair.
+6. **The planner side runtime is an explicit compatibility boundary.** mplib 0.1.1 is incompatible
+   with the main NumPy 2 runtime on the target. Exact side-runtime pins, the adapter preflight, and
+   manifest fingerprints prevent silent ABI drift, but every new target image must rerun
+   `verify_planner_runtime.py`; a future upstream ABI-compatible planner could revisit this split.
+7. **Formal M2 physical acceptance is pending.** The isolated runtime has executed real Panda
+   screw plans, grasps, transport, placement, and the 180-rollout matrix at 98.3%, but that
+   pre-commit trial did not include the authoritative repeatability and rendered-phase checks. Only
+   the clean committed ordered target gate can close this risk.
+8. **Dual-runtime replay identity must remain exact.** M3A collection and independent action replay
+   must use the same ten-field planner runtime fingerprint. Main-runtime inspection may not be used
+   to admit a trajectory whose real action replay was skipped or executed under a different ABI.
 9. **No authoritative M3A target archive exists yet.** The deterministic schedule, recorder adapter,
    transaction recovery, archive validation, and replay audit passed synthetic and structural tests,
    but no native Linux Panda expert has recorded, inspected, and independently replayed all 360

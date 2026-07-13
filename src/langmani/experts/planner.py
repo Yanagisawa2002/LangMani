@@ -17,6 +17,7 @@ from typing import Any, Protocol, runtime_checkable
 import numpy as np
 
 EXPECTED_MPLIB_VERSION = "0.1.1"
+EXPECTED_MPLIB_NUMPY_VERSION = "1.26.4"
 PANDA_MOVE_GROUP = "panda_hand_tcp"
 PANDA_ARM_DOF = 7
 PANDA_FULL_DOF = 9
@@ -208,6 +209,12 @@ def _load_mplib() -> ModuleType:
 
 
 def _validate_mplib_contract(module: ModuleType) -> type[Any]:
+    numpy_version = getattr(np, "__version__", None)
+    if numpy_version != EXPECTED_MPLIB_NUMPY_VERSION:
+        raise PlannerVersionError(
+            "M2 requires the mplib side runtime with "
+            f"numpy=={EXPECTED_MPLIB_NUMPY_VERSION}, got {numpy_version!r}"
+        )
     version = getattr(module, "__version__", None)
     if version != EXPECTED_MPLIB_VERSION:
         raise PlannerVersionError(f"M2 requires mplib=={EXPECTED_MPLIB_VERSION}, got {version!r}")

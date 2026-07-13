@@ -29,8 +29,11 @@ multiprocessing, GPU-parallel planning, or policy evaluation.
 | overwrite | error |
 | resume | enabled |
 
-The exact runtime versions of ManiSkill, SAPIEN, PyTorch, h5py, and mplib are part of the manifest
-and must match on resume and independent replay.
+The exact planner-side runtime versions of Gymnasium, h5py, ManiSkill, mplib, NumPy, OpenCV,
+Pillow, SAPIEN, SciPy, and PyTorch are part of the manifest and must match on resume and independent
+replay. Collection and action replay use `LANGMANI_PLANNER_PYTHON`; structural inspection may run
+in the main NumPy-2 environment. A missing field or drift in any recorded runtime version rejects
+reuse rather than silently resuming under another ABI.
 
 ## Deterministic schedule and IDs
 

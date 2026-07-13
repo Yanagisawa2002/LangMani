@@ -28,6 +28,7 @@ from langmani.datasets.types import (
     ReplayValidationMode,
     ReplayValidationResult,
 )
+from langmani.experts.runtime import query_planner_runtime_versions, resolve_planner_python
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_ROOT = PROJECT_ROOT / "outputs"
@@ -366,7 +367,7 @@ def _validate_command_report(
 
 
 def _structural_checks(report: Report) -> None:
-    config = CollectionConfig()
+    config = CollectionConfig(runtime_versions=query_planner_runtime_versions())
     schedule = build_collection_schedule(config)
     report.check(
         "authoritative M3A target size",
@@ -400,7 +401,10 @@ def _structural_checks(report: Report) -> None:
 
 
 def _is_expected_full_config(config: CollectionConfig, dataset_root: Path) -> bool:
-    expected = CollectionConfig(raw_output_root=str(dataset_root))
+    expected = CollectionConfig(
+        raw_output_root=str(dataset_root),
+        runtime_versions=query_planner_runtime_versions(),
+    )
     actual_payload = config.to_dict()
     expected_payload = expected.to_dict()
     actual_root = Path(str(actual_payload.pop("raw_output_root"))).resolve()
@@ -482,7 +486,7 @@ def _prepare_full_archive(
 
 def _collection_command(dataset_root: Path, *, smoke: bool) -> list[str]:
     return [
-        sys.executable,
+        resolve_planner_python(),
         "environment/collect_raw_demos.py",
         "--output-root",
         str(dataset_root),
@@ -514,7 +518,7 @@ def _inspection_command(dataset_root: Path) -> list[str]:
 
 def _replay_command(dataset_root: Path) -> list[str]:
     return [
-        sys.executable,
+        resolve_planner_python(),
         "environment/replay_raw_demos.py",
         "--dataset-root",
         str(dataset_root),

@@ -13,6 +13,13 @@ The motion-planning boundary is `MplibPandaPlannerAdapter`, a project-owned adap
 0.1.1 public APIs and ManiSkill's Panda handles. Runtime code does not import ManiSkill example
 runners, does not modify upstream packages, and does not vectorize or multiplex mplib.
 
+The main `langmani` environment keeps NumPy 2.2.6 for the M0/M1/M3B/M4 dependency set. Native
+planner construction and M3A collection/action replay run sequentially in the interpreter selected
+by `LANGMANI_PLANNER_PYTHON`. That virtual environment inherits the exact main environment and
+overlays NumPy 1.26.4, SciPy 1.15.3, and OpenCV 4.11.0.86. The adapter rejects any other NumPy or
+mplib version before entering the native constructor. This is a subprocess runtime boundary, not
+planner multiprocessing: every expert remains in-process, single-environment, and sequential.
+
 ## Typed interface
 
 The public project types are `ExpertConfig`, `ExpertStatus`, `ExpertPhase`, `PhaseResult`,
@@ -64,6 +71,9 @@ criterion, and classified failure. Initialization validates environment identity
 execution, control mode, semantic task and handles, terminal state, and planner synchronization.
 Planned paths are executed as 8-D Panda joint-position actions. Truncation, off-table state, or an
 unexpected terminal condition aborts with a classified result.
+Each planned path is applied exactly once; the expert adds no terminal waypoint repetition.
+Completion requires TCP position error at most `0.015 m`, sign-invariant quaternion error at most
+`0.08 rad`, and arm-joint error at most `0.08 rad`.
 
 ## Deterministic grasp and placement
 
@@ -78,12 +88,15 @@ releases, settles, retreats, and finally requires the unchanged conservative M1 
 
 ## Acceptance
 
-`environment/verify_m2.py --target` first runs the M0 and M1 target gates. It then requires two
-repeatable six-task smoke passes, a balanced 180-rollout benchmark over seeds 0 through 29 (30 per
-TaskSpec), overall success at least 95%, each TaskSpec at least 90%, zero successful wrong-object or
-wrong-bin outcomes, zero unclassified failures, zero benchmark crashes, one rendered successful
-expert rollout, and all 12 nonempty phase frames.
+`environment/verify_m2.py --target` first runs the M0 and M1 target gates with the main interpreter,
+then runs `verify_planner_runtime.py` with `LANGMANI_PLANNER_PYTHON`. It then requires two repeatable
+six-task smoke passes, a balanced 180-rollout benchmark over seeds 0 through 29 (30 per TaskSpec),
+overall success at least 95%, each TaskSpec at least 90%, zero successful wrong-object or wrong-bin
+outcomes, zero unclassified failures, zero benchmark crashes, one rendered successful expert
+rollout, and all 12 nonempty phase frames.
 
-The Windows review host cannot import the Linux-only mplib package or physically execute this gate.
-M2 physical planning and rendering acceptance therefore remains pending until the native Linux RTX
-4090 command passes.
+The native RTX 4090 M0 and M1 gates have passed. A pre-commit 180-rollout M2 parameter trial reached
+177/180 classified successes with every TaskSpec at 96.7% or better and zero false successes or
+exceptions. That trial supports the chosen execution constants but is not the authoritative M2
+gate; physical M2 acceptance remains pending until the committed command and rendered diagnostic
+both pass.

@@ -33,6 +33,7 @@ from langmani.environments.specs import (
     stable_scene_id,
     stable_task_id,
 )
+from langmani.experts.runtime import PLANNER_RUNTIME_DISTRIBUTIONS
 from langmani.experts.types import (
     ExpertConfig,
     ExpertPhase,
@@ -41,14 +42,8 @@ from langmani.experts.types import (
     PhaseResult,
 )
 
-RUNTIME_VERSION_KEYS = frozenset({"mani_skill", "h5py", "sapien", "torch", "mplib"})
-_RUNTIME_DISTRIBUTIONS = {
-    "mani_skill": "mani-skill",
-    "h5py": "h5py",
-    "sapien": "sapien",
-    "torch": "torch",
-    "mplib": "mplib",
-}
+RUNTIME_VERSION_KEYS = frozenset(PLANNER_RUNTIME_DISTRIBUTIONS)
+_RUNTIME_DISTRIBUTIONS = dict(PLANNER_RUNTIME_DISTRIBUTIONS)
 _SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 
 

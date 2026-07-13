@@ -189,9 +189,14 @@ def test_collection_command_materializes_all_explicit_bounds(
         command,
         "installed_runtime_versions",
         lambda: {
+            "gymnasium": "1.2.3",
             "mani_skill": "3.0.1",
             "h5py": "3.16.0",
+            "numpy": "1.26.4",
+            "opencv_python": "4.11.0.86",
+            "pillow": "12.3.0",
             "sapien": "3.0.3",
+            "scipy": "1.15.3",
             "torch": "2.11.0+cpu",
             "mplib": None,
         },
@@ -228,6 +233,7 @@ def test_target_full_uses_exact_prior_gate_and_unlimited_360_replay(
         lambda: _verifier_args(dataset_root, mode="target_full"),
     )
     monkeypatch.setattr(verifier, "_is_native_linux", lambda: True)
+    monkeypatch.setattr(verifier, "resolve_planner_python", lambda: "planner-side-python")
     monkeypatch.setattr(verifier, "_structural_checks", lambda report: None)
     monkeypatch.setattr(verifier, "_prepare_full_archive", lambda *args, **kwargs: "collect")
 
@@ -251,24 +257,32 @@ def test_target_full_uses_exact_prior_gate_and_unlimited_360_replay(
         "--target",
     ]
     replay = commands["M3A independent 360-episode action replay"]
+    assert replay[0] == "planner-side-python"
     assert "--limit" not in replay
     assert replay[replay.index("--mode") + 1] == "action_and_state_audit"
     collection = commands["M3A 60-group collection/resume"]
+    assert collection[0] == "planner-side-python"
     assert "--overwrite" not in collection
     assert "--no-resume" not in collection
 
 
-def test_smoke_collection_has_one_group_and_never_overwrites() -> None:
+def test_smoke_collection_has_one_group_and_never_overwrites(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     verifier = _load_script("langmani_test_verify_m3a_smoke_args", "environment/verify_m3a.py")
     dataset_root = OUTPUT_ROOT / "datasets" / "m3a" / "fresh-smoke-test"
+    monkeypatch.setattr(verifier, "resolve_planner_python", lambda: "planner-side-python")
 
     command = verifier._collection_command(dataset_root, smoke=True)
 
+    assert command[0] == "planner-side-python"
     assert command[command.index("--target-complete-scene-count") + 1] == "1"
     assert command[command.index("--maximum-candidate-scene-count") + 1] == "20"
     assert command[command.index("--shard-size") + 1] == "6"
     assert "--overwrite" not in command
     assert "--no-resume" not in command
+    assert verifier._replay_command(dataset_root)[0] == "planner-side-python"
+    assert verifier._inspection_command(dataset_root)[0] == sys.executable
 
 
 @pytest.mark.parametrize(

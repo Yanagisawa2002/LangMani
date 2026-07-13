@@ -118,6 +118,7 @@ def fake_mplib(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
     module.__version__ = "0.1.1"
     module.Planner = _FakePlanner
     monkeypatch.setitem(sys.modules, "mplib", module)
+    monkeypatch.setattr(planner_module.np, "__version__", "1.26.4")
     return module
 
 
@@ -290,6 +291,19 @@ def test_wrong_mplib_version_fails_before_construction(
     fake_mplib.__version__ = "0.2.1"
 
     with pytest.raises(planner_module.PlannerVersionError, match="got '0.2.1'"):
+        planner_module.MplibPandaPlannerAdapter(_FakeEnv())
+
+    assert not _FakePlanner.instances
+
+
+def test_numpy_two_runtime_fails_before_native_planner_construction(
+    fake_mplib: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    del fake_mplib
+    monkeypatch.setattr(planner_module.np, "__version__", "2.2.6")
+
+    with pytest.raises(planner_module.PlannerVersionError, match="numpy==1.26.4"):
         planner_module.MplibPandaPlannerAdapter(_FakeEnv())
 
     assert not _FakePlanner.instances

@@ -59,6 +59,9 @@ python environment/verify_m1.py
 # M2 structural diagnostics everywhere; CPU expert execution on native Linux
 python environment/verify_m2.py
 
+# Native Linux planner-side ABI gate; LANGMANI_PLANNER_PYTHON is configured per README.
+"$LANGMANI_PLANNER_PYTHON" environment/verify_planner_runtime.py
+
 # M3A structural diagnostics everywhere
 python environment/verify_m3a.py
 
@@ -89,7 +92,8 @@ python scripts/compare_act_baselines.py --help
 python scripts/inspect_act_checkpoint.py --help
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
-# M0 installation and M1 environment target gates first, in that exact order.
+# M0 installation and M1 environment target gates in the main runtime first,
+# then delegates planner construction and expert rollouts to the side runtime.
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m2.py --target
 
 # Fast native-target chain: ordered M0/M1/M2 gate, one six-task group, and six replays.
