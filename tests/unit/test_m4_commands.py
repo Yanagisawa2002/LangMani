@@ -12,11 +12,12 @@ from types import ModuleType
 import numpy as np
 import pytest
 
-from langmani.datasets.lerobot_types import IMAGE_FEATURE_KEY, STATE_FEATURE_KEY
+from langmani.datasets.lerobot_types import IMAGE_FEATURE_KEY, STATE_FEATURE_KEY, DatasetSplit
 from langmani.datasets.schedule import CANONICAL_TASK_SPECS
 from langmani.environments.specs import stable_scene_id
 from langmani.policies.act_analysis import compute_counterfactual_sensitivity, task_identity_effects
 from langmani.policies.act_conditioning import CANONICAL_TASK_IDS
+from langmani.policies.act_data import DatasetEpisodeView
 from langmani.policies.act_evaluation import (
     authorize_test_evaluation,
     create_checkpoint_selection,
@@ -76,6 +77,59 @@ def test_train_cli_resolves_semantic_alias_without_language_parsing() -> None:
     assert train_cli._task_id(CANONICAL_TASK_IDS[5]) == CANONICAL_TASK_IDS[5]
     with pytest.raises(ValueError, match="unknown task ID"):
         train_cli._task_id("pick up the red cube")
+
+
+def test_tiny_overfit_loss_view_is_not_mislabeled_as_held_out_validation() -> None:
+    task_id = CANONICAL_TASK_IDS[0]
+    config = ActExperimentConfig(
+        variant=ActVariant.PER_TASK,
+        data=ActDataConfig(dataset_root="fixture"),
+        model=ActModelConfig.for_variant(ActVariant.PER_TASK),
+        task_id=task_id,
+        mode=ExperimentMode.TINY_OVERFIT,
+    )
+    train_view = DatasetEpisodeView(
+        split=DatasetSplit.TRAIN,
+        episode_indices=(0,),
+        task_id=task_id,
+    )
+    formal_validation, contract = train_cli._offline_loss_identity_contract(
+        config=config,
+        train_view=train_view,
+        offline_loss_view=train_view,
+    )
+    assert formal_validation == ()
+    assert contract == {
+        "role": "train_tiny_overfit_diagnostic",
+        "episode_indices": [0],
+    }
+
+
+def test_full_run_rejects_any_train_validation_overlap() -> None:
+    task_id = CANONICAL_TASK_IDS[0]
+    config = ActExperimentConfig(
+        variant=ActVariant.PER_TASK,
+        data=ActDataConfig(dataset_root="fixture"),
+        model=ActModelConfig.for_variant(ActVariant.PER_TASK),
+        task_id=task_id,
+        mode=ExperimentMode.FULL,
+    )
+    train_view = DatasetEpisodeView(
+        split=DatasetSplit.TRAIN,
+        episode_indices=(0, 1),
+        task_id=task_id,
+    )
+    overlapping_view = DatasetEpisodeView(
+        split=DatasetSplit.VALIDATION,
+        episode_indices=(1, 2),
+        task_id=task_id,
+    )
+    with pytest.raises(RuntimeError, match="offline loss may overlap training"):
+        train_cli._offline_loss_identity_contract(
+            config=config,
+            train_view=train_view,
+            offline_loss_view=overlapping_view,
+        )
 
 
 def test_resume_recovers_checkpoint_bound_metric_after_process_interruption(

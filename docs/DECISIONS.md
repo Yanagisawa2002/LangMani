@@ -803,6 +803,23 @@ M2 benchmark thresholds and justifies committing the constants, but it is diagno
 Formal M2 acceptance still requires the clean committed `verify_m2.py --target` run and rendered
 12-phase artifact check.
 
+## D-033 — Distinguish tiny-overfit diagnostics from held-out validation identity
+
+The first clean M4 target-smoke attempt reached the real M3B dataset after the ordered M0 through
+M3B gates passed, then both CUDA training commands stopped before optimization. Tiny-overfit
+correctly evaluates loss on the same deterministic train view it is intended to memorize, but the
+training command had also copied that view into `ordered_validation_episode_indices`.
+`ActRunIdentity` correctly rejected the overlap instead of allowing evidence to mislabel training
+episodes as held-out validation.
+
+M4 now keeps formal validation indices empty for tiny-overfit and records the reused episode indices
+under an explicit `train_tiny_overfit_diagnostic` role in the fingerprinted data contract. The same
+explicit rule covers development-mode fallback when a small dataset has no validation episodes.
+Partial overlaps, full-run overlaps, and every unclassified reuse remain errors. Full experiments
+still use disjoint M3B train, validation, and locked-test scene-group splits; validation-only
+checkpoint selection and test locking are unchanged. The target smoke must be rerun from this clean
+commit before any CUDA training, learned rollout, or physical M4 acceptance is claimed.
+
 ## Local bootstrap evidence
 
 The bootstrap was authored on Windows 11, which is not an acceptance platform. In an isolated

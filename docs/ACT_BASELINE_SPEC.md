@@ -335,10 +335,13 @@ duration remains a measured lower bound rather than being mislabeled as total tr
 
 Dry-run validates every gate and reports fingerprints, variant/task, shapes, episode counts,
 train-statistics identity, effective ACT configuration, run directory, and schedules without
-starting a long optimization. Tiny-overfit is a sanity gate, not full evidence. Per-task tiny
-overfit requires final fixed-view offline loss no greater than 50% of the pre-training loss on that
-same deterministic tiny view and records its same-scene rollout outcome. Task-one-hot tiny overfit uses
-one complete six-task train group, varies only the oracle one-hot, and attempts all six rollouts;
+starting a long optimization. Tiny-overfit is a sanity gate, not full evidence. Its fixed-view loss
+is explicitly recorded as a training-view overfit diagnostic, not held-out validation; the run
+identity therefore keeps formal validation indices empty while binding the diagnostic role and
+episode indices in the data contract. Per-task tiny overfit requires final fixed-view offline loss
+no greater than 50% of the pre-training loss on that same deterministic tiny view and records its
+same-scene rollout outcome. Task-one-hot tiny overfit uses one complete six-task train group, varies
+only the oracle one-hot, and attempts all six rollouts;
 its target quality gate is 6/6. A miss is reported and investigated without changing labels,
 success geometry, test data, or temporal/action contracts.
 

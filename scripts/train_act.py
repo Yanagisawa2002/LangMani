@@ -416,6 +416,38 @@ def _data_and_statistics(
     return completed, train_view, validation_view, statistics
 
 
+def _offline_loss_identity_contract(
+    *,
+    config: ActExperimentConfig,
+    train_view: DatasetEpisodeView,
+    offline_loss_view: DatasetEpisodeView,
+) -> tuple[tuple[int, ...], dict[str, object]]:
+    """Separate held-out validation identity from a train-view diagnostic loss."""
+
+    train_indices = train_view.episode_indices
+    offline_indices = offline_loss_view.episode_indices
+    overlap = set(train_indices) & set(offline_indices)
+    if not overlap:
+        return offline_indices, {
+            "role": "held_out_validation",
+            "episode_indices": list(offline_indices),
+        }
+    diagnostic_roles = {
+        ExperimentMode.TINY_OVERFIT: "train_tiny_overfit_diagnostic",
+        ExperimentMode.DEVELOPMENT: "train_development_diagnostic",
+    }
+    role = diagnostic_roles.get(config.mode)
+    if role is None or offline_indices != train_indices:
+        raise RuntimeError(
+            "offline loss may overlap training only when an explicit development or "
+            "tiny-overfit diagnostic reuses the complete train view"
+        )
+    return (), {
+        "role": role,
+        "episode_indices": list(offline_indices),
+    }
+
+
 def _identity(
     *,
     config: ActExperimentConfig,
@@ -427,11 +459,17 @@ def _identity(
     git_dirty: bool,
 ) -> ActRunIdentity:
     versions = runtime_versions()
+    formal_validation_indices, offline_loss_contract = _offline_loss_identity_contract(
+        config=config,
+        train_view=train_view,
+        offline_loss_view=validation_view,
+    )
     data_contract = {
         **config.data.identity_dict(),
         "m3b_feature_contract": completed.manifest.config.feature_contract.to_dict(),
         "policy_state_schema": completed.manifest.config.policy_state_schema.to_dict(),
         "task_onehot": task_onehot_contract(),
+        "offline_loss_view": offline_loss_contract,
         "evaluation_config": config.evaluation.to_dict(),
         "evaluation_schedules": _evaluation_schedule_contract(completed, config),
     }
@@ -439,7 +477,7 @@ def _identity(
         m3b_export_fingerprint=completed.export_fingerprint,
         m3b_split_manifest_digest=completed.split_manifest_digest,
         ordered_train_episode_indices=train_view.episode_indices,
-        ordered_validation_episode_indices=validation_view.episode_indices,
+        ordered_validation_episode_indices=formal_validation_indices,
         variant=config.variant,
         task_id=config.task_id,
         task_onehot_mapping_version="CanonicalTaskOneHotV0",
@@ -624,7 +662,9 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
         },
         "output_shape": [config.model.action_dimension],
         "train_episode_count": len(train_view.episode_indices),
-        "validation_episode_count": len(validation_view.episode_indices),
+        "validation_episode_count": len(identity.ordered_validation_episode_indices),
+        "offline_loss_episode_count": len(validation_view.episode_indices),
+        "offline_loss_role": identity.data_contract["offline_loss_view"]["role"],
         "train_statistics_fingerprint": statistics.statistics_fingerprint,
         "act_config": {
             **config.model.to_dict(),
