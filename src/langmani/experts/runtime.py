@@ -7,20 +7,21 @@ import os
 import subprocess
 import sys
 from collections.abc import Mapping
+from functools import cache
 from pathlib import Path
 from types import MappingProxyType
 from typing import cast
 
 PLANNER_PYTHON_ENV = "LANGMANI_PLANNER_PYTHON"
-PLANNER_RUNTIME_DISTRIBUTIONS: Mapping[str, str] = MappingProxyType(
+PLANNER_RUNTIME_MODULES: Mapping[str, str] = MappingProxyType(
     {
         "gymnasium": "gymnasium",
         "h5py": "h5py",
-        "mani_skill": "mani-skill",
+        "mani_skill": "mani_skill",
         "mplib": "mplib",
         "numpy": "numpy",
-        "opencv_python": "opencv-python",
-        "pillow": "Pillow",
+        "opencv_python": "cv2",
+        "pillow": "PIL",
         "sapien": "sapien",
         "scipy": "scipy",
         "torch": "torch",
@@ -33,7 +34,7 @@ EXPECTED_PLANNER_RUNTIME_VERSIONS: Mapping[str, str] = MappingProxyType(
         "mani_skill": "3.0.1",
         "mplib": "0.1.1",
         "numpy": "1.26.4",
-        "opencv_python": "4.11.0.86",
+        "opencv_python": "4.11.0",
         "pillow": "12.3.0",
         "sapien": "3.0.3",
         "scipy": "1.15.3",
@@ -63,20 +64,33 @@ def resolve_planner_python(value: str | os.PathLike[str] | None = None) -> str:
 def query_planner_runtime_versions(
     python_executable: str | os.PathLike[str] | None = None,
 ) -> dict[str, str | None]:
-    """Read exact distribution versions from the selected interpreter."""
+    """Read effective imported module versions from the selected interpreter."""
 
     interpreter = resolve_planner_python(python_executable)
-    distributions_json = json.dumps(dict(PLANNER_RUNTIME_DISTRIBUTIONS), sort_keys=True)
+    return dict(_query_planner_runtime_version_items(interpreter))
+
+
+@cache
+def _query_planner_runtime_version_items(
+    interpreter: str,
+) -> tuple[tuple[str, str | None], ...]:
+    """Probe one interpreter once and retain immutable results for this process."""
+
+    modules_json = json.dumps(dict(PLANNER_RUNTIME_MODULES), sort_keys=True)
     probe = (
         "import json\n"
-        "from importlib import metadata\n"
-        f"distributions = json.loads({distributions_json!r})\n"
+        "from importlib import import_module\n"
+        f"modules = json.loads({modules_json!r})\n"
         "versions = {}\n"
-        "for key, distribution in distributions.items():\n"
+        "for key, module_name in modules.items():\n"
         "    try:\n"
-        "        versions[key] = metadata.version(distribution)\n"
-        "    except metadata.PackageNotFoundError:\n"
+        "        module = import_module(module_name)\n"
+        "    except ModuleNotFoundError as error:\n"
+        "        if error.name != module_name:\n"
+        "            raise\n"
         "        versions[key] = None\n"
+        "    else:\n"
+        "        versions[key] = getattr(module, '__version__', None)\n"
         "print(json.dumps(versions, sort_keys=True))\n"
     )
     try:
@@ -100,14 +114,14 @@ def query_planner_runtime_versions(
         raise PlannerRuntimeError(
             "planner runtime version probe returned malformed JSON"
         ) from error
-    if not isinstance(payload, dict) or set(payload) != set(PLANNER_RUNTIME_DISTRIBUTIONS):
+    if not isinstance(payload, dict) or set(payload) != set(PLANNER_RUNTIME_MODULES):
         raise PlannerRuntimeError("planner runtime version probe returned an unexpected schema")
     result: dict[str, str | None] = {}
     for key, value in payload.items():
         if value is not None and not isinstance(value, str):
             raise PlannerRuntimeError(f"planner runtime version {key!r} is malformed")
         result[str(key)] = cast(str | None, value)
-    return dict(sorted(result.items()))
+    return tuple(sorted(result.items()))
 
 
 def planner_runtime_matches_expected(versions: Mapping[str, str | None]) -> bool:
@@ -126,7 +140,7 @@ def planner_runtime_matches_expected(versions: Mapping[str, str | None]) -> bool
 __all__ = [
     "EXPECTED_PLANNER_RUNTIME_VERSIONS",
     "PLANNER_PYTHON_ENV",
-    "PLANNER_RUNTIME_DISTRIBUTIONS",
+    "PLANNER_RUNTIME_MODULES",
     "PlannerRuntimeError",
     "planner_runtime_matches_expected",
     "query_planner_runtime_versions",

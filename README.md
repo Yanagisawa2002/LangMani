@@ -606,9 +606,11 @@ that conditional dependency. LangMani does not change or duplicate the upstream 
 environment retains its pinned NumPy 2 stack. The planner virtual environment inherits that exact
 environment and overlays only NumPy 1.26.4, SciPy 1.15.3, and OpenCV 4.11.0.86. Do not run
 `pip check` inside this intentional overlay: inherited LeRobot metadata describes the main runtime.
-Instead, `verify_planner_runtime.py` checks the complete exact planner package set and constructs and
-synchronizes the installed Panda planner. The adapter also checks mplib and NumPy before entering
-the native constructor and fails clearly when either version changes.
+Instead, `verify_planner_runtime.py` imports and checks the complete effective planner module set,
+then constructs and synchronizes the installed Panda planner. Import checks avoid mistaking inherited
+main-environment distribution metadata for the overlay that Python actually loads. The adapter also
+checks mplib and NumPy before entering the native constructor and fails clearly when either version
+changes.
 
 `environment/environment.yml` selects PyTorch 2.11.0 and torchvision 0.26.0 from the official
 CUDA 12.8 wheel index. That path requires an NVIDIA driver new enough for CUDA 12.8; the current

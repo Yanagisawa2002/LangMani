@@ -88,10 +88,10 @@ in the expert's `pd_joint_pos` action path.
 
 The main environment retains NumPy 2.2.6. `runtime.py` selects an explicit inherited virtual
 environment that overlays the NumPy 1.26.4 ABI required by mplib 0.1.1 and validates the complete
-planner-side package set. M0/M1 and M3A inspection stay in the main interpreter; planner creation,
-expert commands, M3A collection, and action replay use the selected interpreter. These are bounded,
-sequential command processes. The planner itself remains in-process with `num_envs=1`; M2/M3A add
-neither planner multiprocessing nor vectorization.
+effective planner-side module set. M0/M1 and M3A inspection stay in the main interpreter; planner
+creation, expert commands, M3A collection, and action replay use the selected interpreter. These are
+bounded, sequential command processes. The planner itself remains in-process with `num_envs=1`;
+M2/M3A add neither planner multiprocessing nor vectorization.
 
 The stable phase sequence is `initialize`, `move_to_pregrasp`, `approach_target`, `close_gripper`,
 `verify_grasp`, `lift_target`, `move_above_destination`, `descend_to_place`, `open_gripper`,

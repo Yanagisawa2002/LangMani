@@ -770,9 +770,11 @@ The main environment is not downgraded: doing so would change the already pinned
 M0/M3B/M4 dependency surface. Instead, native planner construction uses an explicit Python 3.12.13
 virtual environment created with `--system-site-packages`. It inherits the exact main runtime and
 overlays only NumPy 1.26.4, SciPy 1.15.3, and OpenCV 4.11.0.86. The selected interpreter is stored in
-`LANGMANI_PLANNER_PYTHON`; `environment/verify_planner_runtime.py` checks exact Gymnasium, h5py,
-ManiSkill, mplib, NumPy, OpenCV, Pillow, SAPIEN, SciPy, and PyTorch versions before constructing and
-synchronizing the Panda planner. `MplibPandaPlannerAdapter` separately rejects a non-1.26.4 NumPy
+`LANGMANI_PLANNER_PYTHON`; `environment/verify_planner_runtime.py` imports Gymnasium, h5py,
+ManiSkill, mplib, NumPy, OpenCV, Pillow, SAPIEN, SciPy, and PyTorch and checks their effective module
+versions before constructing and synchronizing the Panda planner. Importing modules is deliberate:
+`importlib.metadata` can select inherited main-environment distribution metadata instead of the
+overlay actually used by Python. `MplibPandaPlannerAdapter` separately rejects a non-1.26.4 NumPy
 runtime before the unsafe native constructor.
 
 `verify_m2.py --target` keeps M0 and M1 in the main runtime, then runs the planner gate and all M2
@@ -780,7 +782,7 @@ expert commands in the side runtime. M3A uses that same interpreter for expert c
 action replay, while its offline archive inspection remains in the main runtime. This is sequential
 command orchestration, not an expert architecture change: mplib remains in-process with
 `num_envs=1`, and no planner multiprocessing or vectorization is introduced. M3A manifests now bind
-all ten planner-side distribution versions. Because no authoritative M3A archive existed before
+all ten effective planner-side module versions. Because no authoritative M3A archive existed before
 this change, the v1 schema is retained; older/incomplete mappings fail strict parsing and cannot be
 silently resumed.
 

@@ -8,7 +8,7 @@ import pytest
 from langmani.experts.runtime import (
     EXPECTED_PLANNER_RUNTIME_VERSIONS,
     PLANNER_PYTHON_ENV,
-    PLANNER_RUNTIME_DISTRIBUTIONS,
+    PLANNER_RUNTIME_MODULES,
     PlannerRuntimeError,
     planner_runtime_matches_expected,
     query_planner_runtime_versions,
@@ -36,7 +36,7 @@ def test_planner_python_defaults_to_current_interpreter_and_honors_explicit_env(
 def test_runtime_probe_returns_the_complete_stable_version_mapping() -> None:
     versions = query_planner_runtime_versions(sys.executable)
 
-    assert set(versions) == set(PLANNER_RUNTIME_DISTRIBUTIONS)
+    assert set(versions) == set(PLANNER_RUNTIME_MODULES)
     assert all(value is None or isinstance(value, str) for value in versions.values())
 
 
