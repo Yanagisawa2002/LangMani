@@ -77,6 +77,41 @@ def _base_environment(env: object) -> Any:
     return getattr(env, "unwrapped", env)
 
 
+def _single_action_bounds(env: object, base_environment: Any) -> tuple[np.ndarray, np.ndarray]:
+    """Resolve ManiSkill single-action bounds through the public wrapper contract."""
+
+    action_space = None
+    getter = getattr(env, "get_wrapper_attr", None)
+    if callable(getter):
+        try:
+            action_space = getter("single_action_space")
+        except (AttributeError, LookupError):
+            action_space = None
+    for owner, name in (
+        (env, "single_action_space"),
+        (base_environment, "single_action_space"),
+        (env, "action_space"),
+        (base_environment, "action_space"),
+    ):
+        if action_space is None:
+            action_space = getattr(owner, name, None)
+    if (
+        action_space is None
+        or not hasattr(action_space, "low")
+        or not hasattr(action_space, "high")
+    ):
+        raise RolloutContractError("M1 rollout environment must expose explicit action bounds")
+    low = np.asarray(action_space.low, dtype=np.float32)
+    high = np.asarray(action_space.high, dtype=np.float32)
+    if low.shape == (1, ACT_ACTION_COMPONENTS):
+        low = low[0]
+    if high.shape == (1, ACT_ACTION_COMPONENTS):
+        high = high[0]
+    if low.shape != (ACT_ACTION_COMPONENTS,) or high.shape != (ACT_ACTION_COMPONENTS,):
+        raise RolloutContractError("M1 single-action bounds must have shape (8,)")
+    return np.array(low, copy=True), np.array(high, copy=True)
+
+
 def _reset_component(component: object, name: str) -> None:
     reset = getattr(component, "reset", None)
     if not callable(reset):
@@ -232,8 +267,7 @@ class ActManiSkillRolloutAdapter:
         ):
             raise RolloutContractError("M1 reset metadata disagrees with rollout schedule")
 
-        action_low = np.asarray(self.env.single_action_space.low, dtype=np.float32)
-        action_high = np.asarray(self.env.single_action_space.high, dtype=np.float32)
+        action_low, action_high = _single_action_bounds(self.env, self.base)
         final_evaluation = _current_evaluation(self.base, reset_info)
         inference_latencies: list[float] = []
         environment_latencies: list[float] = []

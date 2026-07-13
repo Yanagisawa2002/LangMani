@@ -127,8 +127,26 @@ class _Env:
         )
 
 
+class _TimeLimitLikeWrapper:
+    """Gymnasium-style wrapper that does not proxy arbitrary attributes directly."""
+
+    def __init__(self, env: _Env) -> None:
+        self.env = env
+        self.unwrapped = env
+        self.spec = env.spec
+
+    def get_wrapper_attr(self, name: str) -> object:
+        return getattr(self.env, name)
+
+    def reset(self, *, seed: int, options: dict[str, object]) -> tuple[object, dict[str, object]]:
+        return self.env.reset(seed=seed, options=options)
+
+    def step(self, action: np.ndarray) -> tuple[object, float, object, object, dict[str, object]]:
+        return self.env.step(action)
+
+
 def _adapter(
-    env: _Env, policy: _Policy
+    env: object, policy: _Policy
 ) -> tuple[ActManiSkillRolloutAdapter, _Processor, _Processor]:
     pre = _Processor(add_batch=True)
     post = _Processor()
@@ -182,6 +200,22 @@ def test_rollout_resets_all_state_and_executes_raw_actions() -> None:
     assert policy.inputs[0][IMAGE_FEATURE_KEY].shape == (1, 3, 256, 256)
     assert policy.inputs[0][IMAGE_FEATURE_KEY].dtype == torch.float32
     assert policy.inputs[0][STATE_FEATURE_KEY].shape == (1, 9)
+
+
+@pytest.mark.fixture
+@pytest.mark.evaluation
+def test_rollout_resolves_single_action_space_through_timelimit_wrapper() -> None:
+    base = _Env()
+    wrapper = _TimeLimitLikeWrapper(base)
+    adapter, _, _ = _adapter(wrapper, _Policy())
+    result = adapter.run_episode(
+        evaluation_id="fixture-wrapped-environment",
+        split=EvaluationSplit.VALIDATION,
+        scene_seed=3,
+        task_spec=CANONICAL_TASK_SPECS[0],
+    )
+    assert result.status is RolloutStatus.SUCCESS
+    assert base.step_calls == 2
 
 
 @pytest.mark.fixture

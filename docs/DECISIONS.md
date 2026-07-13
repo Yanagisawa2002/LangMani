@@ -836,6 +836,22 @@ explicit module transfer call; the native target smoke remains the required CUDA
 and checkpoint evidence. No dependency, model architecture, precision, dataset, split, loss, or
 quality threshold changes.
 
+## D-035 — Resolve policy action bounds through the ManiSkill wrapper boundary
+
+The first fully trained target-smoke models reached closed-loop evaluation, but both rollout
+commands stopped before their first policy action because ManiSkill 3.0.1 returns a
+`TimeLimitWrapper` that has no direct `single_action_space` attribute. The unwrapped M1 environment
+does expose the single-action bounds, and Gymnasium wrappers expose wrapped attributes through
+`get_wrapper_attr`. M3A replay had already validated this installed wrapper behavior through its
+equivalent action-space resolution path.
+
+The M4 rollout adapter now resolves `single_action_space` through `get_wrapper_attr`, then explicit
+wrapped/unwrapped single-space and action-space fallbacks. A leading singleton batch dimension is
+removed only from bounds with exact shape `[1,8]`; the final bounds must be exactly `[8]`. Predicted
+actions remain float32 `[1,8]`, are reduced to one raw `[8]` environment action, and are rejected
+rather than clipped when out of bounds. No action scale, control mode, environment wrapper, success
+criterion, model, dataset, or quality threshold changes.
+
 ## Local bootstrap evidence
 
 The bootstrap was authored on Windows 11, which is not an acceptance platform. In an isolated

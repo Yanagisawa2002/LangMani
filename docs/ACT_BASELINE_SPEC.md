@@ -356,7 +356,9 @@ The adapter creates the M1 environment with `num_envs=1`, RGB policy observation
 `base_camera` RGB and `PandaPolicyStateV0`; the task-one-hot variant additionally encodes the active
 nonprivileged command `TaskSpec`. It applies the saved preprocessor, calls installed
 `ACTPolicy.select_action`, applies the saved postprocessor, and checks float32 `[1,8]`, finiteness,
-and M1 bounds.
+and M1 bounds. Single-action bounds are resolved through Gymnasium's wrapper attribute contract or
+the unwrapped ManiSkill environment because ManiSkill 3.0.1's `TimeLimitWrapper` does not expose
+`single_action_space` as a direct wrapper attribute.
 
 Out-of-bounds actions are recorded as `invalid_action` and terminate the episode. They are never
 silently clipped. Inference failures, environment failures, off-table outcomes, truncation, and
