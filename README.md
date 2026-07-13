@@ -565,7 +565,9 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
 M4.1 target smoke validates the completed M0--M3B smoke evidence, reuses the existing PerTask and
 Mixed-TaskOneHot checkpoints without training, reproduces strict rejection, executes one projected
 legal action, and attempts one plus six learned-policy M1 rollouts. Reports separate raw validity,
-projected legality, task success, and strict-unprojected success. Full mode requires the real
+projected legality, task success, and strict-unprojected success. The clean RTX 4090 M4.1 run passed
+PerTask 1/1 and TaskOneHot 6/6; 834/951 rollout actions projected only the gripper, so raw-bound
+validity and strict-unprojected success correctly remain false. Full mode requires the real
 finalized 360-episode dataset, all six per-task policies,
 both mixed policies, the complete counterfactual audit, validation-only selection, locked test, and
 the 180-episode fresh benchmark. Target modes require the current worktree to be clean before any

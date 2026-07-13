@@ -541,10 +541,12 @@ is intentionally independent and remains false if any successful episode require
 good model quality. `baseline_quality_validated` remains separate and may be false with truthful
 results. The RTX 4090 smoke chain has produced one real six-episode M3B dataset and the two CUDA
 tiny-overfit checkpoints; their losses converged and one-hot changes predictions. The original
-strict rollout correctly stopped on raw bound overshoot before its first step. M4.1 projected
-closed-loop results remain pending until the clean committed runtime is rerun. The 360-episode
-dataset, eight full experiments, locked test/fresh benchmark, and full acceptance also remain
-pending and are outside M4.1.
+strict rollout correctly stopped on raw bound overshoot before its first step. The clean M4.1
+projected smoke passed: PerTask was 1/1, Mixed-TaskOneHot was 6/6, combined task success was 7/7,
+and strict-unprojected success was 0/7. The report correctly keeps raw-bound validity false while
+projected-bound validity and physical closed-loop validation are true. The 360-episode dataset,
+eight full experiments, locked test/fresh benchmark, and full acceptance remain pending and are
+outside M4.1.
 
 ## Handoff
 

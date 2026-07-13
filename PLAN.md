@@ -37,11 +37,9 @@ result.
 M2 uses a deterministic top grasp and bin-interior-center placement. It preserves M1's visual
 no-leakage contract and adds no trajectory recorder, dataset export, training, deployable vision
 policy, LLM/VLM call, teleoperation, reinforcement learning, or domain randomization. mplib is not
-vectorized and no multiprocessing or RRT fallback is introduced. Native Linux RTX 4090 execution,
-CUDA, Vulkan, PhysX GPU, rendering, and physical expert acceptance remain pending until the ordered
-M0/M1/M2 target verification commands all pass. The target gate includes a six-task smoke and a
-balanced 180-rollout benchmark with explicit success, wrong-target, classification, and crash
-thresholds.
+vectorized and no multiprocessing or RRT fallback is introduced. The native RTX 4090 target gate
+passed its six-task smoke and 177/180 balanced benchmark (98.33%) with zero wrong-target successes,
+unclassified failures, or crashes.
 
 ## M3A — ManiSkill-native raw demonstrations (implementation complete)
 
@@ -54,8 +52,8 @@ M3A owns typed collection/replay contracts, cryptographic stable IDs, bounded re
 `RecordEpisode` integration, HDF5/JSON shards with environment states and actions, attempt and
 episode manifests, action replay, state audit, corruption/schema checks, resume behavior,
 inspection commands, and target verification. It does not create LeRobotDataset, Parquet, policy
-videos, training data transformations, or policies. Native Linux collection and the first
-authoritative 60-group archive remain pending until the target gate passes.
+videos, training data transformations, or policies. One six-task native target smoke group passed
+recording and action replay; the authoritative 60-group archive remains pending full collection.
 
 ## M3B — LeRobotDataset v3 export (implementation complete)
 
@@ -70,10 +68,11 @@ source-to-derived mapping, a project lifecycle guard around the public LeRobot 0
 PyAV H.264/yuv444p video, all-or-nothing staging, independent source/action/state/video/Parquet validation,
 DataLoader smoke tests, and structural/smoke/full verification modes. M3A remains authoritative.
 M3B adds no training, policy configuration, Hub upload, failure trajectories, additional sensors,
-language generation, or parallel export. Real state-restoration rendering and the first complete
-360-episode derived dataset remain pending target-machine acceptance.
+language generation, or parallel export. One six-task target export passed real state-restoration
+rendering, H.264 decode, source alignment, finalization, and public reload; the complete 360-episode
+derived dataset remains pending full acceptance.
 
-## M4.1 — Auditable ACT action-bound handling (active)
+## M4.1 — Auditable ACT action-bound handling (complete)
 
 Train and compare exactly three controls on one completed M3B dataset: six `per_task` ACT policies
 with image plus 9D Panda state; one `mixed_unconditioned` ACT with the same 9D input and deliberate
@@ -93,6 +92,10 @@ validates the completed M0-through-M3B evidence, reuses the existing PerTask and
 checkpoints without training, reproduces strict bound rejection, executes a projected legal step,
 then attempts one PerTask and six same-scene TaskOneHot rollouts. It does not start the finalized
 60-group dataset, eight full ACT runs, M4 full selection/test/fresh-seed protocol, or M5.
+
+The clean RTX 4090 smoke passed PerTask 1/1 and TaskOneHot 6/6. All seven task successes required
+at least one explicit gripper projection, so strict-unprojected success remains 0/7 and raw-action
+bounds validity remains false. This closes M4.1 without claiming M4 full acceptance.
 
 ## M5 — SmolVLA baseline (planned)
 

@@ -880,10 +880,25 @@ runtime fingerprint covering checkpoint, saved preprocessor/postprocessor, actio
 environment/action-space contract, task mapping, rollout configuration, code commit, and M4.1
 schema. Runtime manifests and checksummed per-step audits live beside evaluation results. Target
 smoke reuses the two existing checkpoints and completed M3B smoke dataset; it may not train or
-rewrite earlier artifacts. It first reproduces strict rejection and executes one projected legal
-step, then attempts one PerTask and six same-scene one-hot rollouts. Until that clean committed rerun
-finishes, projected closed-loop task results and M4.1 physical flags remain pending; this decision
-will record the actual outcome rather than infer success from the implementation.
+rewrite earlier artifacts. The clean RTX 4090 run at commit
+`f144a9485717dc38c8df74832c694ec8c1534a42` passed. Its strict probe reproduced raw one-hot
+gripper `1.0507922172546387`, rejected it before `env.step`, projected it to exactly `1.0`, and
+executed one real M1 step with L1/L2/L-infinity correction `0.05079221725463867`.
+
+The unchanged PerTask checkpoint
+`sha256:9dcdbd392673c6fef9796d17db2d05691266fcd14deea2c9cd832fe67ece5a62`
+completed red-left in 132 steps. It projected 124/132 actions (93.94%), only in the gripper
+dimension, with maximum excess/correction `0.2882833480834961`. The unchanged TaskOneHot checkpoint
+`sha256:cee1183ded4d2dde335a139d639cbb57f6362856fcd749be413e9400943ac16f`
+completed all six same-scene tasks in 133, 131, 135, 140, 139, and 141 steps. It projected 710/819
+actions (86.69%), again only in the gripper dimension, with maximum excess/correction
+`0.11678099632263184`. Combined rollout task success was 7/7, projection was 834/951 actions
+(87.70%), and strict-unprojected success was honestly 0/7. No malformed/nonfinite action,
+infrastructure failure, M2 action, checkpoint modification, retraining, data rewrite, or success-
+threshold change occurred. Model, saved processors, and action-bound processor reloaded
+deterministically. Consequently raw-bound validity is false while projected-bound validity,
+closed-loop inference, the 6/6 task gate, and M4.1 physical target validation are true. M4 full
+remains unstarted.
 
 ## Local bootstrap evidence
 
@@ -1004,8 +1019,9 @@ workaround.
 10. **The full 360-episode M3B dataset remains pending.** Target smoke exported, finalized, decoded,
     source-aligned, and publicly reloaded six real H.264 episodes. Full scene splits and every video
     remain subject to `verify_m3b.py --target-full` after the full M3A archive exists.
-11. **M4.1 projected closed-loop quality is not yet known.** Real CUDA PerTask and TaskOneHot
-    tiny-overfit training and local reload completed, but strict inference exposed finite ACT
-    regression overshoot before the first environment step. The explicit projection implementation
-    must be rerun from a clean commit. Full eight-model training, selection, locked test, fresh-seed
-    benchmark, peak-memory/throughput comparison, and full acceptance remain outside M4.1.
+11. **M4.1 succeeds only under frequent explicit gripper projection.** Target smoke passed 1/1
+    PerTask and 6/6 TaskOneHot, but 834/951 rollout actions projected the gripper and strict-
+    unprojected success was 0/7. Raw ACT validity must remain reported false; future baselines should
+    not confuse projected control success with calibrated raw regression. Full eight-model training,
+    selection, locked test, fresh-seed benchmark, peak-memory/throughput comparison, and full
+    acceptance remain outside M4.1.

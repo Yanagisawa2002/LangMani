@@ -3,8 +3,8 @@
 ## Purpose
 
 LangMani supports language-conditioned robotic manipulation in ManiSkill. M0 through M3B and the
-M4 implementation are complete. The active M4.1 scope is explicit, auditable action-bound handling
-for existing ACT checkpoints during closed-loop evaluation.
+M4 implementation are complete. M4.1 explicit, auditable action-bound handling and its target smoke
+are also complete; M4 full has not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
