@@ -408,9 +408,16 @@ explicitly nonfinal and cannot set `full_experiment_validated`.
 ## Counterfactual audits and interpretation
 
 Before interpreting the unconditioned baseline, the offline audit checks every train scene group:
-the six episodes, initial RGB digest, Panda state, and physical observation equivalence; expert
-first actions/chunks; and all task-pair action distances. It reports the fraction of identical
-initial observations and the one-to-many target variance.
+the six episodes, decoded initial RGB, Panda state, and physical observation equivalence; expert
+first actions/chunks; and all task-pair action distances. Exact initial RGB digest equality remains
+a reported diagnostic, but it is not the admission rule because independently encoded H.264
+episodes can decode the same source frame to slightly different pixels. Admission instead requires
+all six decoded first frames to be codec-equivalent under the M3B export's already frozen MAE and
+PSNR thresholds, all six Panda states to match, and at least one task-dependent expert chunk in
+every train scene group. The report records the exact and codec-equivalent fractions, worst
+pairwise first-frame MAE, worst pairwise first-frame PSNR, thresholds, and one-to-many action
+statistics. M4 does not reopen M3A during normal training; it relies on the completed M3B source-
+reconstruction and video-quality gate for the source-to-decoded-frame authority.
 
 For prediction sensitivity, RGB and Panda state are held fixed. Mixed-unconditioned inputs are
 identical and deterministic predictions must be identical. Mixed-task-onehot varies only the six

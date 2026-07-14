@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import hashlib
+import math
 from collections.abc import Mapping, Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Any, cast
 
 import numpy as np
+import numpy.typing as npt
 
 from langmani.datasets.lerobot_types import IMAGE_FEATURE_KEY, STATE_FEATURE_KEY
 from langmani.datasets.schedule import CANONICAL_TASK_SPECS
@@ -32,14 +34,24 @@ class CounterfactualDemonstration:
     panda_state: tuple[float, ...]
     action_chunk: tuple[tuple[float, ...], ...]
     action_is_pad: tuple[bool, ...]
+    initial_rgb: npt.NDArray[np.uint8] | None = field(
+        default=None,
+        repr=False,
+        compare=False,
+    )
 
 
 @dataclass(frozen=True, slots=True)
 class OfflineCounterfactualAudit:
     scene_group_count: int
     identical_initial_rgb_fraction: float
+    codec_equivalent_initial_rgb_fraction: float
     identical_initial_state_fraction: float
     one_to_many_action_fraction: float
+    maximum_pairwise_initial_rgb_mae: float
+    minimum_pairwise_initial_rgb_psnr_db: float
+    initial_rgb_mae_tolerance: float
+    initial_rgb_min_psnr_db: float
     mean_initial_action_variance: float
     mean_pairwise_chunk_distance_by_task_pair: Mapping[str, float]
     passed: bool
@@ -53,13 +65,22 @@ def audit_counterfactual_demonstrations(
     *,
     state_atol: float = 1e-6,
     action_distance_epsilon: float = 1e-8,
+    initial_rgb_mae_tolerance: float = 5.0,
+    initial_rgb_min_psnr_db: float = 30.0,
 ) -> OfflineCounterfactualAudit:
-    """Prove that equal initial observations map to task-dependent expert chunks."""
+    """Prove that codec-equivalent initial observations map to task-dependent chunks."""
     if not groups:
         raise CounterfactualAnalysisError("offline audit requires at least one scene group")
+    if not np.isfinite(initial_rgb_mae_tolerance) or initial_rgb_mae_tolerance < 0:
+        raise ValueError("initial_rgb_mae_tolerance must be finite and non-negative")
+    if not np.isfinite(initial_rgb_min_psnr_db) or initial_rgb_min_psnr_db <= 0:
+        raise ValueError("initial_rgb_min_psnr_db must be finite and positive")
     rgb_equal = 0
+    rgb_codec_equivalent = 0
     state_equal = 0
     one_to_many = 0
+    rgb_maes: list[float] = []
+    rgb_psnrs: list[float] = []
     variances: list[float] = []
     pair_distances: dict[str, list[float]] = {}
     for group_id in sorted(groups):
@@ -70,8 +91,29 @@ def audit_counterfactual_demonstrations(
                 f"scene group {group_id!r} must contain the canonical six tasks"
             )
         ordered = tuple(by_task[task_id] for task_id in CANONICAL_TASK_IDS)
-        if len({item.rgb_digest for item in ordered}) == 1:
+        exact_rgb = len({item.rgb_digest for item in ordered}) == 1
+        if exact_rgb:
             rgb_equal += 1
+        group_maximum_mae = 0.0
+        group_minimum_psnr = 999.0
+        if not exact_rgb:
+            images = tuple(_initial_rgb_array(item) for item in ordered)
+            reference_shape = images[0].shape
+            if any(image.shape != reference_shape for image in images[1:]):
+                raise CounterfactualAnalysisError(
+                    "counterfactual initial RGB arrays must share one shape"
+                )
+            for left in range(6):
+                for right in range(left + 1, 6):
+                    mae, psnr = _rgb_quality_metrics(images[left], images[right])
+                    group_maximum_mae = max(group_maximum_mae, mae)
+                    group_minimum_psnr = min(group_minimum_psnr, psnr)
+        rgb_maes.append(group_maximum_mae)
+        rgb_psnrs.append(group_minimum_psnr)
+        rgb_codec_equivalent += int(
+            group_maximum_mae <= initial_rgb_mae_tolerance
+            and group_minimum_psnr >= initial_rgb_min_psnr_db
+        )
         states = np.asarray([item.panda_state for item in ordered], dtype=np.float64)
         if states.shape != (6, 9) or not np.all(np.isfinite(states)):
             raise CounterfactualAnalysisError("initial Panda states must have shape (6,9)")
@@ -114,11 +156,16 @@ def audit_counterfactual_demonstrations(
     return OfflineCounterfactualAudit(
         scene_group_count=count,
         identical_initial_rgb_fraction=rgb_equal / count,
+        codec_equivalent_initial_rgb_fraction=rgb_codec_equivalent / count,
         identical_initial_state_fraction=state_equal / count,
         one_to_many_action_fraction=one_to_many / count,
+        maximum_pairwise_initial_rgb_mae=max(rgb_maes),
+        minimum_pairwise_initial_rgb_psnr_db=min(rgb_psnrs),
+        initial_rgb_mae_tolerance=float(initial_rgb_mae_tolerance),
+        initial_rgb_min_psnr_db=float(initial_rgb_min_psnr_db),
         mean_initial_action_variance=float(sum(variances) / len(variances)),
         mean_pairwise_chunk_distance_by_task_pair=pair_means,
-        passed=rgb_equal == state_equal == one_to_many == count,
+        passed=rgb_codec_equivalent == state_equal == one_to_many == count,
     )
 
 
@@ -156,7 +203,8 @@ def audit_m3b_train_counterfactuals(
         state = _numeric_array(row[STATE_FEATURE_KEY], "initial Panda state")
         actions = _numeric_array(row["action"], "initial action chunk")
         padding = _boolean_array(row["action_is_pad"], "initial action padding")
-        digest = hashlib.sha256(np.ascontiguousarray(image).tobytes()).hexdigest()
+        initial_rgb = _validated_initial_rgb(image)
+        digest = hashlib.sha256(initial_rgb.tobytes()).hexdigest()
         group_id = completed.views.scene_group_id_by_episode[episode_index]
         groups.setdefault(group_id, []).append(
             CounterfactualDemonstration(
@@ -167,9 +215,14 @@ def audit_m3b_train_counterfactuals(
                     tuple(float(component) for component in action) for action in actions
                 ),
                 action_is_pad=tuple(bool(value) for value in padding.reshape(-1)),
+                initial_rgb=initial_rgb,
             )
         )
-    return audit_counterfactual_demonstrations({key: tuple(value) for key, value in groups.items()})
+    return audit_counterfactual_demonstrations(
+        {key: tuple(value) for key, value in groups.items()},
+        initial_rgb_mae_tolerance=completed.manifest.config.video_mean_absolute_error_tolerance,
+        initial_rgb_min_psnr_db=completed.manifest.config.video_min_psnr_db,
+    )
 
 
 def load_m3b_reference_counterfactual_group(
@@ -216,14 +269,16 @@ def load_m3b_reference_counterfactual_group(
         actions = _numeric_array(row["action"], "reference expert action chunk")
         padding = _boolean_array(row["action_is_pad"], "reference expert action padding")
         task_id = completed.views.task_id_by_episode[episode_index]
+        initial_rgb = _validated_initial_rgb(image)
         by_task[task_id] = CounterfactualDemonstration(
             task_id=task_id,
-            rgb_digest=hashlib.sha256(np.ascontiguousarray(image).tobytes()).hexdigest(),
+            rgb_digest=hashlib.sha256(initial_rgb.tobytes()).hexdigest(),
             panda_state=tuple(float(value) for value in state.reshape(-1)),
             action_chunk=tuple(
                 tuple(float(component) for component in action) for action in actions
             ),
             action_is_pad=tuple(bool(value) for value in padding.reshape(-1)),
+            initial_rgb=initial_rgb,
         )
     if set(by_task) != set(CANONICAL_TASK_IDS):
         raise CounterfactualAnalysisError("reference group does not cover canonical tasks")
@@ -493,10 +548,12 @@ def counterfactual_sensitivity_from_dict(value: object) -> CounterfactualSensiti
         for left in range(6)
         for right in range(left + 1, 6)
     }
-    for field in ("pairwise_first_action_distances", "pairwise_chunk_distances"):
-        distances = value[field]
+    for field_name in ("pairwise_first_action_distances", "pairwise_chunk_distances"):
+        distances = value[field_name]
         if not isinstance(distances, dict) or set(distances) != expected_pairs:
-            raise CounterfactualAnalysisError(f"{field} must contain all 15 canonical task pairs")
+            raise CounterfactualAnalysisError(
+                f"{field_name} must contain all 15 canonical task pairs"
+            )
         if any(
             isinstance(distance, bool)
             or not isinstance(distance, int | float)
@@ -504,7 +561,9 @@ def counterfactual_sensitivity_from_dict(value: object) -> CounterfactualSensiti
             or distance < 0
             for distance in distances.values()
         ):
-            raise CounterfactualAnalysisError(f"{field} must contain finite non-negative values")
+            raise CounterfactualAnalysisError(
+                f"{field_name} must contain finite non-negative values"
+            )
     return CounterfactualSensitivityResult(
         variant=ActVariant(cast(str, value["variant"])),
         scene_id=cast(str, value["scene_id"]),
@@ -549,6 +608,38 @@ def _boolean_array(value: object, label: str) -> np.ndarray:
     if array.dtype != np.dtype(np.bool_):
         raise CounterfactualAnalysisError(f"{label} must use boolean dtype")
     return array
+
+
+def _validated_initial_rgb(value: object) -> npt.NDArray[np.uint8]:
+    array = np.asarray(value)
+    if array.dtype != np.dtype(np.uint8) or array.ndim != 3 or array.size == 0:
+        raise CounterfactualAnalysisError(
+            "initial RGB must be a non-empty three-dimensional uint8 array"
+        )
+    result = np.array(array, dtype=np.uint8, copy=True, order="C")
+    result.setflags(write=False)
+    return result
+
+
+def _initial_rgb_array(
+    demonstration: CounterfactualDemonstration,
+) -> npt.NDArray[np.uint8]:
+    if demonstration.initial_rgb is None:
+        raise CounterfactualAnalysisError(
+            "non-identical RGB digests require decoded initial RGB arrays"
+        )
+    return _validated_initial_rgb(demonstration.initial_rgb)
+
+
+def _rgb_quality_metrics(
+    left: npt.NDArray[np.uint8],
+    right: npt.NDArray[np.uint8],
+) -> tuple[float, float]:
+    difference = left.astype(np.float64) - right.astype(np.float64)
+    mae = float(np.mean(np.abs(difference)))
+    mse = float(np.mean(np.square(difference)))
+    psnr = 999.0 if mse == 0.0 else float(20 * math.log10(255.0) - 10 * math.log10(mse))
+    return mae, psnr
 
 
 __all__ = [

@@ -956,6 +956,29 @@ retained only when its schema, run fingerprint, and checkpoint fingerprint match
 own validated `analysis.json` remains the evidence for that execution. Canonical evidence with a
 different identity or dirty Git provenance still fails closed.
 
+## D-039 — Audit decoded counterfactual RGB with the frozen M3B codec thresholds
+
+The first RTX 5090 M4 full attempt at commit
+`b67c440e6495f7f52d308781b12a42c60b5b1b56` stopped before GPU training because 5 of 48 train
+scene groups did not have byte-identical decoded first frames. The failed audit still showed 48/48
+identical Panda states and 48/48 one-to-many expert chunks. A read-only diagnostic measured a worst
+pairwise decoded-frame MAE of `0.1492462158203125` and a worst PSNR of
+`50.632996173007065` dB. Reconstructing the five affected groups directly from their authoritative
+M3A state[0] records produced byte-identical RGB for all six tasks in every group. The difference
+therefore comes from separately encoding each episode with the already selected lossy H.264
+pipeline, not from scene, task, state, frame, or action misalignment.
+
+M4 keeps exact decoded RGB equality as an explicit diagnostic but admits a train group through
+codec equivalence using the M3B export's immutable video thresholds: mean absolute error at most
+`5.0` and PSNR at least `30.0` dB across every pair of decoded initial frames. The audit records
+both fractions, the observed extrema, and the consumed thresholds. Panda-state equality and
+one-to-many expert-action evidence remain exact all-group requirements. Large visual drift still
+fails closed, and missing decoded RGB evidence for a non-identical digest is an error. Normal M4
+training does not reopen M3A; the completed M3B validation remains responsible for exact M3A action
+alignment, reconstructed state/RGB digests, and decoded-video quality. This fixes an audit/model
+boundary defect without changing M1, M3A, M3B, splits, train-only statistics, ACT configuration,
+checkpoint-selection rules, or action projection.
+
 ## Local bootstrap evidence
 
 The bootstrap was authored on Windows 11, which is not an acceptance platform. In an isolated

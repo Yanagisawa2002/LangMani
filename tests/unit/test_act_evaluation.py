@@ -67,9 +67,43 @@ def test_offline_counterfactual_audit_uses_pad_intersection_and_equal_observatio
     report = audit_counterfactual_demonstrations({"group": demonstrations})
     assert report.passed
     assert report.identical_initial_rgb_fraction == 1.0
+    assert report.codec_equivalent_initial_rgb_fraction == 1.0
     assert report.identical_initial_state_fraction == 1.0
     assert report.one_to_many_action_fraction == 1.0
+    assert report.maximum_pairwise_initial_rgb_mae == 0.0
+    assert report.minimum_pairwise_initial_rgb_psnr_db == 999.0
     assert len(report.mean_pairwise_chunk_distance_by_task_pair) == 15
+
+
+def test_offline_counterfactual_audit_accepts_only_bounded_codec_differences() -> None:
+    demonstrations = tuple(
+        CounterfactualDemonstration(
+            task_id=task_id,
+            rgb_digest=f"rgb-{index}",
+            panda_state=(0.0,) * 9,
+            action_chunk=((float(index),) * 8,),
+            action_is_pad=(False,),
+            initial_rgb=np.full((3, 4, 4), index, dtype=np.uint8),
+        )
+        for index, task_id in enumerate(CANONICAL_TASK_IDS)
+    )
+    report = audit_counterfactual_demonstrations({"group": demonstrations})
+    assert report.passed
+    assert report.identical_initial_rgb_fraction == 0.0
+    assert report.codec_equivalent_initial_rgb_fraction == 1.0
+    assert report.maximum_pairwise_initial_rgb_mae == 5.0
+    assert report.minimum_pairwise_initial_rgb_psnr_db > 30.0
+
+    drifted = list(demonstrations)
+    drifted[-1] = replace(
+        drifted[-1],
+        initial_rgb=np.full((3, 4, 4), 255, dtype=np.uint8),
+    )
+    failed = audit_counterfactual_demonstrations({"group": tuple(drifted)})
+    assert not failed.passed
+    assert failed.codec_equivalent_initial_rgb_fraction == 0.0
+    assert failed.maximum_pairwise_initial_rgb_mae == 255.0
+    assert failed.minimum_pairwise_initial_rgb_psnr_db == 0.0
 
 
 def _validation(
