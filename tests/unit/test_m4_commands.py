@@ -929,6 +929,73 @@ def test_verify_target_modes_are_mutually_exclusive(monkeypatch: pytest.MonkeyPa
     assert error.value.code == 2
 
 
+def test_target_smoke_uses_checkpoint_bound_dataset_after_current_machine_gate(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    current_gate_root = tmp_path / "current-machine-smoke"
+    checkpoint_root = tmp_path / "checkpoint-bound-smoke"
+    fingerprint = "sha256:" + "a" * 64
+    completed = SimpleNamespace(
+        summary=SimpleNamespace(total_episodes=6),
+        export_fingerprint=fingerprint,
+    )
+    calls: list[Path] = []
+
+    def fake_load(root: Path, *, require_full: bool, validate_storage: bool) -> object:
+        calls.append(root)
+        assert require_full is False
+        assert validate_storage is True
+        return completed
+
+    monkeypatch.setattr(verify_m4, "load_completed_m3b_dataset", fake_load)
+    training = {
+        verify_m4._CHECKPOINT_DATASET_ROOT_KEY: str(checkpoint_root),
+        verify_m4._CHECKPOINT_DATASET_FINGERPRINT_KEY: fingerprint,
+    }
+    report = verify_m4.Report()
+    selected = verify_m4._checkpoint_bound_smoke_dataset(
+        report,
+        prior_gate_dataset_root=current_gate_root,
+        per_task_training=training,
+        onehot_training=dict(training),
+    )
+
+    assert selected == checkpoint_root.resolve()
+    assert calls == [checkpoint_root.resolve()]
+    assert report.source_dataset_validated is True
+    assert report.checkpoint_bound_dataset_root == str(checkpoint_root.resolve())
+    assert report.checkpoint_bound_dataset_fingerprint == fingerprint
+    assert str(current_gate_root.resolve()) in report.checks[-1]["detail"]
+
+
+def test_target_smoke_rejects_different_checkpoint_dataset_identities(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setattr(
+        verify_m4,
+        "load_completed_m3b_dataset",
+        lambda *_args, **_kwargs: pytest.fail("mismatched identities must fail before loading"),
+    )
+    fingerprint = "sha256:" + "a" * 64
+    per_task = {
+        verify_m4._CHECKPOINT_DATASET_ROOT_KEY: str(tmp_path / "per-task"),
+        verify_m4._CHECKPOINT_DATASET_FINGERPRINT_KEY: fingerprint,
+    }
+    onehot = {
+        verify_m4._CHECKPOINT_DATASET_ROOT_KEY: str(tmp_path / "onehot"),
+        verify_m4._CHECKPOINT_DATASET_FINGERPRINT_KEY: fingerprint,
+    }
+    with pytest.raises(RuntimeError, match="different M3B dataset roots"):
+        verify_m4._checkpoint_bound_smoke_dataset(
+            verify_m4.Report(),
+            prior_gate_dataset_root=tmp_path / "current",
+            per_task_training=per_task,
+            onehot_training=onehot,
+        )
+
+
 def test_verify_dry_run_requires_target_full(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sys, "argv", ["verify_m4.py", "--dry-run"])
     with pytest.raises(SystemExit) as error:

@@ -932,6 +932,23 @@ every validation, locked-test, fresh-seed, and completed-run revalidation comman
 plan records the mode. No dependency, ACT weight/loss, data split, train statistic, M1 success
 geometry, checkpoint fingerprint, or source dataset changes.
 
+## D-038 — Separate the current-machine smoke gate from checkpoint-bound smoke evaluation data
+
+M4 target smoke checkpoints are immutable and bind the exact M3B export fingerprint used during
+their tiny-overfit run. Re-running the ordered M0-through-M3B smoke chain on another machine creates
+a new, independently valid six-episode export identity. Using that new path to evaluate an existing
+checkpoint correctly fails the evaluator's dataset-identity gate, even when both exports represent
+the same six semantic tasks.
+
+Target smoke therefore keeps the latest completed M3B smoke report as the current-machine hardware
+and data-pipeline prerequisite, but evaluates each reused checkpoint only against the dataset root
+stored in its own run manifest. The PerTask and TaskOneHot checkpoints must name the same root and
+SHA-256 export fingerprint. That archive is loaded with storage validation, must contain exactly six
+episodes, and must reproduce the saved fingerprint before any environment step. The M4 verification
+report records both the current gate dataset and the checkpoint-bound evaluation dataset explicitly.
+This permits an auditable cross-machine artifact migration without retraining, editing a checkpoint,
+rewriting M3B data, or weakening any dataset, action-bound, rollout, or success contract.
+
 ## Local bootstrap evidence
 
 The bootstrap was authored on Windows 11, which is not an acceptance platform. In an isolated

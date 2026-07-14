@@ -508,8 +508,12 @@ test lock, rollout serialization, and truthful physical flags. Fixture success i
 CUDA, model-quality, or physical evidence.
 
 M4.1 target smoke requires explicit `--action-bound-mode project`. It validates the already
-completed M0--M3B smoke report and six-episode M3B dataset, then reuses the existing 5000-step
-PerTask and 10000-step Mixed-TaskOneHot checkpoints without training. Before full rollouts it runs
+completed M0--M3B smoke report and its six-episode M3B dataset as the current-machine prerequisite,
+then reuses the existing 5000-step PerTask and 10000-step Mixed-TaskOneHot checkpoints without
+training. Reused checkpoints are evaluated only with the exact six-episode dataset root and export
+fingerprint stored in both run manifests; this checkpoint-bound archive may have a different path
+from a newly generated current-machine smoke export, but it must pass full storage validation.
+Before full rollouts it runs
 one strict probe: reproduce the known raw violation, prove reject blocks the step, reconstruct and
 validate project mode, and execute exactly one projected legal M1 action. It then attempts one
 PerTask rollout and all six one-hot counterfactual tasks from the shared scene group, retains raw

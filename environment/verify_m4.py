@@ -73,6 +73,8 @@ REPORT_PATH = OUTPUT_ROOT / "diagnostics" / "m4" / "verification.json"
 M3B_REPORT = OUTPUT_ROOT / "diagnostics" / "m3b" / "verification.json"
 DEFAULT_DATASET_ROOT = OUTPUT_ROOT / "datasets" / "m3b" / "langmani-pick-place-lerobot-v1"
 DEFAULT_MODEL_ROOT = OUTPUT_ROOT / "models" / "act"
+_CHECKPOINT_DATASET_ROOT_KEY = "_checkpoint_dataset_root"
+_CHECKPOINT_DATASET_FINGERPRINT_KEY = "_checkpoint_dataset_fingerprint"
 VerificationMode = Literal["structural", "target_smoke", "target_full"]
 
 
@@ -124,6 +126,8 @@ class Report:
     full_experiment_validated: bool = False
     baseline_quality_validated: bool = False
     physical_target_validated: bool = False
+    checkpoint_bound_dataset_root: str | None = None
+    checkpoint_bound_dataset_fingerprint: str | None = None
 
     def check(self, name: str, condition: bool, detail: str) -> None:
         status = "pass" if condition else "fail"
@@ -189,7 +193,7 @@ class Report:
 
     def write(self, *, mode: VerificationMode, dataset_root: Path, dry_run: bool = False) -> None:
         payload = {
-            "schema_version": "langmani-m4.1-verification-v3",
+            "schema_version": "langmani-m4.1-verification-v4",
             "verification_mode": mode,
             "dry_run": dry_run,
             "dataset_root": str(dataset_root.resolve()),
@@ -919,7 +923,71 @@ def _existing_smoke_training(
         or summary.get("run_fingerprint") != manifest.identity.run_fingerprint
     ):
         raise RuntimeError("existing smoke checkpoint does not match the declared M4 run")
+    checkpoint_dataset_fingerprint = manifest.identity.m3b_export_fingerprint
+    reported_dataset_fingerprint = payload.get("dataset_fingerprint")
+    if (
+        reported_dataset_fingerprint is not None
+        and reported_dataset_fingerprint != checkpoint_dataset_fingerprint
+    ):
+        raise RuntimeError("smoke training report disagrees with its checkpoint dataset identity")
+    payload = dict(payload)
+    payload[_CHECKPOINT_DATASET_ROOT_KEY] = str(
+        Path(manifest.config.data.dataset_root).expanduser().resolve()
+    )
+    payload[_CHECKPOINT_DATASET_FINGERPRINT_KEY] = checkpoint_dataset_fingerprint
     return payload
+
+
+def _checkpoint_bound_smoke_dataset(
+    report: Report,
+    *,
+    prior_gate_dataset_root: Path,
+    per_task_training: dict[str, object],
+    onehot_training: dict[str, object],
+) -> Path:
+    """Validate and select the immutable dataset identity saved by both smoke checkpoints."""
+
+    training_evidence = (per_task_training, onehot_training)
+    if any(
+        not str(training.get(_CHECKPOINT_DATASET_ROOT_KEY, "")) for training in training_evidence
+    ):
+        raise RuntimeError("smoke checkpoint lacks its bound M3B dataset root")
+    roots = tuple(
+        Path(str(training[_CHECKPOINT_DATASET_ROOT_KEY])).expanduser().resolve()
+        for training in training_evidence
+    )
+    fingerprints = tuple(
+        training.get(_CHECKPOINT_DATASET_FINGERPRINT_KEY) for training in training_evidence
+    )
+    if roots[0] != roots[1]:
+        raise RuntimeError("smoke checkpoints are bound to different M3B dataset roots")
+    if (
+        not isinstance(fingerprints[0], str)
+        or fingerprints[0] != fingerprints[1]
+        or not fingerprints[0].startswith("sha256:")
+    ):
+        raise RuntimeError("smoke checkpoints are bound to different M3B dataset fingerprints")
+
+    completed = load_completed_m3b_dataset(roots[0], require_full=False, validate_storage=True)
+    if completed.summary.total_episodes != 6:
+        raise RuntimeError("checkpoint-bound smoke dataset must contain exactly six episodes")
+    if completed.export_fingerprint != fingerprints[0]:
+        raise RuntimeError(
+            "checkpoint-bound smoke dataset content differs from checkpoint identity"
+        )
+
+    report.source_dataset_validated = True
+    report.checkpoint_bound_dataset_root = str(roots[0])
+    report.checkpoint_bound_dataset_fingerprint = fingerprints[0]
+    report.check(
+        "checkpoint-bound six-episode dataset identity",
+        True,
+        (
+            f"current target gate={prior_gate_dataset_root.resolve()}; "
+            f"checkpoint evaluation dataset={roots[0]}; fingerprint={fingerprints[0]}"
+        ),
+    )
+    return roots[0]
 
 
 def _projection_metrics(
@@ -968,7 +1036,6 @@ def _run_target_smoke(
     model_root: Path,
     args: argparse.Namespace,
 ) -> None:
-    report.source_dataset_validated = True
     smoke_dir = REPORT_PATH.parent / "target_smoke"
     smoke_dir.mkdir(parents=True, exist_ok=True)
     per_train = _existing_smoke_training(
@@ -984,6 +1051,12 @@ def _run_target_smoke(
         model_root=model_root,
         variant=ActVariant.MIXED_TASK_ONEHOT,
         task_id=None,
+    )
+    evaluation_dataset_root = _checkpoint_bound_smoke_dataset(
+        report,
+        prior_gate_dataset_root=dataset_root,
+        per_task_training=per_train,
+        onehot_training=onehot_train,
     )
     report.cuda_training_validated = True
     report.check(
@@ -1008,7 +1081,7 @@ def _run_target_smoke(
 
     strict_ok, strict_probe = _evaluate_last_checkpoint(
         train_report=onehot_train,
-        dataset_root=dataset_root,
+        dataset_root=evaluation_dataset_root,
         split="train",
         report_path=smoke_dir / "strict_bound_probe.json",
         action_bound_mode=ActionBoundMode.REJECT,
@@ -1032,14 +1105,14 @@ def _run_target_smoke(
 
     per_eval_ok, per_eval = _evaluate_last_checkpoint(
         train_report=per_train,
-        dataset_root=dataset_root,
+        dataset_root=evaluation_dataset_root,
         split="train",
         report_path=smoke_dir / "per_task_rollout.json",
         action_bound_mode=ActionBoundMode.PROJECT,
     )
     onehot_eval_ok, onehot_eval = _evaluate_last_checkpoint(
         train_report=onehot_train,
-        dataset_root=dataset_root,
+        dataset_root=evaluation_dataset_root,
         split="train",
         report_path=smoke_dir / "onehot_rollout.json",
         action_bound_mode=ActionBoundMode.PROJECT,
