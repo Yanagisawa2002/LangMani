@@ -513,6 +513,10 @@ then reuses the existing 5000-step PerTask and 10000-step Mixed-TaskOneHot check
 training. Reused checkpoints are evaluated only with the exact six-episode dataset root and export
 fingerprint stored in both run manifests; this checkpoint-bound archive may have a different path
 from a newly generated current-machine smoke export, but it must pass full storage validation.
+Each runtime-specific evaluation retains its own `analysis.json`. If a clean canonical analysis for
+the same run, checkpoint, and schema already exists from another runtime, revalidation preserves it
+instead of overwriting it; a different run/checkpoint/schema or dirty canonical artifact still
+fails. The current runtime analysis remains addressable through the evaluation output path.
 Before full rollouts it runs
 one strict probe: reproduce the known raw violation, prove reject blocks the step, reconstruct and
 validate project mode, and execute exactly one projected legal M1 action. It then attempts one

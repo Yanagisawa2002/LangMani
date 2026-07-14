@@ -996,6 +996,99 @@ def test_target_smoke_rejects_different_checkpoint_dataset_identities(
         )
 
 
+def test_runtime_specific_analysis_preserves_clean_canonical_history(tmp_path: Path) -> None:
+    run_root = tmp_path / "run"
+    output = run_root / "train-new-runtime"
+    reports = run_root / "reports"
+    output.mkdir(parents=True)
+    reports.mkdir()
+    run_fingerprint = "sha256:" + "a" * 64
+    checkpoint_fingerprint = "sha256:" + "b" * 64
+    old_git = {
+        "commit": "1" * 40,
+        "dirty": False,
+        "changed_paths": [],
+        "baseline_tracked": True,
+    }
+    new_git = {**old_git, "commit": "2" * 40}
+    canonical = {
+        "schema_version": "langmani-m4-counterfactual-sensitivity-v1",
+        "passed": True,
+        "run_fingerprint": run_fingerprint,
+        "checkpoint_fingerprint": checkpoint_fingerprint,
+        "evaluation_git": old_git,
+        "first_actions": [[0.0] * 8],
+    }
+    current = {
+        **canonical,
+        "evaluation_git": new_git,
+        "first_actions": [[1.0] * 8],
+    }
+    canonical_path = reports / "counterfactual_sensitivity.json"
+    canonical_path.write_text(json.dumps(canonical), encoding="utf-8")
+    (output / evaluate_cli.EVALUATION_ANALYSIS_FILE).write_text(
+        json.dumps(current), encoding="utf-8"
+    )
+    identity = SimpleNamespace(
+        variant=ActVariant.MIXED_TASK_ONEHOT,
+        run_fingerprint=run_fingerprint,
+    )
+
+    evaluate_cli._publish_analysis(
+        output=output,
+        run_root=run_root,
+        identity=identity,
+        checkpoint_fingerprint=checkpoint_fingerprint,
+        evaluation_git=new_git,
+    )
+
+    assert json.loads(canonical_path.read_text(encoding="utf-8")) == canonical
+    assert json.loads((output / "analysis.json").read_text(encoding="utf-8")) == current
+
+
+def test_runtime_specific_analysis_rejects_wrong_canonical_checkpoint(tmp_path: Path) -> None:
+    run_root = tmp_path / "run"
+    output = run_root / "train-new-runtime"
+    reports = run_root / "reports"
+    output.mkdir(parents=True)
+    reports.mkdir()
+    run_fingerprint = "sha256:" + "a" * 64
+    checkpoint_fingerprint = "sha256:" + "b" * 64
+    evaluation_git = {
+        "commit": "1" * 40,
+        "dirty": False,
+        "changed_paths": [],
+        "baseline_tracked": True,
+    }
+    current = {
+        "schema_version": "langmani-m4-counterfactual-sensitivity-v1",
+        "passed": True,
+        "run_fingerprint": run_fingerprint,
+        "checkpoint_fingerprint": checkpoint_fingerprint,
+        "evaluation_git": evaluation_git,
+    }
+    (output / evaluate_cli.EVALUATION_ANALYSIS_FILE).write_text(
+        json.dumps(current), encoding="utf-8"
+    )
+    canonical = {**current, "checkpoint_fingerprint": "sha256:" + "c" * 64}
+    (reports / "counterfactual_sensitivity.json").write_text(
+        json.dumps(canonical), encoding="utf-8"
+    )
+    identity = SimpleNamespace(
+        variant=ActVariant.MIXED_TASK_ONEHOT,
+        run_fingerprint=run_fingerprint,
+    )
+
+    with pytest.raises(RuntimeError, match="existing immutable evaluation artifact differs"):
+        evaluate_cli._publish_analysis(
+            output=output,
+            run_root=run_root,
+            identity=identity,
+            checkpoint_fingerprint=checkpoint_fingerprint,
+            evaluation_git=evaluation_git,
+        )
+
+
 def test_verify_dry_run_requires_target_full(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sys, "argv", ["verify_m4.py", "--dry-run"])
     with pytest.raises(SystemExit) as error:

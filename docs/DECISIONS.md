@@ -949,6 +949,13 @@ report records both the current gate dataset and the checkpoint-bound evaluation
 This permits an auditable cross-machine artifact migration without retraining, editing a checkpoint,
 rewriting M3B data, or weakening any dataset, action-bound, rollout, or success contract.
 
+Evaluation results are already namespaced by the action/runtime fingerprint, so numerical
+differences across GPU/runtime revisions remain explicit in each output directory. A previously
+published clean canonical sensitivity artifact is never overwritten during revalidation. It may be
+retained only when its schema, run fingerprint, and checkpoint fingerprint match; the new runtime's
+own validated `analysis.json` remains the evidence for that execution. Canonical evidence with a
+different identity or dirty Git provenance still fails closed.
+
 ## Local bootstrap evidence
 
 The bootstrap was authored on Windows 11, which is not an acceptance platform. In an isolated

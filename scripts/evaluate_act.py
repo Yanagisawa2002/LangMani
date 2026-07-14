@@ -1173,6 +1173,24 @@ def _publish_analysis(
     )
     analysis_path = run_root / "reports" / analysis_name
     _validate_owned_artifact_path(run_root, analysis_path)
+    if analysis_path.is_file():
+        existing = _read(analysis_path)
+        existing_git = existing.get("evaluation_git")
+        same_artifact_identity = all(
+            (
+                existing.get("schema_version") == analysis.get("schema_version"),
+                existing.get("passed") is True,
+                existing.get("run_fingerprint") == identity.run_fingerprint,
+                existing.get("checkpoint_fingerprint") == checkpoint_fingerprint,
+                isinstance(existing_git, dict),
+                isinstance(existing_git, dict) and existing_git.get("baseline_tracked") is True,
+                isinstance(existing_git, dict) and existing_git.get("dirty") is False,
+                isinstance(existing_git, dict) and existing_git.get("changed_paths") == [],
+            )
+        )
+        if not same_artifact_identity:
+            raise RuntimeError(f"existing immutable evaluation artifact differs: {analysis_path}")
+        return
     _write_or_validate_immutable(analysis_path, analysis)
 
 
