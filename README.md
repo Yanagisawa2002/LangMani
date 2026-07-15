@@ -516,6 +516,33 @@ python scripts/benchmark_act_evaluation_workers.py --help
 python environment/verify_m4.py
 ```
 
+The evaluation-worker benchmark is an isolated throughput diagnostic, not M4 acceptance evidence.
+It creates minimal per-worker clones with an independent copy of one already selected checkpoint,
+executes the same six validation episodes with `num_envs=1`, and ranks physically passing
+configurations by the worst GPU's completed episodes per minute. An explicit CPU-demand estimate can exclude worker
+counts that exceed the container's cgroup quota; excluded counts are recorded as unmeasured, never
+as failed results. If the parent process is interrupted after workers finish, `--summarize-existing`
+recovers durations from filesystem timestamps, verifies each clone against the immutable source,
+and preserves unknown subprocess return codes as `null`. Recovered artifact measurements,
+subprocess-exit validation, source-mutation isolation, and temporal selection stability remain
+separate so an actionable recommendation cannot be mistaken for a fully repeated selection:
+
+```bash
+python scripts/benchmark_act_evaluation_workers.py \
+  --source-run outputs/models/act/<completed-run-fingerprint> \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --output-root outputs/benchmarks/m4_eval_worker_scaling/<new-run> \
+  --worker-counts 1 2 4 6 --gpu-ids 0 1 \
+  --estimated-cpu-cores-per-worker 12
+
+python scripts/benchmark_act_evaluation_workers.py \
+  --source-run outputs/models/act/<completed-run-fingerprint> \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --output-root outputs/benchmarks/m4_eval_worker_scaling/<interrupted-run> \
+  --worker-counts 1 2 4 6 --gpu-ids 0 1 \
+  --estimated-cpu-cores-per-worker 12 --summarize-existing
+```
+
 For example:
 
 ```bash

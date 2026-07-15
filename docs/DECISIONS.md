@@ -1151,3 +1151,47 @@ and per-episode runtime fingerprint. It reports the single training Git commit s
 set of evaluation Git commits. This changes no M1 success/bounds, M3A/M3B artifact, ACT
 weights/loss/configuration, train-only statistics, split, checkpoint fingerprint, selected
 checkpoint, or stored evaluation result.
+
+## D-042 — Rank evaluation concurrency by completed episodes, within the CPU quota
+
+M4 policy evaluation is a simulator-and-renderer pipeline whose bottleneck is not represented by
+instantaneous GPU utilization. LangMani therefore benchmarks independent `num_envs=1` validation
+workers by completed episodes per minute, using the worst GPU as the primary rate. Every worker is
+given a minimal clone of one immutable, selection-locked PerTask run; new benchmark runs
+independently copy and hash-check the selected checkpoint so a faulty worker cannot mutate the
+source. The benchmark never opens test or fresh-seed schedules, never finalizes a clone, and is not
+M4 acceptance evidence.
+
+The dual-RTX 5090 target measurement at Git
+`c2951fd6657b1f57c6673d4265023babf65d1228` used the fixed six-episode validation schedule and
+`project` action handling. The container required
+`VK_ICD_FILENAMES=/etc/vulkan/icd.d/my_nvidia_icd.json`; the default NVIDIA ICD failed before a
+rollout with `vk::createInstanceUnique: ErrorIncompatibleDriver`, and that failed warm-up remains
+preserved separately as diagnostic evidence. With the working ICD, every executed worker completed
+6/6 task-success episodes with zero infrastructure failures and matching schedule/semantic digests.
+Recovered wall-clock measurements were:
+
+| workers per GPU | phase | wall time | per-GPU episodes/min | cluster episodes/min |
+| --- | --- | ---: | ---: | ---: |
+| 1 | warm-up | 76.25 s | 4.721 | 9.442 |
+| 1 | timed | 87.63 s | 4.108 | 8.216 |
+| 2 | timed | 600.54 s | 1.199 | 2.398 |
+
+The container's cgroup v2 `cpu.max` was `5000000 100000`, an effective 50-core quota. Process
+sampling showed approximately 12 CPU cores demanded by each evaluator, so two GPUs at two workers
+each already requested about 48 cores and suffered heavy throttling while GPU utilization remained
+near idle. Four and six workers per GPU would request approximately 96 and 144 cores; they were
+excluded by an explicit quota preflight and are recorded as unmeasured rather than failed.
+
+Among the eligible, physically measured counts, one worker per GPU is the future evaluation-queue
+recommendation: its timed per-GPU throughput was 3.43 times the two-worker rate. This is deliberately
+not labeled a globally selected optimum. The one-worker warm-up/timed rates differed by more than
+the benchmark's 10% temporal-repeat tolerance, and no second two-worker timing was run. Recovered
+reports therefore keep `artifact_measurements_validated=true`, `recommendation_supported=true`,
+`measurement_validated=false`, `selection_stability_validated=false`,
+`recommended_worker_count_per_gpu=1`, and `selected_worker_count_per_gpu=null`. The historical
+measurement used hard-linked checkpoint clones. A strict post-run reload verified that the source
+checkpoint remained intact, but source-mutation isolation during that run was not guaranteed and is
+reported false; future clones are independent copies. Recovery also reports subprocess return codes
+as unknown instead of inventing successful exits and does not claim that the interrupted parent's
+lost pre-benchmark source snapshot was persisted.
