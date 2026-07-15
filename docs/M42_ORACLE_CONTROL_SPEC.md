@@ -338,15 +338,63 @@ In particular, completing `--target-development` leaves `final_benchmark_complet
 `go_no_go_decision_completed=false`, and no SmolVLA decision claim. This repository must not
 fabricate or prefill those results.
 
-| Result field | Current documented value |
+| Result field | Paused execution value (2026-07-15) |
 | --- | --- |
-| horizon results / selected horizon | `pending` |
-| post-grasp development distribution | `pending` |
-| project versus binary results / selected runtime | `pending` |
+| horizon results / selected horizon | M4.2a evidence completed and reused; `H=10` selected |
+| post-grasp development distribution | completed in immutable M4.2a evidence |
+| project versus binary results / selected runtime | M4.2a evidence completed and reused; `project` selected |
 | TaskToken selected checkpoint / fingerprint | `pending` |
 | `m42_dev_v0` policy comparison | `pending` |
-| raw and executed development action statistics | `pending` |
+| raw and executed development action statistics | M4.2a evidence complete; TaskToken development evaluation `pending` |
 | `m42_final_v0` paired benchmark | `not_run` |
 | final PerTask / State-OneHot / TaskToken rates | `not_run` |
 | final task-sensitivity ratios and safety metrics | `not_run` |
 | SmolVLA go/no-go | `not_computed` |
+
+## Paused target-development execution (2026-07-15)
+
+This is an interruption record, not an acceptance claim. The native target-development run used
+clean commit `36bd6d81ff5e3b2c74977da1eec0fb0231d2f922`. Its strict immutable-evidence audit accepted the
+completed M4.2a runtime ablation without rerunning the 336 physical episodes. The accepted runtime
+evidence selected horizon 10 and the existing `project` gripper runtime. It records zero arm
+projection, zero target-in-wrong-bin events, and zero target-off-table events. Binary gripper
+projection was not selected because it increased wrong-object interaction from 13 to 14 events.
+
+The sole TaskToken run has stable run fingerprint
+`sha256:1fec0221b5dbcd28faf2e9b5e465b7a97d7a4b3fc1c141251c19b275af8bf2a8`. Before interruption,
+training had reached observed step 82,078 of 100,000 with 16 of 20 atomically complete checkpoints.
+The last complete checkpoint was `step-00080000-19bb17efda9f`; the latest observed total loss was
+0.10229156166315079, with no NaN or Inf in the latest 1,000 metric records and no incomplete
+checkpoint directory. These observations must be rechecked on disk after the instance is restarted;
+they do not by themselves prove that the checkpoint survived the platform shutdown.
+
+The AutoDL instance was shut down prematurely while training was still active. Consequently, no
+TaskToken training-completion report exists, validation-only selection across all 20 checkpoints has
+not run, and `m42_dev_v0` rollout comparison has not run. Any older
+`outputs/diagnostics/m42/verification.json` with false flags is stale evidence from an earlier failed
+attempt, not the result of this interrupted run. `--target-development` is not validated, and
+`--target-final` remains untouched.
+
+When suitable GPU capacity is available again, resume on the exact clean implementation commit,
+not on a later documentation-only commit. First verify that commit and the 80,000-step completion
+marker, then rerun the same development verifier. Its fingerprint-checked resume path must complete
+the remaining checkpoints before validation-only selection and the development benchmark:
+
+```bash
+cd /root/autodl-tmp/langmani
+git fetch origin
+git checkout --detach 36bd6d81ff5e3b2c74977da1eec0fb0231d2f922
+test "$(git rev-parse HEAD)" = "36bd6d81ff5e3b2c74977da1eec0fb0231d2f922"
+test -z "$(git status --porcelain)"
+test -f outputs/models/act-task-token/1fec0221b5dbcd28faf2e9b5e465b7a97d7a4b3fc1c141251c19b275af8bf2a8/checkpoints/step-00080000-19bb17efda9f/complete.json
+
+export CUDA_VISIBLE_DEVICES=0
+export PYTHONPATH=/root/autodl-tmp/langmani/src
+export VK_ICD_FILENAMES=/etc/vulkan/icd.d/my_nvidia_icd.json
+export XDG_RUNTIME_DIR=/tmp/langmani-xdg
+/root/autodl-tmp/conda-envs/langmani/bin/python environment/verify_m42.py --target-development
+```
+
+Do not run `--target-final`. After target-development finishes, preserve its exit code and
+`outputs/diagnostics/m42/verification.json` before any platform shutdown. A hard failure must remain
+stopped with its evidence intact rather than being restarted or hidden.
