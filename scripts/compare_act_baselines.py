@@ -10,9 +10,13 @@ from typing import Any
 
 import numpy as np
 
-from langmani.datasets.lerobot_types import IMAGE_FEATURE_KEY, STATE_FEATURE_KEY
+from langmani.datasets.lerobot_types import ENVIRONMENT_ID, IMAGE_FEATURE_KEY, STATE_FEATURE_KEY
 from langmani.datasets.schedule import CANONICAL_TASK_SPECS
 from langmani.environments.specs import stable_scene_id
+from langmani.policies.act_action_bounds import (
+    ActionBoundMode,
+    EvaluationRuntimeManifest,
+)
 from langmani.policies.act_analysis import (
     compute_counterfactual_sensitivity,
     counterfactual_sensitivity_from_dict,
@@ -28,6 +32,7 @@ from langmani.policies.act_evaluation import (
 from langmani.policies.act_runtime import atomic_write_json
 from langmani.policies.act_types import (
     M4_SCHEMA_VERSION,
+    TASK_ONEHOT_MAPPING_VERSION,
     ActComparisonReport,
     ActEvaluationConfig,
     ActExperimentManifest,
@@ -66,6 +71,75 @@ def _finite_number(value: object, *, minimum: float = 0.0) -> bool:
         and np.isfinite(value)
         and float(value) >= minimum
     )
+
+
+def _evaluation_git(value: object, *, path: Path) -> str:
+    if (
+        not isinstance(value, dict)
+        or not isinstance(value.get("commit"), str)
+        or value.get("dirty") is not False
+        or value.get("baseline_tracked") is not True
+        or value.get("changed_paths") != []
+    ):
+        raise RuntimeError(f"evaluation artifact lacks clean Git provenance: {path}")
+    return str(value["commit"])
+
+
+def _validated_runtime_evidence(
+    *,
+    benchmark_path: Path,
+    benchmark: dict[str, Any],
+    checkpoint_fingerprint: str,
+    split: EvaluationSplit,
+    expected_evaluation_config: dict[str, object],
+) -> str:
+    runtime_path = benchmark_path.parent / "evaluation_runtime_manifest.json"
+    runtime = EvaluationRuntimeManifest.from_dict(_read(runtime_path))
+    identity = runtime.identity
+    evaluation_git_commit = _evaluation_git(benchmark.get("evaluation_git"), path=benchmark_path)
+    rollout = dict(identity.rollout_config)
+    action_space = dict(identity.action_space_contract)
+    lower_bounds = action_space.get("lower_bounds")
+    upper_bounds = action_space.get("upper_bounds")
+    numeric_bounds = (
+        isinstance(lower_bounds, list | tuple)
+        and isinstance(upper_bounds, list | tuple)
+        and len(lower_bounds) == 8
+        and len(upper_bounds) == 8
+        and np.isfinite(np.asarray(lower_bounds, dtype=np.float64)).all()
+        and np.isfinite(np.asarray(upper_bounds, dtype=np.float64)).all()
+        and (np.asarray(lower_bounds) <= np.asarray(upper_bounds)).all()
+    )
+    if (
+        identity.checkpoint_fingerprint != checkpoint_fingerprint
+        or identity.code_git_commit != evaluation_git_commit
+        or identity.runtime_fingerprint != benchmark.get("evaluation_runtime_fingerprint")
+        or identity.action_bound_config.mode is not ActionBoundMode.PROJECT
+        or identity.environment_id != ENVIRONMENT_ID
+        or identity.task_conditioning_mapping_version != TASK_ONEHOT_MAPPING_VERSION
+        or rollout.get("split") != split.value
+        or rollout.get("sim_backend") != "physx_cpu"
+        or rollout.get("rollout_video") is not False
+        or rollout.get("evaluation") != expected_evaluation_config
+        or action_space.get("bounds_source") != "environment_action_space"
+        or tuple(action_space.get("single_action_shape", ())) != (8,)
+        or action_space.get("lower_dtype") != "float32"
+        or action_space.get("upper_dtype") != "float32"
+        or not numeric_bounds
+        or not runtime.checkpoint_model_reload_validated
+        or not runtime.policy_processor_reload_validated
+        or not runtime.action_bound_processor_reload_validated
+        or not runtime.deterministic_raw_action_matched
+    ):
+        raise RuntimeError(f"evaluation runtime manifest is incompatible: {runtime_path}")
+    raw_episodes = benchmark.get("episodes")
+    if not isinstance(raw_episodes, list) or any(
+        not isinstance(episode, dict)
+        or episode.get("runtime_fingerprint") != identity.runtime_fingerprint
+        for episode in raw_episodes
+    ):
+        raise RuntimeError(f"episode runtime identity is inconsistent: {benchmark_path}")
+    return evaluation_git_commit
 
 
 def _validated_benchmark(
@@ -195,58 +269,90 @@ def _manifest_facts(path: Path, expected: ActVariant) -> dict[str, object]:
         raise RuntimeError(f"selected checkpoint is absent from manifest evidence: {path}")
     selected_name = selected_checkpoint.removeprefix("sha256:")
     result_artifacts: dict[str, object] = {}
-    required_results = [
-        f"validation/{selected_name}/benchmark.json",
-        "test/benchmark.json",
-        "fresh_seed/benchmark.json",
-    ]
-    required_results.append(
-        "reports/per_task_reference.json"
-        if expected is ActVariant.PER_TASK
-        else "reports/counterfactual_sensitivity.json"
-    )
-    for relative in required_results:
-        result = _read(path.parent / relative)
+    evaluation_git_commits: set[str] = set()
+    selected_validation: dict[str, Any] | None = None
+    for candidate in selection.candidates:
+        relative = (
+            f"validation/{candidate.checkpoint_fingerprint.removeprefix('sha256:')}/benchmark.json"
+        )
+        benchmark_path = path.parent / relative
+        result = _read(benchmark_path)
         if (
             result.get("passed") is not True
             or result.get("run_fingerprint") != run_fingerprint
-            or result.get("checkpoint_fingerprint") != selected_checkpoint
-            or not isinstance(result.get("evaluation_git"), dict)
-            or result["evaluation_git"].get("commit") != identity.git_commit
-            or result["evaluation_git"].get("dirty") is not False
+            or result.get("checkpoint_fingerprint") != candidate.checkpoint_fingerprint
+            or result.get("schedule_digest") != candidate.schedule_digest
         ):
-            raise RuntimeError(
-                f"incomplete or mismatched result artifact: {path.parent / relative}"
+            raise RuntimeError(f"incomplete validation result artifact: {benchmark_path}")
+        _validated_benchmark(
+            result,
+            variant=expected,
+            task_id=identity.task_id,
+            m3b_export_fingerprint=identity.m3b_export_fingerprint,
+            split=EvaluationSplit.VALIDATION,
+        )
+        evaluation_git_commits.add(
+            _validated_runtime_evidence(
+                benchmark_path=benchmark_path,
+                benchmark=result,
+                checkpoint_fingerprint=candidate.checkpoint_fingerprint,
+                split=EvaluationSplit.VALIDATION,
+                expected_evaluation_config=config.evaluation.to_dict(),
             )
-        result_artifacts[relative] = result
+        )
+        if candidate.checkpoint_fingerprint == selected_checkpoint:
+            selected_validation = result
     validation_relative = f"validation/{selected_name}/benchmark.json"
-    validation_artifact = result_artifacts[validation_relative]
+    validation_artifact = selected_validation
     if (
         not isinstance(validation_artifact, dict)
         or validation_artifact.get("schedule_digest") != selection.validation_schedule_digest
     ):
         raise RuntimeError(f"selected validation artifact schedule is inconsistent: {path}")
-    _validated_benchmark(
-        validation_artifact,
-        variant=expected,
-        task_id=identity.task_id,
-        m3b_export_fingerprint=identity.m3b_export_fingerprint,
-        split=EvaluationSplit.VALIDATION,
+    result_artifacts[validation_relative] = validation_artifact
+    split_git_commits: dict[EvaluationSplit, str] = {}
+    for split in (EvaluationSplit.TEST, EvaluationSplit.FRESH_SEED):
+        relative = f"{split.value}/benchmark.json"
+        benchmark_path = path.parent / relative
+        result = _read(benchmark_path)
+        if (
+            result.get("passed") is not True
+            or result.get("run_fingerprint") != run_fingerprint
+            or result.get("checkpoint_fingerprint") != selected_checkpoint
+        ):
+            raise RuntimeError(f"incomplete or mismatched result artifact: {benchmark_path}")
+        _validated_benchmark(
+            result,
+            variant=expected,
+            task_id=identity.task_id,
+            m3b_export_fingerprint=identity.m3b_export_fingerprint,
+            split=split,
+        )
+        split_git_commits[split] = _validated_runtime_evidence(
+            benchmark_path=benchmark_path,
+            benchmark=result,
+            checkpoint_fingerprint=selected_checkpoint,
+            split=split,
+            expected_evaluation_config=config.evaluation.to_dict(),
+        )
+        evaluation_git_commits.add(split_git_commits[split])
+        result_artifacts[relative] = result
+    analysis_relative = (
+        "reports/per_task_reference.json"
+        if expected is ActVariant.PER_TASK
+        else "reports/counterfactual_sensitivity.json"
     )
-    _validated_benchmark(
-        result_artifacts["test/benchmark.json"],
-        variant=expected,
-        task_id=identity.task_id,
-        m3b_export_fingerprint=identity.m3b_export_fingerprint,
-        split=EvaluationSplit.TEST,
-    )
-    _validated_benchmark(
-        result_artifacts["fresh_seed/benchmark.json"],
-        variant=expected,
-        task_id=identity.task_id,
-        m3b_export_fingerprint=identity.m3b_export_fingerprint,
-        split=EvaluationSplit.FRESH_SEED,
-    )
+    analysis_path = path.parent / analysis_relative
+    analysis = _read(analysis_path)
+    if (
+        analysis.get("passed") is not True
+        or analysis.get("run_fingerprint") != run_fingerprint
+        or analysis.get("checkpoint_fingerprint") != selected_checkpoint
+        or _evaluation_git(analysis.get("evaluation_git"), path=analysis_path)
+        != split_git_commits[EvaluationSplit.FRESH_SEED]
+    ):
+        raise RuntimeError(f"incomplete or mismatched result artifact: {analysis_path}")
+    result_artifacts[analysis_relative] = analysis
     if expected is not ActVariant.PER_TASK:
         sensitivity_path = "reports/counterfactual_sensitivity.json"
         raw_sensitivity = result_artifacts[sensitivity_path]
@@ -357,6 +463,7 @@ def _manifest_facts(path: Path, expected: ActVariant) -> dict[str, object]:
         "dataset_fingerprint": identity.m3b_export_fingerprint,
         "split_digest": identity.m3b_split_manifest_digest,
         "git_commit": identity.git_commit,
+        "evaluation_git_commits": sorted(evaluation_git_commits),
         "training_seed": identity.training_seed,
         "lerobot_version": identity.lerobot_version,
         "torch_version": identity.torch_version,
@@ -463,10 +570,14 @@ def compare(args: argparse.Namespace) -> dict[str, object]:
         raise ValueError(
             "all compared runs must share split, seed, runtime, optimization, and evaluation controls"
         )
+    training_git_commit = str(commits.pop())
+    evaluation_git_commits = sorted(
+        {str(commit) for item in all_runs for commit in item["evaluation_git_commits"]}
+    )
     report = ActComparisonReport(
         schema_version=M4_SCHEMA_VERSION,
         dataset_fingerprint=str(datasets.pop()),
-        git_commit=str(commits.pop()),
+        git_commit=training_git_commit,
         per_task_run_fingerprints=tuple(str(item["run_fingerprint"]) for item in per_task),
         mixed_unconditioned_run_fingerprint=str(unconditioned["run_fingerprint"]),
         mixed_task_onehot_run_fingerprint=str(conditioned["run_fingerprint"]),
@@ -484,6 +595,10 @@ def compare(args: argparse.Namespace) -> dict[str, object]:
     )
     return {
         **report.to_dict(),
+        "training_git_commit": training_git_commit,
+        "evaluation_git_commits": evaluation_git_commits,
+        "physical_evidence_validated": True,
+        "projected_action_bounds_validated": True,
         "runs": list(all_runs),
         "counterfactual_sensitivity": {
             "per_task_oracle": _per_task_sensitivity(per_task),

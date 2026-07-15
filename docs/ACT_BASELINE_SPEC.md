@@ -539,6 +539,23 @@ historical artifacts. Full mode resumes the latest identity-compatible checkpoin
 valid promoted orphan, revalidates already promoted evaluation directories, and reuses only a fully
 completed immutable run instead of unconditionally retraining it.
 
+An evaluation-only compatibility repair must not manufacture a new training identity. The explicit
+`environment/verify_m4.py --target-full --reuse-completed-evidence --action-bound-mode project`
+path therefore loads only the eight fingerprints in the existing passed full dry-run plan. It
+requires the plan's clean training Git, exact dataset/split identity, canonical ordering, fixed
+configuration and schedules, 20 sealed checkpoints and validations per run, immutable selection,
+locked test, fresh-seed, analysis, and completion evidence. It invokes only
+`compare_act_baselines.py`; missing or incompatible evidence is an error and can never fall back to
+`train_act.py` or `evaluate_act.py`. Normal target-full also refuses implicit retraining when it
+finds matching completed historical evidence; a genuinely new experiment uses a new output root.
+
+Training and evaluation provenance are separate contracts. The run and checkpoint fingerprints
+retain their original training Git. Every validation, test, and fresh-seed benchmark must instead
+match the code Git and runtime fingerprint in its sibling `EvaluationRuntimeManifest`, including
+`project` action handling, `physx_cpu`, the M1 environment/action space, task mapping, exact split,
+fixed evaluation configuration, deterministic reload checks, and all per-episode runtime IDs. The
+comparison report records one `training_git_commit` plus the audited `evaluation_git_commits` set.
+
 The structured report keeps these flags independent:
 
 ```text
@@ -552,6 +569,8 @@ tiny_overfit_task_success_validated,
 train_stats_leakage_validated, validation_selection_validated, test_lock_validated,
 per_task_experiment_completed, mixed_unconditioned_experiment_completed,
 mixed_task_onehot_experiment_completed, fresh_seed_benchmark_completed,
+completed_evidence_reuse_validated, reused_training_git_commit,
+reused_evaluation_git_commits,
 full_experiment_validated, baseline_quality_validated, physical_target_validated
 ```
 

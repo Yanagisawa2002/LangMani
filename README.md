@@ -569,6 +569,13 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --output-root outputs/models/act --action-bound-mode project
+
+# Audit the exact eight completed runs from the recorded full dry-run plan.
+# This command never trains and never executes a rollout.
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --output-root outputs/models/act --action-bound-mode project \
+  --reuse-completed-evidence
 ```
 
 M4.1 target smoke validates the completed M0--M3B smoke evidence, reuses the existing PerTask and
@@ -584,6 +591,14 @@ the 180-episode fresh benchmark. Target modes require the current worktree to be
 completed run is reused. Every full evaluation explicitly uses the frozen `project` action-bound
 mode; no evaluator default may choose that behavior implicitly. M4.1 does not retrain the smoke
 checkpoints.
+
+After an evaluation-only code repair, `--reuse-completed-evidence` is the fail-closed official
+summary path. It reads the exact eight immutable run fingerprints from the existing full dry-run
+plan, verifies all 160 validation results plus the eight locked tests, eight fresh-seed benchmarks,
+runtime manifests, selections, and completion markers, and runs only the final comparison audit.
+Training Git remains checkpoint-bound; each evaluation Git is checked independently against its
+sibling runtime manifest. Without this flag, target-full refuses to launch a replacement training
+run when compatible completed historical evidence already exists.
 
 ## Target-machine setup
 

@@ -18,6 +18,7 @@ from langmani.datasets.schedule import CANONICAL_TASK_SPECS
 from langmani.environments.specs import stable_scene_id
 from langmani.policies.act_action_bounds import (
     ActionBoundConfig,
+    ActionBoundMode,
     EvaluationRuntimeIdentity,
     EvaluationRuntimeManifest,
 )
@@ -34,6 +35,7 @@ from langmani.policies.act_evaluation import (
 from langmani.policies.act_types import (
     TASK_ONEHOT_MAPPING_VERSION,
     ActDataConfig,
+    ActEvaluationConfig,
     ActExperimentConfig,
     ActExperimentManifest,
     ActModelConfig,
@@ -53,23 +55,34 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _runtime_manifest(
-    *, checkpoint_fingerprint: str, split: EvaluationSplit
+    *,
+    checkpoint_fingerprint: str,
+    split: EvaluationSplit,
+    code_git_commit: str = "1" * 40,
+    action_bound_mode: ActionBoundMode = ActionBoundMode.REJECT,
 ) -> EvaluationRuntimeManifest:
     identity = EvaluationRuntimeIdentity(
         checkpoint_fingerprint=checkpoint_fingerprint,
         policy_preprocessor_fingerprint="sha256:" + "a" * 64,
         policy_postprocessor_fingerprint="sha256:" + "b" * 64,
-        action_bound_config=ActionBoundConfig(),
+        action_bound_config=ActionBoundConfig(mode=action_bound_mode),
         environment_id="LangMani-PickPlaceByInstruction-v0",
         action_space_contract={
-            "shape": [8],
-            "dtype": "float32",
-            "low": [-1.0] * 8,
-            "high": [1.0] * 8,
+            "bounds_source": "environment_action_space",
+            "single_action_shape": [8],
+            "lower_bounds": [-1.0] * 8,
+            "upper_bounds": [1.0] * 8,
+            "lower_dtype": "float32",
+            "upper_dtype": "float32",
         },
         task_conditioning_mapping_version=TASK_ONEHOT_MAPPING_VERSION,
-        rollout_config={"split": split.value, "sim_backend": "fixture"},
-        code_git_commit="1" * 40,
+        rollout_config={
+            "evaluation": ActEvaluationConfig().to_dict(),
+            "split": split.value,
+            "sim_backend": "physx_cpu",
+            "rollout_video": False,
+        },
+        code_git_commit=code_git_commit,
     )
     return EvaluationRuntimeManifest(
         identity=identity,
@@ -311,6 +324,9 @@ def test_verify_report_exposes_independent_flags_and_structural_is_not_physical(
         "fresh_seed_benchmark_completed",
         "full_dry_run_validated",
         "planned_full_run_count",
+        "completed_evidence_reuse_validated",
+        "reused_training_git_commit",
+        "reused_evaluation_git_commits",
         "full_experiment_validated",
         "baseline_quality_validated",
         "physical_target_validated",
@@ -342,10 +358,13 @@ def _benchmark_payload(
     variant: ActVariant,
     task_id: str | None,
     split: EvaluationSplit,
+    evaluation_git_commit: str = "1" * 40,
 ) -> dict[str, object]:
     runtime_manifest = _runtime_manifest(
         checkpoint_fingerprint=checkpoint_fingerprint,
         split=split,
+        code_git_commit=evaluation_git_commit,
+        action_bound_mode=ActionBoundMode.PROJECT,
     )
     task_ids = (task_id,) if variant is ActVariant.PER_TASK else CANONICAL_TASK_IDS
     scene_count = 30 if split is EvaluationSplit.FRESH_SEED else 6
@@ -416,6 +435,7 @@ def _benchmark_payload(
         **benchmark.to_dict(),
         "schema_version": "langmani-m4.1-rollout-benchmark-v2",
         "passed": True,
+        "physical_execution": True,
         "quality_validated": False,
         "infrastructure_failure_count": 0,
         "environment_action_applied": True,
@@ -426,7 +446,7 @@ def _benchmark_payload(
             "record_count": 0,
         },
         "evaluation_git": {
-            "commit": "1" * 40,
+            "commit": evaluation_git_commit,
             "dirty": False,
             "changed_paths": [],
             "baseline_tracked": True,
@@ -440,6 +460,8 @@ def _write_run(
     variant: ActVariant,
     run_character: str,
     task_id: str | None,
+    training_git_commit: str = "1" * 40,
+    evaluation_git_commit: str = "1" * 40,
 ) -> Path:
     selected = "sha256:" + "e" * 64
     statistics = "sha256:" + "5" * 64
@@ -490,7 +512,7 @@ def _write_run(
         lerobot_version="0.6.0",
         torch_version="2.11.0+cu128",
         cuda_version="12.8",
-        git_commit="1" * 40,
+        git_commit=training_git_commit,
         git_dirty=False,
         dirty_development_override=False,
     )
@@ -557,23 +579,28 @@ def _write_run(
         candidates=candidates,
     )
     write_checkpoint_selection_atomic(root / "checkpoint_selection.json", selection)
-    required = [
-        f"validation/{selected.removeprefix('sha256:')}/benchmark.json",
-        "test/benchmark.json",
-        "fresh_seed/benchmark.json",
-    ]
-    for relative in required:
-        split = (
-            EvaluationSplit.VALIDATION
-            if relative.startswith("validation/")
-            else EvaluationSplit(relative.split("/", maxsplit=1)[0])
+    benchmark_targets = [
+        (
+            f"validation/{checkpoint.checkpoint_fingerprint.removeprefix('sha256:')}/benchmark.json",
+            EvaluationSplit.VALIDATION,
+            checkpoint.checkpoint_fingerprint,
         )
+        for checkpoint in checkpoints
+    ]
+    benchmark_targets.extend(
+        [
+            ("test/benchmark.json", EvaluationSplit.TEST, selected),
+            ("fresh_seed/benchmark.json", EvaluationSplit.FRESH_SEED, selected),
+        ]
+    )
+    for relative, split, checkpoint_fingerprint in benchmark_targets:
         benchmark = _benchmark_payload(
             run_fingerprint=run_fingerprint,
-            checkpoint_fingerprint=selected,
+            checkpoint_fingerprint=checkpoint_fingerprint,
             variant=variant,
             task_id=task_id,
             split=split,
+            evaluation_git_commit=evaluation_git_commit,
         )
         authorization = (
             authorize_test_evaluation(
@@ -594,8 +621,10 @@ def _write_run(
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(benchmark), encoding="utf-8")
         runtime_manifest = _runtime_manifest(
-            checkpoint_fingerprint=selected,
+            checkpoint_fingerprint=checkpoint_fingerprint,
             split=split,
+            code_git_commit=evaluation_git_commit,
+            action_bound_mode=ActionBoundMode.PROJECT,
         )
         (path.parent / evaluate_cli.EVALUATION_RUNTIME_MANIFEST_FILE).write_text(
             json.dumps(runtime_manifest.to_dict()), encoding="utf-8"
@@ -620,7 +649,7 @@ def _write_run(
             "run_fingerprint": run_fingerprint,
             "checkpoint_fingerprint": selected,
             "evaluation_git": {
-                "commit": "1" * 40,
+                "commit": evaluation_git_commit,
                 "dirty": False,
                 "changed_paths": [],
                 "baseline_tracked": True,
@@ -678,7 +707,7 @@ def _write_run(
             "run_fingerprint": run_fingerprint,
             "checkpoint_fingerprint": selected,
             "evaluation_git": {
-                "commit": "1" * 40,
+                "commit": evaluation_git_commit,
                 "dirty": False,
                 "changed_paths": [],
                 "baseline_tracked": True,
@@ -707,6 +736,16 @@ def _write_run(
                 "mean_throughput_examples_per_s": 1.0,
                 "effective_model_config": config.model.to_dict(),
                 "effective_optimization_config": config.optimization.to_dict(),
+            }
+        ),
+        encoding="utf-8",
+    )
+    (root / "complete.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "langmani-m4-run-completion-v1",
+                "run_fingerprint": run_fingerprint,
+                "selected_checkpoint_fingerprint": selected,
             }
         ),
         encoding="utf-8",
@@ -885,6 +924,39 @@ def test_evaluation_and_full_reuse_reject_linked_output_directories(
         )
 
 
+def test_normal_full_refuses_completed_historical_evidence_instead_of_retraining(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    model_root = tmp_path / "models"
+    _write_run(
+        model_root / "historical",
+        variant=ActVariant.PER_TASK,
+        run_character="historical",
+        task_id=CANONICAL_TASK_IDS[0],
+        training_git_commit="1" * 40,
+    )
+    monkeypatch.setattr(
+        verify_m4,
+        "inspect_git_state",
+        lambda _root: SimpleNamespace(commit="2" * 40),
+    )
+    monkeypatch.setattr(
+        verify_m4,
+        "runtime_versions",
+        lambda: {"lerobot": "0.6.0", "torch": "2.11.0+cu128", "cuda": "12.8"},
+    )
+    with pytest.raises(RuntimeError, match="reuse-completed-evidence"):
+        verify_m4._full_training_command_or_reuse(
+            dataset_root=tmp_path / "dataset",
+            dataset_fingerprint="sha256:" + "d" * 64,
+            model_root=model_root,
+            variant=ActVariant.PER_TASK,
+            task_id=CANONICAL_TASK_IDS[0],
+            report_path=tmp_path / "train.json",
+        )
+
+
 def test_comparison_requires_complete_result_evidence_and_does_not_invent_quality(
     tmp_path: Path,
 ) -> None:
@@ -920,6 +992,69 @@ def test_comparison_requires_complete_result_evidence_and_does_not_invent_qualit
     assert result["baseline_quality_validated"] is False
     assert result["interpretation"]["language_understanding"] == "not tested in M4"
     assert [item["task_id"] for item in result["runs"][:6]] == list(CANONICAL_TASK_IDS)
+
+
+def test_comparison_keeps_training_and_evaluation_git_provenance_separate(
+    tmp_path: Path,
+) -> None:
+    per_task = [
+        _write_run(
+            tmp_path / f"cross-git-per-{index}",
+            variant=ActVariant.PER_TASK,
+            run_character=f"cross-{index}",
+            task_id=task_id,
+            training_git_commit="1" * 40,
+            evaluation_git_commit="2" * 40,
+        )
+        for index, task_id in enumerate(CANONICAL_TASK_IDS)
+    ]
+    unconditioned = _write_run(
+        tmp_path / "cross-git-unconditioned",
+        variant=ActVariant.MIXED_UNCONDITIONED,
+        run_character="cross-a",
+        task_id=None,
+        training_git_commit="1" * 40,
+        evaluation_git_commit="2" * 40,
+    )
+    conditioned = _write_run(
+        tmp_path / "cross-git-conditioned",
+        variant=ActVariant.MIXED_TASK_ONEHOT,
+        run_character="cross-b",
+        task_id=None,
+        training_git_commit="1" * 40,
+        evaluation_git_commit="2" * 40,
+    )
+    result = compare_cli.compare(
+        argparse.Namespace(
+            per_task_manifest=per_task,
+            mixed_unconditioned_manifest=unconditioned,
+            mixed_task_onehot_manifest=conditioned,
+        )
+    )
+    assert result["training_git_commit"] == "1" * 40
+    assert result["evaluation_git_commits"] == ["2" * 40]
+    assert result["physical_evidence_validated"] is True
+
+
+def test_comparison_rejects_benchmark_git_not_bound_to_runtime_manifest(
+    tmp_path: Path,
+) -> None:
+    manifest_path = _write_run(
+        tmp_path / "runtime-git-mismatch",
+        variant=ActVariant.PER_TASK,
+        run_character="runtime-git-mismatch",
+        task_id=CANONICAL_TASK_IDS[0],
+    )
+    manifest = ActExperimentManifest.from_dict(
+        json.loads(manifest_path.read_text(encoding="utf-8"))
+    )
+    selected = str(manifest.selected_checkpoint_fingerprint).removeprefix("sha256:")
+    benchmark_path = manifest_path.parent / "validation" / selected / "benchmark.json"
+    benchmark = json.loads(benchmark_path.read_text(encoding="utf-8"))
+    benchmark["evaluation_git"]["commit"] = "2" * 40
+    benchmark_path.write_text(json.dumps(benchmark), encoding="utf-8")
+    with pytest.raises(RuntimeError, match="runtime manifest is incompatible"):
+        compare_cli._manifest_facts(manifest_path, ActVariant.PER_TASK)
 
 
 def test_verify_target_modes_are_mutually_exclusive(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -1094,6 +1229,91 @@ def test_verify_dry_run_requires_target_full(monkeypatch: pytest.MonkeyPatch) ->
     with pytest.raises(SystemExit) as error:
         verify_m4.parse_args()
     assert error.value.code == 2
+
+
+def test_verify_completed_evidence_reuse_cli_is_explicit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["verify_m4.py", "--reuse-completed-evidence"])
+    with pytest.raises(SystemExit) as error:
+        verify_m4.parse_args()
+    assert error.value.code == 2
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "verify_m4.py",
+            "--target-full",
+            "--dry-run",
+            "--reuse-completed-evidence",
+        ],
+    )
+    with pytest.raises(SystemExit) as error:
+        verify_m4.parse_args()
+    assert error.value.code == 2
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["verify_m4.py", "--target-full", "--reuse-completed-evidence"],
+    )
+    assert verify_m4.parse_args().reuse_completed_evidence is True
+
+
+def test_completed_evidence_summary_never_runs_training_or_rollout(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    completed = SimpleNamespace(
+        summary=SimpleNamespace(total_episodes=360),
+        export_fingerprint="sha256:" + "d" * 64,
+        split_manifest_digest="sha256:" + "6" * 64,
+    )
+    trained = [
+        {
+            "expected_output_directory": str(tmp_path / f"run-{index}"),
+            "reused_completed_training": True,
+        }
+        for index in range(8)
+    ]
+    monkeypatch.setattr(
+        verify_m4,
+        "load_completed_m3b_dataset",
+        lambda *_args, **_kwargs: completed,
+    )
+    monkeypatch.setattr(
+        verify_m4,
+        "_load_plan_bound_completed_evidence",
+        lambda **_kwargs: (trained, "1" * 40),
+    )
+    commands: list[list[str]] = []
+
+    def fake_run(command: list[str]) -> tuple[bool, dict[str, object]]:
+        commands.append(command)
+        assert Path(command[1]).name == "compare_act_baselines.py"
+        return True, {
+            "passed": True,
+            "full_experiment_validated": True,
+            "baseline_quality_validated": False,
+            "physical_evidence_validated": True,
+            "training_git_commit": "1" * 40,
+            "evaluation_git_commits": ["2" * 40],
+        }
+
+    monkeypatch.setattr(verify_m4, "_run", fake_run)
+    report = verify_m4.Report()
+    verify_m4._run_target_full_completed_evidence(
+        report,
+        tmp_path / "dataset",
+        tmp_path / "models",
+        action_bound_mode="project",
+    )
+    assert len(commands) == 1
+    assert report.completed_evidence_reuse_validated is True
+    assert report.full_experiment_validated is True
+    assert report.baseline_quality_validated is False
+    assert report.physical_target_validated is True
 
 
 def test_full_commands_bind_planned_identity_and_projected_action_boundary(

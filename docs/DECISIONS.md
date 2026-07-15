@@ -1123,3 +1123,31 @@ workaround.
     not confuse projected control success with calibrated raw regression. Full eight-model training,
     selection, locked test, fresh-seed benchmark, peak-memory/throughput comparison, and full
     acceptance remain outside M4.1.
+
+## D-041 — Audit plan-bound completed M4 evidence without changing training identities
+
+The first dual-RTX 5090 full run trained and sealed all eight 100,000-step ACT models at Git commit
+`ceb73db1a0fe88fa7f58f347b51c542aa76663a0`. Evaluation later continued across the D-040
+serialization-only repair, so each checkpoint remains bound to its original training commit while
+each validation, test, and fresh-seed artifact is independently bound to the exact evaluation code
+commit in its `EvaluationRuntimeManifest`. Requiring evaluation Git to equal training Git is
+therefore incorrect: it rejects valid, runtime-audited evidence and can cause the outer verifier to
+mistake a completed historical experiment for a missing current-commit run.
+
+M4 now exposes explicit `--reuse-completed-evidence` target-full mode. It accepts only the exact
+eight run fingerprints and directories recorded by the existing clean, passed full dry-run plan;
+requires the same M3B export/split identity, canonical run order, fixed optimization and 5,000-step
+checkpoint/evaluation schedules, all 20 sealed checkpoints per run, immutable selection/completion
+records, every validation result, locked test, fresh-seed result, and final analysis; then invokes
+only the project-owned comparison/provenance audit. It never calls `train_act.py` or
+`evaluate_act.py`, and any incompatibility fails rather than falling back to training or rollout.
+Normal target-full mode also refuses implicit retraining when a matching completed historical run
+exists; an explicitly new experiment must use a new output root.
+
+The comparison audit now validates every benchmark against its sibling evaluation-runtime manifest,
+including the selected checkpoint, project action-bound mode, `physx_cpu` environment execution,
+action-space contract, task mapping, split/evaluation configuration, deterministic reload flags,
+and per-episode runtime fingerprint. It reports the single training Git commit separately from the
+set of evaluation Git commits. This changes no M1 success/bounds, M3A/M3B artifact, ACT
+weights/loss/configuration, train-only statistics, split, checkpoint fingerprint, selected
+checkpoint, or stored evaluation result.

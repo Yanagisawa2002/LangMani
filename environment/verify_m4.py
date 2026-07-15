@@ -123,6 +123,9 @@ class Report:
     fresh_seed_benchmark_completed: bool = False
     full_dry_run_validated: bool = False
     planned_full_run_count: int = 0
+    completed_evidence_reuse_validated: bool = False
+    reused_training_git_commit: str | None = None
+    reused_evaluation_git_commits: list[str] = field(default_factory=list)
     full_experiment_validated: bool = False
     baseline_quality_validated: bool = False
     physical_target_validated: bool = False
@@ -193,7 +196,7 @@ class Report:
 
     def write(self, *, mode: VerificationMode, dataset_root: Path, dry_run: bool = False) -> None:
         payload = {
-            "schema_version": "langmani-m4.1-verification-v4",
+            "schema_version": "langmani-m4.1-verification-v5",
             "verification_mode": mode,
             "dry_run": dry_run,
             "dataset_root": str(dataset_root.resolve()),
@@ -214,6 +217,14 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="validate the exact eight-run full plan without training or rollout",
     )
+    parser.add_argument(
+        "--reuse-completed-evidence",
+        action="store_true",
+        help=(
+            "audit the exact completed runs recorded by the full dry-run plan; "
+            "never train or execute rollouts"
+        ),
+    )
     parser.add_argument("--dataset-root", type=Path, default=DEFAULT_DATASET_ROOT)
     parser.add_argument(
         "--model-root",
@@ -233,6 +244,10 @@ def parse_args() -> argparse.Namespace:
     args = parser.parse_args()
     if args.dry_run and not args.target_full:
         parser.error("--dry-run requires --target-full")
+    if args.reuse_completed_evidence and not args.target_full:
+        parser.error("--reuse-completed-evidence requires --target-full")
+    if args.reuse_completed_evidence and args.dry_run:
+        parser.error("--reuse-completed-evidence cannot be combined with --dry-run")
     return args
 
 
@@ -558,6 +573,7 @@ def _run_prior_target_gate(
     args: argparse.Namespace,
     *,
     dry_run: bool = False,
+    reuse_completed_evidence: bool = False,
 ) -> Path:
     if mode == "target_smoke":
         if not M3B_REPORT.is_file():
@@ -597,10 +613,12 @@ def _run_prior_target_gate(
         if not passed:
             raise RuntimeError("completed M3B smoke evidence is invalid")
         return dataset_root
-    if dry_run:
+    if dry_run or reuse_completed_evidence:
         if not M3B_REPORT.is_file():
             report.check("completed M3B full target gate", False, "M3B report is missing")
-            raise RuntimeError("full dry-run requires a completed M3B target-full report")
+            raise RuntimeError(
+                "full dry-run/evidence reuse requires a completed M3B target-full report"
+            )
         payload = json.loads(M3B_REPORT.read_text(encoding="utf-8"))
         dataset_root = Path(str(payload.get("dataset_root", ""))).resolve()
         requested_root = args.dataset_root.resolve()
@@ -728,6 +746,7 @@ def _full_training_command_or_reuse(
     git = inspect_git_state(PROJECT_ROOT)
     versions = runtime_versions()
     matches: list[tuple[Path, ActExperimentManifest]] = []
+    historical_completed: list[tuple[Path, ActExperimentManifest]] = []
     for path in model_root.glob("*/run_manifest.json"):
         candidate_root = path.parent
         if (
@@ -741,23 +760,35 @@ def _full_training_command_or_reuse(
             manifest = ActExperimentManifest.from_dict(json.loads(path.read_text(encoding="utf-8")))
         except (AttributeError, OSError, TypeError, ValueError, json.JSONDecodeError):
             continue
-        if (
+        semantic_match = (
             manifest.config.mode is ExperimentMode.FULL
             and manifest.config.device == "cuda"
             and manifest.config.allow_dirty_development is False
             and manifest.config.model == ActModelConfig.for_variant(variant)
             and manifest.config.optimization == ActOptimizationConfig()
             and manifest.identity.m3b_export_fingerprint == dataset_fingerprint
-            and manifest.identity.git_commit == git.commit
             and manifest.identity.git_dirty is False
-            and manifest.identity.lerobot_version == versions["lerobot"]
-            and manifest.identity.torch_version == versions["torch"]
-            and manifest.identity.cuda_version == versions["cuda"]
             and manifest.identity.variant is variant
             and manifest.identity.task_id == task_id
             and manifest.identity.training_seed == 0
-        ):
+        )
+        if not semantic_match:
+            continue
+        current_runtime_match = (
+            manifest.identity.git_commit == git.commit
+            and manifest.identity.lerobot_version == versions["lerobot"]
+            and manifest.identity.torch_version == versions["torch"]
+            and manifest.identity.cuda_version == versions["cuda"]
+        )
+        if current_runtime_match:
             matches.append((path.parent, manifest))
+        elif (
+            manifest.complete
+            and manifest.training_state.completed
+            and (candidate_root / "complete.json").is_file()
+            and (candidate_root / "reports" / "training_summary.json").is_file()
+        ):
+            historical_completed.append((candidate_root, manifest))
     if len(matches) > 1:
         raise RuntimeError("multiple current full runs match one declared M4 baseline")
     command = _training_command(
@@ -770,6 +801,12 @@ def _full_training_command_or_reuse(
         report_path=report_path,
     )
     if not matches:
+        if historical_completed:
+            raise RuntimeError(
+                "completed historical full evidence exists; refusing implicit retraining. "
+                "Use --reuse-completed-evidence to audit the plan-bound immutable runs, or "
+                "choose a new output root for an explicitly new experiment"
+            )
         return command, None
     run_root, manifest = matches[0]
     summary_path = run_root / "reports" / "training_summary.json"
@@ -1350,6 +1387,298 @@ def _run_target_full_dry_run(
     )
 
 
+def _load_plan_bound_completed_evidence(
+    *,
+    dataset_root: Path,
+    dataset_fingerprint: str,
+    split_digest: str,
+    model_root: Path,
+    action_bound_mode: str,
+) -> tuple[list[dict[str, object]], str]:
+    """Load the exact sealed runs named by the immutable full dry-run plan.
+
+    This path deliberately does not synthesize a current-Git training identity.  The
+    training commit remains part of every original run/checkpoint fingerprint, while
+    the current verifier commit is only an audit runtime.  Any missing or changed
+    plan, run, checkpoint, or final-evaluation artifact fails instead of falling back
+    to training or rollout execution.
+    """
+
+    full_dir = REPORT_PATH.parent / "target_full"
+    plan_path = full_dir / "dry_run_plan.json"
+    if not plan_path.is_file():
+        raise RuntimeError("completed-evidence reuse requires the existing full dry-run plan")
+    _validate_owned_path(full_dir, plan_path)
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    expected_runs: list[tuple[ActVariant, str | None]] = [
+        *[(ActVariant.PER_TASK, task_id) for task_id in CANONICAL_TASK_IDS],
+        (ActVariant.MIXED_UNCONDITIONED, None),
+        (ActVariant.MIXED_TASK_ONEHOT, None),
+    ]
+    expected_schedule = list(range(5_000, 100_001, 5_000))
+    plan_git = plan.get("git") if isinstance(plan, dict) else None
+    planned_runs = plan.get("runs") if isinstance(plan, dict) else None
+    if (
+        not isinstance(plan, dict)
+        or plan.get("schema_version") != "langmani-m4-full-dry-run-plan-v1"
+        or plan.get("passed") is not True
+        or plan.get("training_started") is not False
+        or plan.get("rollout_started") is not False
+        or plan.get("action_bound_mode") != action_bound_mode
+        or Path(str(plan.get("dataset_root", ""))).resolve() != dataset_root.resolve()
+        or plan.get("dataset_fingerprint") != dataset_fingerprint
+        or plan.get("split_digest") != split_digest
+        or plan.get("optimization") != ActOptimizationConfig().to_dict()
+        or plan.get("checkpoint_schedule") != expected_schedule
+        or plan.get("evaluation_schedule") != expected_schedule
+        or not isinstance(plan_git, dict)
+        or plan_git.get("dirty") is not False
+        or plan_git.get("baseline_tracked") is not True
+        or plan_git.get("changed_paths") != []
+        or not isinstance(plan_git.get("commit"), str)
+        or not isinstance(planned_runs, list)
+        or len(planned_runs) != len(expected_runs)
+    ):
+        raise RuntimeError("completed-evidence reuse plan is missing or semantically incompatible")
+    training_git_commit = str(plan_git["commit"])
+    if len(training_git_commit) not in {40, 64} or any(
+        character not in "0123456789abcdef" for character in training_git_commit
+    ):
+        raise RuntimeError("completed-evidence plan has an invalid training Git commit")
+
+    reused: list[dict[str, object]] = []
+    seen_fingerprints: set[str] = set()
+    seen_directories: set[Path] = set()
+    for index, ((variant, task_id), planned) in enumerate(
+        zip(expected_runs, planned_runs, strict=True)
+    ):
+        if not isinstance(planned, dict):
+            raise RuntimeError(f"completed-evidence plan run {index} is not an object")
+        fingerprint = planned.get("run_fingerprint")
+        if (
+            planned.get("index") != index
+            or planned.get("variant") != variant.value
+            or planned.get("task_id") != task_id
+            or planned.get("contract_validated") is not True
+            or not isinstance(fingerprint, str)
+            or not fingerprint.startswith("sha256:")
+            or len(fingerprint) != 71
+        ):
+            raise RuntimeError(f"completed-evidence plan run {index} is incompatible")
+        run_root = model_root.resolve() / fingerprint.removeprefix("sha256:")
+        declared_root = Path(str(planned.get("expected_output_directory", ""))).resolve()
+        if (
+            declared_root != run_root
+            or run_root in seen_directories
+            or fingerprint in seen_fingerprints
+            or _is_link_like(run_root)
+            or not run_root.is_dir()
+            or run_root.resolve().parent != model_root.resolve()
+        ):
+            raise RuntimeError(f"completed-evidence plan run {index} has an unsafe directory")
+        seen_directories.add(run_root)
+        seen_fingerprints.add(fingerprint)
+        manifest_path = run_root / "run_manifest.json"
+        _validate_owned_path(run_root, manifest_path)
+        manifest = ActExperimentManifest.from_dict(
+            json.loads(manifest_path.read_text(encoding="utf-8"))
+        )
+        expected_model = ActModelConfig.for_variant(variant)
+        if (
+            manifest.identity.run_fingerprint != fingerprint
+            or manifest.identity.git_commit != training_git_commit
+            or manifest.identity.git_dirty
+            or manifest.identity.m3b_export_fingerprint != dataset_fingerprint
+            or manifest.identity.m3b_split_manifest_digest != split_digest
+            or manifest.identity.variant is not variant
+            or manifest.identity.task_id != task_id
+            or manifest.identity.training_seed != 0
+            or manifest.config.mode is not ExperimentMode.FULL
+            or manifest.config.device != "cuda"
+            or manifest.config.allow_dirty_development
+            or manifest.config.model != expected_model
+            or manifest.config.optimization != ActOptimizationConfig()
+            or not manifest.complete
+            or not manifest.training_state.completed
+            or manifest.training_state.global_step != 100_000
+            or manifest.selected_checkpoint_fingerprint is None
+        ):
+            raise RuntimeError(f"completed-evidence manifest {index} differs from its plan")
+        checkpoints = sorted(manifest.checkpoints, key=lambda item: item.global_step)
+        if [item.global_step for item in checkpoints] != expected_schedule or any(
+            not item.complete
+            or item.run_fingerprint != fingerprint
+            or item.git_commit != training_git_commit
+            for item in checkpoints
+        ):
+            raise RuntimeError(f"completed-evidence run {index} has an incomplete checkpoint set")
+        selected = manifest.selected_checkpoint_fingerprint
+        selected_records = [item for item in checkpoints if item.checkpoint_fingerprint == selected]
+        if len(selected_records) != 1:
+            raise RuntimeError(f"completed-evidence run {index} has no unique selected checkpoint")
+        for checkpoint in checkpoints:
+            checkpoint_root = run_root / checkpoint.relative_path
+            _validate_owned_path(run_root, checkpoint_root)
+            for name in (CHECKPOINT_MANIFEST, CHECKPOINT_COMPLETION_MARKER):
+                artifact = checkpoint_root / name
+                _validate_owned_path(run_root, artifact)
+                if not artifact.is_file():
+                    raise RuntimeError(
+                        f"completed-evidence run {index} is missing checkpoint artifact {name}"
+                    )
+            validation_root = (
+                run_root / "validation" / checkpoint.checkpoint_fingerprint.removeprefix("sha256:")
+            )
+            for name in ("benchmark.json", "evaluation_runtime_manifest.json"):
+                artifact = validation_root / name
+                _validate_owned_path(run_root, artifact)
+                if not artifact.is_file():
+                    raise RuntimeError(
+                        f"completed-evidence run {index} is missing validation artifact {name}"
+                    )
+        completion_path = run_root / "complete.json"
+        selection_path = run_root / "checkpoint_selection.json"
+        summary_path = run_root / "reports" / "training_summary.json"
+        for artifact in (completion_path, selection_path, summary_path):
+            _validate_owned_path(run_root, artifact)
+            if not artifact.is_file():
+                raise RuntimeError(f"completed-evidence run {index} is not sealed")
+        completion = json.loads(completion_path.read_text(encoding="utf-8"))
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        if completion != {
+            "schema_version": "langmani-m4-run-completion-v1",
+            "run_fingerprint": fingerprint,
+            "selected_checkpoint_fingerprint": selected,
+        } or (
+            not isinstance(summary, dict)
+            or summary.get("passed") is not True
+            or summary.get("run_fingerprint") != fingerprint
+            or summary.get("effective_model_config") != expected_model.to_dict()
+            or summary.get("effective_optimization_config") != ActOptimizationConfig().to_dict()
+        ):
+            raise RuntimeError(f"completed-evidence run {index} has inconsistent completion data")
+        analysis_name = (
+            "per_task_reference.json"
+            if variant is ActVariant.PER_TASK
+            else "counterfactual_sensitivity.json"
+        )
+        final_artifacts = (
+            run_root / "test" / "benchmark.json",
+            run_root / "test" / "evaluation_runtime_manifest.json",
+            run_root / "fresh_seed" / "benchmark.json",
+            run_root / "fresh_seed" / "evaluation_runtime_manifest.json",
+            run_root / "fresh_seed" / "analysis.json",
+            run_root / "reports" / analysis_name,
+        )
+        for artifact in final_artifacts:
+            _validate_owned_path(run_root, artifact)
+            if not artifact.is_file():
+                raise RuntimeError(
+                    f"completed-evidence run {index} lacks final evaluation evidence"
+                )
+        reused.append(
+            {
+                "passed": True,
+                "training_started": False,
+                "reused_completed_training": True,
+                "plan_bound_evidence": True,
+                "expected_output_directory": str(run_root),
+                "run_fingerprint": fingerprint,
+                "training_git_commit": training_git_commit,
+                "last_checkpoint": checkpoints[-1].to_dict(),
+            }
+        )
+    return reused, training_git_commit
+
+
+def _run_target_full_completed_evidence(
+    report: Report,
+    dataset_root: Path,
+    model_root: Path,
+    *,
+    action_bound_mode: str,
+) -> None:
+    """Audit sealed training/evaluation evidence without training or rollout."""
+
+    completed = load_completed_m3b_dataset(dataset_root, require_full=True, validate_storage=True)
+    report.source_dataset_validated = completed.summary.total_episodes == 360
+    report.check(
+        "completed real M3B full dataset",
+        report.source_dataset_validated,
+        f"episodes={completed.summary.total_episodes}",
+    )
+    trained, training_git_commit = _load_plan_bound_completed_evidence(
+        dataset_root=dataset_root,
+        dataset_fingerprint=completed.export_fingerprint,
+        split_digest=completed.split_manifest_digest,
+        model_root=model_root,
+        action_bound_mode=action_bound_mode,
+    )
+    full_dir = REPORT_PATH.parent / "target_full"
+    command = [sys.executable, "scripts/compare_act_baselines.py"]
+    for train_report in trained[:6]:
+        command.extend(
+            [
+                "--per-task-manifest",
+                str(Path(str(train_report["expected_output_directory"])) / "run_manifest.json"),
+            ]
+        )
+    command.extend(
+        [
+            "--mixed-unconditioned-manifest",
+            str(Path(str(trained[6]["expected_output_directory"])) / "run_manifest.json"),
+            "--mixed-task-onehot-manifest",
+            str(Path(str(trained[7]["expected_output_directory"])) / "run_manifest.json"),
+            "--output",
+            str(full_dir / "comparison.json"),
+        ]
+    )
+    compare_ok, comparison = _run(command)
+    if comparison is None:
+        comparison = {}
+    evaluation_git_commits = comparison.get("evaluation_git_commits")
+    reuse_ok = all(
+        (
+            len(trained) == 8,
+            compare_ok,
+            comparison.get("full_experiment_validated") is True,
+            comparison.get("physical_evidence_validated") is True,
+            comparison.get("training_git_commit") == training_git_commit,
+            isinstance(evaluation_git_commits, list),
+            bool(evaluation_git_commits),
+        )
+    )
+    report.completed_evidence_reuse_validated = reuse_ok
+    report.reused_training_git_commit = training_git_commit
+    report.reused_evaluation_git_commits = (
+        [str(item) for item in evaluation_git_commits]
+        if isinstance(evaluation_git_commits, list)
+        else []
+    )
+    report.cuda_training_validated = reuse_ok
+    report.checkpoint_model_reload_validated = reuse_ok
+    report.policy_processor_reload_validated = reuse_ok
+    report.action_bound_processor_reload_validated = reuse_ok
+    report.projected_action_bounds_validated = reuse_ok
+    report.closed_loop_inference_validated = reuse_ok
+    report.fresh_seed_benchmark_completed = reuse_ok
+    report.per_task_experiment_completed = reuse_ok
+    report.mixed_unconditioned_experiment_completed = reuse_ok
+    report.mixed_task_onehot_experiment_completed = reuse_ok
+    report.full_experiment_validated = reuse_ok
+    report.baseline_quality_validated = bool(comparison.get("baseline_quality_validated", False))
+    report.physical_target_validated = reuse_ok
+    report.check(
+        "plan-bound completed M4 evidence reuse",
+        reuse_ok,
+        (
+            f"runs={len(trained)}; training_git={training_git_commit}; "
+            f"evaluation_gits={report.reused_evaluation_git_commits}; "
+            "training_started=false; rollout_started=false"
+        ),
+    )
+
+
 def _run_target_full(
     report: Report,
     dataset_root: Path,
@@ -1610,7 +1939,13 @@ def main() -> int:
                     mode=ExperimentMode.FULL,
                     allow_dirty_development=False,
                 )
-                dataset_root = _run_prior_target_gate(report, mode, args, dry_run=args.dry_run)
+                dataset_root = _run_prior_target_gate(
+                    report,
+                    mode,
+                    args,
+                    dry_run=args.dry_run,
+                    reuse_completed_evidence=args.reuse_completed_evidence,
+                )
                 if mode == "target_smoke":
                     _run_target_smoke(
                         report,
@@ -1621,6 +1956,13 @@ def main() -> int:
                 else:
                     if args.dry_run:
                         _run_target_full_dry_run(
+                            report,
+                            dataset_root,
+                            args.model_root.resolve(),
+                            action_bound_mode=args.action_bound_mode,
+                        )
+                    elif args.reuse_completed_evidence:
+                        _run_target_full_completed_evidence(
                             report,
                             dataset_root,
                             args.model_root.resolve(),
