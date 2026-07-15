@@ -3,8 +3,10 @@
 This document defines current and future ownership boundaries. M0 and M1 established the runtime
 foundation and environment boundary, M2 added the privileged expert, M3A implemented the
 authoritative ManiSkill-native raw archive, and M3B added deterministic LeRobotDataset v3
-derivation and validation. Active M4 owns three reproducible ACT controls, their checkpoints, and
-closed-loop evaluation. The root package stays lightweight, and importing
+derivation and validation. M4/M4.1 own three reproducible ACT controls, their checkpoints,
+closed-loop evaluation, and the explicit action-bound runtime. Active M4.2 adds only committed
+seed locks, runtime/post-grasp analysis, and one oracle TaskToken ACT. The root package stays
+lightweight, and importing
 `langmani.environments` is still the explicit registration boundary.
 
 ## Dependency direction
@@ -18,6 +20,7 @@ experts -> environments
 datasets -> M3A authority plus one-way M3B derived representation
 policies -> completed M3B schemas plus installed LeRobot policy interfaces
 policy evaluation -> environments and policy interfaces
+M4.2 -> completed M4 evidence plus completed M3B schemas
 ```
 
 Shared schemas should live at the narrowest neutral boundary. ManiSkill-specific objects must not
@@ -56,8 +59,10 @@ Panda qpos. The explicit bin values are necessary because ManiSkill's native sim
 omits static actors; the accessor still exposes nothing through policy observations.
 
 The environment still does not own planning, expert phase behavior, dataset persistence, training,
-checkpoint selection, or policy metrics. M4 adds only a narrow policy-rollout evaluation accessor;
-it does not change observations or expose privileged values.
+checkpoint selection, or policy metrics. M4 adds only a narrow policy-rollout evaluation accessor.
+M4.2 may add a separate compact post-step diagnostic accessor for target/object/bin geometry and
+velocity, but those values are consumed only after action selection for failure classification.
+Neither boundary changes policy observations or exposes privileged values as model inputs.
 
 ## Experts
 
@@ -174,6 +179,10 @@ acceptance. It derives global and per-task views from validated scene-group spli
 normalization statistics from the selected train frames only; M3B's whole-dataset `meta.stats` is
 not a training input.
 
+M4.2 consumes the same completed M3B view and immutable M4 checkpoint/evaluation evidence. Its
+committed schedule locks are policy-package resources, not a new dataset layer. M4.2 never writes
+M3A/M3B, recalculates their admission, or uses historical M4 test/fresh evidence for selection.
+
 ## Policies
 
 `langmani.policies` owns M4's project-level ACT boundary:
@@ -188,7 +197,16 @@ langmani.policies
 ├── act_rollout.py        # ACT queue to single M1 pd_joint_pos environment
 ├── act_evaluation.py     # schedules, validation ranking, test lock, summaries
 ├── act_analysis.py       # counterfactual action sensitivity
-└── act_runtime.py        # Git/runtime identity and safe immutable output helpers
+├── act_runtime.py        # Git/runtime identity and safe immutable output helpers
+├── m42_types.py          # immutable stage/runtime/selection/final-gate contracts
+├── m42_schedule.py       # joint leakage-safe development/final schedule locks
+├── m42_schedules/        # committed exclusions and exact seed-list resources
+├── m42_runtime.py        # execution horizon and explicit binary-gripper runtime
+├── m42_analysis.py       # post-grasp phases, rankings, paired metrics, go/no-go
+├── m42_evidence.py       # completed M4 evidence and immutable selection gates
+├── m42_training.py       # TaskToken run identity, data mapping, and training orchestration
+├── m42_evaluation.py     # validation ranking and development/final benchmarks
+└── act_task_token.py     # public LeRobot ENV-token integration and API checks
 ```
 
 The package wraps installed LeRobot 0.6.0 public interfaces rather than copying ACT. It implements
@@ -197,6 +215,24 @@ framework. The first two use image plus 9D Panda state. The third appends a six-
 condition in memory for a 15D state and does not rewrite M3B. Task text remains metadata and is not
 an ACT tensor input. Policies do not define task physics, accept privileged state, invoke M2 during
 rollout, upload to Hub, or mutate source datasets.
+
+M4.2 remains a narrow extension rather than a generic policy framework. `ExecutionHorizonPolicyV0`
+calls the installed public chunk-prediction path and owns an independent queue for exactly 1, 5, or
+10 actions; reset clears both queues. `BinaryGripperEnvPostprocessorV0` is composed with the
+existing M4.1 `project` processor and changes only component 7. It records raw, binary, projected,
+and executed values separately and rejects malformed or nonfinite actions.
+
+`ACT-Mixed-TaskToken` uses the installed LeRobot 0.6.0 public `FeatureType.ENV` feature at
+`observation.environment_state`. The public `nn.Linear(6, dim_model)` environment projection maps
+the canonical one-hot command to one learned hidden-dimensional vector, and ACT inserts it as a
+dedicated encoder token between the 9D Panda-state token and image tokens. The Panda state remains
+9D; the command is not appended to qpos. `NormalizationMode.IDENTITY` preserves the one-hot. A
+project-owned contract validates the ENV feature, projection shape, and encoder-position count so
+an upstream change fails explicitly. LangMani does not subclass, fork, patch, or copy ACT.
+
+Historical checkpoint bytes and schemas remain unchanged. The shared atomic checkpoint lifecycle
+accepts a narrow structural identity protocol so the independent M4.2 identity can reuse save and
+reload without adding a fourth historical `ActVariant` or weakening any identity comparison.
 
 ## Evaluation
 
@@ -207,6 +243,14 @@ authorization, fresh-seed exclusion, and compact rollout/comparison records. It 
 implementation, fixture training, CUDA training, model quality, and physical target acceptance.
 It does not fabricate missing runs, treat offline loss as task success, or use test results to tune
 or resume training.
+
+M4.2 evaluation adds a strict development/final boundary. The exact 12-scene `m42_dev_v0` and
+30-scene `m42_final_v0` lists are jointly regenerated from canonical SHA-256 inputs after excluding
+125 prior observed or predeclared seeds. A caller may validate the final lock without materializing
+its episodes. Final materialization additionally requires explicit authorization, clean Git, a
+matching implementation fingerprint, and immutable horizon, gripper, and TaskToken-checkpoint
+selections. Post-grasp state is diagnostic only and cannot affect policy input or checkpoint
+selection. Only M3B validation selects the TaskToken checkpoint.
 
 ## CLI
 
@@ -256,6 +300,15 @@ effective configurations, and schedules without creating a model directory or st
 The subsequent non-dry command additionally runs all eight policies, locked test, and the fixed
 180-episode fresh benchmark. Fixture work cannot set physical or model-quality flags.
 
+M4.2 adds `scripts/run_m42_runtime_ablation.py`, `scripts/train_act_task_token.py`,
+`scripts/evaluate_m42.py`, and `environment/verify_m42.py`. Commands accept explicit paths and
+dry-run, write machine-readable fingerprint-owned artifacts through owned staging, and fail on
+incompatible reuse. `--target-development` verifies completed M4 evidence, locks both schedules,
+runs horizon then gripper selection, trains/selects exactly one TaskToken model from M3B validation,
+and evaluates development. It cannot materialize `m42_final_v0`. `--target-final` is a later,
+separate authorization that verifies all immutable locks, performs the paired final benchmark, and
+writes go/no-go without starting M5.
+
 ## Cross-cutting rules
 
 - Project-owned interfaces use static typing and tests.
@@ -264,5 +317,8 @@ The subsequent non-dry command additionally runs all eight policies, locked test
 - Dependency and interface changes require an entry in `docs/DECISIONS.md`.
 - Every M4 run records the full Git commit; a dirty tree is development-only and never final.
 - M4 train statistics and checkpoint selection may use train/validation only; test remains locked.
+- M4.2 runtime selection uses only `m42_dev_v0`; TaskToken checkpoint selection uses only M3B
+  validation; the sealed `m42_final_v0` is never a development input.
+- OneHot and TaskToken are oracle discrete-task controls, not language understanding.
 - Simulator, CUDA, Vulkan, or rendering failures remain visible and cause strict verification to
   fail.

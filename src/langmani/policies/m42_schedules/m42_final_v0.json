@@ -1,0 +1,33 @@
+{
+  "schema_version": "langmani-m42-seed-schedule-v0",
+  "generation_schema_version": "langmani-m42-joint-seed-generation-v0",
+  "generation_namespace": "langmani-m42-dev-final-v0",
+  "m3b_export_fingerprint": "sha256:3f4d81471ac7c3ecc034206bc207524c4cbfbd1f7874b25eca894a5b607acfb4",
+  "base_exclusion_digest": "sha256:801e5b9d0595855729a45fa3bab25b85449afab2aec06065dd69233eec0f5610",
+  "candidate_attempts": 42,
+  "maximum_episode_steps": 200,
+  "evaluation_config_fingerprint": "sha256:0746ecb022ac67e73bc04d19db39c6e11e76ce264669d5e1dec9474a34cbb6d4",
+  "ordered_task_specs": [
+    {"target_object_id": "red_cube", "target_bin_id": "left_bin", "instruction_template_id": "canonical_v0"},
+    {"target_object_id": "red_cube", "target_bin_id": "right_bin", "instruction_template_id": "canonical_v0"},
+    {"target_object_id": "green_cube", "target_bin_id": "left_bin", "instruction_template_id": "canonical_v0"},
+    {"target_object_id": "green_cube", "target_bin_id": "right_bin", "instruction_template_id": "canonical_v0"},
+    {"target_object_id": "blue_cube", "target_bin_id": "left_bin", "instruction_template_id": "canonical_v0"},
+    {"target_object_id": "blue_cube", "target_bin_id": "right_bin", "instruction_template_id": "canonical_v0"}
+  ],
+  "schedule_id": "m42_final_v0",
+  "stage": "final",
+  "ordered_scene_seeds": [
+    893589536, 982761247, 1647023593, 694109670, 145992996, 544351154,
+    2073139116, 908051858, 651466276, 2055735584, 1942539159, 978613149,
+    64981643, 1732076572, 47175200, 451960684, 1196965561, 272982124,
+    737985780, 1699051323, 138690626, 1098325036, 1544603825, 214610042,
+    905027018, 568018298, 742414486, 1073839369, 2086293999, 824728764
+  ],
+  "counterpart_schedule_id": "m42_dev_v0",
+  "counterpart_scene_seeds": [
+    722950248, 1851299512, 713553274, 1707433820, 1405538489, 1953463567,
+    1994548171, 1805875340, 520095534, 400105183, 1993348904, 584965131
+  ],
+  "schedule_fingerprint": "sha256:b2aef313e076201f7a94875c835c2d606d8f255e3f75d53f7ac7fadcdbb267fc"
+}

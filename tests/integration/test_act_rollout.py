@@ -16,6 +16,8 @@ from langmani.environments.specs import EpisodeSpec
 from langmani.policies.act_action_bounds import ActionBoundConfig, ActionBoundMode
 from langmani.policies.act_rollout import ActManiSkillRolloutAdapter, RolloutContractError
 from langmani.policies.act_types import ActVariant, EvaluationSplit, RolloutStatus
+from langmani.policies.m42_runtime import ExecutionHorizonPolicyV0
+from langmani.policies.m42_types import ExecutionHorizonConfig
 
 SHA = "sha256:" + "a" * 64
 
@@ -245,6 +247,38 @@ def test_out_of_bounds_action_is_rejected_without_environment_step() -> None:
     assert result.invalid_action
     assert env.step_calls == 0
     assert result.action_projection_summary["maximum_bound_excess"] == 1.0
+
+
+@pytest.mark.fixture
+@pytest.mark.evaluation
+@pytest.mark.parametrize("failure", ("nonfinite", "malformed"))
+def test_m42_chunk_contract_failures_remain_invalid_action_evidence(failure: str) -> None:
+    class InvalidChunkPolicy:
+        @staticmethod
+        def reset() -> None:
+            return None
+
+        @staticmethod
+        def predict_action_chunk(_batch: dict[str, torch.Tensor]) -> torch.Tensor:
+            if failure == "malformed":
+                return torch.zeros((1, 50, 7), dtype=torch.float32)
+            chunk = torch.zeros((1, 50, 8), dtype=torch.float32)
+            chunk[0, 0, 0] = float("nan")
+            return chunk
+
+    env = _Env()
+    horizon = ExecutionHorizonPolicyV0(InvalidChunkPolicy(), ExecutionHorizonConfig(1))
+    adapter, _, _ = _adapter(env, horizon)  # type: ignore[arg-type]
+    result = adapter.run_episode(
+        evaluation_id=f"fixture-m42-{failure}-action",
+        split=EvaluationSplit.VALIDATION,
+        scene_seed=4,
+        task_spec=CANONICAL_TASK_SPECS[1],
+    )
+    assert result.status is RolloutStatus.INVALID_ACTION
+    assert result.invalid_action
+    assert env.step_calls == 0
+    assert result.action_projection_summary[f"any_{failure}_action"]
 
 
 @pytest.mark.fixture

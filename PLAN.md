@@ -1,9 +1,10 @@
 # LangMani roadmap
 
-Milestone M4 is active. M0 through M3B are implemented, and the native target now has the accepted
-60-group M3A authority plus its validated 360-episode M3B derivative. M4.1 target smoke is complete;
-the eight-run M4 full experiment remains pending its exact dry-run preflight and execution. Later
-milestones describe intended sequencing, not authorization to implement those systems now.
+Milestone M4.2 is active. M0 through M3B, M4 full, and M4.1 target smoke are complete on native
+targets. M4 full is experimentally and physically validated, but its declared quality gate is
+false. M4.2 may execute development only until its runtime and TaskToken choices are frozen; the
+sealed final benchmark remains pending and M5 is not authorized. Later milestones describe intended
+sequencing, not authorization to implement those systems now.
 
 ## M0 — Reproducible environment foundation (complete)
 
@@ -78,7 +79,7 @@ splits. Every TaskSpec contributes 48/6/6 episodes; all videos decode, provenanc
 alignment pass, and no scene group crosses a split. The accepted export fingerprint is
 `sha256:3f4d81471ac7c3ecc034206bc207524c4cbfbd1f7874b25eca894a5b607acfb4`.
 
-## M4.1 — Auditable ACT action-bound handling (complete)
+## M4 — Reproducible ACT baselines (complete)
 
 Train and compare exactly three controls on one completed M3B dataset: six `per_task` ACT policies
 with image plus 9D Panda state; one `mixed_unconditioned` ACT with the same 9D input and deliberate
@@ -93,25 +94,50 @@ and processor fingerprints, bound configuration, environment/action-space contra
 rollout configuration, schema, and current code commit. Existing checkpoint fingerprints remain
 unchanged.
 
-Local completion means typed/fixture/API tests and truthful pending flags. M4.1 target smoke
+M4.1 target smoke
 validates the completed M0-through-M3B evidence, reuses the existing PerTask and TaskOneHot
 checkpoints without training, reproduces strict bound rejection, executes a projected legal step,
-then attempts one PerTask and six same-scene TaskOneHot rollouts. It does not start the finalized
-60-group dataset, eight full ACT runs, M4 full selection/test/fresh-seed protocol, or M5.
+then attempts one PerTask and six same-scene TaskOneHot rollouts.
 
 The clean RTX 4090 smoke passed PerTask 1/1 and TaskOneHot 6/6. All seven task successes required
 at least one explicit gripper projection, so strict-unprojected success remains 0/7 and raw-action
-bounds validity remains false. This closes M4.1 without claiming M4 full acceptance.
+bounds validity remains false.
 
-M4 full begins with a no-training target preflight that binds the completed dataset, exact split
-views and train-only statistics, fixed 100,000-step configuration, Git/runtime identity, and eight
-unique future full-run directories. Both preflight and execution require explicit action-bound mode
-`project`; every validation, locked-test, and fresh-seed rollout receives that value explicitly.
+M4 full subsequently trained and sealed all eight 100,000-step runs. PerTask achieved 31/36 on the
+locked test and 143/180 on historical fresh seeds; Mixed-Unconditioned achieved 5/36 and 18/180;
+Mixed-TaskOneHot achieved 27/36 and 101/180. Validation-only selection, locked test access,
+fresh-seed evaluation, provenance, and physical execution passed, so
+`full_experiment_validated=true` and `physical_target_validated=true`. The intended conditioning and
+fresh-seed quality thresholds did not all pass, so `baseline_quality_validated=false` remains an
+equally important result.
+
+## M4.2 — Oracle-control robustness (active; development only)
+
+M4.2 first uses frozen Mixed-TaskOneHot and representative green-left PerTask checkpoints to compare
+execution horizons 10, 5, and 1 on the committed 12-scene `m42_dev_v0` schedule. After locking one
+horizon, it compares the existing explicit `project` action runtime with an explicit component-7
+`BinaryGripperEnvPostprocessorV0`. Raw, binary-transformed, projected, and executed actions remain
+separate, and privileged post-grasp phases are diagnostics only.
+
+M4.2 then trains exactly one `ACT-Mixed-TaskToken`. Panda policy state remains 9D. The canonical
+six-way oracle command uses LeRobot 0.6.0's public `FeatureType.ENV` path, whose linear 6-to-hidden
+projection creates a dedicated Transformer environment token. This is discrete oracle conditioning,
+not language understanding. Training retains the M4 configuration and train-only statistics; only
+M3B validation may select its checkpoint.
+
+Both M4.2 schedules were generated and committed jointly after excluding 125 prior observed or
+predeclared seeds. `m42_dev_v0` contains 12 scenes and has fingerprint
+`sha256:981547e771b2b5cd3a77e2788bb49d29fc45b3f59c607021a03a4e2ce70b43f1`.
+The sealed 30-scene `m42_final_v0` has fingerprint
+`sha256:b2aef313e076201f7a94875c835c2d606d8f255e3f75d53f7ac7fadcdbb267fc`.
+Development must stop before rendering or resetting a final seed. Final results, paired metrics, and
+the SmolVLA go/no-go decision remain pending until a later explicit `--target-final` invocation.
+The normative contract is `docs/M42_ORACLE_CONTROL_SPEC.md`.
 
 ## M5 — SmolVLA baseline (planned)
 
-Add SmolVLA-specific preprocessing, training, and evaluation only after the dataset and ACT
-baseline contracts are stable.
+Add SmolVLA-specific preprocessing, training, and evaluation only if the immutable M4.2-final
+decision is `go_for_smolvla`. M4.2 never starts M5 automatically.
 
 ## M6 — Evaluation and release hardening (planned)
 

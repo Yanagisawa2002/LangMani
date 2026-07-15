@@ -510,6 +510,36 @@ class PickPlaceByInstructionEnv(BaseEnv):
         ).any(dim=1)
         return evaluation
 
+    def get_policy_rollout_diagnostics(self) -> dict[str, torch.Tensor]:
+        """Return privileged rollout-analysis tensors outside the policy input path.
+
+        M4.2 samples this accessor at reset and after executed actions to diagnose
+        post-grasp phases.  The values are absent from observations, processor
+        inputs, rewards, and step ``info``; therefore this accessor does not alter
+        the M1 no-leakage contract or provide a deployable policy input.
+        """
+        cube_positions = torch.stack([cube.pose.p for cube in self.cubes], dim=1)
+        cube_velocities = torch.stack([cube.linear_velocity for cube in self.cubes], dim=1)
+        cube_is_grasped = torch.stack([self.agent.is_grasping(cube) for cube in self.cubes], dim=1)
+        gather_xyz = self._target_object_indices[:, None, None].expand(-1, 1, 3)
+        target_position = torch.gather(cube_positions, dim=1, index=gather_xyz).squeeze(1)
+        target_velocity = torch.gather(cube_velocities, dim=1, index=gather_xyz).squeeze(1)
+        bin_centers = self._bin_floor_centers()
+        target_bin_center = torch.gather(
+            bin_centers,
+            dim=1,
+            index=self._target_bin_indices[:, None, None].expand(-1, 1, 3),
+        ).squeeze(1)
+        return {
+            "target_position": target_position,
+            "target_linear_velocity": target_velocity,
+            "target_bin_floor_center": target_bin_center,
+            "target_to_bin_center_distance": torch.linalg.vector_norm(
+                target_position - target_bin_center, dim=1
+            ),
+            "object_is_grasped": cube_is_grasped,
+        }
+
     def get_expert_task_context(self) -> ExpertTaskContext:
         """Return the explicit privileged context for a single-environment expert.
 

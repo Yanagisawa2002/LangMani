@@ -2,17 +2,21 @@
 
 ## Purpose
 
-LangMani supports language-conditioned robotic manipulation in ManiSkill. M0 through M3B and the
-M4 implementation are complete. M4.1 explicit, auditable action-bound handling and its target smoke
-are also complete; M4 full has not started.
+LangMani supports language-conditioned robotic manipulation in ManiSkill. M0 through M3B, M4 full,
+and M4.1 explicit action-bound target smoke are complete. M4 full is experimentally and physically
+validated, but `baseline_quality_validated=false`. M4.2 oracle-control robustness is active; the
+current authorized target stops after `--target-development`. The sealed M4.2 final benchmark and
+M5 have not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
-Standard ACT is not language conditioned; the task one-hot is an oracle command condition. M4.1
-must not change M1 bounds/success, M3A/M3B data, train-only statistics, ACT weights/loss, or existing
-checkpoint fingerprints. Do not retrain, add binary-gripper conversion, start M4 full or M5, add
-new data/tasks, invoke M2 during rollout, or hide projection as clipping.
+Standard ACT is not language conditioned; task OneHot and TaskToken are oracle command conditions.
+M4.2 must not change M1 bounds/success, M3A/M3B data, train-only statistics, historical M4
+weights/loss, or existing checkpoint fingerprints. Do not retrain old M4 controls, materialize or
+execute `m42_final_v0` during development, start M5, add new data/tasks, invoke M2 during rollout,
+or hide projection as clipping. Binary gripper handling is permitted only as the explicit versioned
+M4.2 component-7 ablation defined in `docs/M42_ORACLE_CONTROL_SPEC.md`.
 
 ## Directory ownership
 
@@ -91,6 +95,12 @@ python scripts/compare_act_baselines.py --help
 python scripts/inspect_act_checkpoint.py --help
 python scripts/benchmark_act_evaluation_workers.py --help
 
+# M4.2 oracle-control commands
+python scripts/run_m42_runtime_ablation.py --help
+python scripts/train_act_task_token.py --help
+python scripts/evaluate_m42.py --help
+python environment/verify_m42.py
+
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,
 # then delegates planner construction and expert rollouts to the side runtime.
@@ -125,6 +135,13 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py \
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --output-root outputs/models/act
+
+# M4.2 development: horizon/gripper ablations, one TaskToken run, validation selection,
+# and the 12-scene development benchmark. This must stop before m42_final_v0.
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m42.py --target-development
+
+# Separate future authorization only after all development selections are immutable.
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m42.py --target-final
 ```
 
 The exact environment creation commands are maintained in `README.md`.
@@ -145,6 +162,11 @@ The exact environment creation commands are maintained in `README.md`.
   override, and that run is never final evidence.
 - M4 normalization must be computed from its exact train episode view. Never use M3B whole-dataset
   `meta.stats`, expose test episodes to training/selection, or reopen M3A in normal training.
+- M4.2 runtime selection may use only `m42_dev_v0`; TaskToken checkpoint selection may use only the
+  M3B validation split. Loading the final lock for audit is allowed, but development must never
+  materialize, render, or reset an `m42_final_v0` episode.
+- Preserve raw, binary-transformed, projected, and executed action evidence as separate contracts.
+  OneHot and TaskToken must always be described as oracle conditioning, never language understanding.
 - Do not describe a skipped, metadata-only, structural-only, or CPU-only check as physical GPU or
   rendering validation.
 
@@ -160,8 +182,9 @@ M2 target commands to pass in the documented order. M3A smoke acceptance require
 before one fresh complete group and six independent action replays. Full-dataset acceptance is a
 separate command requiring exactly 60 complete groups (360 accepted episodes, 60 per TaskSpec),
 inspection of every shard/checksum, and independent replay of every action sequence. When that
-machine is unavailable, physical M2/M3A/M3B/M4 verification, the first authoritative archive, and
-the first full derived dataset remain explicitly pending. M3B target acceptance additionally
+machine is unavailable, any newly requested physical gate remains explicitly pending; previously
+accepted immutable M2/M3A/M3B/M4 evidence is not downgraded or re-created. M3B target acceptance
+additionally
 requires a content-bound M3A target report, real state-restoration rendering, exact scene-level
 splits, all videos decoded, source/action/state alignment, a local LeRobot reload, and a DataLoader
 batch. M4 implementation or fixture checks are not model-quality evidence. Target smoke requires
@@ -170,4 +193,10 @@ checkpoint/processor reload, and learned-policy M1 rollouts. Full acceptance req
 real 360-episode M3B dataset, six per-task and two mixed runs, validation-only checkpoint selection,
 locked test evaluation, the fixed 180-episode fresh-seed benchmark, and provenance-complete reports.
 `full_experiment_validated`, `baseline_quality_validated`, and `physical_target_validated` remain
-independent flags.
+independent flags. M4.2 development additionally requires both source-controlled schedule locks,
+the exact 125-seed exclusion audit, immutable horizon and gripper selections from development only,
+exactly one TaskToken training run, M3B-validation-only checkpoint selection, and a completed
+development benchmark. It must leave `final_benchmark_completed=false` and no SmolVLA go/no-go
+claim. M4.2 final is a later separate command requiring immutable selections, clean Git, sealed
+schedule authorization, paired PerTask/State-OneHot/TaskToken evaluation, and an explicit go/no-go;
+it never starts M5 automatically.

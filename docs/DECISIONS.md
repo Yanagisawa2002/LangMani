@@ -1195,3 +1195,113 @@ checkpoint remained intact, but source-mutation isolation during that run was no
 reported false; future clones are independent copies. Recovery also reports subprocess return codes
 as unknown instead of inventing successful exits and does not claim that the interrupted parent's
 lost pre-benchmark source snapshot was persisted.
+
+## D-043 — Quarantine observed M4 evidence behind two jointly generated M4.2 seed locks
+
+M4 full is complete and experimentally valid, but its quality gate is false. The six PerTask
+policies achieved 31/36 on locked test and 143/180 on historical fresh seeds;
+Mixed-Unconditioned achieved 5/36 and 18/180; Mixed-TaskOneHot achieved 27/36 and 101/180. These
+results diagnose a useful gap, but their test/fresh scenes have been observed and are permanently
+ineligible for runtime, architecture, checkpoint, stopping, or M4.2 go/no-go selection. This
+observed completion supersedes the earlier time-local pending-status note in D-040 without changing
+that decision's compatibility rationale.
+
+M4.2 therefore commits `m42_dev_v0` and `m42_final_v0` before any new rollout. The locks are
+generated together from canonical JSON and a SHA-256 counter stream under
+`langmani-m42-joint-seed-generation-v0`. The candidate payload binds the namespace, M3B export
+fingerprint, exclusion digest, and integer counter. The first 64 digest bits are reduced to an
+int31 seed; excluded/duplicate candidates are skipped. The first 12 accepted values form
+development and the next 30 form final. Both schedules expand scenes in the canonical six-task
+object-major/bin-minor order, use 200 episode steps, and bind evaluation fingerprint
+`sha256:0746ecb022ac67e73bc04d19db39c6e11e76ce264669d5e1dec9474a34cbb6d4`.
+
+The source lock records redundant provenance deliberately. Its union is exactly 125 seeds: all 60
+M3A accepted scenes, five rejected candidates (together `0..64`), the exact M3B train/validation/test
+partition, 30 observed M4 full fresh seeds, seed 0 used by smoke/tiny/M4.1 diagnostics, and 30
+predeclared tiny fresh seeds. The exclusion digest is
+`sha256:801e5b9d0595855729a45fa3bab25b85449afab2aec06065dd69233eec0f5610`.
+The development fingerprint is
+`sha256:981547e771b2b5cd3a77e2788bb49d29fc45b3f59c607021a03a4e2ce70b43f1`; the sealed final
+fingerprint is
+`sha256:b2aef313e076201f7a94875c835c2d606d8f255e3f75d53f7ac7fadcdbb267fc`.
+
+Loading and regenerating the final lock is permitted for source audit. Materializing final rollout
+episodes is a different capability: it requires an explicit final authorization, clean Git, an
+exact implementation fingerprint, and locked horizon, gripper, and TaskToken-checkpoint selection
+records. `--target-development` cannot supply that authorization. This makes accidental final-seed
+reset/render a contract failure rather than a process convention.
+
+## D-044 — Use the public LeRobot ACT ENV feature as the dedicated oracle TaskToken
+
+Installed LeRobot 0.6.0 inspection found that ACT already supports one environment-state feature
+through public `lerobot.configs.FeatureType.ENV`, `PolicyFeature`, and `ACTConfig.input_features`.
+The model creates `encoder_env_state_input_proj = nn.Linear(env_dim, dim_model)` and inserts that
+projected value as a dedicated encoder token in the sequence
+`[latent, Panda state, environment state, image tokens...]`. This is the smallest maintainable
+integration point and avoids copying, forking, patching, or subclassing the upstream ACT model.
+
+`ACT-Mixed-TaskToken` therefore presents `CanonicalTaskTokenV0` as float32 `[6]` at
+`observation.environment_state` with `NormalizationMode.IDENTITY`. The canonical basis vector is
+projected by the public 6-to-512 linear layer; its columns plus shared bias act as six learned 512D
+task embeddings. PandaPolicyStateV0 stays exactly 9D, action output stays 8D, and image, backbone,
+Transformer, VAE, optimizer, loss, and 100,000-step training configuration remain the same as
+Mixed-TaskOneHot. The model is an oracle discrete-task policy, not a language or text-token policy.
+
+The public feature types/configuration are the supported dependency boundary. The concrete
+`encoder_env_state_input_proj` and `encoder_1d_feature_pos_embed` attributes are additionally
+checked to prove the intended injection location and are an upstream structural risk: an installed
+ACT change must fail a contract test rather than silently change semantics. LangMani imports no
+example-only or private module and modifies no installed file. The M4.2 architecture fingerprint
+binds the mapping, feature key, input/hidden dimensions, normalization, and injection location.
+Checkpoint resume rejects any mismatch.
+
+The existing atomic checkpoint implementation now types its identity input through the
+project-owned `ActCheckpointIdentity` structural protocol. Historical `ActRunIdentity` values
+satisfy that protocol unchanged, while the separate M4.2 `TaskTokenRunIdentity` supplies the same
+content-bound fields. This is a typing/interface generalization only: the checkpoint schema,
+serialized historical identities, component digests, checkpoint fingerprints, and all eight M4
+artifacts remain unchanged.
+
+## D-045 — Select M4.2 runtime before training and keep final evaluation separately authorized
+
+M4.2a changes no model weight. It evaluates exactly horizons 10, 5, and 1 from the unchanged
+50-action chunk with frozen Mixed-TaskOneHot and green-left PerTask checkpoints on `m42_dev_v0`.
+All horizon episodes use the existing explicit `project` runtime. The ranking is declared before
+results: mixed success, post-grasp timeout, wrong-object interaction, representative success,
+successful median steps, inference cost, then the larger horizon.
+
+Only after horizon lock may `project` be compared with `BinaryGripperEnvPostprocessorV0`. Binary
+maps action component 7 by sign (`>=0` to `+1`, `<0` to `-1`), preserves arm values before the
+existing project processor, and records raw/binary/projected/executed values separately. It is
+eligible only with no safety/error worsening and at least a five-point mixed-success gain, 25%
+relative post-grasp-timeout reduction, or two-of-12 representative gain; otherwise project wins.
+The transition tie-break counts only per-episode sign changes beyond one close and one release,
+rather than penalizing the two transitions required by a normal pick-and-place episode.
+This does not redefine M4.1 reject/project and does not add a bounded ACT head.
+
+The selected horizon/runtime then applies to exactly one new TaskToken training run. Only M3B
+validation selects its checkpoint. `m42_dev_v0` may compare frozen selected policies afterward but
+cannot change the checkpoint. `m42_final_v0` remains inaccessible until every selection is
+immutable and an explicit final command is issued. Target-development results, runtime selections,
+TaskToken checkpoint identity, final paired metrics, and SmolVLA go/no-go are pending until the
+corresponding commands actually complete; no value is inferred from implementation tests. M4.2
+never starts M5 automatically.
+
+The runtime-selection transaction also publishes one shared immutable
+`experiment_manifest.json`. Its fingerprint binds the exact ordered eight M4 selected checkpoint
+fingerprints and an M4.1 processor fingerprint reconstructed from every selected run's validated
+`test/evaluation_runtime_manifest.json`: the versioned `project` configuration and actual
+environment action-space bounds must agree across all eight runs. The runtime selection then
+references this manifest, and the TaskToken run identity, validation queue, development evidence,
+and future final evidence must all carry the same fingerprint. TaskToken-specific architecture and
+checkpoint identities remain in their own immutable artifacts so that the shared provenance root
+has no circular dependency on later outputs.
+
+Target-development acceptance additionally revalidates all eight historical selected checkpoint
+directories, atomic markers, component hashes, and strict reload contracts from current disk. It
+compares the TaskToken effective training contract with the frozen Mixed-TaskOneHot manifest rather
+than trusting reconstructed defaults; the only permitted model-input difference is 9D Panda state
+plus the dedicated six-way ENV token in place of state-appended task one-hot. A second complete or
+incomplete fingerprint-owned TaskToken run is ambiguous and rejected. Any Panda arm projection,
+target-in-wrong-bin regression under binary gripper, nonphysical child command, or development
+child that accessed the sealed final schedule invalidates the target-development gate.

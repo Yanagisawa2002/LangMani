@@ -297,6 +297,21 @@ def prepare_raw_batch(batch: Mapping[str, object]) -> dict[str, object]:
         IMAGE_FEATURE_KEY: image_to_policy_float(image),
         STATE_FEATURE_KEY: state.to(dtype=torch.float32),
     }
+    # M4.2 may add LeRobot's public ENV observation as a dedicated task token.
+    # Historical M4 batches never contain this key, so their projection is
+    # unchanged.  Import lazily to keep the original M4 module dependency-free
+    # when TaskToken is not used.
+    from langmani.policies.act_task_token import TASK_TOKEN_FEATURE_KEY
+
+    if TASK_TOKEN_FEATURE_KEY in batch:
+        task_token = batch[TASK_TOKEN_FEATURE_KEY]
+        if not isinstance(task_token, torch.Tensor):
+            raise TrainingContractError("TaskToken ENV feature must be a torch tensor")
+        if task_token.dtype != torch.float32 or task_token.shape[-1:] != (6,):
+            raise TrainingContractError("TaskToken ENV feature must be float32[...,6]")
+        if not torch.isfinite(task_token).all():
+            raise TrainingContractError("TaskToken ENV feature contains nonfinite values")
+        projected[TASK_TOKEN_FEATURE_KEY] = task_token
     if ACTION_FEATURE_KEY in batch:
         action = batch[ACTION_FEATURE_KEY]
         if not isinstance(action, torch.Tensor):
@@ -349,6 +364,7 @@ def validate_processed_training_batch(
     *,
     state_dimension: int,
     chunk_size: int,
+    task_token_dimension: int | None = None,
 ) -> None:
     expected = {
         IMAGE_FEATURE_KEY: (3, 256, 256),
@@ -356,6 +372,10 @@ def validate_processed_training_batch(
         ACTION_FEATURE_KEY: (chunk_size, 8),
         "action_is_pad": (chunk_size,),
     }
+    if task_token_dimension is not None:
+        from langmani.policies.act_task_token import TASK_TOKEN_FEATURE_KEY
+
+        expected[TASK_TOKEN_FEATURE_KEY] = (task_token_dimension,)
     for key, trailing_shape in expected.items():
         value = batch.get(key)
         if not isinstance(value, torch.Tensor):
@@ -423,6 +443,7 @@ def train_act(
     postprocessor: PolicyProcessorPipeline | None = None,
     validation_callback: Callable[[int, ACTPolicy], float] | None = None,
     task_id_by_episode: Mapping[int, str] | None = None,
+    task_token_enabled: bool = False,
     seed_at_start: bool = True,
     initial_examples_processed: int = 0,
 ) -> TrainingOutcome:
@@ -463,14 +484,26 @@ def train_act(
                 except StopIteration as error:
                     raise TrainingContractError("training DataLoader is empty") from error
             batch_ready = time.perf_counter()
-            conditioned_batch = (
-                append_task_condition_to_batch(
+            if task_token_enabled:
+                if experiment.model.state_dimension != 9 or task_id_by_episode is None:
+                    raise TrainingContractError(
+                        "TaskToken training requires 9D state and an episode task mapping"
+                    )
+                from langmani.policies.act_task_token import inject_task_token_training_batch
+
+                conditioned_batch = inject_task_token_training_batch(
                     raw_batch,
                     task_id_by_episode=task_id_by_episode,
                 )
-                if experiment.model.state_dimension == 15
-                else dict(raw_batch)
-            )
+            else:
+                conditioned_batch = (
+                    append_task_condition_to_batch(
+                        raw_batch,
+                        task_id_by_episode=task_id_by_episode,
+                    )
+                    if experiment.model.state_dimension == 15
+                    else dict(raw_batch)
+                )
             projected = prepare_raw_batch(conditioned_batch)
             processed = preprocessor(projected)
             if not isinstance(processed, Mapping):
@@ -479,6 +512,7 @@ def train_act(
                 processed,
                 state_dimension=experiment.model.state_dimension,
                 chunk_size=experiment.model.chunk_size,
+                task_token_dimension=6 if task_token_enabled else None,
             )
             step_start = time.perf_counter()
             optimizer.zero_grad(set_to_none=True)
@@ -576,6 +610,7 @@ def evaluate_offline_loss(
     preprocessor: PolicyProcessorPipeline,
     validation_batches: Iterable[Mapping[str, object]],
     task_id_by_episode: Mapping[int, str] | None = None,
+    task_token_enabled: bool = False,
     maximum_batches: int | None = None,
 ) -> float:
     """Compute validation loss only; this function cannot receive test results."""
@@ -584,14 +619,26 @@ def evaluate_offline_loss(
     for batch_index, raw_batch in enumerate(validation_batches):
         if maximum_batches is not None and batch_index >= maximum_batches:
             break
-        conditioned_batch = (
-            append_task_condition_to_batch(
+        if task_token_enabled:
+            if experiment.model.state_dimension != 9 or task_id_by_episode is None:
+                raise TrainingContractError(
+                    "TaskToken validation requires 9D state and an episode task mapping"
+                )
+            from langmani.policies.act_task_token import inject_task_token_training_batch
+
+            conditioned_batch = inject_task_token_training_batch(
                 raw_batch,
                 task_id_by_episode=task_id_by_episode,
             )
-            if experiment.model.state_dimension == 15
-            else dict(raw_batch)
-        )
+        else:
+            conditioned_batch = (
+                append_task_condition_to_batch(
+                    raw_batch,
+                    task_id_by_episode=task_id_by_episode,
+                )
+                if experiment.model.state_dimension == 15
+                else dict(raw_batch)
+            )
         processed = preprocessor(prepare_raw_batch(conditioned_batch))
         if not isinstance(processed, Mapping):
             raise TrainingContractError("ACT preprocessor must return a mapping")
@@ -599,6 +646,7 @@ def evaluate_offline_loss(
             processed,
             state_dimension=experiment.model.state_dimension,
             chunk_size=experiment.model.chunk_size,
+            task_token_dimension=6 if task_token_enabled else None,
         )
         loss, loss_dict = policy.forward(cast(dict[str, torch.Tensor], processed))
         if not torch.isfinite(loss):

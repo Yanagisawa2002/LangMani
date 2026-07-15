@@ -3,13 +3,15 @@
 LangMani is a language-conditioned robotic manipulation research repository. M0 established the
 runtime foundation, M1 added the environment/language contracts, M2 added a deterministic
 privileged Panda expert, M3A implemented the authoritative ManiSkill-native raw archive, and M3B
-implemented its validated local LeRobotDataset v3 derivation. Active M4 adds reproducible ACT
-behavioral-cloning controls and closed-loop policy evaluation.
+implemented its validated local LeRobotDataset v3 derivation. M4 and M4.1 established reproducible
+ACT controls, closed-loop evaluation, and auditable action projection. Active M4.2 diagnoses
+oracle-conditioned control robustness before any language policy is attempted.
 
 M4 implements six per-task ACT policies, one mixed unconditioned ACT, and one mixed ACT with an
 oracle six-way task one-hot. Standard ACT consumes no natural-language text, so M4 is not a language
-understanding milestone. It does not add SmolVLA, rewrite M3B, reopen M3A during normal training,
-invoke M2 during policy rollouts, publish to Hub, or change the M1/M2 task.
+understanding milestone. M4.2 adds runtime ablations and exactly one oracle TaskToken ACT; it still
+does not add SmolVLA, rewrite M3B, reopen M3A during normal training, invoke M2 during policy
+rollouts, publish to Hub, or change the M1/M2 task.
 
 ## Target platform
 
@@ -496,7 +498,7 @@ four VAE encoder layers, dropout 0.1, and KL weight 10. Optimization is AdamW at
 the backbone), weight decay `1e-4`, no scheduler/warmup, global gradient clipping at 10, CUDA
 bfloat16 autocast, batch size 32, 100000 steps, and checkpoint/validation every 5000 steps. The
 model/source tensors remain float32. The target must support bfloat16; M4 does not silently switch
-precision. GPU memory and throughput remain pending measurement on the target.
+precision. Actual target memory and throughput remain recorded in the immutable run reports.
 
 Every run records the actual full Git commit. The tracked M3B baseline is
 `6920b52c1f48c278e669cd71b69b8949dd900f3a` (`m3b-implementation`). Full and tiny-overfit evidence
@@ -636,6 +638,63 @@ episodes per minute, chooses fewer workers when throughput is within 5% of the m
 the winner and runner-up. The benchmark output lives under `outputs/benchmarks`; it cannot publish
 selection, test, fresh-seed, or final M4 evidence.
 
+M4 full is complete. The six PerTask policies achieved 31/36 (86.1%) on locked test and 143/180
+(79.4%) on historical fresh seeds; Mixed-Unconditioned achieved 5/36 and 18/180; and
+Mixed-TaskOneHot achieved 27/36 and 101/180. The full experiment, provenance, and native physical
+execution are validated, while `baseline_quality_validated=false`. That distinction is intentional:
+the experiment is sound, but the oracle-conditioned mixed control remains below its quality target.
+
+## M4.2 oracle-control robustness
+
+The normative contract is
+[`docs/M42_ORACLE_CONTROL_SPEC.md`](docs/M42_ORACLE_CONTROL_SPEC.md). M4.2 uses the completed M4
+evidence without changing any of its eight checkpoints. It first compares execution horizons 10,
+5, and 1 using the frozen Mixed-TaskOneHot checkpoint and the fixed representative green-left
+PerTask checkpoint. After one horizon is locked, it compares the existing `project` runtime with an
+explicit `BinaryGripperEnvPostprocessorV0` that changes only action component 7. Raw commands,
+binary changes, projections, and executed actions remain separately auditable. Any Panda arm
+projection or worsened wrong-object/wrong-bin safety count fails development admission.
+
+Two schedules were generated and committed together before rollout:
+
+| Lock | Scenes x tasks | Use | SHA-256 fingerprint |
+| --- | ---: | --- | --- |
+| `m42_dev_v0` | 12 x 6 = 72 | runtime selection and development comparison | `sha256:981547e771b2b5cd3a77e2788bb49d29fc45b3f59c607021a03a4e2ce70b43f1` |
+| `m42_final_v0` | 30 x 6 = 180 | one later sealed paired benchmark | `sha256:b2aef313e076201f7a94875c835c2d606d8f255e3f75d53f7ac7fadcdbb267fc` |
+
+The locks exclude the exact 125-seed union of M3A accepted/rejected candidates, every M3B split,
+observed M4 fresh seeds, smoke/tiny and M4.1 diagnostic seeds, and predeclared tiny fresh seeds. The
+final list is source-visible for audit but cannot be materialized as rollout episodes without an
+explicit final authorization and immutable development selections. Development must not render or
+reset a final scene.
+
+M4.2 then trains exactly one `ACT-Mixed-TaskToken` with the same 288 M3B train episodes, 100,000-step
+configuration, and validation-only selection used by Mixed-TaskOneHot. `PandaPolicyStateV0` remains
+9D. The six-way canonical oracle command uses LeRobot 0.6.0's public `FeatureType.ENV` feature:
+ACT's public linear 6-to-512 projection creates a dedicated Transformer environment token between
+the Panda-state and image tokens. It is `CanonicalTaskTokenV0`, not instruction tokenization or
+language understanding.
+Before training, all eight historical selected checkpoints are strictly revalidated from disk and
+the effective TaskToken configuration is compared with the frozen Mixed-TaskOneHot run manifest;
+an extra complete or incomplete TaskToken run identity is rejected as ambiguous.
+
+The current authorized target boundary stops at development:
+
+```bash
+python scripts/run_m42_runtime_ablation.py --help
+python scripts/train_act_task_token.py --help
+python scripts/evaluate_m42.py --help
+python environment/verify_m42.py
+
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m42.py --target-development
+```
+
+`--target-development` validates prior M4 evidence and both schedule locks, runs and locks the two
+runtime ablations, trains/selects TaskToken using M3B validation only, evaluates `m42_dev_v0`, and
+stops. `python environment/verify_m42.py --target-final` is a distinct future authorization; it has
+not been run in this stage. Final paired results and the SmolVLA go/no-go decision therefore remain
+pending, and M4.2 never starts M5 automatically.
+
 ## Target-machine setup
 
 Install [Miniforge](https://github.com/conda-forge/miniforge) first so `conda` is available. Then
@@ -707,6 +766,7 @@ python environment/verify_m2.py
 python environment/verify_m3a.py
 python environment/verify_m3b.py
 python environment/verify_m4.py
+python environment/verify_m42.py
 ```
 
 The actual target-machine gate is stricter. The M2 command itself invokes the M0 installation gate
@@ -730,6 +790,7 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --output-root outputs/models/act --action-bound-mode project
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m42.py --target-development
 pytest
 ```
 
@@ -795,6 +856,7 @@ python environment/verify_m2.py
 python environment/verify_m3a.py
 python environment/verify_m3b.py
 python environment/verify_m4.py
+python environment/verify_m42.py
 ```
 
 The same documented OpenCV dual-wheel risk applies to this review environment.
@@ -823,6 +885,9 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 | `python environment/verify_m4.py --target-smoke --action-bound-mode project` | Yes | Yes | Validates completed prior M3B smoke evidence |
 | `python environment/verify_m4.py --target-full --dry-run --action-bound-mode project` | Metadata only | No | Existing M3B full gate plus exact eight-run plan |
 | `python environment/verify_m4.py --target-full --action-bound-mode project` | Yes | Yes | Via dataset and rollout gates |
+| `python environment/verify_m42.py` | No | No | No; contracts and CPU fixture only |
+| `python environment/verify_m42.py --target-development` | Yes | Yes | Yes; verifies the final lock but never materializes or executes sealed final episodes |
+| `python environment/verify_m42.py --target-final` | Yes | Yes | Yes; separate explicit authorization |
 | `scripts/export_lerobot_dataset.py` | Real export: yes | According to source/render backend | Yes |
 | `scripts/validate_lerobot_dataset.py` | Full source alignment: yes | According to source/render backend | Yes |
 | `scripts/inspect_lerobot_episode.py` | No | No | No |
@@ -847,9 +912,9 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 - `src/langmani/collection/`: M3A recorder, collector, replay, manifests, and inspection.
 - `src/langmani/datasets/`: M3A immutable types, stable IDs, schedules, and native archive checks.
 - `src/langmani/datasets/lerobot_*.py`: M3B source gate, contracts, export, and validation.
-- `src/langmani/policies/`: M4 ACT data, conditioning, training, checkpoint, rollout, evaluation, and analysis boundaries.
-- `scripts/`: M3B data commands plus M4 train/evaluate/compare/checkpoint inspection.
-- `environment/`: reproducible declaration plus M0/M1/M2/M3A/M3B/M4 diagnostics and commands.
+- `src/langmani/policies/`: M4 ACT plus M4.2 schedule, runtime, post-grasp, TaskToken, selection, and evaluation boundaries.
+- `scripts/`: M3B data commands plus M4/M4.2 train, runtime-ablation, evaluate, compare, and inspection commands.
+- `environment/`: reproducible declaration plus M0/M1/M2/M3A/M3B/M4/M4.2 diagnostics and commands.
 - `tests/unit/`: environment/expert/data plus ACT identity, leakage, conditioning, checkpoint, and evaluation checks.
 - `tests/integration/`: LeRobot data/export plus ACT preprocessing, optimization, reload, and rollout boundaries.
 - `tests/smoke/`: dependency, simulator, vectorization, rendering, expert, and raw collection acceptance.

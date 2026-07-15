@@ -44,6 +44,18 @@ class StatefulPolicy(Protocol):
     def select_action(self, batch: dict[str, torch.Tensor]) -> torch.Tensor: ...
 
 
+class ProcessedObservationAugmenter(Protocol):
+    """Optional post-normalization command injection used by M4.2 TaskToken."""
+
+    def __call__(self, batch: dict[str, torch.Tensor], task_id: str) -> dict[str, torch.Tensor]: ...
+
+
+class PreBoundActionTransform(Protocol):
+    """Explicit runtime transform applied before the unchanged bound processor."""
+
+    def __call__(self, action: torch.Tensor, *, rollout_step: int) -> torch.Tensor: ...
+
+
 TaskConditioner = Callable[[np.ndarray, str], np.ndarray]
 ProjectionRecordSink = Callable[[str, ActionProjectionRecord], None]
 
@@ -152,6 +164,8 @@ class ActManiSkillRolloutAdapter:
         evaluation: ActEvaluationConfig | None = None,
         task_conditioner: TaskConditioner | None = None,
         projection_record_sink: ProjectionRecordSink | None = None,
+        processed_observation_augmenter: ProcessedObservationAugmenter | None = None,
+        pre_bound_action_transform: PreBoundActionTransform | None = None,
     ) -> None:
         self.env = env
         self.base = _base_environment(env)
@@ -167,6 +181,8 @@ class ActManiSkillRolloutAdapter:
         self.evaluation = evaluation or ActEvaluationConfig()
         self.task_conditioner = task_conditioner
         self.projection_record_sink = projection_record_sink
+        self.processed_observation_augmenter = processed_observation_augmenter
+        self.pre_bound_action_transform = pre_bound_action_transform
         self._validate_environment()
         self.action_bound_processor = BoundedActionEnvPostprocessorV0.from_environment(
             env,
@@ -203,6 +219,8 @@ class ActManiSkillRolloutAdapter:
         _reset_component(self.policy, "policy")
         _reset_component(self.preprocessor, "preprocessor")
         _reset_component(self.postprocessor, "postprocessor")
+        if self.pre_bound_action_transform is not None:
+            _reset_component(self.pre_bound_action_transform, "pre_bound_action_transform")
 
     def run_episode(
         self,
@@ -215,6 +233,9 @@ class ActManiSkillRolloutAdapter:
         """Run one episode through the declared reject or audited projection boundary."""
         self.reset_policy_state()
         task_id = stable_task_id(task_spec)
+        begin_task = getattr(self.policy, "begin_task", None)
+        if callable(begin_task):
+            begin_task(task_id)
         reset_result = self.env.reset(
             seed=scene_seed,
             options={"task_spec": task_spec.to_dict()},
@@ -268,7 +289,14 @@ class ActManiSkillRolloutAdapter:
                 processed = self.preprocessor(raw_input)
                 if not isinstance(processed, Mapping):
                     raise RolloutContractError("preprocessor must return a tensor mapping")
-                predicted = self.policy.select_action(cast(dict[str, torch.Tensor], processed))
+                processed_batch = cast(dict[str, torch.Tensor], dict(processed))
+                if self.processed_observation_augmenter is not None:
+                    processed_batch = self.processed_observation_augmenter(processed_batch, task_id)
+                    if not isinstance(processed_batch, dict):
+                        raise RolloutContractError(
+                            "processed observation augmenter must return a tensor dictionary"
+                        )
+                predicted = self.policy.select_action(processed_batch)
                 postprocessed = self.postprocessor(predicted)
                 if torch.cuda.is_available() and str(
                     getattr(predicted, "device", "cpu")
@@ -276,6 +304,13 @@ class ActManiSkillRolloutAdapter:
                     torch.cuda.synchronize()
                 inference_latencies.append((time.perf_counter() - inference_start) * 1000.0)
                 raw_environment_action = _raw_environment_action(postprocessed)
+                if self.pre_bound_action_transform is not None:
+                    raw_environment_action = _raw_environment_action(
+                        self.pre_bound_action_transform(
+                            raw_environment_action,
+                            rollout_step=step,
+                        )
+                    )
                 bounded = self.action_bound_processor.process(
                     raw_environment_action,
                     rollout_step=step,

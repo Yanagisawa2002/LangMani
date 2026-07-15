@@ -1,0 +1,58 @@
+{
+  "schema_version": "langmani-m42-seed-exclusion-v0",
+  "m3a_full": {
+    "collection_run_id": "langmani-m3a-collection-run-54b4973f34c9c752ca044253d734865b068812e6a0381b09406c1bd0435ccd8f",
+    "config_fingerprint": "sha256:1f520fd86caeba6f59202d203df7b8e8b04e15732fbb69b8ba2ce4a196a4e340",
+    "canonical_manifest_digest": "sha256:c7847f8ea9e7c55e31aacd2fed13f9f7688a52cc794bad80fe1911bd0852c1d1",
+    "accepted_scene_seeds": [
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20,
+      21, 22, 23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+      40, 41, 42, 44, 45, 46, 47, 48, 49, 51, 52, 53, 54, 55, 56, 57, 58, 59,
+      61, 62, 63, 64
+    ],
+    "rejected_candidate_scene_seeds": [13, 26, 43, 50, 60]
+  },
+  "m3b_full": {
+    "export_fingerprint": "sha256:3f4d81471ac7c3ecc034206bc207524c4cbfbd1f7874b25eca894a5b607acfb4",
+    "split_manifest_digest": "sha256:d86d29374ef7956a4ad8a1d9a111ed0924387b5b456d86e8c9ad5a31752f65e5",
+    "train_scene_seeds": [
+      0, 1, 2, 4, 5, 6, 8, 9, 10, 11, 12, 14, 17, 18, 20, 21, 22, 23, 24,
+      25, 27, 28, 29, 30, 31, 32, 33, 35, 36, 37, 38, 39, 40, 41, 42, 44,
+      46, 49, 51, 52, 53, 54, 55, 57, 58, 61, 63, 64
+    ],
+    "validation_scene_seeds": [3, 15, 19, 34, 45, 47],
+    "test_scene_seeds": [7, 16, 48, 56, 59, 62]
+  },
+  "m4_full_fresh": {
+    "fresh_seed_schedule_digest": "sha256:479c63c1df51d8fb1f59b6e892bd104c485551ae9d80f5b77bf50aa75b5d7e00",
+    "ordered_scene_seeds": [
+      257025151, 116952062, 852185370, 1001795542, 525297853, 1363371340,
+      327869330, 877250871, 255649311, 525189685, 972751135, 760257821,
+      352153503, 1639645921, 544474617, 1397046231, 1391621510, 157568669,
+      253070757, 299290742, 96823262, 4989341, 688315009, 1216781450,
+      356921530, 159489941, 524453105, 1042803638, 1042789384, 869693972
+    ]
+  },
+  "m4_smoke_tiny": {
+    "actual_scene_seeds": [0],
+    "predeclared_fresh_seed_schedule_digest": "sha256:714ef5d0fa31ca288a5a31edf26a4f0754b304f2ad7d5c42f1635d011a1022d2",
+    "predeclared_fresh_scene_seeds": [
+      1590420839, 1364020810, 652865705, 856810449, 649065604, 544972497,
+      45846708, 1836839473, 1481906471, 694771684, 129011734, 1832284299,
+      2126841906, 1793162194, 186560574, 33110063, 1112982437, 1666024245,
+      341365007, 2100339488, 1458695379, 847914296, 1310257283, 1348313648,
+      2020314539, 1003914954, 1215342260, 2019867565, 1402552899, 1695211692
+    ],
+    "run_fingerprints": [
+      "sha256:0843118d609b755b47f80f16b10559854b402ee0856006094c8b15bb885e5311",
+      "sha256:fa0f24a1c883806c6af282a0f8452fb5da59cb35ffdbf6d0591868a98e5eb822"
+    ]
+  },
+  "m41_diagnostic_target_smoke": {
+    "actual_scene_seeds": [0],
+    "per_task_rollout_schedule_digest": "sha256:8eba5412ea71fb463e4ecf158d871aa78b558ac62f50de4b489117371c317c9b",
+    "onehot_rollout_schedule_digest": "sha256:40cc235a9855a44ca2a9111955f2ab9a559ce6244f14711e89ba7a1b911e973b",
+    "strict_probe_checkpoint_fingerprint": "sha256:cee1183ded4d2dde335a139d639cbb57f6362856fcd749be413e9400943ac16f"
+  },
+  "exclusion_digest": "sha256:801e5b9d0595855729a45fa3bab25b85449afab2aec06065dd69233eec0f5610"
+}

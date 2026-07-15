@@ -25,7 +25,7 @@ from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
 
 from langmani.datasets.identity import sha256_hex
-from langmani.policies.act_types import ActRunIdentity, CheckpointRecord, TrainingState
+from langmani.policies.act_types import CheckpointRecord, TrainingState
 
 CHECKPOINT_SCHEMA_VERSION = "langmani-m4-act-checkpoint-v1"
 CHECKPOINTS_DIRECTORY = "checkpoints"
@@ -66,6 +66,18 @@ class _PolicyClass(Protocol):
     ) -> object: ...
 
 
+class ActCheckpointIdentity(Protocol):
+    """Structural identity shared by historical M4 and isolated M4.2 runs."""
+
+    run_fingerprint: str
+    model_config: Mapping[str, object]
+    train_statistics_fingerprint: str
+    m3b_split_manifest_digest: str
+    git_commit: str
+
+    def to_dict(self) -> dict[str, object]: ...
+
+
 ProcessorLoader = Callable[[object, Path], tuple[object, object]]
 
 
@@ -97,7 +109,7 @@ class LoadedActCheckpoint:
 def save_act_checkpoint(
     *,
     run_root: str | Path,
-    identity: ActRunIdentity,
+    identity: ActCheckpointIdentity,
     training_state: TrainingState,
     policy: _SavePretrained,
     preprocessor: _SavePretrained,
@@ -220,7 +232,7 @@ def load_act_checkpoint(
     *,
     run_root: str | Path,
     checkpoint_relative_path: str,
-    expected_identity: ActRunIdentity,
+    expected_identity: ActCheckpointIdentity,
     optimizer: Optimizer | None = None,
     scheduler: LRScheduler | None = None,
     for_resume: bool = False,
@@ -339,7 +351,7 @@ def load_act_checkpoint(
 
 
 def assert_resume_compatible(
-    expected_identity: ActRunIdentity,
+    expected_identity: ActCheckpointIdentity,
     checkpoint_identity: Mapping[str, object],
 ) -> None:
     """Reject any changed semantic input before restoring mutable training state."""
@@ -445,7 +457,7 @@ def _load_installed_processors(policy: object, pretrained_root: Path) -> tuple[o
 
 def _checkpoint_fingerprint(
     *,
-    identity: ActRunIdentity,
+    identity: ActCheckpointIdentity,
     training_state: TrainingState,
     artifact_digest: str,
     policy_config_digest: str,
@@ -468,7 +480,7 @@ def _checkpoint_fingerprint(
 
 def _validate_record(
     record: CheckpointRecord,
-    identity: ActRunIdentity,
+    identity: ActCheckpointIdentity,
     training_state: TrainingState,
     manifest: Mapping[str, object],
 ) -> None:
@@ -724,6 +736,7 @@ __all__ = [
     "CHECKPOINT_COMPLETION_MARKER",
     "CHECKPOINT_MANIFEST",
     "CHECKPOINT_SCHEMA_VERSION",
+    "ActCheckpointIdentity",
     "ActCheckpointError",
     "CheckpointComponentFingerprints",
     "LoadedActCheckpoint",

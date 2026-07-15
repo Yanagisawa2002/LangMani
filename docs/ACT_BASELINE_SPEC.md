@@ -12,6 +12,12 @@ understanding. SmolVLA, text encoders, language embeddings, paraphrases, RL, DAg
 distributed training, data augmentation, new demonstrations, and M2 expert use during policy
 rollout are outside M4.
 
+M4 full is now complete: `full_experiment_validated=true`,
+`physical_target_validated=true`, and `baseline_quality_validated=false`. This document remains the
+immutable contract for those eight historical runs. M4.2 does not add a fourth `ActVariant` or
+change an existing run/checkpoint identity; its independent extension contract is
+[`M42_ORACLE_CONTROL_SPEC.md`](M42_ORACLE_CONTROL_SPEC.md).
+
 ## Baselines and policy features
 
 `ActVariant` contains exactly these values:
@@ -589,14 +595,43 @@ tiny-overfit checkpoints; their losses converged and one-hot changes predictions
 strict rollout correctly stopped on raw bound overshoot before its first step. The clean M4.1
 projected smoke passed: PerTask was 1/1, Mixed-TaskOneHot was 6/6, combined task success was 7/7,
 and strict-unprojected success was 0/7. The report correctly keeps raw-bound validity false while
-projected-bound validity and physical closed-loop validation are true. The 360-episode dataset,
-eight full experiments, locked test/fresh benchmark, and full acceptance remain pending and are
-outside M4.1.
+projected-bound validity and physical closed-loop validation are true.
+
+The later M4 full run completed all eight 100,000-step policies with validation-only selection,
+locked test, 180-episode historical fresh-seed evaluation, and provenance-complete physical
+reports. PerTask aggregate reached 31/36 locked-test and 143/180 fresh-seed success;
+Mixed-Unconditioned reached 5/36 and 18/180; Mixed-TaskOneHot reached 27/36 and 101/180. Experiment
+validity and physical acceptance are true, while baseline quality is false. These observed test and
+fresh results are quarantined as historical evidence and cannot tune M4.2.
+
+## M4.2 compatibility boundary
+
+M4.2 preserves this document's M3B gate, exact split views, train-only normalization, model/loss,
+atomic checkpoint, validation selection, test lock, and raw-versus-executed action contracts. The
+existing `ActVariant` enum and all eight M4 identities remain unchanged.
+
+Runtime ablation wraps the installed action-chunk prediction interface with an independent queue
+that executes exactly 10, 5, or 1 actions from the unchanged 50-action chunk. After the horizon is
+selected, `BinaryGripperEnvPostprocessorV0` may explicitly map component 7 by sign before the
+existing project processor. It does not redefine M4.1 `reject` or `project`, and every raw,
+binary-transformed, projected, and executed value remains independently auditable.
+
+The one new `ACT-Mixed-TaskToken` is an independent M4.2 run type. It keeps Panda state at 9D and
+uses LeRobot 0.6.0's public `FeatureType.ENV` input plus `nn.Linear(6, dim_model)` projection as a
+dedicated Transformer token. It neither concatenates the command to qpos nor changes the historical
+15D State-OneHot checkpoint. `CanonicalTaskTokenV0` is the same six-way oracle mapping and is not
+natural-language understanding. Only the M3B validation split may select its checkpoint.
+
+M4.2 locks a 12-scene development schedule and a disjoint, sealed 30-scene final schedule after
+excluding 125 prior seeds. Development runtime selection never uses the old M4 test/fresh results
+and never materializes or executes the new final schedule. A separate final authorization is
+required after all runtime, architecture, and checkpoint choices are immutable.
 
 ## Handoff
 
-The next language-conditioned milestone should add the declared SmolVLA/text path only after M4's
-real target dataset and ACT controls are complete. It must reuse M4's scene splits, train-only
-statistics discipline, validation selection, test lock, fresh-seed schedule, and result provenance,
-and compare language conditioning against both the ambiguous unconditioned model and the oracle
-task-one-hot upper bound.
+The immediate handoff is M4.2 development, not SmolVLA. M4.2-final will compare PerTask,
+State-OneHot, and TaskToken on one sealed paired schedule and write an immutable go/no-go decision.
+Only `go_for_smolvla` may authorize planning a later text-policy milestone. That future milestone
+must still reuse M4/M4.2 data, split, normalization, selection, action-audit, and provenance
+discipline and compare language conditioning with the oracle controls. No command starts it
+automatically.
