@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import replace
 from pathlib import Path
 
@@ -40,6 +41,8 @@ from langmani.policies.act_evaluation import (
     TestEvaluationAuthorization as EvaluationAuthorization,
 )
 from langmani.policies.act_types import (
+    TASK_ONEHOT_MAPPING_VERSION,
+    ActRunIdentity,
     ActVariant,
     EvaluationSplit,
     ExperimentMode,
@@ -359,6 +362,44 @@ def test_fresh_seed_schedule_is_deterministic_and_excludes_all_available_source_
     assert first.ordered_rejected_source_seeds == (2, 8)
     assert first.rejected_source_seeds_available
     assert FreshSeedSchedule.from_dict(json.loads(json.dumps(first.to_dict()))) == first
+
+
+def test_fresh_seed_schedule_accepts_frozen_run_identity_contract() -> None:
+    schedule = build_fresh_seed_schedule(
+        m3b_export_fingerprint=_digest("a"),
+        accepted_source_seeds=(1, 2),
+        rejected_source_seeds=None,
+        namespace="langmani-m4-fresh-seeds-v1",
+    )
+    identity = ActRunIdentity(
+        m3b_export_fingerprint=_digest("a"),
+        m3b_split_manifest_digest=_digest("b"),
+        ordered_train_episode_indices=(0,),
+        ordered_validation_episode_indices=(1,),
+        variant=ActVariant.MIXED_UNCONDITIONED,
+        task_id=None,
+        task_onehot_mapping_version=TASK_ONEHOT_MAPPING_VERSION,
+        model_config={"policy": "act"},
+        data_contract={"evaluation_schedules": {"fresh_seed_schedule": schedule.to_dict()}},
+        train_statistics_fingerprint=_digest("c"),
+        optimization_config={"optimizer": "adamw"},
+        training_seed=0,
+        experiment_mode=ExperimentMode.DRY_RUN,
+        device="cpu",
+        dtype="float32",
+        lerobot_version="0.6.0",
+        torch_version="2.11.0+cpu",
+        cuda_version=None,
+        git_commit="1" * 40,
+        git_dirty=False,
+        dirty_development_override=False,
+    )
+    schedules = identity.data_contract["evaluation_schedules"]
+    assert isinstance(schedules, Mapping)
+    stored = schedules["fresh_seed_schedule"]
+    assert isinstance(stored, Mapping)
+    assert not isinstance(stored, dict)
+    assert FreshSeedSchedule.from_dict(stored) == schedule
 
 
 def test_fresh_seed_schedule_records_unavailable_rejected_candidates() -> None:

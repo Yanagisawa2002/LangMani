@@ -979,6 +979,24 @@ alignment, reconstructed state/RGB digests, and decoded-video quality. This fixe
 boundary defect without changing M1, M3A, M3B, splits, train-only statistics, ACT configuration,
 checkpoint-selection rules, or action projection.
 
+## D-040 — Parse recursively frozen fresh-seed evidence as JSON-compatible mappings
+
+The first dual-RTX 5090 M4 full evaluation completed all eight 100,000-step training runs, selected
+one checkpoint for each of the first two runs from 40 passing validation evaluations, and passed
+both locked six-episode tests before both fresh-seed workers stopped with `TypeError: fresh-seed
+schedule JSON must be an object`. The stored schedule was present and content-complete. The defect
+was at the project-owned serialization boundary: `ActRunIdentity` recursively freezes JSON mappings
+and arrays as `_FrozenMapping` and tuple values, while `FreshSeedSchedule.from_dict` required
+concrete `dict` and `list` instances.
+
+`FreshSeedSchedule.from_dict` therefore accepts the abstract `Mapping` contract and either list or
+tuple for the three JSON-array fields. Exact field membership, schema version, seed counts,
+exclusion evidence, and schedule digests remain unchanged and fail closed. A regression test now
+constructs a real `ActRunIdentity`, reads its recursively frozen nested schedule, and requires an
+exact round trip. This compatibility repair does not alter M3A/M3B data, run identities, existing
+checkpoint fingerprints, validation selection, test locks, fresh-seed ordering, model weights,
+action projection, or M1 success criteria.
+
 ## Local bootstrap evidence
 
 The bootstrap was authored on Windows 11, which is not an acceptance platform. In an isolated

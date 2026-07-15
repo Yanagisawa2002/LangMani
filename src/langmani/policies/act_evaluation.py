@@ -570,7 +570,7 @@ class FreshSeedSchedule:
 
     @classmethod
     def from_dict(cls, value: object) -> Self:
-        if not isinstance(value, dict):
+        if not isinstance(value, Mapping):
             raise TypeError("fresh-seed schedule JSON must be an object")
         expected = {
             "schema_version",
@@ -591,7 +591,7 @@ class FreshSeedSchedule:
             "ordered_rejected_source_seeds",
             "ordered_fresh_seeds",
         ):
-            if not isinstance(value[key], list):
+            if not isinstance(value[key], list | tuple):
                 raise TypeError(f"{key} must be a list")
         return cls(
             schema_version=cast(str, value["schema_version"]),
