@@ -95,6 +95,7 @@ DEFAULT_REPORT = PROJECT_ROOT / "outputs" / "diagnostics" / "m42" / "train_act_t
 TRAINING_SUMMARY_SCHEMA = TASK_TOKEN_TRAINING_SUMMARY_SCHEMA
 TRAINING_COMPLETION_SCHEMA = TASK_TOKEN_TRAINING_COMPLETION_SCHEMA
 PRECHECKPOINT_RECOVERY_SCHEMA = "langmani-m42-task-token-precheckpoint-recovery-v0"
+RUNTIME_SELECTION_THAW_REPAIR_ID = "M42TaskTokenRuntimeSelectionFrozenTupleThawV0"
 
 
 def _training_source_fingerprint() -> str:
@@ -344,13 +345,32 @@ def _effective_act_config_dict(config: object) -> dict[str, object]:
     }
 
 
+def _thaw_runtime_selection_json(value: object) -> object:
+    """Thaw only the immutable JSON containers owned by RuntimeSelectionContract."""
+
+    if isinstance(value, Mapping):
+        if not all(isinstance(key, str) for key in value):
+            raise RuntimeError("runtime selection JSON keys must be strings")
+        return {key: _thaw_runtime_selection_json(item) for key, item in value.items()}
+    if isinstance(value, tuple | list):
+        return [_thaw_runtime_selection_json(item) for item in value]
+    if value is None or isinstance(value, bool | int | float | str):
+        if isinstance(value, float) and not math.isfinite(value):
+            raise RuntimeError("runtime selection JSON numbers must be finite")
+        return value
+    raise RuntimeError(f"runtime selection contains a non-JSON value: {type(value).__name__}")
+
+
 def _fair_comparison_contract(runtime: RuntimeSelectionContract) -> TaskTokenFairComparisonContract:
     raw = runtime.selection_evidence.get("task_token_fair_comparison_contract")
     if not isinstance(raw, Mapping):
         raise RuntimeError(
             "runtime selection lacks the frozen Mixed-TaskOneHot fair-comparison contract"
         )
-    return TaskTokenFairComparisonContract.from_dict(cast(Mapping[str, object], raw))
+    thawed = _thaw_runtime_selection_json(raw)
+    if not isinstance(thawed, Mapping):
+        raise RuntimeError("thawed runtime fair-comparison contract is not a JSON object")
+    return TaskTokenFairComparisonContract.from_dict(cast(Mapping[str, object], thawed))
 
 
 def _validate_fair_comparison(

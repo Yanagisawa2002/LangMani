@@ -467,6 +467,36 @@ def test_fair_comparison_allows_only_9d_state_plus_6d_env(
         )
 
 
+def test_public_fair_comparison_contract_keeps_json_list_only_boundary() -> None:
+    payload = _fair_comparison_payload()
+    payload["ordered_train_episode_indices"] = tuple(payload["ordered_train_episode_indices"])
+
+    with pytest.raises(M42TrainingContractError, match="must be a JSON list"):
+        TaskTokenFairComparisonContract.from_dict(payload)
+
+
+def test_fair_comparison_survives_runtime_selection_freezing(tmp_path: Path) -> None:
+    runtime = _runtime(tmp_path)
+
+    restored = cli._fair_comparison_contract(runtime)
+    expected = TaskTokenFairComparisonContract.from_dict(_fair_comparison_payload())
+
+    assert restored == expected
+    assert restored.contract_fingerprint == expected.contract_fingerprint
+
+
+@pytest.mark.parametrize(
+    "malformed",
+    [range(288), {0, 1}, "0,1", tuple(range(288))],
+)
+def test_fair_comparison_rejects_non_json_index_containers(malformed: object) -> None:
+    payload = _fair_comparison_payload()
+    payload["ordered_train_episode_indices"] = malformed
+
+    with pytest.raises(M42TrainingContractError, match="must be a JSON list"):
+        TaskTokenFairComparisonContract.from_dict(payload)
+
+
 def test_task_token_identity_is_separate_stable_and_resume_sensitive() -> None:
     identity = _identity()
     assert TaskTokenRunIdentity.from_dict(identity.to_dict()) == identity

@@ -1305,3 +1305,44 @@ plus the dedicated six-way ENV token in place of state-appended task one-hot. A 
 incomplete fingerprint-owned TaskToken run is ambiguous and rejected. Any Panda arm projection,
 target-in-wrong-bin regression under binary gripper, nonphysical child command, or development
 child that accessed the sealed final schedule invalidates the target-development gate.
+
+## D-046 — Reuse completed runtime ablations only through a semantic-source repair lineage
+
+A verifier or JSON-parser defect discovered after the development runtime sweep must not force a
+second execution of the already completed 336 physical episodes, but a Git-commit mismatch alone
+is not sufficient authority to reuse them. `verify_m42.py` therefore treats any existing runtime
+command report or runtime evidence tree as a fail-closed recovery transaction. If the command
+report is absent, partial evidence is rejected rather than resumed; if it is present, the verifier
+audits all eight benchmark directories, exact 336-unique/420-logical accounting, ordered episode
+sets, identity/artifact/completion fingerprints, development-only flags, selections, post-grasp
+analysis, M3B/M4 checkpoint provenance, TaskToken fairness contract, and experiment manifest before
+later stages may proceed.
+
+The historical producer commit is read from the evidence. Its original commit-bound implementation
+fingerprint is still reproduced from the exact legacy five-file payload used by the sealed report;
+that compatibility calculation is not redefined. Reuse authority is deliberately wider: Git must
+report exactly the same tracked path set, regular-file modes, and bytes for
+`run_m42_runtime_ablation.py`, `environment/environment.yml`, `pyproject.toml`, the package root,
+and every tracked file under `policies`, `environments`, `datasets`, and `experts`. Historical paths
+come from `git ls-tree`; current paths come from `git ls-files`. Unsafe modes, links, missing files,
+untracked non-ignored files, a new tracked semantic file, or any byte change are hard failures. The
+committed development and final schedule JSON resources are therefore hashed without materializing
+final episodes.
+
+The frozen runtime selection converts nested JSON arrays into immutable tuples internally. The
+public `TaskTokenFairComparisonContract.from_dict` remains list-only and is part of the byte-exact
+runtime closure. Compatibility is instead isolated at the `train_act_task_token.py` consumer
+boundary: `M42TaskTokenRuntimeSelectionFrozenTupleThawV0` recursively converts only Mapping and
+tuple/list JSON containers back to canonical dictionaries/lists, rejects non-JSON values, and then
+calls the unchanged public parser. The training command is not a producer of the 336 runtime
+episodes, so this parser repair neither weakens nor normalizes their semantic source closure.
+
+Successful recovery writes one new content-addressed immutable JSON under
+`runtime_repair_lineage/`. It binds producer and consumer commits, the semantic closure, the old
+command report, both selections, selected runtime, experiment manifest, post-grasp analysis, and
+all eight identity/artifact/benchmark fingerprints. The lineage is a sibling of the old runtime
+evidence, declares that old evidence was not rewritten, and is stable for a repeated run at the
+same commit. It records the complete semantic path list/count, byte-exact closure and raw
+fingerprints, and the consumer repair ID. This recovery mechanism does not materialize
+`m42_final_v0`, alter any historical checkpoint or selection, or claim M4.2 development acceptance
+by itself.

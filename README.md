@@ -695,6 +695,19 @@ stops. `python environment/verify_m42.py --target-final` is a distinct future au
 not been run in this stage. Final paired results and the SmolVLA go/no-go decision therefore remain
 pending, and M4.2 never starts M5 automatically.
 
+If the runtime command report and its evidence already exist, the verifier never launches the
+336 physical episodes again. It first audits all eight immutable benchmark directories, their
+identity/artifact/completion fingerprints, exact 336-unique/420-logical episode accounting,
+development selections, post-grasp report, M3B/M4 provenance, and experiment manifest. Cross-commit
+reuse is accepted only when the historical and current tracked path sets, regular-file modes, and
+bytes match for the runtime command, environment/dependency locks, package root, and every policy,
+environment, dataset, and expert source. The legacy five-file digest is used only to reproduce the
+old report's implementation fingerprint. The TaskToken command thaws internally frozen JSON tuples
+at its consumer boundary without changing the list-only public parser or the byte-exact runtime
+closure. This repair is recorded in a separate content-addressed `runtime_repair_lineage` file and
+never rewrites the original evidence. Partial, linked, untracked, extra, missing, tampered, or
+final-access evidence is a hard failure rather than a rerun.
+
 ## Target-machine setup
 
 Install [Miniforge](https://github.com/conda-forge/miniforge) first so `conda` is available. Then

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
 from pathlib import Path
 from types import SimpleNamespace
+from typing import cast
 
 import pytest
 
@@ -166,6 +169,53 @@ def test_target_development_reuses_content_bound_training_without_full_retrain(
     assert report.task_token_training_completed
     assert report.development_benchmark_completed
     assert report.physical_target_validated
+
+
+def test_target_development_audits_existing_runtime_before_any_runtime_command(
+    tmp_path: Path, monkeypatch
+) -> None:
+    args = _args(tmp_path, dry_run=False)
+    _write_json(args.output_root / "runtime_ablation_command.json", {})
+    commands: list[list[str]] = []
+
+    def fake_run(command: list[str], _report: Path) -> dict[str, object]:
+        commands.append(command)
+        if any(item.endswith("run_m42_runtime_ablation.py") for item in command):
+            pytest.fail("existing physical runtime evidence must not be executed again")
+        if any(item.endswith("train_act_task_token.py") for item in command):
+            return {"passed": True, "training_started": False}
+        return _development_report(physical=True)
+
+    monkeypatch.setattr(verify_m42, "_run_json", fake_run)
+    monkeypatch.setattr(
+        verify_m42,
+        "_audit_completed_runtime_evidence",
+        lambda **_kwargs: (_runtime_report(physical=True), {"lineage_fingerprint": "unused"}),
+    )
+    monkeypatch.setattr(
+        verify_m42,
+        "_write_runtime_repair_lineage",
+        lambda _root, _lineage: args.output_root / "runtime_repair_lineage" / "audit.json",
+    )
+    monkeypatch.setattr(
+        verify_m42,
+        "_find_content_bound_task_token_training",
+        lambda **_kwargs: {
+            "passed": True,
+            "training_reused": True,
+            "task_token_training_completed": True,
+        },
+    )
+    report = verify_m42.Report()
+    verify_m42._run_target_development(
+        report,
+        args,
+        prior_evidence=cast(verify_m42.PriorM4Evidence, SimpleNamespace()),
+    )
+
+    assert len(commands) == 2
+    assert report.physical_target_validated
+    assert any(item["name"] == "strict immutable runtime evidence reuse" for item in report.checks)
 
 
 @pytest.mark.parametrize(
@@ -490,3 +540,279 @@ def test_historical_training_source_uses_same_closure_and_rejects_missing(
     del sources["src/langmani/policies/act_data.py"]
     with pytest.raises(RuntimeError, match="cannot audit historical TaskToken source.*act_data"):
         verify_m42._task_token_training_source_fingerprint_at_commit("a" * 40)
+
+
+def _write_json(path: Path, value: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _minimal_completed_runtime_report(*, final_accessed: bool = False) -> dict[str, object]:
+    return {
+        "schema_version": verify_m42.RUNTIME_COMMAND_SCHEMA,
+        "execution_mode": "physical",
+        "git": {
+            "baseline_tracked": True,
+            "changed_paths": [],
+            "commit": "a" * 40,
+            "dirty": False,
+        },
+        "horizon_ablation_completed": True,
+        "horizon_selection_locked": True,
+        "gripper_ablation_completed": True,
+        "gripper_selection_locked": True,
+        "post_grasp_analysis_completed": True,
+        "raw_action_metrics_validated": True,
+        "runtime_action_metrics_validated": True,
+        "physical_execution": True,
+        "passed": True,
+        "final_schedule_accessed": final_accessed,
+    }
+
+
+def _make_completed_runtime_layout(output: Path) -> None:
+    runtime = output / "runtime_ablation"
+    (runtime / "evidence").mkdir(parents=True)
+    for name in (
+        "horizon_selection.json",
+        "gripper_selection.json",
+        "post_grasp_analysis.json",
+        "experiment_manifest.json",
+        "runtime_selection.json",
+    ):
+        _write_json(runtime / name, {})
+
+
+def _tracked_runtime_sources(sources: dict[str, bytes]) -> verify_m42._TrackedRuntimeSources:
+    return verify_m42._TrackedRuntimeSources(
+        sources=sources,
+        modes={name: "100644" for name in sources},
+    )
+
+
+def test_runtime_reuse_rejects_changed_producer_semantic_source(
+    tmp_path: Path, monkeypatch
+) -> None:
+    output = tmp_path / "m42"
+    _make_completed_runtime_layout(output)
+    report = output / "runtime_ablation_command.json"
+    _write_json(report, _minimal_completed_runtime_report())
+    historical = {
+        name: f"same:{name}".encode()
+        for name in (
+            *verify_m42.RUNTIME_LEGACY_IMPLEMENTATION_FILES,
+            "src/langmani/datasets/indirect_dependency.py",
+        )
+    }
+    current = dict(historical)
+    current["src/langmani/datasets/indirect_dependency.py"] = b"changed runtime semantics"
+    monkeypatch.setattr(
+        verify_m42,
+        "_runtime_sources_at_commit",
+        lambda _commit: _tracked_runtime_sources(historical),
+    )
+    monkeypatch.setattr(
+        verify_m42, "_current_runtime_sources", lambda: _tracked_runtime_sources(current)
+    )
+
+    with pytest.raises(RuntimeError, match="runtime semantic source changed"):
+        verify_m42._audit_completed_runtime_evidence(
+            output_root=output,
+            report_path=report,
+            evidence=cast(verify_m42.PriorM4Evidence, SimpleNamespace()),
+            consumer_git_commit="b" * 40,
+        )
+
+
+def test_runtime_semantic_closure_rejects_added_tracked_source() -> None:
+    historical = _tracked_runtime_sources({"src/langmani/policies/existing.py": b"existing"})
+    current = _tracked_runtime_sources(
+        {
+            "src/langmani/policies/existing.py": b"existing",
+            "src/langmani/environments/new_semantic_file.py": b"new",
+        }
+    )
+    with pytest.raises(RuntimeError, match="tracked path sets differ"):
+        verify_m42._audit_runtime_semantic_sources(historical, current)
+
+
+def test_runtime_semantic_closure_rejects_any_m42_training_change() -> None:
+    path = "src/langmani/policies/m42_training.py"
+    historical = _tracked_runtime_sources({path: b"original"})
+    current = _tracked_runtime_sources({path: b"original\nextra change"})
+    with pytest.raises(RuntimeError, match="runtime semantic source changed"):
+        verify_m42._audit_runtime_semantic_sources(historical, current)
+
+
+def test_runtime_semantic_closure_accepts_only_exact_tracked_bytes() -> None:
+    values = {
+        "pyproject.toml": b"project",
+        "environment/environment.yml": b"environment",
+        "scripts/run_m42_runtime_ablation.py": b"producer",
+        "src/langmani/__init__.py": b"package",
+        "src/langmani/policies/policy.py": b"policy",
+        "src/langmani/environments/environment.py": b"environment",
+        "src/langmani/datasets/dataset.py": b"dataset",
+        "src/langmani/experts/expert.py": b"expert",
+    }
+    historical = _tracked_runtime_sources(values)
+    current = _tracked_runtime_sources(dict(values))
+    audited = verify_m42._audit_runtime_semantic_sources(historical, current)
+
+    assert audited.path_count == len(values)
+    assert audited.historical_raw_fingerprint == audited.current_raw_fingerprint
+    assert audited.consumer_repair_id == verify_m42.RUNTIME_REUSE_CONSUMER_REPAIR_ID
+
+
+def test_runtime_reuse_rejects_historical_final_schedule_flag(tmp_path: Path, monkeypatch) -> None:
+    output = tmp_path / "m42"
+    _make_completed_runtime_layout(output)
+    report = output / "runtime_ablation_command.json"
+    _write_json(report, _minimal_completed_runtime_report(final_accessed=True))
+    sources = {name: name.encode() for name in verify_m42.RUNTIME_LEGACY_IMPLEMENTATION_FILES}
+    tracked = _tracked_runtime_sources(sources)
+    monkeypatch.setattr(verify_m42, "_runtime_sources_at_commit", lambda _commit: tracked)
+    monkeypatch.setattr(verify_m42, "_current_runtime_sources", lambda: tracked)
+
+    with pytest.raises(RuntimeError, match="frozen acceptance contract"):
+        verify_m42._audit_completed_runtime_evidence(
+            output_root=output,
+            report_path=report,
+            evidence=cast(verify_m42.PriorM4Evidence, SimpleNamespace()),
+            consumer_git_commit="b" * 40,
+        )
+
+
+def test_runtime_reuse_rejects_top_level_staging_artifact(tmp_path: Path) -> None:
+    output = tmp_path / "m42"
+    _make_completed_runtime_layout(output)
+    (output / "runtime_ablation" / ".staging-deadbeef").mkdir()
+    report = output / "runtime_ablation_command.json"
+    _write_json(report, _minimal_completed_runtime_report())
+    with pytest.raises(RuntimeError, match="extra, missing, or staging"):
+        verify_m42._audit_completed_runtime_evidence(
+            output_root=output,
+            report_path=report,
+            evidence=cast(verify_m42.PriorM4Evidence, SimpleNamespace()),
+            consumer_git_commit="b" * 40,
+        )
+
+
+def test_runtime_reuse_rejects_list_command_report(tmp_path: Path) -> None:
+    report = tmp_path / "runtime_ablation_command.json"
+    _write_json(report, [])
+    with pytest.raises(RuntimeError, match="must contain one JSON object"):
+        verify_m42._json_object(report, label="runtime command report")
+
+
+def test_runtime_evidence_children_reject_extra_missing_and_non_list(tmp_path: Path) -> None:
+    runtime_root = tmp_path / "runtime_ablation"
+    evidence_root = runtime_root / "evidence"
+    evidence_root.mkdir(parents=True)
+    declared = [f"evidence/{index:064x}" for index in range(8)]
+    for relative in declared:
+        (runtime_root / relative).mkdir()
+    assert verify_m42._audit_runtime_evidence_children(runtime_root, declared) == tuple(declared)
+    (evidence_root / ("f" * 64)).mkdir()
+    with pytest.raises(RuntimeError, match="extra or missing"):
+        verify_m42._audit_runtime_evidence_children(runtime_root, declared)
+    (evidence_root / ("f" * 64)).rmdir()
+    (runtime_root / declared[-1]).rmdir()
+    with pytest.raises(RuntimeError, match="extra or missing"):
+        verify_m42._audit_runtime_evidence_children(runtime_root, declared)
+    with pytest.raises(RuntimeError, match="exactly eight"):
+        verify_m42._audit_runtime_evidence_children(runtime_root, tuple(declared))
+
+
+def test_runtime_artifact_tamper_breaks_completion_fingerprint(tmp_path: Path) -> None:
+    runtime_root = tmp_path / "runtime_ablation"
+    identity = {"placeholder": "identity"}
+    identity_fingerprint = canonical_fingerprint(identity)
+    relative = f"evidence/{identity_fingerprint.removeprefix('sha256:')}"
+    directory = runtime_root / relative
+    directory.mkdir(parents=True)
+    artifact = {"benchmark_identity": identity}
+    _write_json(
+        directory / "owner.json",
+        {
+            "identity_fingerprint": identity_fingerprint,
+            "benchmark_identity": identity,
+        },
+    )
+    _write_json(directory / "benchmark.json", {**artifact, "tampered": True})
+    _write_json(
+        directory / "complete.json",
+        {
+            "schema_version": verify_m42.RUNTIME_BENCHMARK_ARTIFACT_SCHEMA,
+            "identity_fingerprint": identity_fingerprint,
+            "artifact_fingerprint": canonical_fingerprint(artifact),
+            "passed": True,
+        },
+    )
+    with pytest.raises(RuntimeError, match="fingerprints disagree"):
+        verify_m42._audit_runtime_artifact(
+            runtime_root=runtime_root,
+            relative_path=relative,
+            producer_commit="a" * 40,
+            producer_implementation_fingerprint="sha256:" + "a" * 64,
+            evidence=cast(verify_m42.PriorM4Evidence, SimpleNamespace()),
+            horizon_config_fingerprint="sha256:" + "b" * 64,
+            gripper_config_fingerprint="sha256:" + "c" * 64,
+        )
+
+
+def test_runtime_evidence_rejects_symlinked_benchmark_directory(tmp_path: Path) -> None:
+    runtime_root = tmp_path / "runtime_ablation"
+    evidence = runtime_root / "evidence"
+    target = tmp_path / "external"
+    evidence.mkdir(parents=True)
+    target.mkdir()
+    link = evidence / ("a" * 64)
+    try:
+        os.symlink(target, link, target_is_directory=True)
+    except (NotImplementedError, OSError):
+        pytest.skip("directory symlinks are unavailable for this Windows account")
+    declared = [f"evidence/{index:064x}" for index in range(7)] + [f"evidence/{'a' * 64}"]
+    for relative in declared[:-1]:
+        (runtime_root / relative).mkdir()
+    with pytest.raises(RuntimeError, match="symlink or junction"):
+        verify_m42._audit_runtime_evidence_children(runtime_root, declared)
+
+
+def test_runtime_repair_lineage_is_content_addressed_immutable_and_repeatable(
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "m42"
+    (output / "runtime_ablation").mkdir(parents=True)
+    identity = {
+        "schema_version": verify_m42.RUNTIME_REPAIR_LINEAGE_SCHEMA,
+        "producer_git_commit": "a" * 40,
+        "consumer_git_commit": "a" * 40,
+        "old_evidence_rewritten": False,
+        "final_schedule_accessed": False,
+    }
+    fingerprint = canonical_fingerprint(identity)
+    lineage = {**identity, "lineage_fingerprint": fingerprint}
+    first = verify_m42._write_runtime_repair_lineage(output, lineage)
+    second = verify_m42._write_runtime_repair_lineage(output, lineage)
+    assert first == second
+    assert first.name == f"{fingerprint.removeprefix('sha256:')}.json"
+    assert json.loads(first.read_text(encoding="utf-8")) == lineage
+    first.write_text("{}\n", encoding="utf-8")
+    with pytest.raises(RuntimeError, match="differs from its content address"):
+        verify_m42._write_runtime_repair_lineage(output, lineage)
+
+
+def test_target_development_refuses_partial_runtime_evidence_without_report(
+    tmp_path: Path, monkeypatch
+) -> None:
+    args = _args(tmp_path, dry_run=False)
+    partial = args.output_root / "runtime_ablation" / "evidence" / ("a" * 64)
+    partial.mkdir(parents=True)
+    monkeypatch.setattr(
+        verify_m42,
+        "_run_json",
+        lambda *_args, **_kwargs: pytest.fail("partial evidence must never be rerun"),
+    )
+    with pytest.raises(RuntimeError, match="refusing rerun"):
+        verify_m42._run_target_development(verify_m42.Report(), args)

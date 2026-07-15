@@ -6,14 +6,15 @@ import argparse
 import json
 import os
 import platform
+import re
 import subprocess
 import sys
 import tempfile
 import traceback
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
-from pathlib import Path
-from typing import Literal, cast
+from pathlib import Path, PurePosixPath
+from typing import Any, Literal, cast
 
 import torch
 from lerobot.policies.act import ACTPolicy
@@ -33,8 +34,10 @@ from langmani.policies.m42_analysis import (
     PostGraspTrace,
     classify_post_grasp_phase,
     create_go_no_go_decision,
+    create_gripper_selection,
+    create_horizon_selection,
 )
-from langmani.policies.m42_evidence import load_prior_m4_evidence
+from langmani.policies.m42_evidence import PriorM4Evidence, load_prior_m4_evidence
 from langmani.policies.m42_runtime import BinaryGripperEnvPostprocessorV0
 from langmani.policies.m42_schedule import (
     M42_DEV_SCHEDULE_FINGERPRINT,
@@ -48,16 +51,24 @@ from langmani.policies.m42_source_fingerprint import (
     task_token_training_source_fingerprint,
 )
 from langmani.policies.m42_training import (
+    RUNTIME_SELECTION_SCHEMA,
+    TaskTokenFairComparisonContract,
     TaskTokenTrainingManifest,
     TaskTokenValidationQueue,
+    build_task_token_fair_comparison_contract,
     canonical_fingerprint,
     fingerprint_owned_task_token_runs,
 )
 from langmani.policies.m42_types import (
     ExecutionHorizonConfig,
+    GripperRuntimeMode,
     M42Decision,
+    M42ExperimentManifest,
     M42GoNoGoMetrics,
+    M42SelectionRecord,
     PostGraspPhase,
+    RuntimeAblationConfig,
+    RuntimeAblationResult,
     TaskTokenConfig,
 )
 
@@ -70,6 +81,36 @@ DEFAULT_M4_DIAGNOSTICS_ROOT = OUTPUT_ROOT / "diagnostics" / "m4"
 DEFAULT_M42_OUTPUT_ROOT = OUTPUT_ROOT / "diagnostics" / "m42"
 REPORT_PATH = DEFAULT_M42_OUTPUT_ROOT / "verification.json"
 VerificationMode = Literal["structural", "target_development", "target_final"]
+
+RUNTIME_LEGACY_IMPLEMENTATION_FILES = (
+    "src/langmani/policies/act_rollout.py",
+    "src/langmani/policies/m42_evaluation.py",
+    "src/langmani/policies/m42_runtime.py",
+    "src/langmani/policies/m42_analysis.py",
+    "scripts/run_m42_runtime_ablation.py",
+)
+RUNTIME_SEMANTIC_EXACT_PATHS = (
+    "scripts/run_m42_runtime_ablation.py",
+    "environment/environment.yml",
+    "pyproject.toml",
+    "src/langmani/__init__.py",
+)
+RUNTIME_SEMANTIC_PREFIXES = (
+    "src/langmani/policies/",
+    "src/langmani/environments/",
+    "src/langmani/datasets/",
+    "src/langmani/experts/",
+)
+# These are Git pathspec roots. The exact expanded file list is discovered independently
+# from the historical tree and current index, then required to be identical.
+RUNTIME_SEMANTIC_SOURCE_FILES = (*RUNTIME_SEMANTIC_EXACT_PATHS, *RUNTIME_SEMANTIC_PREFIXES)
+RUNTIME_REUSE_CONSUMER_REPAIR_ID = "M42TaskTokenRuntimeSelectionFrozenTupleThawV0"
+RUNTIME_IMPLEMENTATION_SCHEMA = "langmani-m42-runtime-implementation-v0"
+RUNTIME_SEMANTIC_CLOSURE_SCHEMA = "langmani-m42-runtime-semantic-closure-v1"
+RUNTIME_COMMAND_SCHEMA = "langmani-m42-runtime-ablation-command-v0"
+RUNTIME_BENCHMARK_ARTIFACT_SCHEMA = "langmani-m42-runtime-benchmark-artifact-v0"
+RUNTIME_POST_GRASP_SCHEMA = "langmani-m42-post-grasp-analysis-v0"
+RUNTIME_REPAIR_LINEAGE_SCHEMA = "langmani-m42-runtime-repair-lineage-v0"
 
 PROTECTED_SOURCE_ROOTS = (
     PROJECT_ROOT / "src",
@@ -465,7 +506,7 @@ def _run_json(command: list[str], report_path: Path) -> dict[str, object]:
     return value
 
 
-def _target_preflight(report: Report, args: argparse.Namespace) -> object:
+def _target_preflight(report: Report, args: argparse.Namespace) -> PriorM4Evidence:
     native = platform.system() == "Linux" and torch.cuda.is_available()
     report.check(
         "native Linux CUDA target",
@@ -505,6 +546,1022 @@ def _json_object(path: Path, *, label: str) -> dict[str, object]:
     if not isinstance(value, dict):
         raise RuntimeError(f"{label} must contain one JSON object: {path}")
     return cast(dict[str, object], value)
+
+
+def _owned_runtime_path(
+    root: Path,
+    relative: object,
+    *,
+    label: str,
+    kind: Literal["file", "directory"],
+) -> Path:
+    """Resolve one canonical portable child without following filesystem links."""
+
+    if not isinstance(relative, str) or not relative or "\\" in relative:
+        raise RuntimeError(f"{label} must be a non-empty portable relative path")
+    portable = PurePosixPath(relative)
+    if (
+        portable.is_absolute()
+        or portable.as_posix() != relative
+        or any(part in {"", ".", ".."} for part in portable.parts)
+    ):
+        raise RuntimeError(f"{label} must be a canonical relative path")
+    owned_root = _resolved_unlinked(root, label="runtime evidence root")
+    candidate = _resolved_unlinked(owned_root.joinpath(*portable.parts), label=label)
+    if candidate == owned_root or not _is_within(candidate, owned_root):
+        raise RuntimeError(f"{label} escapes the runtime evidence root")
+    valid = candidate.is_file() if kind == "file" else candidate.is_dir()
+    if not valid:
+        raise RuntimeError(f"{label} is not a real {kind}: {candidate}")
+    return candidate
+
+
+@dataclass(frozen=True, slots=True)
+class _TrackedRuntimeSources:
+    sources: Mapping[str, bytes]
+    modes: Mapping[str, str]
+
+
+@dataclass(frozen=True, slots=True)
+class _RuntimeSemanticClosureAudit:
+    path_count: int
+    closure_fingerprint: str
+    historical_raw_fingerprint: str
+    current_raw_fingerprint: str
+    consumer_repair_id: str
+
+
+def _validate_runtime_semantic_path(name: str) -> None:
+    if not isinstance(name, str) or not name or "\\" in name:
+        raise RuntimeError("runtime semantic Git path is not portable")
+    path = PurePosixPath(name)
+    if (
+        path.is_absolute()
+        or path.as_posix() != name
+        or any(part in {"", ".", ".."} for part in path.parts)
+        or not (
+            name in RUNTIME_SEMANTIC_EXACT_PATHS
+            or any(name.startswith(prefix) for prefix in RUNTIME_SEMANTIC_PREFIXES)
+        )
+    ):
+        raise RuntimeError(f"unsafe or out-of-scope runtime semantic path: {name!r}")
+
+
+def _git_bytes(command: list[str], *, label: str) -> bytes:
+    completed = subprocess.run(
+        command,
+        cwd=PROJECT_ROOT,
+        check=False,
+        capture_output=True,
+    )
+    if completed.returncode != 0:
+        detail = completed.stderr.decode("utf-8", errors="replace").strip()
+        raise RuntimeError(f"cannot audit {label}: {detail}")
+    return completed.stdout
+
+
+def _parse_historical_runtime_tree(git_commit: str) -> dict[str, str]:
+    raw = _git_bytes(
+        ["git", "ls-tree", "-rz", git_commit, "--", *RUNTIME_SEMANTIC_SOURCE_FILES],
+        label="historical runtime semantic tree",
+    )
+    modes: dict[str, str] = {}
+    for record in raw.split(b"\0"):
+        if not record:
+            continue
+        try:
+            metadata, raw_name = record.split(b"\t", maxsplit=1)
+            mode, object_type, _object_id = metadata.split(b" ", maxsplit=2)
+            name = raw_name.decode("utf-8", errors="strict")
+            decoded_mode = mode.decode("ascii", errors="strict")
+        except (UnicodeDecodeError, ValueError) as error:
+            raise RuntimeError("historical runtime semantic tree is malformed") from error
+        _validate_runtime_semantic_path(name)
+        if object_type != b"blob" or decoded_mode not in {"100644", "100755"}:
+            raise RuntimeError(f"historical runtime semantic source has unsafe mode: {name}")
+        if name in modes:
+            raise RuntimeError(f"historical runtime semantic source is duplicated: {name}")
+        modes[name] = decoded_mode
+    return modes
+
+
+def _parse_current_runtime_index() -> dict[str, str]:
+    raw = _git_bytes(
+        ["git", "ls-files", "--stage", "-z", "--", *RUNTIME_SEMANTIC_SOURCE_FILES],
+        label="current runtime semantic index",
+    )
+    modes: dict[str, str] = {}
+    for record in raw.split(b"\0"):
+        if not record:
+            continue
+        try:
+            metadata, raw_name = record.split(b"\t", maxsplit=1)
+            mode, _object_id, stage = metadata.split(b" ", maxsplit=2)
+            name = raw_name.decode("utf-8", errors="strict")
+            decoded_mode = mode.decode("ascii", errors="strict")
+        except (UnicodeDecodeError, ValueError) as error:
+            raise RuntimeError("current runtime semantic index is malformed") from error
+        _validate_runtime_semantic_path(name)
+        if stage != b"0" or decoded_mode not in {"100644", "100755"}:
+            raise RuntimeError(f"current runtime semantic source has unsafe mode or stage: {name}")
+        if name in modes:
+            raise RuntimeError(f"current runtime semantic source is duplicated: {name}")
+        modes[name] = decoded_mode
+    untracked = _git_bytes(
+        [
+            "git",
+            "ls-files",
+            "--others",
+            "--exclude-standard",
+            "-z",
+            "--",
+            *RUNTIME_SEMANTIC_SOURCE_FILES,
+        ],
+        label="untracked runtime semantic sources",
+    )
+    untracked_paths = tuple(item for item in untracked.split(b"\0") if item)
+    if untracked_paths:
+        try:
+            names = ", ".join(item.decode("utf-8", errors="strict") for item in untracked_paths)
+        except UnicodeDecodeError as error:
+            raise RuntimeError("untracked runtime semantic path is not UTF-8") from error
+        raise RuntimeError(f"untracked runtime semantic source drift is forbidden: {names}")
+    return modes
+
+
+def _runtime_sources_at_commit(git_commit: str) -> _TrackedRuntimeSources:
+    if re.fullmatch(r"[0-9a-f]{40,64}", git_commit) is None:
+        raise RuntimeError("runtime producer Git commit is malformed")
+    modes = _parse_historical_runtime_tree(git_commit)
+    sources = {
+        name: _git_bytes(
+            ["git", "show", f"{git_commit}:{name}"],
+            label=f"historical runtime source {name}",
+        )
+        for name in sorted(modes)
+    }
+    return _TrackedRuntimeSources(sources=sources, modes=modes)
+
+
+def _current_runtime_sources() -> _TrackedRuntimeSources:
+    modes = _parse_current_runtime_index()
+    sources: dict[str, bytes] = {}
+    project_root = _resolved_unlinked(PROJECT_ROOT, label="project root")
+    for name in sorted(modes):
+        path = _resolved_unlinked(PROJECT_ROOT / name, label="current runtime semantic source")
+        if not path.is_file() or not _is_within(path, project_root):
+            raise RuntimeError(f"current runtime semantic source is absent or unsafe: {name}")
+        sources[name] = path.read_bytes()
+    return _TrackedRuntimeSources(sources=sources, modes=modes)
+
+
+def _raw_runtime_source_fingerprint(value: _TrackedRuntimeSources) -> str:
+    return canonical_fingerprint(
+        {
+            "schema_version": RUNTIME_SEMANTIC_CLOSURE_SCHEMA,
+            "normalization": "none",
+            "files": {
+                name: {
+                    "mode": value.modes[name],
+                    "sha256": f"sha256:{sha256_hex(content.hex())}",
+                }
+                for name, content in sorted(value.sources.items())
+            },
+        }
+    )
+
+
+def _audit_runtime_semantic_sources(
+    historical: _TrackedRuntimeSources, current: _TrackedRuntimeSources
+) -> _RuntimeSemanticClosureAudit:
+    if set(historical.sources) != set(historical.modes) or set(current.sources) != set(
+        current.modes
+    ):
+        raise RuntimeError("runtime semantic source bundle is internally incomplete")
+    if set(historical.sources) != set(current.sources):
+        raise RuntimeError("historical and current runtime semantic tracked path sets differ")
+    if dict(historical.modes) != dict(current.modes):
+        raise RuntimeError("historical and current runtime semantic file modes differ")
+    for name in sorted(historical.sources):
+        if historical.sources[name] != current.sources[name]:
+            raise RuntimeError(f"runtime semantic source changed: {name}")
+    closure_fingerprint = canonical_fingerprint(
+        {
+            "schema_version": RUNTIME_SEMANTIC_CLOSURE_SCHEMA,
+            "comparison": "tracked-path-set-mode-and-bytes-identical",
+            "files": {
+                name: {
+                    "mode": historical.modes[name],
+                    "sha256": f"sha256:{sha256_hex(content.hex())}",
+                }
+                for name, content in sorted(historical.sources.items())
+            },
+        }
+    )
+    return _RuntimeSemanticClosureAudit(
+        path_count=len(historical.sources),
+        closure_fingerprint=closure_fingerprint,
+        historical_raw_fingerprint=_raw_runtime_source_fingerprint(historical),
+        current_raw_fingerprint=_raw_runtime_source_fingerprint(current),
+        consumer_repair_id=RUNTIME_REUSE_CONSUMER_REPAIR_ID,
+    )
+
+
+def _runtime_implementation_fingerprint(git_commit: str, sources: _TrackedRuntimeSources) -> str:
+    """Reproduce the runtime producer's historical five-file digest exactly."""
+
+    if re.fullmatch(r"[0-9a-f]{40,64}", git_commit) is None:
+        raise RuntimeError("runtime producer Git commit is malformed")
+    if not set(RUNTIME_LEGACY_IMPLEMENTATION_FILES).issubset(sources.sources):
+        raise RuntimeError("historical producer implementation source set is incomplete")
+    return canonical_fingerprint(
+        {
+            "schema_version": RUNTIME_IMPLEMENTATION_SCHEMA,
+            "git_commit": git_commit,
+            "files": {
+                name: f"sha256:{sha256_hex(sources.sources[name].hex())}"
+                for name in RUNTIME_LEGACY_IMPLEMENTATION_FILES
+            },
+        }
+    )
+
+
+def _runtime_result_from_mapping(value: object) -> RuntimeAblationResult:
+    if not isinstance(value, Mapping):
+        raise RuntimeError("runtime benchmark result must be a JSON object")
+    steps = value.get("successful_episode_steps")
+    if not isinstance(steps, list):
+        raise RuntimeError("runtime successful_episode_steps must be a JSON array")
+    action_metrics = value.get("action_metrics")
+    latency_metrics = value.get("latency_metrics")
+    if not isinstance(action_metrics, Mapping) or not isinstance(latency_metrics, Mapping):
+        raise RuntimeError("runtime action and latency metrics must be JSON objects")
+    try:
+        return RuntimeAblationResult(
+            config_fingerprint=cast(str, value["config_fingerprint"]),
+            schedule_id=cast(str, value["schedule_id"]),
+            schedule_fingerprint=cast(str, value["schedule_fingerprint"]),
+            model_label=cast(str, value["model_label"]),
+            task_id=cast(str | None, value.get("task_id")),
+            execution_horizon=cast(int, value["execution_horizon"]),
+            gripper_mode=GripperRuntimeMode(cast(str, value["gripper_mode"])),
+            episode_count=cast(int, value["episode_count"]),
+            successes=cast(int, value["successes"]),
+            post_grasp_timeouts=cast(int, value["post_grasp_timeouts"]),
+            wrong_object_interactions=cast(int, value["wrong_object_interactions"]),
+            wrong_object_grasp_count=cast(int, value["wrong_object_grasp_count"]),
+            wrong_object_in_target_bin_count=cast(int, value["wrong_object_in_target_bin_count"]),
+            target_in_wrong_bin_count=cast(int, value["target_in_wrong_bin_count"]),
+            target_off_table_count=cast(int, value["target_off_table_count"]),
+            invalid_action_count=cast(int, value["invalid_action_count"]),
+            successful_episode_steps=tuple(cast(list[int], steps)),
+            policy_query_count=cast(int, value["policy_query_count"]),
+            release_sign_transitions=cast(int, value["release_sign_transitions"]),
+            grasp_sign_transitions=cast(int, value["grasp_sign_transitions"]),
+            unnecessary_gripper_sign_transitions=cast(
+                int, value["unnecessary_gripper_sign_transitions"]
+            ),
+            action_metrics=cast(Mapping[str, object], action_metrics),
+            latency_metrics=cast(Mapping[str, object], latency_metrics),
+            report_fingerprint=cast(str | None, value.get("report_fingerprint")),
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise RuntimeError("runtime benchmark result is malformed") from error
+
+
+@dataclass(frozen=True, slots=True)
+class _AuditedRuntimeArtifact:
+    relative_path: str
+    identity_fingerprint: str
+    artifact_fingerprint: str
+    benchmark_fingerprint: str
+    result: RuntimeAblationResult
+    benchmark: Mapping[str, object]
+
+
+def _expected_runtime_episodes(
+    evidence: PriorM4Evidence, *, model_label: str
+) -> tuple[object, ...]:
+    episodes = materialize_locked_schedule("m42_dev_v0")
+    if model_label == "ACT-Mixed-TaskOneHot":
+        return cast(tuple[object, ...], episodes)
+    if model_label == "ACT-PerTask-Representative":
+        return tuple(
+            item for item in episodes if item.task_id == evidence.representative_per_task.task_id
+        )
+    raise RuntimeError(f"unknown runtime benchmark model label: {model_label}")
+
+
+def _audit_runtime_artifact(
+    *,
+    runtime_root: Path,
+    relative_path: str,
+    producer_commit: str,
+    producer_implementation_fingerprint: str,
+    evidence: PriorM4Evidence,
+    horizon_config_fingerprint: str,
+    gripper_config_fingerprint: str,
+) -> _AuditedRuntimeArtifact:
+    directory = _owned_runtime_path(
+        runtime_root,
+        relative_path,
+        label="runtime benchmark evidence directory",
+        kind="directory",
+    )
+    portable = PurePosixPath(relative_path)
+    if (
+        len(portable.parts) != 2
+        or portable.parts[0] != "evidence"
+        or re.fullmatch(r"[0-9a-f]{64}", portable.parts[1]) is None
+    ):
+        raise RuntimeError("runtime benchmark evidence path is not content addressed")
+    entries = {item.name for item in directory.iterdir()}
+    if entries != {"owner.json", "benchmark.json", "complete.json"}:
+        raise RuntimeError(f"runtime evidence directory has extra or missing files: {directory}")
+    owner_path = _owned_runtime_path(
+        runtime_root,
+        f"{relative_path}/owner.json",
+        label="runtime benchmark owner",
+        kind="file",
+    )
+    benchmark_path = _owned_runtime_path(
+        runtime_root,
+        f"{relative_path}/benchmark.json",
+        label="runtime benchmark artifact",
+        kind="file",
+    )
+    complete_path = _owned_runtime_path(
+        runtime_root,
+        f"{relative_path}/complete.json",
+        label="runtime benchmark completion marker",
+        kind="file",
+    )
+    owner = _json_object(owner_path, label="runtime benchmark owner")
+    artifact = _json_object(benchmark_path, label="runtime benchmark artifact")
+    complete = _json_object(complete_path, label="runtime benchmark completion marker")
+    identity = artifact.get("benchmark_identity")
+    if not isinstance(identity, Mapping):
+        raise RuntimeError("runtime benchmark artifact lacks a JSON identity object")
+    identity_fingerprint = canonical_fingerprint(cast(Mapping[str, object], identity))
+    artifact_fingerprint = canonical_fingerprint(artifact)
+    if (
+        identity_fingerprint != f"sha256:{portable.parts[1]}"
+        or owner
+        != {
+            "identity_fingerprint": identity_fingerprint,
+            "benchmark_identity": dict(identity),
+        }
+        or complete
+        != {
+            "schema_version": RUNTIME_BENCHMARK_ARTIFACT_SCHEMA,
+            "identity_fingerprint": identity_fingerprint,
+            "artifact_fingerprint": artifact_fingerprint,
+            "passed": True,
+        }
+    ):
+        raise RuntimeError("runtime benchmark identity/artifact/completion fingerprints disagree")
+    required_identity = {
+        "schema_version",
+        "evaluation_git_commit",
+        "implementation_fingerprint",
+        "schedule_id",
+        "schedule_fingerprint",
+        "model_label",
+        "task_id",
+        "run_fingerprint",
+        "checkpoint_fingerprint",
+        "execution_horizon",
+        "gripper_mode",
+        "config_fingerprint",
+        "maximum_episode_steps",
+        "ordered_episode_indices",
+        "ordered_scene_seeds",
+        "ordered_task_ids",
+        "final_schedule_accessed",
+    }
+    if set(identity) != required_identity:
+        raise RuntimeError("runtime benchmark identity fields differ from the frozen contract")
+    model_label = identity.get("model_label")
+    task_id = identity.get("task_id")
+    if model_label == "ACT-Mixed-TaskOneHot":
+        checkpoint = evidence.mixed_task_onehot
+        expected_task_id = None
+    elif model_label == "ACT-PerTask-Representative":
+        checkpoint = evidence.representative_per_task
+        expected_task_id = checkpoint.task_id
+    else:
+        raise RuntimeError("runtime benchmark uses an unknown model")
+    gripper_mode = GripperRuntimeMode(cast(str, identity.get("gripper_mode")))
+    expected_config = (
+        horizon_config_fingerprint
+        if gripper_mode is GripperRuntimeMode.PROJECT
+        else gripper_config_fingerprint
+    )
+    expected_episodes = _expected_runtime_episodes(evidence, model_label=cast(str, model_label))
+    expected_indices = [cast(Any, item).episode_index for item in expected_episodes]
+    expected_seeds = [cast(Any, item).scene_seed for item in expected_episodes]
+    expected_tasks = [cast(Any, item).task_id for item in expected_episodes]
+    if any(
+        (
+            identity.get("schema_version") != RUNTIME_BENCHMARK_ARTIFACT_SCHEMA,
+            identity.get("evaluation_git_commit") != producer_commit,
+            identity.get("implementation_fingerprint") != producer_implementation_fingerprint,
+            identity.get("schedule_id") != "m42_dev_v0",
+            identity.get("schedule_fingerprint") != M42_DEV_SCHEDULE_FINGERPRINT,
+            task_id != expected_task_id,
+            identity.get("run_fingerprint") != checkpoint.run_fingerprint,
+            identity.get("checkpoint_fingerprint") != checkpoint.checkpoint_fingerprint,
+            identity.get("config_fingerprint") != expected_config,
+            identity.get("maximum_episode_steps") != 200,
+            identity.get("ordered_episode_indices") != expected_indices,
+            identity.get("ordered_scene_seeds") != expected_seeds,
+            identity.get("ordered_task_ids") != expected_tasks,
+            identity.get("final_schedule_accessed") is not False,
+        )
+    ):
+        raise RuntimeError("runtime benchmark identity differs from current locked evidence")
+    benchmark = artifact.get("benchmark")
+    runtime_result = artifact.get("runtime_result")
+    if not isinstance(benchmark, Mapping) or not isinstance(runtime_result, Mapping):
+        raise RuntimeError("runtime benchmark payload or aggregate result is absent")
+    benchmark_fingerprint = canonical_fingerprint(cast(Mapping[str, object], benchmark))
+    if (
+        artifact.get("schema_version") != RUNTIME_BENCHMARK_ARTIFACT_SCHEMA
+        or artifact.get("passed") is not True
+        or artifact.get("benchmark_fingerprint") != benchmark_fingerprint
+    ):
+        raise RuntimeError("runtime benchmark artifact fingerprint is invalid")
+    descriptor = benchmark.get("checkpoint")
+    episodes = benchmark.get("episodes")
+    aggregate = benchmark.get("aggregate")
+    if (
+        not isinstance(descriptor, Mapping)
+        or not isinstance(episodes, list)
+        or not isinstance(aggregate, Mapping)
+    ):
+        raise RuntimeError("runtime benchmark report structure is malformed")
+    if any(
+        (
+            benchmark.get("schedule_id") != identity.get("schedule_id"),
+            benchmark.get("schedule_fingerprint") != identity.get("schedule_fingerprint"),
+            benchmark.get("model_label") != model_label,
+            benchmark.get("execution_horizon") != identity.get("execution_horizon"),
+            benchmark.get("gripper_mode") != identity.get("gripper_mode"),
+            descriptor.get("run_fingerprint") != checkpoint.run_fingerprint,
+            descriptor.get("checkpoint_fingerprint") != checkpoint.checkpoint_fingerprint,
+            descriptor.get("dataset_fingerprint") != evidence.dataset_fingerprint,
+            descriptor.get("task_id") != expected_task_id,
+            len(episodes) != len(expected_episodes),
+            aggregate.get("episode_count") != len(expected_episodes),
+        )
+    ):
+        raise RuntimeError("runtime benchmark report disagrees with its identity")
+    for position, (episode, expected) in enumerate(zip(episodes, expected_episodes, strict=True)):
+        if not isinstance(episode, Mapping) or not isinstance(episode.get("rollout"), Mapping):
+            raise RuntimeError(f"runtime episode {position} is malformed")
+        rollout = cast(Mapping[str, object], episode["rollout"])
+        if any(
+            (
+                episode.get("schedule_id") != "m42_dev_v0",
+                episode.get("episode_index") != cast(Any, expected).episode_index,
+                episode.get("model_label") != model_label,
+                rollout.get("scene_seed") != cast(Any, expected).scene_seed,
+                rollout.get("scene_id") != cast(Any, expected).scene_id,
+                rollout.get("task_id") != cast(Any, expected).task_id,
+                rollout.get("run_fingerprint") != checkpoint.run_fingerprint,
+                rollout.get("checkpoint_fingerprint") != checkpoint.checkpoint_fingerprint,
+            )
+        ):
+            raise RuntimeError(f"runtime episode {position} differs from the locked schedule")
+    result = _runtime_result_from_mapping(runtime_result)
+    aggregate_pairs = (
+        (result.episode_count, aggregate.get("episode_count")),
+        (result.successes, aggregate.get("successes")),
+        (result.post_grasp_timeouts, aggregate.get("post_grasp_timeout_count")),
+        (result.wrong_object_interactions, aggregate.get("wrong_object_interaction_count")),
+        (result.wrong_object_grasp_count, aggregate.get("wrong_object_grasp_count")),
+        (
+            result.wrong_object_in_target_bin_count,
+            aggregate.get("wrong_object_in_target_bin_count"),
+        ),
+        (result.target_in_wrong_bin_count, aggregate.get("target_in_wrong_bin_count")),
+        (result.target_off_table_count, aggregate.get("target_off_table_count")),
+        (result.invalid_action_count, aggregate.get("invalid_action_count")),
+        (result.policy_query_count, aggregate.get("policy_query_count")),
+        (result.release_sign_transitions, aggregate.get("release_sign_transitions")),
+        (result.grasp_sign_transitions, aggregate.get("grasp_sign_transitions")),
+        (
+            result.unnecessary_gripper_sign_transitions,
+            aggregate.get("unnecessary_gripper_sign_transitions"),
+        ),
+    )
+    if any(
+        (
+            result.report_fingerprint != benchmark_fingerprint,
+            result.schedule_id != "m42_dev_v0",
+            result.schedule_fingerprint != M42_DEV_SCHEDULE_FINGERPRINT,
+            result.model_label != model_label,
+            result.task_id != expected_task_id,
+            result.execution_horizon != identity.get("execution_horizon"),
+            result.gripper_mode is not gripper_mode,
+            result.config_fingerprint != expected_config,
+            not isinstance(aggregate.get("action_metrics"), Mapping),
+            isinstance(aggregate.get("action_metrics"), Mapping)
+            and canonical_fingerprint(result.action_metrics)
+            != canonical_fingerprint(cast(Mapping[str, object], aggregate["action_metrics"])),
+            list(result.successful_episode_steps) != aggregate.get("successful_episode_steps"),
+            any(left != right for left, right in aggregate_pairs),
+        )
+    ):
+        raise RuntimeError("runtime aggregate result disagrees with the episode report")
+    return _AuditedRuntimeArtifact(
+        relative_path=relative_path,
+        identity_fingerprint=identity_fingerprint,
+        artifact_fingerprint=artifact_fingerprint,
+        benchmark_fingerprint=benchmark_fingerprint,
+        result=result,
+        benchmark=cast(Mapping[str, object], benchmark),
+    )
+
+
+def _runtime_json(root: Path, name: str, *, label: str) -> dict[str, object]:
+    path = _owned_runtime_path(root, name, label=label, kind="file")
+    return _json_object(path, label=label)
+
+
+def _audit_runtime_evidence_children(runtime_root: Path, artifact_paths: object) -> tuple[str, ...]:
+    if (
+        not isinstance(artifact_paths, list)
+        or len(artifact_paths) != 8
+        or not all(isinstance(item, str) for item in artifact_paths)
+        or len(set(cast(list[str], artifact_paths))) != 8
+    ):
+        raise RuntimeError("runtime command must reference exactly eight unique artifacts")
+    evidence_root = _owned_runtime_path(
+        runtime_root,
+        "evidence",
+        label="runtime benchmark evidence root",
+        kind="directory",
+    )
+    actual_children: set[str] = set()
+    for child in evidence_root.iterdir():
+        resolved = _resolved_unlinked(child, label="runtime benchmark evidence child")
+        if not resolved.is_dir() or resolved.parent != evidence_root:
+            raise RuntimeError("runtime benchmark evidence root contains an unsafe child")
+        actual_children.add(f"evidence/{resolved.name}")
+    declared = tuple(cast(list[str], artifact_paths))
+    if actual_children != set(declared):
+        raise RuntimeError("runtime evidence contains extra or missing benchmark artifacts")
+    return declared
+
+
+def _audit_completed_runtime_evidence(
+    *,
+    output_root: Path,
+    report_path: Path,
+    evidence: PriorM4Evidence,
+    consumer_git_commit: str,
+) -> tuple[dict[str, object], dict[str, object]]:
+    """Strictly audit immutable runtime evidence before permitting cross-commit reuse."""
+
+    output_root = _resolved_unlinked(output_root, label="M4.2 verifier output")
+    runtime_root = _resolved_unlinked(
+        output_root / "runtime_ablation", label="runtime-ablation evidence root"
+    )
+    if not runtime_root.is_dir():
+        raise RuntimeError("completed runtime command report has no evidence directory")
+    expected_runtime_entries = {
+        "evidence",
+        "horizon_selection.json",
+        "gripper_selection.json",
+        "post_grasp_analysis.json",
+        "experiment_manifest.json",
+        "runtime_selection.json",
+    }
+    actual_runtime_entries: set[str] = set()
+    for entry in runtime_root.iterdir():
+        resolved_entry = _resolved_unlinked(entry, label="runtime-ablation top-level artifact")
+        if resolved_entry.parent != runtime_root:
+            raise RuntimeError("runtime-ablation top-level artifact escapes its owned root")
+        actual_runtime_entries.add(resolved_entry.name)
+    if actual_runtime_entries != expected_runtime_entries:
+        raise RuntimeError("runtime-ablation root contains extra, missing, or staging artifacts")
+    report_path = _resolved_unlinked(report_path, label="runtime-ablation command report")
+    if report_path.parent != output_root or not report_path.is_file():
+        raise RuntimeError("runtime-ablation command report is absent or outside its owned root")
+    runtime = _json_object(report_path, label="runtime-ablation command report")
+    git = runtime.get("git")
+    if not isinstance(git, Mapping):
+        raise RuntimeError("runtime command report lacks its producer Git identity")
+    producer_commit = git.get("commit")
+    if not isinstance(producer_commit, str):
+        raise RuntimeError("runtime command report producer Git commit is malformed")
+    historical_sources = _runtime_sources_at_commit(producer_commit)
+    current_sources = _current_runtime_sources()
+    source_audit = _audit_runtime_semantic_sources(historical_sources, current_sources)
+    producer_implementation = _runtime_implementation_fingerprint(
+        producer_commit, historical_sources
+    )
+    required_true = (
+        "horizon_ablation_completed",
+        "horizon_selection_locked",
+        "gripper_ablation_completed",
+        "gripper_selection_locked",
+        "post_grasp_analysis_completed",
+        "raw_action_metrics_validated",
+        "runtime_action_metrics_validated",
+        "physical_execution",
+        "passed",
+    )
+    if (
+        runtime.get("schema_version") != RUNTIME_COMMAND_SCHEMA
+        or runtime.get("execution_mode") != "physical"
+        or git.get("baseline_tracked") is not True
+        or git.get("dirty") is not False
+        or git.get("changed_paths") != []
+        or runtime.get("evaluation_git_commit", producer_commit) != producer_commit
+        or any(runtime.get(name) is not True for name in required_true)
+        or runtime.get("final_schedule_accessed") is not False
+        or runtime.get("schedule_id") != "m42_dev_v0"
+        or runtime.get("schedule_fingerprint") != M42_DEV_SCHEDULE_FINGERPRINT
+        or runtime.get("implementation_fingerprint") != producer_implementation
+        or runtime.get("prior_m4_evidence_fingerprint") != evidence.fingerprint
+        or runtime.get("m41_runtime_processor_fingerprint")
+        != evidence.m41_runtime_processor_fingerprint
+        or runtime.get("m3b_dataset_fingerprint") != evidence.dataset_fingerprint
+        or runtime.get("m4_checkpoint_fingerprints")
+        != [item.checkpoint_fingerprint for item in evidence.checkpoints]
+        or runtime.get("mixed_task_onehot_checkpoint_fingerprint")
+        != evidence.mixed_task_onehot.checkpoint_fingerprint
+        or runtime.get("representative_per_task_checkpoint_fingerprint")
+        != evidence.representative_per_task.checkpoint_fingerprint
+        or runtime.get("unique_physical_benchmark_count") != 8
+        or runtime.get("unique_physical_episode_count") != 336
+    ):
+        raise RuntimeError("completed runtime command report fails its frozen acceptance contract")
+    expected_plan = {
+        "schedule_id": "m42_dev_v0",
+        "scene_count": 12,
+        "task_count": 6,
+        "horizon_order": [10, 5, 1],
+        "horizon_mixed_episode_count": 216,
+        "horizon_representative_episode_count": 36,
+        "horizon_physical_episode_count": 252,
+        "gripper_modes": ["project", "binary"],
+        "gripper_mixed_logical_episode_count": 144,
+        "gripper_representative_logical_episode_count": 24,
+        "gripper_logical_episode_count": 168,
+        "gripper_additional_physical_episode_count": 84,
+        "total_logical_episode_count": 420,
+        "total_unique_physical_episode_count": 336,
+        "project_gripper_evidence_reuse": "content-bound selected-horizon evidence",
+        "final_schedule_materialized": False,
+    }
+    if runtime.get("plan") != expected_plan:
+        raise RuntimeError("runtime command plan does not bind 336 unique/420 logical episodes")
+    horizon_config = runtime.get("horizon_config")
+    gripper_config = runtime.get("gripper_config")
+    if not isinstance(horizon_config, Mapping) or not isinstance(gripper_config, Mapping):
+        raise RuntimeError("runtime command report lacks both frozen ablation configurations")
+    expected_horizon_config = RuntimeAblationConfig(
+        schedule_id="m42_dev_v0",
+        schedule_fingerprint=M42_DEV_SCHEDULE_FINGERPRINT,
+        m3b_dataset_fingerprint=evidence.dataset_fingerprint,
+        mixed_task_onehot_checkpoint_fingerprint=(
+            evidence.mixed_task_onehot.checkpoint_fingerprint
+        ),
+        representative_per_task_checkpoint_fingerprint=(
+            evidence.representative_per_task.checkpoint_fingerprint
+        ),
+        representative_task_id=cast(str, evidence.representative_per_task.task_id),
+        horizons=(10, 5, 1),
+        gripper_modes=(GripperRuntimeMode.PROJECT,),
+        maximum_episode_steps=200,
+    ).to_dict()
+    if horizon_config != expected_horizon_config:
+        raise RuntimeError("runtime ablation configurations differ from current frozen evidence")
+    try:
+        selected_horizon_from_gripper = cast(list[object], gripper_config["horizons"])[0]
+    except (KeyError, IndexError, TypeError) as error:
+        raise RuntimeError("runtime gripper configuration is malformed") from error
+    expected_gripper_config = RuntimeAblationConfig(
+        schedule_id="m42_dev_v0",
+        schedule_fingerprint=M42_DEV_SCHEDULE_FINGERPRINT,
+        m3b_dataset_fingerprint=evidence.dataset_fingerprint,
+        mixed_task_onehot_checkpoint_fingerprint=(
+            evidence.mixed_task_onehot.checkpoint_fingerprint
+        ),
+        representative_per_task_checkpoint_fingerprint=(
+            evidence.representative_per_task.checkpoint_fingerprint
+        ),
+        representative_task_id=cast(str, evidence.representative_per_task.task_id),
+        horizons=(cast(int, selected_horizon_from_gripper),),
+        gripper_modes=(GripperRuntimeMode.PROJECT, GripperRuntimeMode.BINARY),
+        maximum_episode_steps=200,
+    ).to_dict()
+    if gripper_config != expected_gripper_config:
+        raise RuntimeError("runtime horizon/gripper configuration candidates changed")
+    horizon_config_fingerprint = canonical_fingerprint(cast(Mapping[str, object], horizon_config))
+    gripper_config_fingerprint = canonical_fingerprint(cast(Mapping[str, object], gripper_config))
+    horizon_payload = _runtime_json(
+        runtime_root, "horizon_selection.json", label="runtime horizon selection"
+    )
+    gripper_payload = _runtime_json(
+        runtime_root, "gripper_selection.json", label="runtime gripper selection"
+    )
+    horizon_selection = M42SelectionRecord.from_dict(horizon_payload)
+    gripper_selection = M42SelectionRecord.from_dict(gripper_payload)
+    try:
+        selected_horizon = int(horizon_selection.selected_value)
+    except ValueError as error:
+        raise RuntimeError("runtime horizon selection is not an integer") from error
+    selected_mode = GripperRuntimeMode(gripper_selection.selected_value)
+    if (
+        gripper_config.get("horizons") != [selected_horizon]
+        or runtime.get("horizon_selection") != horizon_payload
+        or runtime.get("gripper_selection") != gripper_payload
+        or runtime.get("horizon_selection_fingerprint") != horizon_selection.fingerprint
+        or runtime.get("gripper_selection_fingerprint") != gripper_selection.fingerprint
+    ):
+        raise RuntimeError("runtime selection report and immutable selection files disagree")
+    artifact_paths = _audit_runtime_evidence_children(
+        runtime_root, runtime.get("evidence_artifacts")
+    )
+    audited = tuple(
+        _audit_runtime_artifact(
+            runtime_root=runtime_root,
+            relative_path=cast(str, relative),
+            producer_commit=producer_commit,
+            producer_implementation_fingerprint=producer_implementation,
+            evidence=evidence,
+            horizon_config_fingerprint=horizon_config_fingerprint,
+            gripper_config_fingerprint=gripper_config_fingerprint,
+        )
+        for relative in artifact_paths
+    )
+    expected_sequence = tuple(
+        (label, horizon, "project")
+        for horizon in (10, 5, 1)
+        for label in ("ACT-Mixed-TaskOneHot", "ACT-PerTask-Representative")
+    ) + (
+        ("ACT-Mixed-TaskOneHot", selected_horizon, "binary"),
+        ("ACT-PerTask-Representative", selected_horizon, "binary"),
+    )
+    actual_sequence = tuple(
+        (item.result.model_label, item.result.execution_horizon, item.result.gripper_mode.value)
+        for item in audited
+    )
+    if actual_sequence != expected_sequence:
+        raise RuntimeError("runtime artifacts do not cover the exact eight declared benchmarks")
+    unique_episode_count = sum(item.result.episode_count for item in audited)
+    selected_project_episode_count = sum(
+        item.result.episode_count
+        for item in audited
+        if item.result.execution_horizon == selected_horizon
+        and item.result.gripper_mode is GripperRuntimeMode.PROJECT
+    )
+    if unique_episode_count != 336 or unique_episode_count + selected_project_episode_count != 420:
+        raise RuntimeError("audited runtime artifacts do not total 336 unique/420 logical episodes")
+    by_key = {
+        (item.result.model_label, item.result.execution_horizon, item.result.gripper_mode): item
+        for item in audited
+    }
+    mixed_horizon = tuple(
+        by_key[("ACT-Mixed-TaskOneHot", horizon, GripperRuntimeMode.PROJECT)].result
+        for horizon in (10, 5, 1)
+    )
+    representative_horizon = tuple(
+        by_key[("ACT-PerTask-Representative", horizon, GripperRuntimeMode.PROJECT)].result
+        for horizon in (10, 5, 1)
+    )
+    recomputed_horizon = create_horizon_selection(
+        mixed_results=mixed_horizon,
+        representative_per_task_results=representative_horizon,
+        locked_at_utc=horizon_selection.locked_at_utc,
+    )
+    recomputed_gripper = create_gripper_selection(
+        mixed_results=(
+            by_key[("ACT-Mixed-TaskOneHot", selected_horizon, GripperRuntimeMode.PROJECT)].result,
+            by_key[("ACT-Mixed-TaskOneHot", selected_horizon, GripperRuntimeMode.BINARY)].result,
+        ),
+        representative_per_task_results=(
+            by_key[
+                (
+                    "ACT-PerTask-Representative",
+                    selected_horizon,
+                    GripperRuntimeMode.PROJECT,
+                )
+            ].result,
+            by_key[
+                (
+                    "ACT-PerTask-Representative",
+                    selected_horizon,
+                    GripperRuntimeMode.BINARY,
+                )
+            ].result,
+        ),
+        locked_at_utc=gripper_selection.locked_at_utc,
+    )
+    if (
+        recomputed_horizon.to_dict() != horizon_payload
+        or recomputed_gripper.to_dict() != gripper_payload
+        or selected_mode is not GripperRuntimeMode(gripper_selection.selected_value)
+    ):
+        raise RuntimeError("runtime selections cannot be reproduced from their eight artifacts")
+    post_grasp = _runtime_json(
+        runtime_root, "post_grasp_analysis.json", label="runtime post-grasp analysis"
+    )
+    summaries = post_grasp.get("benchmarks")
+    if (
+        post_grasp.get("schema_version") != RUNTIME_POST_GRASP_SCHEMA
+        or post_grasp.get("schedule_id") != "m42_dev_v0"
+        or post_grasp.get("schedule_fingerprint") != M42_DEV_SCHEDULE_FINGERPRINT
+        or post_grasp.get("unique_physical_benchmark_count") != 8
+        or post_grasp.get("complete") is not True
+        or post_grasp.get("final_schedule_accessed") is not False
+        or not isinstance(summaries, list)
+        or len(summaries) != 8
+    ):
+        raise RuntimeError("runtime post-grasp analysis is incomplete or crossed final")
+    for summary, item in zip(summaries, audited, strict=True):
+        aggregate = item.benchmark.get("aggregate")
+        episodes = item.benchmark.get("episodes")
+        if (
+            not isinstance(summary, Mapping)
+            or not isinstance(aggregate, Mapping)
+            or not isinstance(episodes, list)
+            or summary.get("artifact") != item.relative_path
+            or summary.get("benchmark_fingerprint") != item.benchmark_fingerprint
+            or summary.get("episode_count") != item.result.episode_count
+            or summary.get("phase_counts") != aggregate.get("phase_counts")
+            or summary.get("post_grasp_timeout_count") != aggregate.get("post_grasp_timeout_count")
+            or summary.get("failed_record_count")
+            != sum(
+                isinstance(episode, Mapping)
+                and episode.get("post_grasp_failure_record") is not None
+                for episode in episodes
+            )
+        ):
+            raise RuntimeError("post-grasp analysis does not reference the audited benchmarks")
+    experiment_payload = _runtime_json(
+        runtime_root, "experiment_manifest.json", label="runtime experiment manifest"
+    )
+    experiment_manifest = M42ExperimentManifest.from_dict(experiment_payload)
+    if any(
+        (
+            experiment_manifest.implementation_git_commit != producer_commit,
+            experiment_manifest.m3b_dataset_fingerprint != evidence.dataset_fingerprint,
+            experiment_manifest.prior_m4_verification_fingerprint
+            != evidence.verification_fingerprint,
+            dict(experiment_manifest.schedule_fingerprints)
+            != {
+                "m42_dev_v0": M42_DEV_SCHEDULE_FINGERPRINT,
+                "m42_final_v0": M42_FINAL_SCHEDULE_FINGERPRINT,
+            },
+            experiment_manifest.m4_checkpoint_fingerprints
+            != tuple(item.checkpoint_fingerprint for item in evidence.checkpoints),
+            experiment_manifest.m41_runtime_processor_fingerprint
+            != evidence.m41_runtime_processor_fingerprint,
+            dict(experiment_manifest.runtime_selection_fingerprints)
+            != {
+                "execution_horizon": horizon_selection.fingerprint,
+                "gripper_runtime": gripper_selection.fingerprint,
+            },
+            experiment_manifest.task_token_experiment_fingerprint is not None,
+            dict(experiment_manifest.artifact_paths)
+            != {
+                "runtime_selection": "runtime_selection.json",
+                "horizon_selection": "horizon_selection.json",
+                "gripper_selection": "gripper_selection.json",
+                "post_grasp_analysis": "post_grasp_analysis.json",
+            },
+            experiment_manifest.completed is not True,
+        )
+    ):
+        raise RuntimeError("runtime experiment manifest differs from current M3B/M4 evidence")
+    experiment_fingerprint = experiment_manifest.fingerprint
+    runtime_selection_payload = _runtime_json(
+        runtime_root, "runtime_selection.json", label="selected runtime lock"
+    )
+    selection_evidence = runtime_selection_payload.get("selection_evidence")
+    if not isinstance(selection_evidence, Mapping):
+        raise RuntimeError("selected runtime lock lacks selection evidence")
+    fair_payload = selection_evidence.get("task_token_fair_comparison_contract")
+    if not isinstance(fair_payload, Mapping):
+        raise RuntimeError("selected runtime lock lacks the TaskToken fairness contract")
+    fair = TaskTokenFairComparisonContract.from_dict(fair_payload)
+    expected_fair = build_task_token_fair_comparison_contract(
+        evidence.mixed_task_onehot.manifest,
+        selected_checkpoint_fingerprint=evidence.mixed_task_onehot.checkpoint_fingerprint,
+    )
+    if fair.to_dict() != expected_fair.to_dict():
+        raise RuntimeError("runtime TaskToken fairness contract differs from current M4 evidence")
+    expected_selection_evidence = {
+        "horizon_selection": "horizon_selection.json",
+        "gripper_selection": "gripper_selection.json",
+        "post_grasp_analysis": "post_grasp_analysis.json",
+        "experiment_manifest": "experiment_manifest.json",
+        "task_token_fair_comparison_contract": fair.to_dict(),
+        "project_evidence_reused_from_horizon": True,
+    }
+    if (
+        runtime_selection_payload.get("schema_version") != RUNTIME_SELECTION_SCHEMA
+        or runtime_selection_payload.get("execution_horizon") != selected_horizon
+        or runtime_selection_payload.get("gripper_mode") != selected_mode.value
+        or runtime_selection_payload.get("horizon_selection_fingerprint")
+        != horizon_selection.fingerprint
+        or runtime_selection_payload.get("gripper_selection_fingerprint")
+        != gripper_selection.fingerprint
+        or runtime_selection_payload.get("development_schedule_fingerprint")
+        != M42_DEV_SCHEDULE_FINGERPRINT
+        or runtime_selection_payload.get("m3b_dataset_fingerprint") != evidence.dataset_fingerprint
+        or runtime_selection_payload.get("mixed_task_onehot_checkpoint_fingerprint")
+        != evidence.mixed_task_onehot.checkpoint_fingerprint
+        or runtime_selection_payload.get("representative_per_task_checkpoint_fingerprint")
+        != evidence.representative_per_task.checkpoint_fingerprint
+        or runtime_selection_payload.get("implementation_fingerprint") != producer_implementation
+        or runtime_selection_payload.get("evaluation_git_commit") != producer_commit
+        or runtime_selection_payload.get("experiment_manifest_fingerprint")
+        != experiment_fingerprint
+        or runtime_selection_payload.get("selection_evidence") != expected_selection_evidence
+        or runtime_selection_payload.get("locked") is not True
+        or runtime_selection_payload.get("final_schedule_accessed") is not False
+    ):
+        raise RuntimeError("selected runtime lock is inconsistent with audited evidence")
+    runtime_selection_fingerprint = canonical_fingerprint(runtime_selection_payload)
+    if (
+        runtime.get("runtime_selection_fingerprint") != runtime_selection_fingerprint
+        or runtime.get("experiment_manifest") != "experiment_manifest.json"
+        or runtime.get("experiment_manifest_fingerprint") != experiment_fingerprint
+        or runtime.get("task_token_fair_comparison_fingerprint") != fair.contract_fingerprint
+    ):
+        raise RuntimeError("runtime report does not bind the selected runtime and manifest")
+    report_fingerprint = canonical_fingerprint(runtime)
+    lineage_identity: dict[str, object] = {
+        "schema_version": RUNTIME_REPAIR_LINEAGE_SCHEMA,
+        "producer_git_commit": producer_commit,
+        "consumer_git_commit": consumer_git_commit,
+        "runtime_semantic_source_files": sorted(historical_sources.sources),
+        "runtime_semantic_source_path_count": source_audit.path_count,
+        "runtime_semantic_closure_fingerprint": source_audit.closure_fingerprint,
+        "historical_runtime_semantic_raw_fingerprint": (source_audit.historical_raw_fingerprint),
+        "current_runtime_semantic_raw_fingerprint": source_audit.current_raw_fingerprint,
+        "consumer_compatibility_repair_id": source_audit.consumer_repair_id,
+        "producer_implementation_fingerprint": producer_implementation,
+        "runtime_command_report_fingerprint": report_fingerprint,
+        "horizon_selection_fingerprint": horizon_selection.fingerprint,
+        "gripper_selection_fingerprint": gripper_selection.fingerprint,
+        "runtime_selection_fingerprint": runtime_selection_fingerprint,
+        "experiment_manifest_fingerprint": experiment_fingerprint,
+        "post_grasp_analysis_fingerprint": canonical_fingerprint(post_grasp),
+        "artifact_fingerprints": [
+            {
+                "relative_path": item.relative_path,
+                "identity_fingerprint": item.identity_fingerprint,
+                "artifact_fingerprint": item.artifact_fingerprint,
+                "benchmark_fingerprint": item.benchmark_fingerprint,
+            }
+            for item in audited
+        ],
+        "unique_physical_benchmark_count": 8,
+        "unique_physical_episode_count": 336,
+        "logical_episode_count": 420,
+        "old_evidence_rewritten": False,
+        "final_schedule_accessed": False,
+    }
+    lineage_fingerprint = canonical_fingerprint(lineage_identity)
+    lineage = {**lineage_identity, "lineage_fingerprint": lineage_fingerprint}
+    return runtime, lineage
+
+
+def _write_runtime_repair_lineage(output_root: Path, lineage: Mapping[str, object]) -> Path:
+    fingerprint = lineage.get("lineage_fingerprint")
+    if (
+        not isinstance(fingerprint, str)
+        or canonical_fingerprint(
+            {key: value for key, value in lineage.items() if key != "lineage_fingerprint"}
+        )
+        != fingerprint
+    ):
+        raise RuntimeError("runtime repair lineage fingerprint is invalid")
+    lineage_root = _resolved_unlinked(
+        output_root / "runtime_repair_lineage", label="runtime repair-lineage root"
+    )
+    runtime_root = _resolved_unlinked(
+        output_root / "runtime_ablation", label="runtime-ablation evidence root"
+    )
+    if _overlaps(lineage_root, runtime_root):
+        raise RuntimeError("runtime repair lineage must not overlap immutable runtime evidence")
+    if lineage_root.exists() and not lineage_root.is_dir():
+        raise RuntimeError("runtime repair-lineage root must be a real directory")
+    lineage_root.mkdir(parents=True, exist_ok=True)
+    path = lineage_root / f"{fingerprint.removeprefix('sha256:')}.json"
+    if path.exists():
+        if _json_object(path, label="runtime repair lineage") != dict(lineage):
+            raise RuntimeError("existing runtime repair lineage differs from its content address")
+    else:
+        atomic_write_json(path, dict(lineage), immutable=True)
+    return path
 
 
 def _task_token_content_matches_plan(
@@ -801,7 +1858,12 @@ def _evaluation_command(
     return command
 
 
-def _run_target_development(report: Report, args: argparse.Namespace) -> None:
+def _run_target_development(
+    report: Report,
+    args: argparse.Namespace,
+    *,
+    prior_evidence: PriorM4Evidence | None = None,
+) -> None:
     output_root = args.output_root.resolve()
     if args.dry_run:
         with tempfile.TemporaryDirectory(prefix="langmani-m42-verifier-plan-") as temporary:
@@ -892,15 +1954,49 @@ def _run_target_development(report: Report, args: argparse.Namespace) -> None:
         return
 
     runtime_report = output_root / "runtime_ablation_command.json"
-    runtime = _run_json(
-        _runtime_command(
-            args,
-            output_root=output_root / "runtime_ablation",
-            report_path=runtime_report,
-            dry_run=False,
-        ),
-        runtime_report,
+    runtime_root = output_root / "runtime_ablation"
+    report_present = (
+        runtime_report.exists() or runtime_report.is_symlink() or runtime_report.is_junction()
     )
+    root_present = runtime_root.exists() or runtime_root.is_symlink() or runtime_root.is_junction()
+    if report_present:
+        if prior_evidence is None:
+            raise RuntimeError("strict runtime evidence reuse requires validated prior M4 evidence")
+        git = inspect_git_state(PROJECT_ROOT)
+        runtime, lineage = _audit_completed_runtime_evidence(
+            output_root=output_root,
+            report_path=runtime_report,
+            evidence=prior_evidence,
+            consumer_git_commit=git.commit,
+        )
+        lineage_path = _write_runtime_repair_lineage(output_root, lineage)
+        report.check(
+            "strict immutable runtime evidence reuse",
+            True,
+            (
+                "8 artifacts / 336 unique / 420 logical episodes audited; "
+                f"repair lineage={lineage_path.name}"
+            ),
+        )
+    else:
+        if root_present and (
+            runtime_root.is_symlink()
+            or runtime_root.is_junction()
+            or not runtime_root.is_dir()
+            or any(runtime_root.iterdir())
+        ):
+            raise RuntimeError(
+                "runtime evidence exists without its completed command report; refusing rerun"
+            )
+        runtime = _run_json(
+            _runtime_command(
+                args,
+                output_root=runtime_root,
+                report_path=runtime_report,
+                dry_run=False,
+            ),
+            runtime_report,
+        )
     runtime_boundary_valid = all(
         (
             runtime.get("physical_execution") is True,
@@ -1117,9 +2213,9 @@ def main() -> int:
     try:
         _structural_checks(report)
         if mode != "structural":
-            _target_preflight(report, args)
+            evidence = _target_preflight(report, args)
             if mode == "target_development":
-                _run_target_development(report, args)
+                _run_target_development(report, args, prior_evidence=evidence)
             else:
                 _run_target_final(report, args)
         else:
