@@ -89,6 +89,7 @@ python scripts/train_act.py --help
 python scripts/evaluate_act.py --help
 python scripts/compare_act_baselines.py --help
 python scripts/inspect_act_checkpoint.py --help
+python scripts/benchmark_act_evaluation_workers.py --help
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,

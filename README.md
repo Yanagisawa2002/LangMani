@@ -512,6 +512,7 @@ python scripts/train_act.py --help
 python scripts/evaluate_act.py --help
 python scripts/compare_act_baselines.py --help
 python scripts/inspect_act_checkpoint.py --help
+python scripts/benchmark_act_evaluation_workers.py --help
 python environment/verify_m4.py
 ```
 
@@ -599,6 +600,14 @@ runtime manifests, selections, and completion markers, and runs only the final c
 Training Git remains checkpoint-bound; each evaluation Git is checked independently against its
 sibling runtime manifest. Without this flag, target-full refuses to launch a replacement training
 run when compatible completed historical evidence already exists.
+
+Evaluation-worker scaling is measured separately from official selection/test/fresh evidence. The
+benchmark command hard-links one immutable selected checkpoint into per-worker minimal run clones,
+runs only the fixed six-episode validation schedule, keeps every worker at `num_envs=1`, and hashes
+the source run before and after. It compares symmetric per-GPU counts by the slower GPU's completed
+episodes per minute, chooses fewer workers when throughput is within 5% of the maximum, and retests
+the winner and runner-up. The benchmark output lives under `outputs/benchmarks`; it cannot publish
+selection, test, fresh-seed, or final M4 evidence.
 
 ## Target-machine setup
 
