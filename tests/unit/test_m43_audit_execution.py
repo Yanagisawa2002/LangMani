@@ -5,15 +5,19 @@ from argparse import Namespace
 from pathlib import Path
 from types import SimpleNamespace
 
+import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
 import torch
+from lerobot.configs.types import FeatureType, NormalizationMode, PolicyFeature
+from lerobot.processor import UnnormalizerProcessorStep
 
 from langmani.datasets.schedule import CANONICAL_TASK_SPECS
 from langmani.environments.specs import stable_task_id
 from langmani.policies.m43_audit_execution import (
     _action_std_from_context,
+    _distance_config,
     _rollout_distribution,
     _rollout_metrics,
     _validation_frame_rows,
@@ -89,10 +93,85 @@ def test_rollout_metrics_preserve_action_contract_and_recover_per_task_strict_co
 
 
 def test_action_std_comes_from_one_saved_train_only_postprocessor_record() -> None:
-    step = SimpleNamespace(stats={"action": {"std": torch.arange(1, 9)}})
+    step = SimpleNamespace(stats={"action": {"std": torch.arange(1, 9, dtype=torch.float32)}})
     context = SimpleNamespace(loaded=SimpleNamespace(postprocessor=SimpleNamespace(steps=[step])))
     result = _action_std_from_context(context)
     assert result == tuple(float(value) for value in range(1, 9))
+
+
+def test_action_std_accepts_exact_public_lerobot_numpy_float32_record() -> None:
+    high_precision = (
+        0.1710442851280501,
+        0.24617334989705913,
+        0.04556946773446931,
+        0.4108679144550478,
+        0.04032323625685756,
+        0.20265467286995067,
+        0.23601910385043248,
+        0.9999948224584017,
+    )
+    saved = np.asarray(high_precision, dtype=np.float32)
+    step = SimpleNamespace(stats={"action": {"std": saved}})
+    context = SimpleNamespace(loaded=SimpleNamespace(postprocessor=SimpleNamespace(steps=[step])))
+
+    result = _action_std_from_context(context)
+
+    assert result == tuple(float(value) for value in saved.tolist())
+    assert result != high_precision
+
+
+def test_installed_lerobot_unnormalizer_restores_public_numpy_float32_stats() -> None:
+    step = UnnormalizerProcessorStep(
+        features={"action": PolicyFeature(type=FeatureType.ACTION, shape=(8,))},
+        norm_map={FeatureType.ACTION: NormalizationMode.MEAN_STD},
+    )
+    expected = torch.linspace(0.125, 1.0, 8, dtype=torch.float32)
+    step.load_state_dict({"action.std": expected})
+    context = SimpleNamespace(loaded=SimpleNamespace(postprocessor=SimpleNamespace(steps=[step])))
+
+    assert isinstance(step.stats["action"]["std"], np.ndarray)
+    assert step.stats["action"]["std"].dtype == np.float32
+    assert step.stats["action"]["std"].shape == (8,)
+    assert _action_std_from_context(context) == tuple(float(value) for value in expected.tolist())
+
+
+def test_distance_config_compares_processors_at_exact_float32_precision(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    high_precision = (
+        0.1710442851280501,
+        0.24617334989705913,
+        0.04556946773446931,
+        0.4108679144550478,
+        0.04032323625685756,
+        0.20265467286995067,
+        0.23601910385043248,
+        0.9999948224584017,
+    )
+    saved = np.asarray(high_precision, dtype=np.float32)
+
+    def context(values: np.ndarray) -> object:
+        step = SimpleNamespace(stats={"action": {"std": values}})
+        return SimpleNamespace(loaded=SimpleNamespace(postprocessor=SimpleNamespace(steps=[step])))
+
+    monkeypatch.setattr(
+        "langmani.policies.m43_audit_execution._action_bounds",
+        lambda _env: ((-1.0,) * 8, (1.0,) * 8),
+    )
+    inputs = SimpleNamespace(
+        train_action_std=high_precision,
+        runtime=SimpleNamespace(execution_horizon=10),
+    )
+    policies = SimpleNamespace(state_onehot=context(saved), task_token=context(saved.copy()))
+
+    result = _distance_config(env=object(), policies=policies, inputs=inputs)
+
+    assert result.train_action_std == high_precision
+    changed = saved.copy()
+    changed[0] = np.nextafter(changed[0], np.float32(np.inf))
+    mismatched = SimpleNamespace(state_onehot=context(changed), task_token=context(changed.copy()))
+    with pytest.raises(M43AuditRuntimeError, match="fingerprint-validated train action std"):
+        _distance_config(env=object(), policies=mismatched, inputs=inputs)
 
 
 def test_action_std_rejects_missing_duplicate_or_nonpositive_values() -> None:
@@ -107,9 +186,86 @@ def test_action_std_rejects_missing_duplicate_or_nonpositive_values() -> None:
     second = SimpleNamespace(stats={"action": {"std": [2.0] * 8}})
     with pytest.raises(M43AuditRuntimeError, match="exactly one"):
         _action_std_from_context(context(first, second))
+    numpy_first = SimpleNamespace(stats={"action": {"std": np.ones(8, dtype=np.float32)}})
+    numpy_second = SimpleNamespace(stats={"action": {"std": np.full(8, 2.0, dtype=np.float32)}})
+    with pytest.raises(M43AuditRuntimeError, match="exactly one"):
+        _action_std_from_context(context(numpy_first, numpy_second))
     invalid = SimpleNamespace(stats={"action": {"std": [1.0] * 7 + [0.0]}})
     with pytest.raises(M43AuditRuntimeError, match="finite and positive"):
         _action_std_from_context(context(invalid))
+    unsupported = SimpleNamespace(stats={"action": {"std": object()}})
+    with pytest.raises(M43AuditRuntimeError, match="unsupported public representation"):
+        _action_std_from_context(context(unsupported))
+    with pytest.raises(M43AuditRuntimeError, match="exactly one"):
+        _action_std_from_context(context(first, unsupported))
+
+
+@pytest.mark.parametrize(
+    "raw",
+    (
+        np.ones(8, dtype=np.float64),
+        np.ones((2, 4), dtype=np.float32),
+        np.ones(7, dtype=np.float32),
+    ),
+)
+def test_action_std_rejects_wrong_numpy_dtype_or_shape(raw: np.ndarray) -> None:
+    step = SimpleNamespace(stats={"action": {"std": raw}})
+    context = SimpleNamespace(loaded=SimpleNamespace(postprocessor=SimpleNamespace(steps=[step])))
+
+    with pytest.raises(M43AuditRuntimeError, match=r"NumPy action std must be float32\[8\]"):
+        _action_std_from_context(context)
+
+
+def test_action_std_rejects_wrong_torch_dtype_or_shape() -> None:
+    def context(raw: torch.Tensor) -> object:
+        step = SimpleNamespace(stats={"action": {"std": raw}})
+        return SimpleNamespace(loaded=SimpleNamespace(postprocessor=SimpleNamespace(steps=[step])))
+
+    with pytest.raises(M43AuditRuntimeError, match=r"Torch action std must be float32\[8\]"):
+        _action_std_from_context(context(torch.ones(8, dtype=torch.float64)))
+    with pytest.raises(M43AuditRuntimeError, match=r"Torch action std must be float32\[8\]"):
+        _action_std_from_context(context(torch.ones((2, 4), dtype=torch.float32)))
+
+
+@pytest.mark.parametrize("raw", (["1"] * 8, [True] * 8, [[1.0]] * 8))
+def test_action_std_rejects_non_numeric_or_nested_sequences(raw: list[object]) -> None:
+    step = SimpleNamespace(stats={"action": {"std": raw}})
+    context = SimpleNamespace(loaded=SimpleNamespace(postprocessor=SimpleNamespace(steps=[step])))
+
+    with pytest.raises(
+        M43AuditRuntimeError, match=r"sequence action std must be numeric float32\[8\]"
+    ):
+        _action_std_from_context(context)
+
+
+def test_distance_config_rejects_input_that_overflows_float32() -> None:
+    raw = np.ones(8, dtype=np.float32)
+    step = SimpleNamespace(stats={"action": {"std": raw}})
+    context = SimpleNamespace(loaded=SimpleNamespace(postprocessor=SimpleNamespace(steps=[step])))
+    policies = SimpleNamespace(state_onehot=context, task_token=context)
+    inputs = SimpleNamespace(
+        train_action_std=(1.0,) * 7 + (float(np.finfo(np.float32).max) * 2.0,),
+        runtime=SimpleNamespace(execution_horizon=10),
+    )
+
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        monkeypatch.setattr(
+            "langmani.policies.m43_audit_execution._action_bounds",
+            lambda _env: ((-1.0,) * 8, (1.0,) * 8),
+        )
+        with pytest.raises(M43AuditRuntimeError, match="canonical train-only action std"):
+            _distance_config(env=object(), policies=policies, inputs=inputs)
+
+
+@pytest.mark.parametrize("invalid", (float("nan"), float("inf"), float("-inf"), 0.0, -1.0))
+def test_action_std_rejects_nonfinite_numpy_values(invalid: float) -> None:
+    raw = np.ones(8, dtype=np.float32)
+    raw[3] = invalid
+    step = SimpleNamespace(stats={"action": {"std": raw}})
+    context = SimpleNamespace(loaded=SimpleNamespace(postprocessor=SimpleNamespace(steps=[step])))
+
+    with pytest.raises(M43AuditRuntimeError, match="finite and positive"):
+        _action_std_from_context(context)
 
 
 def _validation_schedule() -> tuple[ValidationEpisodeInput, ...]:

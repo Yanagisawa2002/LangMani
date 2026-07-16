@@ -197,7 +197,7 @@ def _load_policy_contexts(inputs: RestrictedAuditInputs, *, device: str) -> Sema
 
 
 def _action_std_from_context(context: M42CheckpointContext) -> tuple[float, ...]:
-    candidates: list[tuple[float, ...]] = []
+    records: list[object] = []
     steps = getattr(context.loaded.postprocessor, "steps", None)
     if not isinstance(steps, Sequence):
         raise M43AuditRuntimeError("postprocessor lacks public steps for statistics audit")
@@ -208,18 +208,30 @@ def _action_std_from_context(context: M42CheckpointContext) -> tuple[float, ...]
         action = stats.get("action")
         if not isinstance(action, Mapping):
             continue
-        raw = action.get("std")
-        if isinstance(raw, torch.Tensor):
-            values = tuple(float(value) for value in raw.detach().cpu().reshape(-1).tolist())
-        elif isinstance(raw, Sequence) and not isinstance(raw, str | bytes):
-            values = tuple(float(value) for value in raw)
-        else:
-            continue
-        if len(values) == M43_ACTION_COMPONENTS:
-            candidates.append(values)
-    if len(candidates) != 1:
+        if "std" in action:
+            records.append(action["std"])
+    if len(records) != 1:
         raise M43AuditRuntimeError("checkpoint must expose exactly one 8D action std")
-    result = candidates[0]
+    raw = records[0]
+    if isinstance(raw, torch.Tensor):
+        if raw.dtype != torch.float32 or tuple(raw.shape) != (M43_ACTION_COMPONENTS,):
+            raise M43AuditRuntimeError("saved Torch action std must be float32[8]")
+        result = tuple(float(value) for value in raw.detach().to(device="cpu").tolist())
+    elif isinstance(raw, np.ndarray):
+        if raw.dtype != np.dtype(np.float32) or raw.shape != (M43_ACTION_COMPONENTS,):
+            raise M43AuditRuntimeError("saved NumPy action std must be float32[8]")
+        result = tuple(float(value) for value in raw.tolist())
+    elif isinstance(raw, list | tuple):
+        if len(raw) != M43_ACTION_COMPONENTS or any(
+            isinstance(value, bool) or not isinstance(value, int | float | np.integer | np.floating)
+            for value in raw
+        ):
+            raise M43AuditRuntimeError("saved sequence action std must be numeric float32[8]")
+        with np.errstate(over="ignore", invalid="ignore"):
+            array = np.asarray(raw, dtype=np.float32)
+        result = tuple(float(value) for value in array.tolist())
+    else:
+        raise M43AuditRuntimeError("saved action std uses an unsupported public representation")
     if any(not math.isfinite(value) or value <= 0.0 for value in result):
         raise M43AuditRuntimeError("train-only action std must be finite and positive")
     return result
@@ -234,7 +246,13 @@ def _distance_config(
     low, high = _action_bounds(env)
     onehot_std = _action_std_from_context(policies.state_onehot)
     token_std = _action_std_from_context(policies.task_token)
-    if onehot_std != token_std or onehot_std != inputs.train_action_std:
+    with np.errstate(over="ignore", invalid="ignore"):
+        canonical_input_std = tuple(
+            float(value) for value in np.asarray(inputs.train_action_std, dtype=np.float32).tolist()
+        )
+    if any(not math.isfinite(value) or value <= 0.0 for value in canonical_input_std):
+        raise M43AuditRuntimeError("canonical train-only action std must be finite and positive")
+    if onehot_std != token_std or onehot_std != canonical_input_std:
         raise M43AuditRuntimeError(
             "loaded processors differ from the fingerprint-validated train action std"
         )

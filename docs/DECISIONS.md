@@ -1449,3 +1449,21 @@ hard failures.
 Historical evidence is not rewritten and the M4.2 producer schema is not changed. A future rollout
 schema should distinguish development schedules from generic unseen-scene evaluation directly;
 this compatibility rule is intentionally limited to the immutable M4.2 development artifact.
+
+## D-050 — Canonicalize saved processor statistics through their public float32 representation
+
+Installed LeRobot 0.6.0 reloads the public `UnnormalizerProcessorStep.stats["action"]["std"]`
+record as a NumPy `float32[8]` array. M4.3a originally recognized only Torch tensors and Python
+`Sequence` values; NumPy arrays do not implement that sequence abstract base class, so all eight
+real checkpoints loaded successfully but the audit rejected the saved action statistics before its
+first inference.
+
+M4.3a now accepts only an exact NumPy `float32[8]` array at that public processor boundary, while
+retaining exact `float32[8]` Torch and numeric list/tuple fixture paths. Wrong dtype/shape,
+unsupported or duplicate records, nonfinite values, and nonpositive values remain hard failures.
+The installed-version contract test exercises the real public `UnnormalizerProcessorStep` state
+reload and must be rerun before any future LeRobot upgrade. The persisted project-owned train
+statistics use JSON floats with more precision than their saved processor representation, so
+comparison first canonicalizes the project values to float32 and then requires exact tuple equality
+across State-OneHot, TaskToken, and the fingerprint-validated train record. No tolerance is
+introduced and no checkpoint or processor artifact is rewritten.
