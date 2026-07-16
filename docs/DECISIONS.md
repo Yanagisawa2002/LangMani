@@ -1428,3 +1428,24 @@ This is the verified lineage contract for the frozen M4.2 target-development evi
 workflow evaluates a TaskToken training run from a different committed evaluator, that workflow
 must publish an explicit immutable validation-producer lineage index; it must not infer one from the
 runtime lock or silently generalize this compatibility rule.
+
+## D-049 — Interpret the legacy M4.2 rollout split only inside a locked development schedule
+
+The M4.2 producer uses one shared rollout record type for unseen-scene schedules. Consequently its
+completed `m42_dev_v0` comparison serializes `rollout.split="fresh_seed"` even though the comparison,
+all eight benchmark records, and all 216 episode records bind the locked `m42_dev_v0` schedule and
+its development fingerprint. This label does not identify or access the historical M4 fresh-seed
+benchmark, but a context-free M4.3 string prohibition cannot distinguish the two meanings.
+
+M4.3a accepts this historical label only at the exact `rollout.split` field of a complete
+`m42_dev_v0` episode nested under one of the six PerTask, State-OneHot, or TaskToken development
+benchmarks. Before that exception is considered, the comparison and each benchmark must bind the
+locked development schedule fingerprint, each episode must declare `m42_dev_v0`, and the exact
+12/72/72 episode cardinalities must hold. The committed development lock additionally determines
+every episode index, scene seed/ID, task ID, and rollout schedule digest. The same string at any
+other JSON path, any mismatched schedule or fingerprint, and every test/final access flag remain
+hard failures.
+
+Historical evidence is not rewritten and the M4.2 producer schema is not changed. A future rollout
+schema should distinguish development schedules from generic unseen-scene evaluation directly;
+this compatibility rule is intentionally limited to the immutable M4.2 development artifact.

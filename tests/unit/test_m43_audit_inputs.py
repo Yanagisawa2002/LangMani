@@ -33,6 +33,12 @@ from langmani.policies.act_types import (
     ValidationResult,
 )
 from langmani.policies.m42_analysis import create_task_token_checkpoint_selection
+from langmani.policies.m42_schedule import (
+    M42_DEV_SCHEDULE_FINGERPRINT,
+    M42_DEV_SCHEDULE_ID,
+    load_locked_schedule,
+    materialize_schedule,
+)
 from langmani.policies.m42_training import (
     RUNTIME_SELECTION_SCHEMA,
     TaskTokenRunIdentity,
@@ -299,7 +305,7 @@ def _fixture(tmp_path: Path, *, task_token_std: tuple[float, ...] | None = None)
         "horizon_selection_fingerprint": _digest(20),
         "gripper_selection_fingerprint": _digest(21),
         "runtime_fingerprint": _digest(22),
-        "development_schedule_fingerprint": _digest(23),
+        "development_schedule_fingerprint": M42_DEV_SCHEDULE_FINGERPRINT,
         "m3b_dataset_fingerprint": dataset_fingerprint,
         "mixed_task_onehot_checkpoint_fingerprint": onehot["checkpoint_fingerprint"],
         "representative_per_task_checkpoint_fingerprint": per_task[2]["checkpoint_fingerprint"],
@@ -488,7 +494,14 @@ def _fixture(tmp_path: Path, *, task_token_std: tuple[float, ...] | None = None)
             },
         )
 
+    development_schedule = materialize_schedule(load_locked_schedule(M42_DEV_SCHEDULE_ID))
+
     def benchmark(checkpoint: dict[str, object], policy_kind: str) -> dict[str, object]:
+        scheduled = (
+            tuple(item for item in development_schedule if item.task_id == checkpoint["task_id"])
+            if policy_kind == "per_task"
+            else development_schedule
+        )
         return {
             "schedule_id": "m42_dev_v0",
             "schedule_fingerprint": runtime_raw["development_schedule_fingerprint"],
@@ -504,8 +517,21 @@ def _fixture(tmp_path: Path, *, task_token_std: tuple[float, ...] | None = None)
                 "architecture_fingerprint": checkpoint["architecture_fingerprint"],
                 "git_commit": checkpoint["git_commit"],
             },
-            "aggregate": {"episode_count": 12},
-            "episodes": [],
+            "aggregate": {"episode_count": len(scheduled)},
+            "episodes": [
+                {
+                    "schedule_id": "m42_dev_v0",
+                    "episode_index": item.episode_index,
+                    "rollout": {
+                        "split": "fresh_seed",
+                        "schedule_digest": runtime_raw["development_schedule_fingerprint"],
+                        "scene_seed": item.scene_seed,
+                        "scene_id": item.scene_id,
+                        "task_id": item.task_id,
+                    },
+                }
+                for item in scheduled
+            ],
         }
 
     comparison = {
@@ -892,6 +918,66 @@ def test_development_payload_rejects_final_identity_before_completion(
     comparison = json.loads(paths["comparison_path"].read_text(encoding="utf-8"))
     comparison["source_identity"] = "m42_final_v0"
     _write(paths["comparison_path"], comparison)
+    with pytest.raises(M43AuditInputError, match="prohibited evidence identity"):
+        _load(paths)
+
+
+def test_development_legacy_fresh_seed_label_requires_dev_episode_schedule(
+    tmp_path: Path,
+) -> None:
+    paths = _fixture(tmp_path)
+    comparison = json.loads(paths["comparison_path"].read_text(encoding="utf-8"))
+    comparison["models"]["state_onehot"]["episodes"][0]["schedule_id"] = "m42_final_v0"
+    _write(paths["comparison_path"], comparison)
+
+    with pytest.raises(M43AuditInputError, match="legacy-labeled m42_dev_v0 rollout"):
+        _load(paths)
+
+
+def test_development_legacy_fresh_seed_label_requires_locked_benchmark_schedule(
+    tmp_path: Path,
+) -> None:
+    paths = _fixture(tmp_path)
+    comparison = json.loads(paths["comparison_path"].read_text(encoding="utf-8"))
+    comparison["models"]["task_token"]["schedule_fingerprint"] = _digest(999)
+    _write(paths["comparison_path"], comparison)
+
+    with pytest.raises(M43AuditInputError, match="complete locked m42_dev_v0 schedule"):
+        _load(paths)
+
+
+def test_development_legacy_fresh_seed_label_requires_locked_rollout_digest(
+    tmp_path: Path,
+) -> None:
+    paths = _fixture(tmp_path)
+    comparison = json.loads(paths["comparison_path"].read_text(encoding="utf-8"))
+    comparison["models"]["state_onehot"]["episodes"][0]["rollout"]["schedule_digest"] = _digest(998)
+    _write(paths["comparison_path"], comparison)
+
+    with pytest.raises(M43AuditInputError, match="legacy-labeled m42_dev_v0 rollout"):
+        _load(paths)
+
+
+def test_development_legacy_fresh_seed_label_requires_committed_scene_and_task(
+    tmp_path: Path,
+) -> None:
+    paths = _fixture(tmp_path)
+    comparison = json.loads(paths["comparison_path"].read_text(encoding="utf-8"))
+    comparison["models"]["task_token"]["episodes"][0]["rollout"]["scene_seed"] += 1
+    _write(paths["comparison_path"], comparison)
+
+    with pytest.raises(M43AuditInputError, match="legacy-labeled m42_dev_v0 rollout"):
+        _load(paths)
+
+
+def test_development_fresh_seed_identity_outside_legacy_split_path_is_rejected(
+    tmp_path: Path,
+) -> None:
+    paths = _fixture(tmp_path)
+    comparison = json.loads(paths["comparison_path"].read_text(encoding="utf-8"))
+    comparison["models"]["state_onehot"]["episodes"][0]["rollout"]["source_identity"] = "fresh_seed"
+    _write(paths["comparison_path"], comparison)
+
     with pytest.raises(M43AuditInputError, match="prohibited evidence identity"):
         _load(paths)
 

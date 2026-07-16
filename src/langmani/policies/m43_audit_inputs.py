@@ -43,7 +43,13 @@ from langmani.policies.act_types import (
 )
 from langmani.policies.m42_analysis import M42AnalysisError, create_task_token_checkpoint_selection
 from langmani.policies.m42_evaluation import M42PolicyKind
-from langmani.policies.m42_schedule import M42_MAXIMUM_EPISODE_STEPS
+from langmani.policies.m42_schedule import (
+    M42_DEV_SCHEDULE_FINGERPRINT,
+    M42_MAXIMUM_EPISODE_STEPS,
+    M42ScheduledEpisode,
+    load_locked_schedule,
+    materialize_schedule,
+)
 from langmani.policies.m42_training import (
     RUNTIME_SELECTION_SCHEMA,
     M42TrainingContractError,
@@ -155,7 +161,35 @@ def _reject_forbidden_path_parts(parts: Sequence[str], *, label: str) -> None:
         raise M43AuditInputError(f"{label} names a prohibited test, fresh-seed, or final path")
 
 
-def _assert_development_only(value: object, *, label: str) -> None:
+def _is_legacy_m42_development_rollout_split(path: tuple[str | int, ...], value: object) -> bool:
+    if value != "fresh_seed":
+        return False
+    shared_path = (
+        len(path) == 6
+        and path[0] == "models"
+        and path[1] in {"state_onehot", "task_token"}
+        and path[2] == "episodes"
+        and isinstance(path[3], int)
+        and path[4:] == ("rollout", "split")
+    )
+    per_task_path = (
+        len(path) == 8
+        and path[:3] == ("models", "per_task", "benchmarks")
+        and isinstance(path[3], int)
+        and path[4] == "episodes"
+        and isinstance(path[5], int)
+        and path[6:] == ("rollout", "split")
+    )
+    return shared_path or per_task_path
+
+
+def _assert_development_only(
+    value: object,
+    *,
+    label: str,
+    path: tuple[str | int, ...] = (),
+    allow_legacy_m42_development_rollout_split: bool = False,
+) -> None:
     if isinstance(value, Mapping):
         for raw_key, item in value.items():
             if not isinstance(raw_key, str):
@@ -167,13 +201,31 @@ def _assert_development_only(value: object, *, label: str) -> None:
                 continue
             if _forbidden_identity(raw_key):
                 raise M43AuditInputError(f"{label} contains a prohibited evidence section")
-            _assert_development_only(item, label=label)
+            _assert_development_only(
+                item,
+                label=label,
+                path=(*path, raw_key),
+                allow_legacy_m42_development_rollout_split=(
+                    allow_legacy_m42_development_rollout_split
+                ),
+            )
         return
     if isinstance(value, Sequence) and not isinstance(value, str | bytes | bytearray):
-        for item in value:
-            _assert_development_only(item, label=label)
+        for index, item in enumerate(value):
+            _assert_development_only(
+                item,
+                label=label,
+                path=(*path, index),
+                allow_legacy_m42_development_rollout_split=(
+                    allow_legacy_m42_development_rollout_split
+                ),
+            )
         return
     if isinstance(value, str) and _forbidden_identity(value):
+        if allow_legacy_m42_development_rollout_split and (
+            _is_legacy_m42_development_rollout_split(path, value)
+        ):
+            return
         raise M43AuditInputError(f"{label} references a prohibited evidence identity")
 
 
@@ -1186,6 +1238,72 @@ def _benchmark_checkpoint(value: object, *, label: str) -> Mapping[str, object]:
     return cast(Mapping[str, object], value["checkpoint"])
 
 
+def _assert_locked_m42_development_rollouts(
+    comparison: Mapping[str, object], *, schedule_fingerprint: str
+) -> None:
+    if (
+        schedule_fingerprint != M42_DEV_SCHEDULE_FINGERPRINT
+        or comparison.get("schedule_id") != M42_DEV_SCHEDULE_ID
+        or comparison.get("schedule_fingerprint") != schedule_fingerprint
+    ):
+        raise M43AuditInputError("development comparison is not the locked m42_dev_v0 schedule")
+    models = comparison.get("models")
+    if not isinstance(models, Mapping):
+        raise M43AuditInputError("development comparison lacks model evidence")
+    per_task = models.get("per_task")
+    if not isinstance(per_task, Mapping):
+        raise M43AuditInputError("development comparison lacks PerTask evidence")
+    raw_per_task = per_task.get("benchmarks")
+    if not isinstance(raw_per_task, Sequence) or isinstance(raw_per_task, str | bytes):
+        raise M43AuditInputError("development comparison lacks PerTask benchmarks")
+    if len(raw_per_task) != 6:
+        raise M43AuditInputError("development comparison requires six PerTask benchmarks")
+    scheduled = materialize_schedule(load_locked_schedule(M42_DEV_SCHEDULE_ID))
+    benchmarks: tuple[tuple[str, object, tuple[M42ScheduledEpisode, ...]], ...] = (
+        *(
+            (
+                f"PerTask[{index}]",
+                value,
+                tuple(item for item in scheduled if item.task_id == CANONICAL_TASK_IDS[index]),
+            )
+            for index, value in enumerate(raw_per_task)
+        ),
+        ("State-OneHot", models.get("state_onehot"), tuple(scheduled)),
+        ("TaskToken", models.get("task_token"), tuple(scheduled)),
+    )
+    for label, raw_benchmark, expected_episodes in benchmarks:
+        if not isinstance(raw_benchmark, Mapping):
+            raise M43AuditInputError(f"{label} development benchmark is malformed")
+        raw_episodes = raw_benchmark.get("episodes")
+        if (
+            raw_benchmark.get("schedule_id") != M42_DEV_SCHEDULE_ID
+            or raw_benchmark.get("schedule_fingerprint") != schedule_fingerprint
+            or not isinstance(raw_episodes, Sequence)
+            or isinstance(raw_episodes, str | bytes)
+            or len(raw_episodes) != len(expected_episodes)
+        ):
+            raise M43AuditInputError(
+                f"{label} benchmark is not the complete locked m42_dev_v0 schedule"
+            )
+        for episode, expected in zip(raw_episodes, expected_episodes, strict=True):
+            if not isinstance(episode, Mapping):
+                raise M43AuditInputError(f"{label} development episode is malformed")
+            rollout = episode.get("rollout")
+            if (
+                episode.get("schedule_id") != M42_DEV_SCHEDULE_ID
+                or episode.get("episode_index") != expected.episode_index
+                or not isinstance(rollout, Mapping)
+                or rollout.get("split") != "fresh_seed"
+                or rollout.get("schedule_digest") != schedule_fingerprint
+                or rollout.get("scene_seed") != expected.scene_seed
+                or rollout.get("scene_id") != expected.scene_id
+                or rollout.get("task_id") != expected.task_id
+            ):
+                raise M43AuditInputError(
+                    f"{label} episode is not a legacy-labeled m42_dev_v0 rollout"
+                )
+
+
 def _checkpoint_descriptor(value: RestrictedCheckpointInput) -> dict[str, object]:
     return {
         "policy_kind": value.policy_kind.value,
@@ -1218,7 +1336,14 @@ def _development_inputs(
     completion = reader.read_json(
         root / "development_complete.json", label="M4.2 development completion"
     )
-    _assert_development_only(comparison, label="development comparison")
+    _assert_locked_m42_development_rollouts(
+        comparison, schedule_fingerprint=runtime.development_schedule_fingerprint
+    )
+    _assert_development_only(
+        comparison,
+        label="development comparison",
+        allow_legacy_m42_development_rollout_split=True,
+    )
     _assert_development_only(completion, label="development completion")
     comparison_fingerprint = canonical_fingerprint(comparison)
     if (
