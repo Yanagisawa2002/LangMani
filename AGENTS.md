@@ -3,10 +3,10 @@
 ## Purpose
 
 LangMani supports language-conditioned robotic manipulation in ManiSkill. M0 through M3B, M4 full,
-and M4.1 explicit action-bound target smoke are complete. M4 full is experimentally and physically
-validated, but `baseline_quality_validated=false`. M4.2 oracle-control robustness is active; the
-current authorized target stops after `--target-development`. The sealed M4.2 final benchmark and
-M5 have not started.
+M4.1 explicit action-bound target smoke, and M4.2 target-development are complete. M4 full is
+experimentally and physically validated, but `baseline_quality_validated=false`; the M4.2 TaskToken
+candidate was rejected. M4.3a semantic alignment audit is active. The sealed M4.2 final benchmark,
+M4.3b FactorFiLM, and M5 have not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
@@ -16,7 +16,10 @@ M4.2 must not change M1 bounds/success, M3A/M3B data, train-only statistics, his
 weights/loss, or existing checkpoint fingerprints. Do not retrain old M4 controls, materialize or
 execute `m42_final_v0` during development, start M5, add new data/tasks, invoke M2 during rollout,
 or hide projection as clipping. Binary gripper handling is permitted only as the explicit versioned
-M4.2 component-7 ablation defined in `docs/M42_ORACLE_CONTROL_SPEC.md`.
+M4.2 component-7 ablation defined in `docs/M42_ORACLE_CONTROL_SPEC.md`. M4.3a may use only frozen
+PerTask, State-OneHot, and rejected TaskToken checkpoints on M3B validation and `m42_dev_v0`.
+It must keep those sources separate, must not access M3B test, M4 fresh, or `m42_final_v0`, and must
+not implement or initialize FactorFiLM until a real immutable semantic audit is complete.
 
 ## Directory ownership
 
@@ -101,6 +104,10 @@ python scripts/train_act_task_token.py --help
 python scripts/evaluate_m42.py --help
 python environment/verify_m42.py
 
+# M4.3a zero-training semantic-audit commands
+python scripts/audit_act_semantics.py --help
+python environment/verify_m43.py
+
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,
 # then delegates planner construction and expert rollouts to the side runtime.
@@ -165,6 +172,14 @@ The exact environment creation commands are maintained in `README.md`.
 - M4.2 runtime selection may use only `m42_dev_v0`; TaskToken checkpoint selection may use only the
   M3B validation split. Loading the final lock for audit is allowed, but development must never
   materialize, render, or reset an `m42_final_v0` episode.
+- M4.3a must compare environment-semantic policy chunks before runtime projection with
+  `ActionChunkDistanceV0`. Its primary retrieval metric is action-range-normalized, arm-only L2 over
+  the locked execution horizon. Nonzero distance is not semantic correctness.
+- M4.3a completed evidence is fingerprint-owned and immutable. Validation and `m42_dev_v0` records
+  must remain explicitly separated, and no test/fresh/final identity may appear in the evidence.
+- Historical M4.2 evidence may supply its real aggregate post-grasp distribution, but it lacks the
+  exact per-episode fields for M4.3 first-interaction confusion. Keep that evidence explicitly
+  unavailable; never reconstruct first interactions from aggregate wrong-object counts.
 - Preserve raw, binary-transformed, projected, and executed action evidence as separate contracts.
   OneHot and TaskToken must always be described as oracle conditioning, never language understanding.
 - Do not describe a skipped, metadata-only, structural-only, or CPU-only check as physical GPU or
@@ -200,3 +215,7 @@ development benchmark. It must leave `final_benchmark_completed=false` and no Sm
 claim. M4.2 final is a later separate command requiring immutable selections, clean Git, sealed
 schedule authorization, paired PerTask/State-OneHot/TaskToken evaluation, and an explicit go/no-go;
 it never starts M5 automatically.
+M4.3a local structural completion may validate implementation without claiming a completed semantic
+audit or physical execution. M4.3b remains blocked until real validation and `m42_dev_v0` audit
+inputs pass immutable promotion with `semantic_audit_completed=true`; audit completion alone does
+not authorize a final schedule or SmolVLA.

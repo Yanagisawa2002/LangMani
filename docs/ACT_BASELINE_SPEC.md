@@ -627,11 +627,34 @@ excluding 125 prior seeds. Development runtime selection never uses the old M4 t
 and never materializes or executes the new final schedule. A separate final authorization is
 required after all runtime, architecture, and checkpoint choices are immutable.
 
+M4.2 target-development completed with horizon 10 and the existing `project` runtime. Its
+validation-selected 90,000-step TaskToken checkpoint achieved 15/72 development successes versus
+35/72 for State-OneHot and 56/72 for PerTask, with 33 TaskToken wrong-object grasps. TaskToken is
+rejected and its final benchmark remains unrun.
+
+## M4.3a semantic-audit compatibility boundary
+
+M4.3a consumes the immutable selected six PerTask, State-OneHot, and rejected TaskToken checkpoints
+without changing any training or checkpoint identity. It uses all M3B validation and all
+`m42_dev_v0` observations as separately labeled audit sources. M3B test, historical M4 fresh, and
+`m42_final_v0` are forbidden.
+
+The audit holds base-camera RGB and `PandaPolicyStateV0[9]` fixed while generating all six PerTask
+reference chunks and each requested candidate chunk. It compares saved-postprocessor outputs before
+runtime transforms. `ActionChunkDistanceV0` reports multiple scale/window/component families, while
+its primary retrieval metric is fixed to action-range-normalized, arm-only L2 over the first locked
+execution-horizon actions. Full-task, object/bin centroid, conditional-bin, first-interaction, and
+post-grasp evidence remain distinct; nonzero action distance is not semantic correctness.
+
+Evidence uses canonical SHA-256 identity, owned staging, independent checksum/schema validation,
+atomic promotion, and a last completion marker. A completed fingerprint root is immutable. Local
+fixtures may validate the implementation but cannot claim real checkpoint inference, semantic
+completion, or physical target validation.
+
 ## Handoff
 
-The immediate handoff is M4.2 development, not SmolVLA. M4.2-final will compare PerTask,
-State-OneHot, and TaskToken on one sealed paired schedule and write an immutable go/no-go decision.
-Only `go_for_smolvla` may authorize planning a later text-policy milestone. That future milestone
-must still reuse M4/M4.2 data, split, normalization, selection, action-audit, and provenance
-discipline and compare language conditioning with the oracle controls. No command starts it
+The immediate handoff is M4.3a zero-training semantic audit, not M4.2-final or SmolVLA. M4.3b may
+implement exactly one factorized FiLM repair only after the real validation and `m42_dev_v0` audit
+artifacts pass immutable validation at a separate clean Git boundary. Audit completion alone does
+not authorize a final schedule or any language-policy milestone, and no command starts either
 automatically.

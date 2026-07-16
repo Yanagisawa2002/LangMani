@@ -1,10 +1,10 @@
 # LangMani roadmap
 
-Milestone M4.2 is active. M0 through M3B, M4 full, and M4.1 target smoke are complete on native
-targets. M4 full is experimentally and physically validated, but its declared quality gate is
-false. M4.2 may execute development only until its runtime and TaskToken choices are frozen; the
-sealed final benchmark remains pending and M5 is not authorized. Later milestones describe intended
-sequencing, not authorization to implement those systems now.
+Milestone M4.3a is active. M0 through M3B, M4 full, M4.1 target smoke, and M4.2
+target-development are complete on native targets. M4 full is experimentally and physically
+validated, but its declared quality gate is false. M4.2 rejected TaskToken after development; its
+sealed final benchmark remains unaccessed. M4.3a audits frozen shared-policy semantics without new
+training. FactorFiLM, the sealed final benchmark, and M5 are not authorized by structural work.
 
 ## M0 — Reproducible environment foundation (complete)
 
@@ -111,7 +111,7 @@ fresh-seed evaluation, provenance, and physical execution passed, so
 fresh-seed quality thresholds did not all pass, so `baseline_quality_validated=false` remains an
 equally important result.
 
-## M4.2 — Oracle-control robustness (active; development only)
+## M4.2 — Oracle-control robustness (development complete; final not authorized)
 
 M4.2 first uses frozen Mixed-TaskOneHot and representative green-left PerTask checkpoints to compare
 execution horizons 10, 5, and 1 on the committed 12-scene `m42_dev_v0` schedule. After locking one
@@ -130,9 +130,41 @@ predeclared seeds. `m42_dev_v0` contains 12 scenes and has fingerprint
 `sha256:981547e771b2b5cd3a77e2788bb49d29fc45b3f59c607021a03a4e2ce70b43f1`.
 The sealed 30-scene `m42_final_v0` has fingerprint
 `sha256:b2aef313e076201f7a94875c835c2d606d8f255e3f75d53f7ac7fadcdbb267fc`.
-Development must stop before rendering or resetting a final seed. Final results, paired metrics, and
-the SmolVLA go/no-go decision remain pending until a later explicit `--target-final` invocation.
-The normative contract is `docs/M42_ORACLE_CONTROL_SPEC.md`.
+Development selected horizon 10 and the existing `project` runtime, completed one 100,000-step
+TaskToken run, selected its 90,000-step checkpoint from M3B validation only, and completed the fixed
+72-episode development comparison. PerTask, State-OneHot, and TaskToken achieved 56/72, 35/72, and
+15/72 respectively; TaskToken was rejected. Development stopped without materializing, rendering,
+or resetting a final seed. The sealed final result and SmolVLA decision remain absent. The normative
+contract is `docs/M42_ORACLE_CONTROL_SPEC.md`.
+
+## M4.3a — Shared-policy semantic alignment audit (active)
+
+Use the frozen six PerTask, State-OneHot, and rejected TaskToken checkpoints to compare complete
+postprocessed ACT chunks on fixed RGB plus `PandaPolicyStateV0[9]` observations. Audit all M3B
+validation groups and all `m42_dev_v0` groups while keeping the two sources explicitly separate.
+The primary retrieval metric is action-range-normalized, arm-only L2 over the locked execution
+horizon. Full-task, object-centroid, global-bin, and object-conditional-bin retrieval, deterministic
+confusions, first interaction, and post-grasp failure classes are stored in immutable
+fingerprint-owned evidence.
+
+Historical M4.2 development evidence supports aggregate post-grasp failure distributions but lacks
+the exact per-episode fields required to reconstruct first-interaction confusion. M4.3a must report
+that confusion as unavailable rather than derive it from aggregate wrong-object counts.
+
+M4.3a adds no model or training. It never opens M3B test, M4 fresh, or `m42_final_v0`. Local
+structural verification cannot claim real semantic or physical completion. M4.3b may begin only
+after real validation and development audits pass immutable validation from a clean committed Git
+boundary. The normative contract is `docs/M43_SHARED_POLICY_REPAIR_SPEC.md`.
+
+The local M4.3a structural gate passes Ruff, dependency, build, non-target verifier, focused tests,
+and the full CPU-safe suite. Real frozen-checkpoint inference and GPU evidence remain pending, so
+semantic audit completion and M4.3b authorization remain false.
+
+## M4.3b — One factorized FiLM repair (blocked)
+
+After M4.3a is complete, implement exactly one oracle `ACT-Mixed-FactorFiLM` with separate target-
+object visual FiLM and destination-bin state/context FiLM paths. Do not begin this stage during the
+M4.3a commit or infer its authorization from nonzero action sensitivity.
 
 ## M5 — SmolVLA baseline (planned)
 

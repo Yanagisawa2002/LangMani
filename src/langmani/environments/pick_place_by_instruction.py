@@ -29,7 +29,11 @@ from langmani.environments.specs import (
     EpisodeSpec,
     TaskSpec,
 )
-from langmani.environments.task_logic import build_observation_extra, evaluate_task_state
+from langmani.environments.task_logic import (
+    build_observation_extra,
+    cube_in_bin_matrix,
+    evaluate_task_state,
+)
 
 ENV_ID = "LangMani-PickPlaceByInstruction-v0"
 MAX_EPISODE_STEPS = 200
@@ -513,10 +517,11 @@ class PickPlaceByInstructionEnv(BaseEnv):
     def get_policy_rollout_diagnostics(self) -> dict[str, torch.Tensor]:
         """Return privileged rollout-analysis tensors outside the policy input path.
 
-        M4.2 samples this accessor at reset and after executed actions to diagnose
-        post-grasp phases.  The values are absent from observations, processor
-        inputs, rewards, and step ``info``; therefore this accessor does not alter
-        the M1 no-leakage contract or provide a deployable policy input.
+        M4.2/M4.3 sample this accessor only after action selection to diagnose
+        post-grasp phases and first semantic interactions.  The values are absent
+        from observations, processor inputs, rewards, and step ``info``; therefore
+        this accessor does not alter the M1 no-leakage contract or provide a
+        deployable policy input.
         """
         cube_positions = torch.stack([cube.pose.p for cube in self.cubes], dim=1)
         cube_velocities = torch.stack([cube.linear_velocity for cube in self.cubes], dim=1)
@@ -530,6 +535,15 @@ class PickPlaceByInstructionEnv(BaseEnv):
             dim=1,
             index=self._target_bin_indices[:, None, None].expand(-1, 1, 3),
         ).squeeze(1)
+        object_in_bin = cube_in_bin_matrix(
+            cube_positions,
+            bin_centers,
+            cube_bounding_radius=CUBE_BOUNDING_RADIUS,
+            cube_resting_height=CUBE_HALF_SIZE,
+            bin_interior_half_size=BIN_INTERIOR_HALF_SIZE,
+            containment_clearance=CONTAINMENT_CLEARANCE,
+            resting_height_tolerance=RESTING_HEIGHT_TOLERANCE,
+        )
         return {
             "target_position": target_position,
             "target_linear_velocity": target_velocity,
@@ -538,6 +552,11 @@ class PickPlaceByInstructionEnv(BaseEnv):
                 target_position - target_bin_center, dim=1
             ),
             "object_is_grasped": cube_is_grasped,
+            "cube_positions": cube_positions,
+            "cube_linear_velocities": cube_velocities,
+            "bin_floor_centers": bin_centers,
+            "tcp_position": self.agent.tcp.pose.p,
+            "object_in_bin": object_in_bin,
         }
 
     def get_expert_task_context(self) -> ExpertTaskContext:

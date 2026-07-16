@@ -1082,12 +1082,13 @@ workaround.
 
 ## Unresolved risks
 
-1. **M4 full remains pending.** The RTX 4090 has passed M0 through the authoritative M3A/M3B full
-   data gates and M4.1 target smoke. The eight full ACT runs, validation-only selection, locked test,
-   and fresh-seed comparison have not yet produced final evidence.
-2. **ManiSkill does not declare a PyTorch upper bound.** M0/M1 now prove the selected PyTorch 2.11
-   CUDA build for installation, simulation, and rendering, but they do not prove M4 ACT training or
-   the entire full-data chain.
+1. **M4.3a real semantic inference remains pending.** M4 full and M4.2 target-development are
+   complete, but local structural audit checks do not replace running the frozen checkpoints over
+   all M3B validation and `m42_dev_v0` inputs. FactorFiLM remains blocked until those two immutable
+   audit sections complete and validate.
+2. **ManiSkill does not declare a PyTorch upper bound.** M0 through M4.2 proved the selected PyTorch
+   2.11 CUDA build on the accepted targets, but a new driver/container image must repeat the relevant
+   install, simulator, rendering, checkpoint, and policy-inference gates.
 3. **OpenCV wheel collision.** SAPIEN 3.0.3 requires `opencv-python`, while LeRobot 0.6.0 requires
    `opencv-python-headless`. OpenCV's publishers state that only one wheel sharing the `cv2`
    namespace should be installed. The environment pins both to the same version because both
@@ -1120,9 +1121,9 @@ workaround.
 11. **M4.1 succeeds only under frequent explicit gripper projection.** Target smoke passed 1/1
     PerTask and 6/6 TaskOneHot, but 834/951 rollout actions projected the gripper and strict-
     unprojected success was 0/7. Raw ACT validity must remain reported false; future baselines should
-    not confuse projected control success with calibrated raw regression. Full eight-model training,
-    selection, locked test, fresh-seed benchmark, peak-memory/throughput comparison, and full
-    acceptance remain outside M4.1.
+    not confuse projected control success with calibrated raw regression. The later M4 full and M4.2
+    development evidence preserve raw/runtime action statistics separately; M4.3 must continue that
+    separation.
 
 ## D-041 — Audit plan-bound completed M4 evidence without changing training identities
 
@@ -1346,3 +1347,64 @@ same commit. It records the complete semantic path list/count, byte-exact closur
 fingerprints, and the consumer repair ID. This recovery mechanism does not materialize
 `m42_final_v0`, alter any historical checkpoint or selection, or claim M4.2 development acceptance
 by itself.
+
+## D-047 — Audit frozen shared-policy semantics before one factorized repair
+
+M4.2 target-development completed but rejected TaskToken: the frozen PerTask, State-OneHot, and
+TaskToken controls achieved 56/72, 35/72, and 15/72 successes respectively, while State-OneHot and
+TaskToken grasped wrong objects 13 and 33 times. State-OneHot's action-sensitivity magnitude was
+approximately equal to PerTask, so output change alone is not evidence that a shared policy follows
+the requested object/bin semantics.
+
+M4.3a therefore introduces a zero-training semantic-alignment audit before any FactorFiLM code or
+training. For each fixed base-camera RGB plus `PandaPolicyStateV0[9]` observation, it obtains all six
+frozen PerTask reference chunks and the requested State-OneHot/TaskToken chunk after the saved
+LeRobot postprocessor but before binary-gripper or bound projection. M3B validation and
+`m42_dev_v0` are the only inputs and remain separately identified. M3B test, historical M4 fresh,
+and `m42_final_v0` are rejected identities, not optional exclusions.
+
+`ActionChunkDistanceV0` reports raw, action-range-normalized, train-standard-deviation-normalized,
+and cosine distances over full/arm/gripper components and first/first-five/locked-horizon/full
+windows. The declared primary retrieval metric is action-range-normalized arm-only L2 over the
+locked horizon. Deterministic canonical tie-breaking, full-task top-1/top-2/MRR/margin, object and
+bin centroids, object-conditional bin retrieval, first-interaction confusions, and an exhaustive
+post-grasp taxonomy separate output sensitivity from semantic correctness and later execution
+failure.
+
+The historical M4.2 development artifact contains real per-episode post-grasp phases and aggregate
+wrong-object metrics, but not the complete first object displaced, first approached bin, first
+object-entry bin, and final per-object/bin relationship needed by `FirstInteractionRecord`.
+Consequently M4.3a binds and reports the real aggregate post-grasp distribution while declaring
+first-interaction evidence/confusions unavailable. Reconstructing those fields from aggregate counts
+would fabricate evidence and is prohibited.
+
+M4.3 audit evidence is canonical-JSON/SHA-256 content with a path-independent configuration
+fingerprint. A fingerprint-owned sibling staging directory writes configuration, ordered sources,
+scope artifacts, machine/human summaries, checksums, manifest, and a last completion marker.
+Independent validation precedes atomic promotion. Completed roots are immutable and any linked,
+partial, extra, missing, checksum-mismatched, or semantically incompatible reuse fails. Command
+reports may contain operator paths, but portable manifests and semantic fingerprints may not.
+
+This adds project-owned M4.3 contracts/evidence and two command boundaries,
+`scripts/audit_act_semantics.py` and `environment/verify_m43.py`; it changes no dependency version,
+M1/M3A/M3B contract, historical checkpoint, action runtime, or final schedule. Non-target
+verification may set `semantic_audit_implementation_validated=true` while keeping
+`semantic_audit_completed=false`, `factor_film_training_completed=false`,
+`final_schedule_accessed=false`, `smolvla_go=false`, and `physical_target_validated=false`.
+M4.3b remains blocked until real validation and development audits complete and validate from a
+clean committed boundary. Local structural results and any future target metrics must be recorded
+separately; this decision fabricates neither.
+
+The M4.3a input gate treats the runtime lock, complete TaskToken validation queue, all 20 immutable
+validation artifacts, and a recomputed validation-only ranking as checkpoint provenance. It loads
+the M4.2 development comparison/completion only for `m42_dev_v0` or `combined`, never for
+`validation`. The CLI therefore has no M4 diagnostics-root argument: the only necessary historical
+M4 inputs are the explicitly allowlisted run manifests, validation selection locks, and train-only
+statistics beneath the checkpoint root. Successful runtime reports must explicitly state false for
+test, fresh-seed, and final-schedule access; the command layer does not synthesize those claims.
+
+The 2026-07-16 local gate passed Ruff format/lint, `pip check`, sdist/wheel build, and the non-target
+verifier. Focused M4.3a tests reported 147 passed and one Windows symlink-privilege skip; the full
+CPU-safe suite reported 840 passed, 14 skipped, and 15 hardware/rendering deselected. These results
+do not set semantic-audit completion, deterministic real-checkpoint reload, GPU execution, or
+physical-target validation. Real inference and GPU availability remain pending.

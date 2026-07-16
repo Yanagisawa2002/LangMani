@@ -338,63 +338,48 @@ In particular, completing `--target-development` leaves `final_benchmark_complet
 `go_no_go_decision_completed=false`, and no SmolVLA decision claim. This repository must not
 fabricate or prefill those results.
 
-| Result field | Paused execution value (2026-07-15) |
+| Result field | Completed target-development value (2026-07-15) |
 | --- | --- |
 | horizon results / selected horizon | M4.2a evidence completed and reused; `H=10` selected |
 | post-grasp development distribution | completed in immutable M4.2a evidence |
 | project versus binary results / selected runtime | M4.2a evidence completed and reused; `project` selected |
-| TaskToken selected checkpoint / fingerprint | `pending` |
-| `m42_dev_v0` policy comparison | `pending` |
-| raw and executed development action statistics | M4.2a evidence complete; TaskToken development evaluation `pending` |
+| TaskToken selected checkpoint / fingerprint | step 90,000; `sha256:954455f6af2296c3a5036f134f76a7e8ebb239b8d31cfef0f32188ca70f0592a` |
+| `m42_dev_v0` policy comparison | completed for PerTask, State-OneHot, and TaskToken |
+| raw and executed development action statistics | completed; zero arm projection, NaN, Inf, or malformed action |
 | `m42_final_v0` paired benchmark | `not_run` |
 | final PerTask / State-OneHot / TaskToken rates | `not_run` |
 | final task-sensitivity ratios and safety metrics | `not_run` |
 | SmolVLA go/no-go | `not_computed` |
 
-## Paused target-development execution (2026-07-15)
+## Completed target-development execution (2026-07-15)
 
-This is an interruption record, not an acceptance claim. The native target-development run used
-clean commit `36bd6d81ff5e3b2c74977da1eec0fb0231d2f922`. Its strict immutable-evidence audit accepted the
-completed M4.2a runtime ablation without rerunning the 336 physical episodes. The accepted runtime
-evidence selected horizon 10 and the existing `project` gripper runtime. It records zero arm
-projection, zero target-in-wrong-bin events, and zero target-off-table events. Binary gripper
-projection was not selected because it increased wrong-object interaction from 13 to 14 events.
+The resumed native target-development command completed with return code zero at clean implementation
+commit `36bd6d81ff5e3b2c74977da1eec0fb0231d2f922`. Its strict immutable-evidence audit reused the
+completed M4.2a runtime ablation without rewriting the 336 physical episodes. Horizon 10 and the
+existing `project` gripper runtime remain the immutable selections. Binary gripper projection was
+rejected because it increased wrong-object interaction from 13 to 14 events.
 
-The sole TaskToken run has stable run fingerprint
-`sha256:1fec0221b5dbcd28faf2e9b5e465b7a97d7a4b3fc1c141251c19b275af8bf2a8`. Before interruption,
-training had reached observed step 82,078 of 100,000 with 16 of 20 atomically complete checkpoints.
-The last complete checkpoint was `step-00080000-19bb17efda9f`; the latest observed total loss was
-0.10229156166315079, with no NaN or Inf in the latest 1,000 metric records and no incomplete
-checkpoint directory. These observations must be rechecked on disk after the instance is restarted;
-they do not by themselves prove that the checkpoint survived the platform shutdown.
+The sole TaskToken run retained stable run fingerprint
+`sha256:1fec0221b5dbcd28faf2e9b5e465b7a97d7a4b3fc1c141251c19b275af8bf2a8`, completed all 100,000
+steps and all 20 atomic checkpoints, and selected step 90,000 from M3B validation only. The selected
+checkpoint fingerprint is
+`sha256:954455f6af2296c3a5036f134f76a7e8ebb239b8d31cfef0f32188ca70f0592a`.
+Its validation result was 12/36 successes, 17 wrong-object interactions, and 24 timeouts.
 
-The AutoDL instance was shut down prematurely while training was still active. Consequently, no
-TaskToken training-completion report exists, validation-only selection across all 20 checkpoints has
-not run, and `m42_dev_v0` rollout comparison has not run. Any older
-`outputs/diagnostics/m42/verification.json` with false flags is stale evidence from an earlier failed
-attempt, not the result of this interrupted run. `--target-development` is not validated, and
-`--target-final` remains untouched.
+The fixed 72-episode `m42_dev_v0` comparison produced:
 
-When suitable GPU capacity is available again, resume on the exact clean implementation commit,
-not on a later documentation-only commit. First verify that commit and the 80,000-step completion
-marker, then rerun the same development verifier. Its fingerprint-checked resume path must complete
-the remaining checkpoints before validation-only selection and the development benchmark:
+| Control | Success | Wrong-object grasp | Wrong object in target bin | Timeout |
+| --- | ---: | ---: | ---: | ---: |
+| six PerTask policies | 56/72 | 0 | 0 | 16 |
+| State-OneHot | 35/72 | 13 | 8 | 37 |
+| TaskToken | 15/72 | 33 | 22 | 57 |
 
-```bash
-cd /root/autodl-tmp/langmani
-git fetch origin
-git checkout --detach 36bd6d81ff5e3b2c74977da1eec0fb0231d2f922
-test "$(git rev-parse HEAD)" = "36bd6d81ff5e3b2c74977da1eec0fb0231d2f922"
-test -z "$(git status --porcelain)"
-test -f outputs/models/act-task-token/1fec0221b5dbcd28faf2e9b5e465b7a97d7a4b3fc1c141251c19b275af8bf2a8/checkpoints/step-00080000-19bb17efda9f/complete.json
+All three controls recorded zero target-in-wrong-bin events, target-off-table events, arm
+projections, NaNs, Infs, and malformed actions. State-OneHot and TaskToken task-sensitivity ratios
+relative to PerTask were 1.013 and 0.575 respectively. TaskToken is therefore rejected: the
+development command does not authorize its final benchmark merely because it changes actions.
 
-export CUDA_VISIBLE_DEVICES=0
-export PYTHONPATH=/root/autodl-tmp/langmani/src
-export VK_ICD_FILENAMES=/etc/vulkan/icd.d/my_nvidia_icd.json
-export XDG_RUNTIME_DIR=/tmp/langmani-xdg
-/root/autodl-tmp/conda-envs/langmani/bin/python environment/verify_m42.py --target-development
-```
-
-Do not run `--target-final`. After target-development finishes, preserve its exit code and
-`outputs/diagnostics/m42/verification.json` before any platform shutdown. A hard failure must remain
-stopped with its evidence intact rather than being restarted or hidden.
+The completed command truthfully reported physical target validation for the development stage only.
+It left `final_benchmark_completed=false`, `go_no_go_decision_completed=false`, and
+`smolvla_go=false`; `m42_final_v0` was not materialized, rendered, reset, or evaluated. A later
+milestone must not run `--target-final` for this rejected TaskToken candidate.

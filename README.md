@@ -4,14 +4,16 @@ LangMani is a language-conditioned robotic manipulation research repository. M0 
 runtime foundation, M1 added the environment/language contracts, M2 added a deterministic
 privileged Panda expert, M3A implemented the authoritative ManiSkill-native raw archive, and M3B
 implemented its validated local LeRobotDataset v3 derivation. M4 and M4.1 established reproducible
-ACT controls, closed-loop evaluation, and auditable action projection. Active M4.2 diagnoses
-oracle-conditioned control robustness before any language policy is attempted.
+ACT controls, closed-loop evaluation, and auditable action projection. M4.2 completed its
+oracle-conditioned development diagnosis and rejected TaskToken. Active M4.3a audits whether frozen
+shared-policy action chunks align with the requested object/bin semantics.
 
 M4 implements six per-task ACT policies, one mixed unconditioned ACT, and one mixed ACT with an
 oracle six-way task one-hot. Standard ACT consumes no natural-language text, so M4 is not a language
-understanding milestone. M4.2 adds runtime ablations and exactly one oracle TaskToken ACT; it still
-does not add SmolVLA, rewrite M3B, reopen M3A during normal training, invoke M2 during policy
-rollouts, publish to Hub, or change the M1/M2 task.
+understanding milestone. M4.2 added runtime ablations and exactly one oracle TaskToken ACT. M4.3a
+adds no training or model. It does not add SmolVLA, rewrite M3B, reopen M3A during normal training,
+invoke M2 during policy rollouts, publish to Hub, access the sealed final schedule, or change the
+M1/M2 task.
 
 ## Target platform
 
@@ -678,7 +680,7 @@ Before training, all eight historical selected checkpoints are strictly revalida
 the effective TaskToken configuration is compared with the frozen Mixed-TaskOneHot run manifest;
 an extra complete or incomplete TaskToken run identity is rejected as ambiguous.
 
-The current authorized target boundary stops at development:
+The completed target boundary stopped at development:
 
 ```bash
 python scripts/run_m42_runtime_ablation.py --help
@@ -689,11 +691,12 @@ python environment/verify_m42.py
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m42.py --target-development
 ```
 
-`--target-development` validates prior M4 evidence and both schedule locks, runs and locks the two
-runtime ablations, trains/selects TaskToken using M3B validation only, evaluates `m42_dev_v0`, and
-stops. `python environment/verify_m42.py --target-final` is a distinct future authorization; it has
-not been run in this stage. Final paired results and the SmolVLA go/no-go decision therefore remain
-pending, and M4.2 never starts M5 automatically.
+`--target-development` validated prior M4 evidence and both schedule locks, selected horizon 10 and
+the existing `project` runtime, trained all 100,000 TaskToken steps, selected checkpoint 90,000 from
+M3B validation only, evaluated `m42_dev_v0`, and stopped. PerTask, State-OneHot, and TaskToken
+achieved 56/72, 35/72, and 15/72 development successes; TaskToken was rejected.
+`python environment/verify_m42.py --target-final` remains a distinct command and was not run.
+Final paired results and a SmolVLA go/no-go decision therefore do not exist.
 
 If the runtime command report and its evidence already exist, the verifier never launches the
 336 physical episodes again. It first audits all eight immutable benchmark directories, their
@@ -707,6 +710,62 @@ at its consumer boundary without changing the list-only public parser or the byt
 closure. This repair is recorded in a separate content-addressed `runtime_repair_lineage` file and
 never rewrites the original evidence. Partial, linked, untracked, extra, missing, tampered, or
 final-access evidence is a hard failure rather than a rerun.
+
+## M4.3a semantic alignment audit
+
+The normative zero-training contract is
+[`docs/M43_SHARED_POLICY_REPAIR_SPEC.md`](docs/M43_SHARED_POLICY_REPAIR_SPEC.md). M4.3a uses only
+the frozen six PerTask, State-OneHot, and rejected TaskToken checkpoints. It compares one complete
+postprocessed 50-action chunk from every policy while holding the base-camera RGB and
+`PandaPolicyStateV0[9]` observation fixed. No offline comparison steps an environment, and all
+actions are measured before binary-gripper or environment-bound projection.
+
+The primary retrieval metric is `ActionChunkDistanceV0` action-range-normalized L2 over arm
+components 0 through 6 and the first locked execution-horizon actions. Raw, train-standard-
+deviation-normalized, cosine, gripper-only, first-action, first-five, and full-chunk distances remain
+reported secondary evidence. Full-task top-1/top-2/MRR, target-object centroids, global and
+object-conditional destination-bin retrieval, deterministic confusion matrices, first interaction,
+and post-grasp failure classes establish semantic alignment. A merely nonzero distance does not.
+
+The completed M4.2 development artifacts contain real aggregate post-grasp distributions but not
+the complete per-episode fields needed to reconstruct first object displaced, first bin approached,
+first object-entry bin, and final per-object/bin relationships. M4.3a reports those aggregate
+post-grasp results and marks first-interaction records/confusions unavailable. It never invents
+first-interaction values from aggregate wrong-object counts.
+
+Audit M3B validation, `m42_dev_v0`, or both explicitly:
+
+```bash
+python scripts/audit_act_semantics.py --help
+python scripts/audit_act_semantics \
+  --mode combined \
+  --device cpu \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --m4-checkpoint-root outputs/models/act \
+  --task-token-checkpoint-root outputs/models/act-task-token \
+  --m42-diagnostics-root outputs/diagnostics/m42 \
+  --runtime-selection outputs/diagnostics/m42/runtime_ablation/runtime_selection.json \
+  --output-root outputs/diagnostics/m43/semantic-audit \
+  --report outputs/diagnostics/m43/audit-command.json \
+  --dry-run
+python environment/verify_m43.py
+```
+
+`validation`, `m42_dev_v0`, and `combined` remain distinct source modes. The command rejects M3B
+test, M4 fresh, and `m42_final_v0` identities; it writes fingerprint-owned evidence through staging,
+independent checksum validation, atomic promotion, and a last completion marker. A completed
+fingerprint directory is immutable. The non-target verifier checks contracts, fixture math,
+serialization, lifecycle, path safety, CLI dry-run, and truthful flags only. It cannot set
+`semantic_audit_completed` or physical validation without real frozen-checkpoint inference.
+
+M4.3a implements no FactorFiLM. That separate M4.3b stage remains blocked until both real audit
+sources have been promoted and independently validated from a clean committed Git boundary.
+Audit completion never authorizes `m42_final_v0` or SmolVLA.
+
+Local structural acceptance currently consists of Ruff format/lint, `pip check`, sdist/wheel build,
+the passing non-target verifier, 147 passing focused M4.3a tests with one Windows symlink-privilege
+skip, and the CPU-safe suite at 840 passed, 14 skipped, and 15 hardware/rendering deselected. These
+are not real frozen-checkpoint semantic inference or GPU evidence; both remain pending.
 
 ## Target-machine setup
 
@@ -780,6 +839,7 @@ python environment/verify_m3a.py
 python environment/verify_m3b.py
 python environment/verify_m4.py
 python environment/verify_m42.py
+python environment/verify_m43.py
 ```
 
 The actual target-machine gate is stricter. The M2 command itself invokes the M0 installation gate
@@ -870,6 +930,7 @@ python environment/verify_m3a.py
 python environment/verify_m3b.py
 python environment/verify_m4.py
 python environment/verify_m42.py
+python environment/verify_m43.py
 ```
 
 The same documented OpenCV dual-wheel risk applies to this review environment.
@@ -901,6 +962,9 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 | `python environment/verify_m42.py` | No | No | No; contracts and CPU fixture only |
 | `python environment/verify_m42.py --target-development` | Yes | Yes | Yes; verifies the final lock but never materializes or executes sealed final episodes |
 | `python environment/verify_m42.py --target-final` | Yes | Yes | Yes; separate explicit authorization |
+| `python environment/verify_m43.py` | No | No | No; M4.3a contracts and immutable-evidence fixture only |
+| `scripts/audit_act_semantics.py --dry-run` | No | No | No; validates an explicit audit plan only |
+| `scripts/audit_act_semantics.py` | Real audit host | According to checkpoint device | No environment rollout |
 | `scripts/export_lerobot_dataset.py` | Real export: yes | According to source/render backend | Yes |
 | `scripts/validate_lerobot_dataset.py` | Full source alignment: yes | According to source/render backend | Yes |
 | `scripts/inspect_lerobot_episode.py` | No | No | No |
@@ -925,9 +989,9 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 - `src/langmani/collection/`: M3A recorder, collector, replay, manifests, and inspection.
 - `src/langmani/datasets/`: M3A immutable types, stable IDs, schedules, and native archive checks.
 - `src/langmani/datasets/lerobot_*.py`: M3B source gate, contracts, export, and validation.
-- `src/langmani/policies/`: M4 ACT plus M4.2 schedule, runtime, post-grasp, TaskToken, selection, and evaluation boundaries.
-- `scripts/`: M3B data commands plus M4/M4.2 train, runtime-ablation, evaluate, compare, and inspection commands.
-- `environment/`: reproducible declaration plus M0/M1/M2/M3A/M3B/M4/M4.2 diagnostics and commands.
+- `src/langmani/policies/`: M4 ACT, M4.2 runtime/TaskToken, and M4.3a semantic-audit/evidence boundaries.
+- `scripts/`: M3B data commands plus M4/M4.2 training/evaluation and M4.3a audit commands.
+- `environment/`: reproducible declaration plus M0 through M4.3a diagnostics and commands.
 - `tests/unit/`: environment/expert/data plus ACT identity, leakage, conditioning, checkpoint, and evaluation checks.
 - `tests/integration/`: LeRobot data/export plus ACT preprocessing, optimization, reload, and rollout boundaries.
 - `tests/smoke/`: dependency, simulator, vectorization, rendering, expert, and raw collection acceptance.

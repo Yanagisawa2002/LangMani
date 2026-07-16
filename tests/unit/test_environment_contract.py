@@ -269,3 +269,43 @@ def test_expert_context_rejects_vectorized_access_before_materializing_metadata(
 
     with pytest.raises(ValueError, match="require num_envs=1"):
         env.get_expert_task_context()
+
+
+def test_policy_rollout_diagnostics_expose_m43_oracles_only_on_demand() -> None:
+    env = object.__new__(PickPlaceByInstructionEnv)
+    env.num_envs = 1
+    env.device = torch.device("cpu")
+    env._target_object_indices = torch.tensor([0], dtype=torch.long)
+    env._target_bin_indices = torch.tensor([0], dtype=torch.long)
+
+    def cube(position: tuple[float, float, float]) -> SimpleNamespace:
+        return SimpleNamespace(
+            pose=SimpleNamespace(p=torch.tensor([position], dtype=torch.float32)),
+            linear_velocity=torch.zeros((1, 3), dtype=torch.float32),
+        )
+
+    red = cube((0.08, 0.18, 0.029))
+    green = cube((-0.12, 0.00, 0.025))
+    blue = cube((-0.12, 0.12, 0.025))
+    env.cubes = (red, green, blue)
+    env.bins = (
+        SimpleNamespace(pose=SimpleNamespace(p=torch.tensor([[0.08, 0.18, 0.0]]))),
+        SimpleNamespace(pose=SimpleNamespace(p=torch.tensor([[0.08, -0.18, 0.0]]))),
+    )
+    env.agent = SimpleNamespace(
+        is_grasping=lambda actor: torch.tensor([actor is green]),
+        tcp=SimpleNamespace(pose=SimpleNamespace(p=torch.tensor([[0.1, 0.0, 0.2]]))),
+    )
+
+    diagnostics = env.get_policy_rollout_diagnostics()
+
+    assert diagnostics["cube_positions"].shape == (1, 3, 3)
+    assert diagnostics["cube_linear_velocities"].shape == (1, 3, 3)
+    assert diagnostics["bin_floor_centers"].shape == (1, 2, 3)
+    assert diagnostics["tcp_position"].shape == (1, 3)
+    assert diagnostics["object_in_bin"].shape == (1, 3, 2)
+    assert diagnostics["object_in_bin"][0, 0, 0]
+    assert diagnostics["object_is_grasped"].tolist() == [[False, True, False]]
+    assert "cube_positions" not in environment_module.build_observation_extra(
+        tcp_pose=torch.zeros((1, 7)), use_privileged_state=False
+    )
