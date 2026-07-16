@@ -128,13 +128,15 @@ def _m4_run(
     dataset_fingerprint: str,
     split_digest: str,
     action_std: tuple[float, ...],
+    mode: ExperimentMode = ExperimentMode.FULL,
+    complete: bool = True,
 ) -> dict[str, object]:
     config = ActExperimentConfig(
         variant=variant,
         task_id=task_id,
         data=ActDataConfig(dataset_root="fixture/m3b"),
         model=ActModelConfig.for_variant(variant),
-        mode=ExperimentMode.FULL,
+        mode=mode,
         device="cuda",
     )
     if variant is ActVariant.PER_TASK:
@@ -171,7 +173,7 @@ def _m4_run(
         train_statistics_fingerprint=statistics.statistics_fingerprint,
         optimization_config=config.optimization.to_dict(),
         training_seed=0,
-        experiment_mode=ExperimentMode.FULL,
+        experiment_mode=mode,
         device="cuda",
         dtype="float32",
         lerobot_version="0.6.0",
@@ -202,11 +204,11 @@ def _m4_run(
             global_step=100_000,
             examples_processed=3_200_000,
             last_checkpoint_fingerprint=checkpoint.checkpoint_fingerprint,
-            completed=True,
+            completed=complete,
         ),
         "checkpoints": (checkpoint,),
         "selected_checkpoint_fingerprint": checkpoint.checkpoint_fingerprint,
-        "complete": True,
+        "complete": complete,
     }
     from langmani.policies.act_types import ActExperimentManifest
 
@@ -577,6 +579,8 @@ def _fixture(tmp_path: Path, *, task_token_std: tuple[float, ...] | None = None)
         "queue_path": token_run_root / "validation_queue.json",
         "validation_results": validation_results,
         "validation_evidence_root": development_root / "evidence",
+        "dataset_fingerprint": dataset_fingerprint,
+        "split_digest": split_digest,
         "action_std": action_std,
         "m4_runs": per_task + [onehot],
         "token_run_root": token_run_root,
@@ -733,6 +737,100 @@ def test_loader_never_calls_the_broad_prior_m4_evidence_gate(
     assert len(result.per_task_checkpoints) == 6
     assert result.state_onehot_checkpoint.policy_kind.value == "state_onehot"
     assert result.task_token_checkpoint.policy_kind.value == "task_token"
+
+
+def test_loader_ignores_valid_historical_non_full_and_incomplete_m4_runs(
+    tmp_path: Path,
+) -> None:
+    paths = _fixture(tmp_path)
+    historical = (
+        (
+            100,
+            ActVariant.PER_TASK,
+            CANONICAL_TASK_IDS[0],
+            ExperimentMode.TINY_OVERFIT,
+            True,
+        ),
+        (101, ActVariant.MIXED_TASK_ONEHOT, None, ExperimentMode.TINY_OVERFIT, False),
+        (102, ActVariant.PER_TASK, CANONICAL_TASK_IDS[1], ExperimentMode.FULL, False),
+    )
+    for run_index, variant, task_id, mode, complete in historical:
+        _m4_run(
+            paths["m4_root"],
+            run_index=run_index,
+            variant=variant,
+            task_id=task_id,
+            dataset_fingerprint=paths["dataset_fingerprint"],
+            split_digest=paths["split_digest"],
+            action_std=paths["action_std"],
+            mode=mode,
+            complete=complete,
+        )
+
+    result = _load(paths, mode="validation")
+
+    assert len(result.per_task_checkpoints) == 6
+    assert result.state_onehot_checkpoint.policy_kind.value == "state_onehot"
+
+
+def test_loader_rejects_duplicate_completed_full_m4_semantic_run(tmp_path: Path) -> None:
+    paths = _fixture(tmp_path)
+    _m4_run(
+        paths["m4_root"],
+        run_index=103,
+        variant=ActVariant.PER_TASK,
+        task_id=CANONICAL_TASK_IDS[0],
+        dataset_fingerprint=_digest(901),
+        split_digest=paths["split_digest"],
+        action_std=paths["action_std"],
+    )
+
+    with pytest.raises(M43AuditInputError, match="duplicate M4 semantic run"):
+        _load(paths, mode="validation")
+
+
+def test_loader_rejects_dirty_completed_full_m4_candidate(tmp_path: Path) -> None:
+    paths = _fixture(tmp_path)
+    candidate = _m4_run(
+        paths["m4_root"],
+        run_index=104,
+        variant=ActVariant.PER_TASK,
+        task_id=CANONICAL_TASK_IDS[0],
+        dataset_fingerprint=paths["dataset_fingerprint"],
+        split_digest=paths["split_digest"],
+        action_std=paths["action_std"],
+    )
+    manifest_path = candidate["run_root"] / "run_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["git_dirty"] = True
+    manifest["identity"]["git_dirty"] = True
+    _write(manifest_path, manifest)
+
+    with pytest.raises(M43AuditInputError, match="M4 run manifest is invalid"):
+        _load(paths, mode="validation")
+
+
+def test_loader_binds_validation_selection_to_completed_full_run(tmp_path: Path) -> None:
+    paths = _fixture(tmp_path)
+    run = paths["m4_runs"][0]
+    candidate = ValidationResult(
+        checkpoint_fingerprint=run["checkpoint_fingerprint"],
+        checkpoint_step=100_000,
+        schedule_digest=_digest(902),
+        success_rate=0.5,
+        wrong_object_interaction_rate=0.0,
+        target_off_table_rate=0.0,
+        offline_validation_action_loss=1.0,
+    )
+    foreign_selection = create_checkpoint_selection(
+        run_fingerprint=_digest(903),
+        candidates=(candidate,),
+        selection_timestamp_utc="2026-07-15T00:00:00Z",
+    )
+    _write(run["run_root"] / "checkpoint_selection.json", foreign_selection.to_dict())
+
+    with pytest.raises(M43AuditInputError, match="immutable validation-only lock"):
+        _load(paths, mode="validation")
 
 
 def test_state_onehot_and_task_token_action_std_must_match(tmp_path: Path) -> None:

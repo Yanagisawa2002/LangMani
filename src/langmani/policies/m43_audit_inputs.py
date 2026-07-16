@@ -728,8 +728,14 @@ def _discover_m4_checkpoints(
             manifest.config.mode is not ExperimentMode.FULL
             or not manifest.complete
             or not manifest.training_state.completed
-            or manifest.git_dirty
         ):
+            # M4 roots are append-only experiment stores and legitimately retain
+            # earlier non-full and interrupted runs.  They are not audit
+            # candidates; only a completed full run reaches the strict gate
+            # below.  Parsing before this filter keeps malformed historical
+            # manifests fail-closed instead of silently hiding ambiguity.
+            continue
+        if manifest.git_dirty:
             raise M43AuditInputError("M4.3a accepts only clean completed full M4 runs")
         variant = manifest.identity.variant
         task_id = manifest.identity.task_id
@@ -744,7 +750,9 @@ def _discover_m4_checkpoints(
         except (TypeError, ValueError) as error:
             raise M43AuditInputError("M4 checkpoint selection is invalid") from error
         if (
-            selection.test_evaluation_status != "pending"
+            selection.run_fingerprint != manifest.identity.run_fingerprint
+            or not selection.selection_locked
+            or selection.test_evaluation_status != "pending"
             or manifest.selected_checkpoint_fingerprint != selection.selected_checkpoint_fingerprint
         ):
             raise M43AuditInputError("M4 selection is not an immutable validation-only lock")
