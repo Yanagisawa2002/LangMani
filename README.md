@@ -5,15 +5,17 @@ runtime foundation, M1 added the environment/language contracts, M2 added a dete
 privileged Panda expert, M3A implemented the authoritative ManiSkill-native raw archive, and M3B
 implemented its validated local LeRobotDataset v3 derivation. M4 and M4.1 established reproducible
 ACT controls, closed-loop evaluation, and auditable action projection. M4.2 completed its
-oracle-conditioned development diagnosis and rejected TaskToken. Active M4.3a audits whether frozen
-shared-policy action chunks align with the requested object/bin semantics.
+oracle-conditioned development diagnosis and rejected TaskToken. M4.3a completed the real frozen-
+policy semantic audit. M4.3b now implements one factorized FiLM ACT architecture and its local
+training/checkpoint contracts; no FactorFiLM target training or rollout has started.
 
 M4 implements six per-task ACT policies, one mixed unconditioned ACT, and one mixed ACT with an
 oracle six-way task one-hot. Standard ACT consumes no natural-language text, so M4 is not a language
 understanding milestone. M4.2 added runtime ablations and exactly one oracle TaskToken ACT. M4.3a
-adds no training or model. It does not add SmolVLA, rewrite M3B, reopen M3A during normal training,
-invoke M2 during policy rollouts, publish to Hub, access the sealed final schedule, or change the
-M1/M2 task.
+added no model and established that output changes are not reliably aligned with requested object/
+bin semantics. M4.3b adds one oracle `ACT-Mixed-FactorFiLM`, not language understanding. It does not
+add SmolVLA, rewrite M3B, reopen M3A during normal training, invoke M2 during policy rollouts,
+publish to Hub, access the sealed final schedule, or change the M1/M2 task.
 
 ## Target platform
 
@@ -754,18 +756,115 @@ python environment/verify_m43.py
 `validation`, `m42_dev_v0`, and `combined` remain distinct source modes. The command rejects M3B
 test, M4 fresh, and `m42_final_v0` identities; it writes fingerprint-owned evidence through staging,
 independent checksum validation, atomic promotion, and a last completion marker. A completed
-fingerprint directory is immutable. The non-target verifier checks contracts, fixture math,
-serialization, lifecycle, path safety, CLI dry-run, and truthful flags only. It cannot set
-`semantic_audit_completed` or physical validation without real frozen-checkpoint inference.
+fingerprint directory is immutable. A non-target verifier without the real evidence checks
+contracts, fixture math, serialization, lifecycle, path safety, CLI dry-run, and truthful flags
+only; it may discover and set `semantic_audit_completed=true` only after independently validating
+the promoted real evidence.
 
-M4.3a implements no FactorFiLM. That separate M4.3b stage remains blocked until both real audit
-sources have been promoted and independently validated from a clean committed Git boundary.
-Audit completion never authorizes `m42_final_v0` or SmolVLA.
+The real clean-Git RTX 5090 combined audit completed at implementation commit
+`dfea8b3d7d28274909ff178cb9087a9a90e17ee7` over 36 M3B-validation and 72 `m42_dev_v0`
+observations. The completed evidence fingerprint is
+`sha256:6342bdf4b019df203e6021947cbb39deacac2ea78cc585b5062091ed1d228671`. Its dataset,
+split, and development-schedule fingerprints are respectively
+`sha256:3f4d81471ac7c3ecc034206bc207524c4cbfbd1f7874b25eca894a5b607acfb4`,
+`sha256:d86d29374ef7956a4ad8a1d9a111ed0924387b5b456d86e8c9ad5a31752f65e5`, and
+`sha256:981547e771b2b5cd3a77e2788bb49d29fc45b3f59c607021a03a4e2ce70b43f1`.
 
-Local structural acceptance currently consists of Ruff format/lint, `pip check`, sdist/wheel build,
-the passing non-target verifier, 147 passing focused M4.3a tests with one Windows symlink-privilege
-skip, and the CPU-safe suite at 840 passed, 14 skipped, and 15 hardware/rendering deselected. These
-are not real frozen-checkpoint semantic inference or GPU evidence; both remain pending.
+Across all 108 observations, State-OneHot reached 37.96% full-task top-1, 70.37% top-2,
+MRR 0.6289, 76.85% target-object retrieval, and 50.93% destination-bin retrieval. TaskToken
+reached 24.07%, 50.00%, MRR 0.4887, 50.00%, and 49.07% respectively. Both policies changed
+outputs without reliably following requested semantics; object confusion is present and bin
+retrieval is approximately random. The development evidence also retains shared-policy post-grasp
+failures. TaskToken remains rejected. The promoted audit sets `semantic_audit_completed=true` and
+keeps test, historical-fresh, final-schedule access, final authorization, and SmolVLA false.
+
+## M4.3b factorized FiLM structural implementation
+
+M4.3b implements exactly one oracle-conditioned policy, `ACT-Mixed-FactorFiLM`. Stable TaskSpec
+metadata is decomposed by one shared train/inference component into canonical target-object indices
+`red_cube`, `green_cube`, `blue_cube` and destination-bin indices `left_bin`, `right_bin`. It never
+parses instruction text. `PandaPolicyStateV0` remains exactly nine dimensions and there is no
+appended one-hot or combined task token.
+
+The 32D target-object embedding produces per-channel gamma/beta for the ResNet-18 layer-4 feature
+map `[B,512,8,8]`, before ACT's image projection. The 32D destination-bin embedding separately
+produces gamma/beta for the encoded Panda-state token `[B,512]`, before Transformer processing.
+The two paths use residual FiLM, `x * (1 + gamma) + beta`, with projection weights initialized from
+`N(0,1e-5)` and zero bias. Object identity never conditions the state path and destination identity
+never conditions the image path. The full primary model keeps the 51,576,712 base ACT parameters
+and adds exactly 67,744 conditioning parameters, for 51,644,456 total.
+
+The adapter subclasses the public LeRobot 0.6.0 `ACTPolicy` and uses public `PreTrainedConfig`,
+`ACTConfig`, `ACTPolicy.save_pretrained`/`from_pretrained`, and
+`make_act_pre_post_processors`. LeRobot exposes no public hook for the required two
+intermediate representations, so one isolated module registers instance-local forward hooks on the
+semi-stable `model.backbone` output and `model.encoder_robot_state_input_proj` output. It records
+and validates the ACT symbols/signatures, `[B,512,8,8]` backbone map, `[B,dim_model]` state token,
+latent/state/64-image-token encoder layout, and `[B,50,8]` output. Version, signature, attribute,
+shape, or token-layout drift fails rather than falling back to State-OneHot or TaskToken. Direct
+FactorFiLM saves require a new or empty real directory, so a refused overwrite cannot mutate
+existing weights.
+
+Only local non-target paths are authorized in this milestone:
+
+```bash
+python scripts/train_act_factor_film.py --help
+python scripts/train_act_factor_film.py \
+  --dataset-root outputs/fixtures/m43/factor-film-dataset-contract \
+  --output-root outputs/fixtures/m43/factor-film-dry-run \
+  --device cpu \
+  --report outputs/diagnostics/m43/factor-film-fixture-contract.json \
+  --dry-run \
+  --fixture-contract
+python scripts/train_act_factor_film.py \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --output-root outputs/models/act-factor-film \
+  --evidence-root outputs/diagnostics/m43/remote-audit-dfea8b3/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
+  --device cpu \
+  --report outputs/diagnostics/m43/factor-film-dry-run.json \
+  --dry-run
+python scripts/train_act_factor_film.py \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --output-root outputs/models/act-factor-film \
+  --evidence-root outputs/diagnostics/m43/remote-audit-dfea8b3/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
+  --device cpu \
+  --report outputs/diagnostics/m43/factor-film-fixture.json \
+  --fixture
+python environment/verify_m43.py
+```
+
+The dry-run and fixture validate model construction, separated conditioning, finite forward/
+backward, gradients in the base model and both FiLM paths, one optimizer step, processor and
+checkpoint persistence, fresh-instance reload, and deterministic output equivalence. They do not
+use a tolerance larger than `atol=1e-6`, `rtol=1e-6` and do not produce a target checkpoint or
+quality result. The future clean-Git target-development command is
+explicitly separate:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python scripts/train_act_factor_film.py \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --output-root outputs/models/act-factor-film \
+  --evidence-root outputs/diagnostics/m43/remote-audit-dfea8b3/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
+  --device cuda \
+  --report outputs/diagnostics/m43/factor-film-target-development.json \
+  --clean-staging \
+  --target-development
+```
+
+That future run must reuse the exact 288 M3B train and 36 validation episodes, train-only 9D
+statistics, 100,000 steps, checkpoint interval 5,000, expected 20 checkpoints, batch size 32,
+locked seed 0,
+action chunk 50, bfloat16 CUDA path, horizon 10, and `project` runtime. Only M3B validation may rank
+checkpoints. The complete queue and every selection are fingerprint-bound to the same run,
+schedule, checkpoint fingerprints, steps, and checkpoint-bound offline validation losses. Target
+identities independently enforce canonical unique 288/36 episode lists. Compatible resume accepts only the latest declared
+checkpoint or the sole next 5,000-step atomically promoted orphan. Unsafe or linked output,
+report, and staging paths are rejected before any write. `m42_dev_v0` is a later rollout benchmark,
+never training or selection data. At the
+current structural boundary `factor_film_training_completed=false`,
+`factor_film_checkpoints_complete=false`, `factor_film_checkpoint_selected=false`,
+`development_benchmark_completed=false`, `final_schedule_accessed=false`, `smolvla_go=false`, and
+`physical_target_validated=false`.
 
 ## Target-machine setup
 
@@ -962,9 +1061,12 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 | `python environment/verify_m42.py` | No | No | No; contracts and CPU fixture only |
 | `python environment/verify_m42.py --target-development` | Yes | Yes | Yes; verifies the final lock but never materializes or executes sealed final episodes |
 | `python environment/verify_m42.py --target-final` | Yes | Yes | Yes; separate explicit authorization |
-| `python environment/verify_m43.py` | No | No | No; M4.3a contracts and immutable-evidence fixture only |
+| `python environment/verify_m43.py` | No | No | No; M4.3 audit plus FactorFiLM contracts/CPU fixture only |
 | `scripts/audit_act_semantics.py --dry-run` | No | No | No; validates an explicit audit plan only |
 | `scripts/audit_act_semantics.py` | Real audit host | According to checkpoint device | No environment rollout |
+| `scripts/train_act_factor_film.py --dry-run` | No | No | No; validates one immutable training identity only |
+| `scripts/train_act_factor_film.py --fixture` | No | No | No; local forward/backward and save/reload only |
+| `scripts/train_act_factor_film.py --target-development` | Yes | Yes | No rendering during offline training; no rollout or final access |
 | `scripts/export_lerobot_dataset.py` | Real export: yes | According to source/render backend | Yes |
 | `scripts/validate_lerobot_dataset.py` | Full source alignment: yes | According to source/render backend | Yes |
 | `scripts/inspect_lerobot_episode.py` | No | No | No |
@@ -989,9 +1091,9 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 - `src/langmani/collection/`: M3A recorder, collector, replay, manifests, and inspection.
 - `src/langmani/datasets/`: M3A immutable types, stable IDs, schedules, and native archive checks.
 - `src/langmani/datasets/lerobot_*.py`: M3B source gate, contracts, export, and validation.
-- `src/langmani/policies/`: M4 ACT, M4.2 runtime/TaskToken, and M4.3a semantic-audit/evidence boundaries.
-- `scripts/`: M3B data commands plus M4/M4.2 training/evaluation and M4.3a audit commands.
-- `environment/`: reproducible declaration plus M0 through M4.3a diagnostics and commands.
+- `src/langmani/policies/`: M4 ACT, M4.2 runtime/TaskToken, M4.3a semantic audit, and M4.3b FactorFiLM boundaries.
+- `scripts/`: M3B data commands plus M4/M4.2 training/evaluation, M4.3a audit, and FactorFiLM training commands.
+- `environment/`: reproducible declaration plus M0 through M4.3 non-target and target diagnostics.
 - `tests/unit/`: environment/expert/data plus ACT identity, leakage, conditioning, checkpoint, and evaluation checks.
 - `tests/integration/`: LeRobot data/export plus ACT preprocessing, optimization, reload, and rollout boundaries.
 - `tests/smoke/`: dependency, simulator, vectorization, rendering, expert, and raw collection acceptance.

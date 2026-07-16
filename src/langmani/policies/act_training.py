@@ -50,6 +50,16 @@ class CheckpointCallback(Protocol):
     ) -> str | None: ...
 
 
+class ProcessedBatchAugmenter(Protocol):
+    """Add project-owned policy inputs after the LeRobot processor boundary."""
+
+    def __call__(
+        self,
+        processed_batch: Mapping[str, object],
+        raw_batch: Mapping[str, object],
+    ) -> Mapping[str, object]: ...
+
+
 class DeterministicResumeBatchSampler:
     """Infinite epoch permutations addressable by completed optimizer step."""
 
@@ -239,13 +249,17 @@ def build_fixture_act_config(*, state_dimension: int = 9, device: str = "cpu") -
 def build_policy_and_processors(
     config: ACTConfig,
     train_statistics: Mapping[str, Mapping[str, torch.Tensor]],
+    *,
+    policy_factory: Callable[[ACTConfig], ACTPolicy] | None = None,
 ) -> tuple[ACTPolicy, PolicyProcessorPipeline, PolicyProcessorPipeline]:
     """Construct ACT and processors only from public installed interfaces."""
     stats = {
         feature: {name: tensor.detach().clone() for name, tensor in values.items()}
         for feature, values in train_statistics.items()
     }
-    policy = ACTPolicy(config)
+    policy = ACTPolicy(config) if policy_factory is None else policy_factory(config)
+    if not isinstance(policy, ACTPolicy):
+        raise TrainingContractError("policy factory must return an ACTPolicy")
     requested_device = torch.device(str(config.device))
     if requested_device.type == "cuda":
         requested_device = torch.device("cuda", torch.cuda.current_device())
@@ -446,6 +460,7 @@ def train_act(
     task_token_enabled: bool = False,
     seed_at_start: bool = True,
     initial_examples_processed: int = 0,
+    processed_batch_augmenter: ProcessedBatchAugmenter | None = None,
 ) -> TrainingOutcome:
     """Run a deterministic, bounded ACT optimization loop.
 
@@ -508,6 +523,12 @@ def train_act(
             processed = preprocessor(projected)
             if not isinstance(processed, Mapping):
                 raise TrainingContractError("ACT preprocessor must return a mapping")
+            if processed_batch_augmenter is not None:
+                processed = processed_batch_augmenter(processed, raw_batch)
+                if not isinstance(processed, Mapping):
+                    raise TrainingContractError(
+                        "processed batch augmenter must return a tensor mapping"
+                    )
             validate_processed_training_batch(
                 processed,
                 state_dimension=experiment.model.state_dimension,
@@ -612,6 +633,7 @@ def evaluate_offline_loss(
     task_id_by_episode: Mapping[int, str] | None = None,
     task_token_enabled: bool = False,
     maximum_batches: int | None = None,
+    processed_batch_augmenter: ProcessedBatchAugmenter | None = None,
 ) -> float:
     """Compute validation loss only; this function cannot receive test results."""
     policy.eval()
@@ -642,6 +664,12 @@ def evaluate_offline_loss(
         processed = preprocessor(prepare_raw_batch(conditioned_batch))
         if not isinstance(processed, Mapping):
             raise TrainingContractError("ACT preprocessor must return a mapping")
+        if processed_batch_augmenter is not None:
+            processed = processed_batch_augmenter(processed, raw_batch)
+            if not isinstance(processed, Mapping):
+                raise TrainingContractError(
+                    "processed batch augmenter must return a tensor mapping"
+                )
         validate_processed_training_batch(
             processed,
             state_dimension=experiment.model.state_dimension,
@@ -663,6 +691,7 @@ __all__ = [
     "DeterministicResumeBatchSampler",
     "TrainingMetric",
     "TrainingOutcome",
+    "ProcessedBatchAugmenter",
     "append_task_condition_to_batch",
     "build_act_config",
     "build_fixture_act_config",

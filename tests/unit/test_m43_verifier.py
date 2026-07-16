@@ -12,6 +12,8 @@ def test_structural_report_requires_only_implementation_flags() -> None:
     report = verify_m43.Report(
         implementation_validated=True,
         semantic_audit_implementation_validated=True,
+        factor_film_implementation_validated=True,
+        factor_film_fixture_training_validated=True,
     )
 
     assert report.passed is True
@@ -37,6 +39,8 @@ def test_structural_report_rejects_target_or_future_claims(field: str) -> None:
     report = verify_m43.Report(
         implementation_validated=True,
         semantic_audit_implementation_validated=True,
+        factor_film_implementation_validated=True,
+        factor_film_fixture_training_validated=True,
     )
 
     setattr(report, field, True)
@@ -70,6 +74,7 @@ def test_structural_checks_cover_cli_math_and_truthful_flags() -> None:
         "immutable evidence promotion",
         "immutable evidence corruption rejection",
         "semantic-audit CLI dry-run",
+        "FactorFiLM training CLI dry-run",
         "test and final access prohibition",
         "truthful physical-validation state",
     } <= names

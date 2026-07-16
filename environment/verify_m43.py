@@ -1,9 +1,11 @@
-"""Verify the portable M4.3a semantic-alignment audit implementation.
+"""Verify the portable M4.3 semantic-audit and FactorFiLM implementation.
 
-This entry point is deliberately non-target in M4.3a.  It exercises typed
-contracts, pure retrieval math, immutable evidence, and the audit CLI dry-run.
-It does not load real checkpoints, step a simulator, access a final schedule,
-or require the future FactorFiLM implementation.
+This entry point is deliberately non-target.  It preserves the M4.3a contract,
+math, evidence-lifecycle, and CLI probes, then executes one CPU-only M4.3b
+FactorFiLM fixture forward/backward/checkpoint reload and one fixture dry-run.
+It does not train a target model, step a simulator, or access test, fresh-seed,
+development, or final schedules.  A completed real M4.3a evidence root may be
+supplied explicitly and is validated without reopening its source datasets.
 """
 
 from __future__ import annotations
@@ -16,6 +18,7 @@ import subprocess
 import sys
 import tempfile
 import traceback
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -24,7 +27,14 @@ import torch
 
 from langmani.datasets.schedule import CANONICAL_TASK_SPECS
 from langmani.environments.specs import BIN_IDS, OBJECT_IDS, stable_task_id
-from langmani.policies.act_runtime import atomic_write_json
+from langmani.policies.act_factor_film_training import (
+    AUTHORIZED_M43_AUDIT_EVIDENCE_FINGERPRINT,
+    FACTOR_FILM_IDENTITY_INITIALIZATION_ATOL,
+    fixture_dry_run_report,
+    run_factor_film_fixture,
+    validate_authorizing_semantic_audit,
+)
+from langmani.policies.act_runtime import atomic_write_json, inspect_git_state
 from langmani.policies.act_semantic_audit import (
     bin_retrieval_confusion,
     build_semantic_alignment_audit,
@@ -62,7 +72,7 @@ from langmani.policies.m43_types import (
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_ROOT = PROJECT_ROOT / "outputs"
 DEFAULT_OUTPUT_ROOT = OUTPUT_ROOT / "diagnostics" / "m43"
-REPORT_SCHEMA = "langmani-m43-verification-v0"
+REPORT_SCHEMA = "langmani-m43-verification-v1"
 
 PROTECTED_SOURCE_ROOTS = (
     PROJECT_ROOT / "src",
@@ -116,8 +126,11 @@ def _validate_output_root(path: Path) -> Path:
 @dataclass(slots=True)
 class Report:
     checks: list[dict[str, object]] = field(default_factory=list)
+    implementation_git_commit: str | None = None
+    implementation_git_dirty: bool = False
     implementation_validated: bool = False
     semantic_audit_implementation_validated: bool = False
+    semantic_audit_evidence_fingerprint: str | None = None
     prior_m4_evidence_validated: bool = False
     prior_m42_evidence_validated: bool = False
     dataset_fingerprint_validated: bool = False
@@ -125,8 +138,13 @@ class Report:
     semantic_audit_completed: bool = False
     state_onehot_semantic_alignment_validated: bool = False
     tasktoken_semantic_alignment_validated: bool = False
+    factor_film_implementation_validated: bool = False
+    factor_film_fixture_training_validated: bool = False
+    factor_film_fixture_result: dict[str, object] = field(default_factory=dict)
+    factor_film_dry_run_contract: dict[str, object] = field(default_factory=dict)
     factor_film_training_completed: bool = False
     factor_film_checkpoints_complete: bool = False
+    factor_film_checkpoints_validated: bool = False
     factor_film_checkpoint_selected: bool = False
     validation_only_selection_validated: bool = False
     factor_film_reload_validated: bool = False
@@ -138,7 +156,11 @@ class Report:
     raw_action_metrics_validated: bool = False
     runtime_action_metrics_validated: bool = False
     development_quality_gate_passed: bool = False
+    factor_film_development_evaluation_completed: bool = False
+    factor_film_development_quality_validated: bool = False
     final_benchmark_authorized: bool = False
+    test_split_accessed: bool = False
+    fresh_seed_accessed: bool = False
     final_schedule_accessed: bool = False
     smolvla_go: bool = False
     physical_target_validated: bool = False
@@ -159,11 +181,11 @@ class Report:
             self.prior_m42_evidence_validated,
             self.dataset_fingerprint_validated,
             self.checkpoint_fingerprints_validated,
-            self.semantic_audit_completed,
             self.state_onehot_semantic_alignment_validated,
             self.tasktoken_semantic_alignment_validated,
             self.factor_film_training_completed,
             self.factor_film_checkpoints_complete,
+            self.factor_film_checkpoints_validated,
             self.factor_film_checkpoint_selected,
             self.validation_only_selection_validated,
             self.factor_film_reload_validated,
@@ -175,7 +197,11 @@ class Report:
             self.raw_action_metrics_validated,
             self.runtime_action_metrics_validated,
             self.development_quality_gate_passed,
+            self.factor_film_development_evaluation_completed,
+            self.factor_film_development_quality_validated,
             self.final_benchmark_authorized,
+            self.test_split_accessed,
+            self.fresh_seed_accessed,
             self.final_schedule_accessed,
             self.smolvla_go,
             self.physical_target_validated,
@@ -184,6 +210,12 @@ class Report:
             not self.failed
             and self.implementation_validated
             and self.semantic_audit_implementation_validated
+            and self.factor_film_implementation_validated
+            and self.factor_film_fixture_training_validated
+            and (
+                self.semantic_audit_completed
+                == (self.semantic_audit_evidence_fingerprint is not None)
+            )
             and not any(target_or_future_claims)
         )
 
@@ -201,7 +233,62 @@ class Report:
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
+    parser.add_argument(
+        "--semantic-evidence-root",
+        type=Path,
+        default=None,
+        help=(
+            "optional completed combined M4.3a evidence directory; validates the exact "
+            "authorized fingerprint without accessing source datasets"
+        ),
+    )
     return parser.parse_args(argv)
+
+
+def _portable_json_value(value: object) -> object:
+    """Convert fixture diagnostics to finite JSON without hiding unknown types."""
+
+    if isinstance(value, torch.Tensor):
+        value = value.detach().to(device="cpu")
+        return _portable_json_value(value.item() if value.numel() == 1 else value.tolist())
+    if isinstance(value, np.ndarray):
+        return _portable_json_value(value.tolist())
+    if isinstance(value, np.generic):
+        return _portable_json_value(value.item())
+    if isinstance(value, Mapping):
+        if not all(isinstance(key, str) for key in value):
+            raise TypeError("fixture diagnostic mappings require string keys")
+        return {key: _portable_json_value(item) for key, item in value.items()}
+    if isinstance(value, tuple | list):
+        return [_portable_json_value(item) for item in value]
+    if value is None or isinstance(value, bool | int | float | str):
+        return value
+    raise TypeError(f"fixture diagnostic contains unsupported {type(value).__name__}")
+
+
+def _semantic_evidence_probe(report: Report, evidence_root: Path | None) -> None:
+    if evidence_root is None:
+        report.check(
+            "optional real semantic-audit evidence",
+            True,
+            "not supplied; semantic_audit_completed remains false",
+        )
+        return
+    root = _resolved_unlinked(evidence_root, label="M4.3a semantic evidence")
+    completed = validate_authorizing_semantic_audit(root)
+    fingerprint = completed.evidence_fingerprint
+    valid = (
+        fingerprint == AUTHORIZED_M43_AUDIT_EVIDENCE_FINGERPRINT
+        and completed.completion.get("semantic_audit_completed") is True
+    )
+    report.check(
+        "authorized real semantic-audit evidence",
+        valid,
+        f"validated immutable combined evidence fingerprint={fingerprint}",
+    )
+    if valid:
+        report.semantic_audit_evidence_fingerprint = fingerprint
+        report.semantic_audit_completed = True
 
 
 def _distance_config() -> ActionChunkDistanceConfig:
@@ -621,37 +708,201 @@ def _cli_dry_run_probe(report: Report) -> None:
         )
 
 
-def _structural_checks(report: Report) -> None:
+def _factor_film_fixture_probe(report: Report, *, output_root: Path) -> None:
+    git = inspect_git_state(PROJECT_ROOT)
+    report.implementation_git_commit = git.commit
+    report.implementation_git_dirty = git.dirty
+    report.check(
+        "FactorFiLM tracked Git baseline",
+        git.baseline_tracked,
+        f"commit={git.commit}; dirty={git.dirty}; fixture evidence is non-target",
+    )
+
+    dry_run = fixture_dry_run_report(
+        output_root=output_root / "factor-film-fixture-plan",
+        git_commit=git.commit,
+    )
+    dry_payload = _portable_json_value(dry_run.to_dict())
+    if not isinstance(dry_payload, dict):  # pragma: no cover - typed contract invariant
+        raise TypeError("FactorFiLM fixture dry-run did not produce a JSON object")
+    json.dumps(dry_payload, sort_keys=True, allow_nan=False)
+    report.factor_film_dry_run_contract = dry_payload
+    effective = dry_payload.get("effective_training_configuration")
+    dry_run_ok = (
+        dry_payload.get("fixture_contract") is True
+        and dry_payload.get("train_episode_count") == 6
+        and dry_payload.get("validation_episode_count") == 0
+        and dry_payload.get("panda_policy_state_dimension") == 9
+        and dry_payload.get("expected_checkpoint_steps") == list(range(5_000, 100_001, 5_000))
+        and dry_payload.get("base_act_parameter_count") == 51_576_712
+        and dry_payload.get("factor_film_parameter_count") == 51_644_456
+        and dry_payload.get("parameter_count_increase") == 67_744
+        and dry_payload.get("semantic_audit_evidence_fingerprint")
+        == AUTHORIZED_M43_AUDIT_EVIDENCE_FINGERPRINT
+        and dry_payload.get("test_accessible") is False
+        and dry_payload.get("historical_fresh_accessible") is False
+        and dry_payload.get("final_schedule_accessed") is False
+        and dry_payload.get("training_started") is False
+        and isinstance(effective, dict)
+        and effective.get("mode") == "dry_run"
+        and effective.get("device") == "cpu"
+    )
+    report.check(
+        "FactorFiLM fixture dry-run contract",
+        dry_run_ok,
+        "9D state, full ACT/FactorFiLM parameter counts, 20-checkpoint plan, and sealed sources remain fixed",
+    )
+
+    with tempfile.TemporaryDirectory(prefix="langmani-m43-factor-film-cli-") as temporary:
+        root = Path(temporary)
+        command_report = root / "dry-run.json"
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(PROJECT_ROOT / "scripts" / "train_act_factor_film.py"),
+                "--dry-run",
+                "--fixture-contract",
+                "--device",
+                "cpu",
+                "--output-root",
+                str(root / "models"),
+                "--report",
+                str(command_report),
+            ],
+            cwd=PROJECT_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        command_payload = (
+            json.loads(command_report.read_text(encoding="utf-8"))
+            if command_report.is_file()
+            else {}
+        )
+        command_ok = (
+            completed.returncode == 0
+            and command_payload.get("passed") is True
+            and command_payload.get("fixture_contract") is True
+            and command_payload.get("panda_policy_state_dimension") == 9
+            and command_payload.get("parameter_count_increase") == 67_744
+            and command_payload.get("expected_checkpoint_steps")
+            == list(range(5_000, 100_001, 5_000))
+            and command_payload.get("factor_film_training_completed") is False
+            and command_payload.get("factor_film_checkpoints_complete") is False
+            and command_payload.get("factor_film_checkpoint_selected") is False
+            and command_payload.get("development_benchmark_completed") is False
+            and command_payload.get("final_schedule_accessed") is False
+            and command_payload.get("physical_target_validated") is False
+            and command_payload.get("smolvla_go") is False
+        )
+        report.check(
+            "FactorFiLM training CLI dry-run",
+            command_ok,
+            f"rc={completed.returncode}; fixture-contract command started no real training",
+        )
+
+    fixture_payload = _portable_json_value(run_factor_film_fixture(git.commit))
+    if not isinstance(fixture_payload, dict):  # pragma: no cover - typed fixture invariant
+        raise TypeError("FactorFiLM fixture did not produce a JSON object")
+    json.dumps(fixture_payload, sort_keys=True, allow_nan=False)
+    report.factor_film_fixture_result = fixture_payload
+    gradients = fixture_payload.get("gradient_evidence")
+    fixture_ok = (
+        fixture_payload.get("passed") is True
+        and fixture_payload.get("fixture_training_only") is True
+        and fixture_payload.get("finite_loss") is True
+        and np.isfinite(float(fixture_payload.get("loss", float("nan"))))
+        and isinstance(gradients, dict)
+        and gradients
+        and all(value is True for value in gradients.values())
+        and fixture_payload.get("optimizer_step_completed") is True
+        and fixture_payload.get("processor_reload_validated") is True
+        and fixture_payload.get("checkpoint_reload_validated") is True
+        and fixture_payload.get("deterministic_inference_reload_validated") is True
+        and float(fixture_payload.get("identity_initialization_max_abs_error", float("inf")))
+        <= FACTOR_FILM_IDENTITY_INITIALIZATION_ATOL
+        and fixture_payload.get("object_condition_changes_visual_path") is True
+        and fixture_payload.get("bin_condition_changes_state_path") is True
+        and fixture_payload.get("object_condition_changes_state_path") is False
+        and fixture_payload.get("bin_condition_changes_visual_path") is False
+        and fixture_payload.get("factor_film_training_completed") is False
+        and fixture_payload.get("factor_film_checkpoints_complete") is False
+        and fixture_payload.get("factor_film_checkpoint_selected") is False
+        and fixture_payload.get("development_benchmark_completed") is False
+        and fixture_payload.get("final_schedule_accessed") is False
+        and fixture_payload.get("smolvla_go") is False
+        and fixture_payload.get("physical_target_validated") is False
+    )
+    report.check(
+        "FactorFiLM CPU fixture training and fresh reload",
+        fixture_ok,
+        "finite forward/backward, all gradient groups, optimizer step, checkpoint/processors, and deterministic reload passed",
+    )
+    report.factor_film_fixture_training_validated = fixture_ok
+    report.factor_film_implementation_validated = dry_run_ok and fixture_ok
+
+
+def _structural_checks(
+    report: Report,
+    *,
+    output_root: Path = DEFAULT_OUTPUT_ROOT,
+    semantic_evidence_root: Path | None = None,
+) -> None:
     report.check(
         "M4.3a imports",
         tuple(stable_task_id(value) for value in CANONICAL_TASK_SPECS) == M43_CANONICAL_TASK_IDS,
-        "portable contracts and semantic-audit functions imported without FactorFiLM",
+        "portable contracts and semantic-audit functions retain their canonical task order",
     )
     _math_and_contract_probe(report)
     _evidence_lifecycle_probe(report)
     _cli_dry_run_probe(report)
+    report.semantic_audit_implementation_validated = not report.failed
+
+    _factor_film_fixture_probe(report, output_root=output_root)
+    _semantic_evidence_probe(report, semantic_evidence_root)
     report.check(
         "test and final access prohibition",
-        not report.final_schedule_accessed
+        not report.test_split_accessed
+        and not report.fresh_seed_accessed
+        and not report.final_schedule_accessed
         and not report.final_benchmark_authorized
+        and not report.factor_film_development_evaluation_completed
         and not report.smolvla_go,
-        "non-target verification materialized no test, fresh, or final schedule identity",
+        "non-target verification materialized no test, fresh, development, or final schedule identity",
+    )
+    semantic_state_ok = report.semantic_audit_completed == (
+        report.semantic_audit_evidence_fingerprint is not None
     )
     report.check(
         "truthful physical-validation state",
-        not any(
+        semantic_state_ok
+        and not any(
             (
-                report.semantic_audit_completed,
                 report.state_onehot_semantic_alignment_validated,
                 report.tasktoken_semantic_alignment_validated,
+                report.factor_film_training_completed,
+                report.factor_film_checkpoints_complete,
+                report.factor_film_checkpoints_validated,
+                report.factor_film_checkpoint_selected,
                 report.factor_film_reload_validated,
+                report.factor_film_development_evaluation_completed,
+                report.factor_film_development_quality_validated,
+                report.development_benchmark_completed,
+                report.final_benchmark_authorized,
+                report.test_split_accessed,
+                report.fresh_seed_accessed,
+                report.final_schedule_accessed,
+                report.smolvla_go,
                 report.physical_target_validated,
             )
         ),
-        "fixtures and dry-run claim neither real checkpoint reload, semantic completion, nor physical execution",
+        "fixture-only evidence is separated from real training, checkpoint selection, development, final, and physical claims",
     )
-    report.semantic_audit_implementation_validated = not report.failed
-    report.implementation_validated = report.semantic_audit_implementation_validated
+    report.implementation_validated = (
+        report.semantic_audit_implementation_validated
+        and report.factor_film_implementation_validated
+        and not report.failed
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -663,7 +914,11 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     report = Report()
     try:
-        _structural_checks(report)
+        _structural_checks(
+            report,
+            output_root=output_root,
+            semantic_evidence_root=args.semantic_evidence_root,
+        )
     except Exception as error:  # noqa: BLE001 - command boundary preserves exact diagnostics
         traceback.print_exc()
         report.check(

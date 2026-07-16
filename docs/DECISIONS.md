@@ -1082,10 +1082,11 @@ workaround.
 
 ## Unresolved risks
 
-1. **M4.3a real semantic inference remains pending.** M4 full and M4.2 target-development are
-   complete, but local structural audit checks do not replace running the frozen checkpoints over
-   all M3B validation and `m42_dev_v0` inputs. FactorFiLM remains blocked until those two immutable
-   audit sections complete and validate.
+1. **FactorFiLM physical training and the semi-stable LeRobot hook boundary remain pending.** The
+   real M4.3a audit is complete, but M4.3b currently proves only local architecture/training/
+   checkpoint structure. No 100,000-step FactorFiLM run, selected checkpoint, or development rollout
+   exists. Its isolated hooks depend on LeRobot 0.6.0 intermediate model attributes, so any package
+   upgrade must repeat the fail-closed API, shape, token-layout, fixture, save/reload, and target gates.
 2. **ManiSkill does not declare a PyTorch upper bound.** M0 through M4.2 proved the selected PyTorch
    2.11 CUDA build on the accepted targets, but a new driver/container image must repeat the relevant
    install, simulator, rendering, checkpoint, and policy-inference gates.
@@ -1467,3 +1468,96 @@ statistics use JSON floats with more precision than their saved processor repres
 comparison first canonicalizes the project values to float32 and then requires exact tuple equality
 across State-OneHot, TaskToken, and the fingerprint-validated train record. No tolerance is
 introduced and no checkpoint or processor artifact is rewritten.
+
+## D-051 — Implement one factorized FiLM ACT through isolated instance-local hooks
+
+The clean RTX 5090 M4.3a audit completed 108 frozen-policy observations at Git
+`dfea8b3d7d28274909ff178cb9087a9a90e17ee7` and promoted evidence fingerprint
+`sha256:6342bdf4b019df203e6021947cbb39deacac2ea78cc585b5062091ed1d228671`. Under the
+locked action-range-normalized arm-only execution-window L2 metric, State-OneHot reached 37.96%
+full-task top-1, 76.85% object retrieval, and 50.93% bin retrieval; TaskToken reached 24.07%,
+50.00%, and 49.07%. Both changed outputs without reliably following the requested semantics,
+object confusion remained, bin retrieval was approximately random, and the development evidence
+also retained post-grasp shared-control failures. TaskToken remains rejected. This immutable audit
+authorizes one oracle repair, not a language claim or final benchmark.
+
+M4.3b therefore implements exactly one `ACT-Mixed-FactorFiLM` policy. Stable TaskSpec metadata maps
+to independent canonical `TargetObjectConditionV0` (`red_cube`, `green_cube`, `blue_cube`) and
+`DestinationBinConditionV0` (`left_bin`, `right_bin`) indices. A 32D object embedding projects to
+gamma/beta and applies residual FiLM only to the ResNet-18 layer-4 `[B,512,8,8]` feature map before
+ACT image projection. A separate 32D bin embedding applies residual FiLM only to the encoded
+`[B,512]` Panda-state token before Transformer processing. `PandaPolicyStateV0` remains 9D. There is
+no appended one-hot, object/bin vector, ENV input, combined token, instruction parser, or language
+embedding, and neither factor is allowed to enter the opposite path.
+
+Installed LeRobot 0.6.0 exposes public `PreTrainedConfig`, `ACTConfig`, `ACTPolicy`, and
+`make_act_pre_post_processors`, but no public callback at those intermediate representations. A
+single adapter subclasses `ACTPolicy` and registers instance-local Torch forward hooks on the
+semi-stable `policy.model.backbone` and `policy.model.encoder_robot_state_input_proj` outputs. It
+does not import/copy the private `modeling_act.ACT` implementation, patch installed files, or
+monkey-patch global behavior. The adapter binds the exact public signatures, version, underlying
+model module/name, feature-map key, image/state projection shapes, latent/state/64-image-token
+layout, decoder positions, action head, and one-hook-call-per-path invariant. Any drift fails
+clearly; no State-OneHot, TaskToken, or unconditioned fallback is permitted.
+
+Both FiLM projections use `normal(mean=0,std=1e-5)` weights and zero bias. This is close to identity
+while preserving a usable first-step gradient to each embedding; exactly zero projection weights
+would initially block embedding gradients. The full base ACT has 51,576,712 parameters. The object
+path adds 33,888 and the bin path 33,856, so only 67,744 parameters are added and the full policy has
+51,644,456. No backbone, hidden size, action head, loss, augmentation, sampler, or optimizer change
+is allowed.
+
+FactorFiLM uses independent canonical-JSON/SHA-256 architecture, mapping, run, checkpoint,
+manifest, validation-queue, selection, and dry-run identities. These bind the completed audit
+evidence, exact M3B/split/train-statistics fingerprints, ordered train/validation episodes, base ACT
+configuration, both embedding/injection contracts, optimizer/data/seed/Git/version identity, and
+expected 20 checkpoints. Machine paths do not affect portable fingerprints. The existing M4 atomic
+checkpoint lifecycle is extended with both FiLM paths and a strict local sidecar/reload; historical
+M4/M4.2 identities and checkpoint bytes remain unchanged. Resume rejects incompatible or completed
+runs. It binds locked seed-0 model/optimization fingerprints and the H=10/project runtime, accepts
+only the latest declared checkpoint or one sole exactly-next atomically promoted orphan, and lets
+clean staging remove only a matching owned unlinked incomplete directory. FactorFiLM direct saves
+preflight a new/empty destination before the public LeRobot writer runs. Command output/report
+paths reject dataset, evidence, source, Git, historical artifacts, and links before any write.
+
+Training is intentionally deferred. The intended target run must match State-OneHot's 288 M3B train
+episodes, 36 validation episodes, 9D train-only normalization, ResNet-18, action chunk 50, batch 32,
+100,000 steps, checkpoint interval 5,000, AdamW/loss/bfloat16, seed 0, horizon 10, and `project`
+runtime. Only M3B validation may rank checkpoints. The exact 20-entry queue has a canonical
+fingerprint, and a selection must embed and match that queue's run, schedule, fingerprints, and
+steps before ranking in success/wrong-object/wrong-object-in-bin/off-
+table/timeout/loss/earlier-step order. M3B test, M4 fresh, `m42_dev_v0`, `m42_final_v0`, and semantic-
+audit observations are forbidden training or selection inputs. `m42_dev_v0` may be used only by a
+later post-selection development rollout; the final schedule stays sealed.
+
+The structural commands are `scripts/train_act_factor_film.py --dry-run`, `--fixture`, and
+`environment/verify_m43.py`. Their local forward/backward, gradient, optimizer, processor,
+checkpoint, fresh-instance reload, deterministic inference, path-safety, resume, and selection tests
+may set implementation and fixture flags only. They must leave `factor_film_training_completed`,
+checkpoint completeness/selection, development completion/quality, physical validation, final
+authorization/access, and `smolvla_go` false.
+
+The published validation queue also carries each checkpoint's finite offline validation action
+loss. That value is read from the checkpoint's fingerprint-bound training metric through a
+metadata-only integrity loader, so the sixth ranking key cannot be replaced independently of the
+checkpoint and queue fingerprints. Target identities independently require strictly ordered,
+unique 288-train/36-validation episode lists and bind their counts and canonical list
+fingerprints into the data contract. The training manifest rechecks the base ACT and H=10/project
+runtime contract. Command reports additionally protect every tracked repository-root file (and
+`outputs/.gitkeep`) from overwrite; rejected report paths remain byte-identical and unwritten.
+
+The exact later clean-Git target-development command is:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python scripts/train_act_factor_film.py \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --output-root outputs/models/act-factor-film \
+  --evidence-root outputs/diagnostics/m43/remote-audit-dfea8b3/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
+  --device cuda \
+  --report outputs/diagnostics/m43/factor-film-target-development.json \
+  --clean-staging \
+  --target-development
+```
+
+An interrupted compatible run may add `--resume-checkpoint`; no implementation task may execute the
+command, select a real checkpoint, run `m42_dev_v0`, access `m42_final_v0`, or start SmolVLA.

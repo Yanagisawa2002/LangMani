@@ -5,8 +5,10 @@
 LangMani supports language-conditioned robotic manipulation in ManiSkill. M0 through M3B, M4 full,
 M4.1 explicit action-bound target smoke, and M4.2 target-development are complete. M4 full is
 experimentally and physically validated, but `baseline_quality_validated=false`; the M4.2 TaskToken
-candidate was rejected. M4.3a semantic alignment audit is active. The sealed M4.2 final benchmark,
-M4.3b FactorFiLM, and M5 have not started.
+candidate was rejected. The real M4.3a semantic-alignment audit is complete and authorizes one
+M4.3b `ACT-Mixed-FactorFiLM` implementation. M4.3b currently provides architecture, training,
+checkpoint, dry-run, and local fixture contracts only. No FactorFiLM target training, checkpoint
+selection, development rollout, sealed final benchmark, or M5 work has started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
@@ -16,10 +18,13 @@ M4.2 must not change M1 bounds/success, M3A/M3B data, train-only statistics, his
 weights/loss, or existing checkpoint fingerprints. Do not retrain old M4 controls, materialize or
 execute `m42_final_v0` during development, start M5, add new data/tasks, invoke M2 during rollout,
 or hide projection as clipping. Binary gripper handling is permitted only as the explicit versioned
-M4.2 component-7 ablation defined in `docs/M42_ORACLE_CONTROL_SPEC.md`. M4.3a may use only frozen
-PerTask, State-OneHot, and rejected TaskToken checkpoints on M3B validation and `m42_dev_v0`.
-It must keep those sources separate, must not access M3B test, M4 fresh, or `m42_final_v0`, and must
-not implement or initialize FactorFiLM until a real immutable semantic audit is complete.
+M4.2 component-7 ablation defined in `docs/M42_ORACLE_CONTROL_SPEC.md`. The immutable M4.3a audit
+used only frozen PerTask, State-OneHot, and rejected TaskToken checkpoints on M3B validation and
+`m42_dev_v0`, with those sources kept separate and M3B test, M4 fresh, and `m42_final_v0` excluded.
+M4.3b must keep `PandaPolicyStateV0` at nine dimensions and use only the canonical target-object
+visual FiLM path plus destination-bin state/context FiLM path. It must not silently fall back to
+State-OneHot/TaskToken, train from semantic-audit observations, select on development data, or
+authorize the final schedule or SmolVLA.
 
 ## Directory ownership
 
@@ -104,8 +109,11 @@ python scripts/train_act_task_token.py --help
 python scripts/evaluate_m42.py --help
 python environment/verify_m42.py
 
-# M4.3a zero-training semantic-audit commands
+# M4.3 semantic-audit and FactorFiLM structural commands
 python scripts/audit_act_semantics.py --help
+python scripts/train_act_factor_film.py --help
+python scripts/train_act_factor_film.py --dry-run --fixture-contract
+python scripts/train_act_factor_film.py --fixture
 python environment/verify_m43.py
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
@@ -149,6 +157,17 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m42.py --target-development
 
 # Separate future authorization only after all development selections are immutable.
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m42.py --target-final
+
+# Future M4.3b target training only after the structural implementation commit is clean and pushed.
+# This command trains and publishes the validation queue; it does not run m42_dev_v0 or final.
+CUDA_VISIBLE_DEVICES=0 python scripts/train_act_factor_film.py \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --output-root outputs/models/act-factor-film \
+  --evidence-root outputs/diagnostics/m43/remote-audit-dfea8b3/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
+  --device cuda \
+  --report outputs/diagnostics/m43/factor-film-target-development.json \
+  --clean-staging \
+  --target-development
 ```
 
 The exact environment creation commands are maintained in `README.md`.
@@ -180,8 +199,19 @@ The exact environment creation commands are maintained in `README.md`.
 - Historical M4.2 evidence may supply its real aggregate post-grasp distribution, but it lacks the
   exact per-episode fields for M4.3 first-interaction confusion. Keep that evidence explicitly
   unavailable; never reconstruct first interactions from aggregate wrong-object counts.
+- M4.3b condition preprocessing must use stable TaskSpec metadata, never instruction parsing. The
+  object order is red/green/blue and the bin order is left/right. Object FiLM may modify only the
+  ResNet-18 feature map; bin FiLM may modify only the encoded 9D-state token. No combined task token
+  or state-appended task feature is permitted.
+- FactorFiLM target training must remain a later explicit clean-Git command. Only the exact M3B train
+  view may train it, only M3B validation may select a checkpoint, and fixture forward/backward or
+  save/reload evidence must never set training, checkpoint, rollout, or physical-validation flags.
 - Preserve raw, binary-transformed, projected, and executed action evidence as separate contracts.
   OneHot and TaskToken must always be described as oracle conditioning, never language understanding.
+- M4.3b target development is one seed-0 comparison only. Its model/optimization fingerprints,
+  H=10/project runtime, exact 20-checkpoint queue, and validation-only selection are immutable.
+  Reports, outputs, staging, and resume paths must reject protected or linked content before writes;
+  only the latest declared checkpoint or sole next atomically promoted orphan is recoverable.
 - Do not describe a skipped, metadata-only, structural-only, or CPU-only check as physical GPU or
   rendering validation.
 
@@ -215,7 +245,10 @@ development benchmark. It must leave `final_benchmark_completed=false` and no Sm
 claim. M4.2 final is a later separate command requiring immutable selections, clean Git, sealed
 schedule authorization, paired PerTask/State-OneHot/TaskToken evaluation, and an explicit go/no-go;
 it never starts M5 automatically.
-M4.3a local structural completion may validate implementation without claiming a completed semantic
-audit or physical execution. M4.3b remains blocked until real validation and `m42_dev_v0` audit
-inputs pass immutable promotion with `semantic_audit_completed=true`; audit completion alone does
-not authorize a final schedule or SmolVLA.
+M4.3a real validation and `m42_dev_v0` inputs passed immutable promotion with
+`semantic_audit_completed=true`. M4.3b local structural completion may validate the architecture,
+processor path, fixture optimization, and local checkpoint reload only. It must leave
+`factor_film_training_completed=false`, `factor_film_checkpoints_complete=false`,
+`factor_film_checkpoint_selected=false`, `development_benchmark_completed=false`,
+`final_schedule_accessed=false`, `smolvla_go=false`, and `physical_target_validated=false` until
+their separately authorized real stages complete.

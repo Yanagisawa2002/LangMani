@@ -383,3 +383,20 @@ The completed command truthfully reported physical target validation for the dev
 It left `final_benchmark_completed=false`, `go_no_go_decision_completed=false`, and
 `smolvla_go=false`; `m42_final_v0` was not materialized, rendered, reset, or evaluated. A later
 milestone must not run `--target-final` for this rejected TaskToken candidate.
+
+## M4.3 handoff (2026-07-16)
+
+The subsequent real M4.3a semantic audit used the frozen TaskToken checkpoint only as a rejected
+comparison control. Across the combined 108 M3B-validation and `m42_dev_v0` observations,
+TaskToken achieved 24.07% full-task top-1, 50.00% target-object retrieval, and 49.07%
+destination-bin retrieval. State-OneHot achieved 37.96%, 76.85%, and 50.93% respectively. The
+completed evidence fingerprint is
+`sha256:6342bdf4b019df203e6021947cbb39deacac2ea78cc585b5062091ed1d228671`; it preserves
+`final_benchmark_authorized=false`, `final_schedule_accessed=false`, and `smolvla_go=false`.
+
+Those results authorize one M4.3b oracle repair at the control layer, not the M4.2 final benchmark.
+`ACT-Mixed-FactorFiLM` keeps `PandaPolicyStateV0[9]`, uses target-object FiLM only on the visual
+backbone feature map and destination-bin FiLM only on the encoded state token, and retains the
+selected horizon 10 plus `project` runtime. Its local structural/fixture implementation does not
+reopen this M4.2 decision: no FactorFiLM target training, selected checkpoint, development rollout,
+final schedule, go/no-go, or SmolVLA claim exists yet.

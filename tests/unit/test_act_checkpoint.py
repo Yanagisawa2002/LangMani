@@ -17,6 +17,7 @@ from langmani.policies.act_checkpoint import (
     ActCheckpointError,
     assert_resume_compatible,
     load_act_checkpoint,
+    load_act_checkpoint_manifest,
     save_act_checkpoint,
 )
 from langmani.policies.act_training import DeterministicResumeBatchSampler
@@ -330,6 +331,20 @@ def test_checkpoint_is_staged_promoted_manifested_and_strictly_reloaded(tmp_path
     assert preprocessor.save_calls[0]["push_to_hub"] is False
     assert preprocessor.save_calls[0]["config_filename"] == PREPROCESSOR_CONFIG
     assert postprocessor.save_calls[0]["push_to_hub"] is False
+
+    metadata = load_act_checkpoint_manifest(
+        run_root=tmp_path,
+        checkpoint_relative_path=record.relative_path,
+        expected_identity=identity,
+    )
+    assert metadata.record == record
+    assert metadata.training_state.global_step == 5
+    assert metadata.training_metric == {
+        "step": 5,
+        "total_loss": 0.25,
+        "checkpoint_path": None,
+    }
+    assert _FakePolicy.load_calls == []
 
     random.seed(101)
     np.random.seed(102)

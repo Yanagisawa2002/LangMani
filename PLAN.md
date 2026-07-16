@@ -1,10 +1,12 @@
 # LangMani roadmap
 
-Milestone M4.3a is active. M0 through M3B, M4 full, M4.1 target smoke, and M4.2
-target-development are complete on native targets. M4 full is experimentally and physically
+Milestone M4.3b is at structural implementation. M0 through M3B, M4 full, M4.1 target smoke, and
+M4.2 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken after development; its
-sealed final benchmark remains unaccessed. M4.3a audits frozen shared-policy semantics without new
-training. FactorFiLM, the sealed final benchmark, and M5 are not authorized by structural work.
+sealed final benchmark remains unaccessed. The real M4.3a frozen-policy semantic audit is complete.
+M4.3b now implements one FactorFiLM architecture plus local fixture/training contracts, but no
+100,000-step FactorFiLM run, checkpoint selection, development rollout, final benchmark, or M5 work
+has begun.
 
 ## M0 — Reproducible environment foundation (complete)
 
@@ -137,7 +139,7 @@ TaskToken run, selected its 90,000-step checkpoint from M3B validation only, and
 or resetting a final seed. The sealed final result and SmolVLA decision remain absent. The normative
 contract is `docs/M42_ORACLE_CONTROL_SPEC.md`.
 
-## M4.3a — Shared-policy semantic alignment audit (active)
+## M4.3a — Shared-policy semantic alignment audit (complete)
 
 Use the frozen six PerTask, State-OneHot, and rejected TaskToken checkpoints to compare complete
 postprocessed ACT chunks on fixed RGB plus `PandaPolicyStateV0[9]` observations. Audit all M3B
@@ -151,20 +153,43 @@ Historical M4.2 development evidence supports aggregate post-grasp failure distr
 the exact per-episode fields required to reconstruct first-interaction confusion. M4.3a must report
 that confusion as unavailable rather than derive it from aggregate wrong-object counts.
 
-M4.3a adds no model or training. It never opens M3B test, M4 fresh, or `m42_final_v0`. Local
-structural verification cannot claim real semantic or physical completion. M4.3b may begin only
-after real validation and development audits pass immutable validation from a clean committed Git
-boundary. The normative contract is `docs/M43_SHARED_POLICY_REPAIR_SPEC.md`.
+M4.3a adds no model or training. It never opened M3B test, M4 fresh, or `m42_final_v0`. The real
+clean-Git RTX 5090 audit completed 108 observations and promoted immutable evidence with fingerprint
+`sha256:6342bdf4b019df203e6021947cbb39deacac2ea78cc585b5062091ed1d228671`. The combined
+State-OneHot result was 37.96% full-task top-1, 76.85% target-object retrieval, and 50.93%
+destination-bin retrieval. TaskToken reached 24.07%, 50.00%, and 49.07% respectively and remains
+rejected. The audit shows output sensitivity without reliable requested semantics, target-object
+confusion, approximately random bin retrieval, and shared-policy post-grasp failures. It sets
+`semantic_audit_completed=true` while final/test/historical-fresh access and SmolVLA remain false.
+The normative contract is `docs/M43_SHARED_POLICY_REPAIR_SPEC.md`.
 
-The local M4.3a structural gate passes Ruff, dependency, build, non-target verifier, focused tests,
-and the full CPU-safe suite. Real frozen-checkpoint inference and GPU evidence remain pending, so
-semantic audit completion and M4.3b authorization remain false.
+## M4.3b — One factorized FiLM repair (structural implementation complete; target development pending)
 
-## M4.3b — One factorized FiLM repair (blocked)
+Implement exactly one oracle `ACT-Mixed-FactorFiLM` with separate `TargetObjectConditionV0` and
+`DestinationBinConditionV0` mappings. Red/green/blue object embeddings modulate the ResNet-18
+layer-4 feature map before ACT image projection; left/right bin embeddings modulate the encoded
+nine-dimensional Panda-state token before Transformer processing. Each embedding is 32D. The
+residual FiLM projections use standard deviation `1e-5` weights and zero bias, so the initial
+transform is close to identity. The policy adds 67,744 trainable parameters and adds neither a
+combined task token nor task features to `PandaPolicyStateV0[9]`.
 
-After M4.3a is complete, implement exactly one oracle `ACT-Mixed-FactorFiLM` with separate target-
-object visual FiLM and destination-bin state/context FiLM paths. Do not begin this stage during the
-M4.3a commit or infer its authorization from nonzero action sensitivity.
+The project-owned LeRobot 0.6.0 adapter subclasses the public `ACTPolicy` and uses instance-local
+hooks around the semi-stable backbone and state-projection outputs. Compatibility checks fail closed
+on symbol, signature, model-attribute, token-layout, or tensor-shape drift. Training reuses the exact
+288/36 M3B train/validation views, train-only statistics, locked seed 0, 100,000-step M4
+configuration, a fingerprint-bound 20-checkpoint schedule, validation-only ranking, action chunk
+50, locked rollout horizon 10, and `project` runtime.
+Stable TaskSpec metadata supplies the two indices; language text is never parsed.
+
+The current stage implements typed identities, conditioning, processor integration, deterministic
+local forward/backward and save/reload fixtures, dry-run/fixture/development command contracts,
+compatible latest/sole-orphan resume, protected path rejection, queue-bound validation-only
+selection, and final-schedule prohibition. It does not execute
+the full CUDA run. Consequently `factor_film_training_completed=false`,
+`factor_film_checkpoints_complete=false`, `factor_film_checkpoint_selected=false`,
+`development_benchmark_completed=false`, `final_schedule_accessed=false`, `smolvla_go=false`, and
+`physical_target_validated=false` remain mandatory. A later explicitly authorized clean-Git target
+command may train it; audit completion or local fixture success cannot authorize `m42_final_v0`.
 
 ## M5 — SmolVLA baseline (planned)
 

@@ -106,6 +106,31 @@ class LoadedActCheckpoint:
     component_fingerprints: CheckpointComponentFingerprints
 
 
+@dataclass(frozen=True, slots=True)
+class LoadedActCheckpointManifest:
+    """Integrity-checked checkpoint metadata without model deserialization.
+
+    This binds the persisted training metric to the immutable checkpoint
+    fingerprint.  It intentionally does not claim that the model artifacts
+    have been reloaded; callers that need executable weights must still use
+    :func:`load_act_checkpoint`.
+    """
+
+    training_state: TrainingState
+    record: CheckpointRecord
+    checkpoint_root: Path
+    training_metric: Mapping[str, object] | None
+
+
+@dataclass(frozen=True, slots=True)
+class _ValidatedCheckpointManifest:
+    checkpoint_root: Path
+    manifest: Mapping[str, object]
+    training_state: TrainingState
+    record: CheckpointRecord
+    training_metric: Mapping[str, object] | None
+
+
 def save_act_checkpoint(
     *,
     run_root: str | Path,
@@ -228,20 +253,12 @@ def save_act_checkpoint(
             shutil.rmtree(staging_root)
 
 
-def load_act_checkpoint(
+def _load_validated_checkpoint_manifest(
     *,
     run_root: str | Path,
     checkpoint_relative_path: str,
     expected_identity: ActCheckpointIdentity,
-    optimizer: Optimizer | None = None,
-    scheduler: LRScheduler | None = None,
-    for_resume: bool = False,
-    restore_rng: bool | None = None,
-    policy_class: type[_PolicyClass] | None = None,
-    processor_loader: ProcessorLoader | None = None,
-    existing_policy: object | None = None,
-) -> LoadedActCheckpoint:
-    """Integrity-check and reload a checkpoint without contacting the Hub."""
+) -> _ValidatedCheckpointManifest:
     root = Path(run_root).resolve()
     checkpoint_root = _safe_relative_path(root, checkpoint_relative_path)
     if not checkpoint_root.is_dir() or checkpoint_root.is_symlink():
@@ -271,6 +288,60 @@ def load_act_checkpoint(
     _validate_record(record, expected_identity, training_state, manifest)
     if marker.get("checkpoint_fingerprint") != record.checkpoint_fingerprint:
         raise ActCheckpointError("completion marker checkpoint fingerprint mismatch")
+    return _ValidatedCheckpointManifest(
+        checkpoint_root=checkpoint_root,
+        manifest=manifest,
+        training_state=training_state,
+        record=record,
+        training_metric=training_metric,
+    )
+
+
+def load_act_checkpoint_manifest(
+    *,
+    run_root: str | Path,
+    checkpoint_relative_path: str,
+    expected_identity: ActCheckpointIdentity,
+) -> LoadedActCheckpointManifest:
+    """Load fingerprint-bound metadata without deserializing model artifacts."""
+    validated = _load_validated_checkpoint_manifest(
+        run_root=run_root,
+        checkpoint_relative_path=checkpoint_relative_path,
+        expected_identity=expected_identity,
+    )
+    return LoadedActCheckpointManifest(
+        training_state=validated.training_state,
+        record=validated.record,
+        checkpoint_root=validated.checkpoint_root,
+        training_metric=validated.training_metric,
+    )
+
+
+def load_act_checkpoint(
+    *,
+    run_root: str | Path,
+    checkpoint_relative_path: str,
+    expected_identity: ActCheckpointIdentity,
+    optimizer: Optimizer | None = None,
+    scheduler: LRScheduler | None = None,
+    for_resume: bool = False,
+    restore_rng: bool | None = None,
+    policy_class: type[_PolicyClass] | None = None,
+    processor_loader: ProcessorLoader | None = None,
+    existing_policy: object | None = None,
+) -> LoadedActCheckpoint:
+    """Integrity-check and reload a checkpoint without contacting the Hub."""
+    root = Path(run_root).resolve()
+    validated = _load_validated_checkpoint_manifest(
+        run_root=root,
+        checkpoint_relative_path=checkpoint_relative_path,
+        expected_identity=expected_identity,
+    )
+    checkpoint_root = validated.checkpoint_root
+    manifest = validated.manifest
+    training_state = validated.training_state
+    record = validated.record
+    training_metric = validated.training_metric
     _validate_artifacts(checkpoint_root, manifest)
     component_fingerprints = _component_fingerprints(manifest)
 
@@ -740,7 +811,9 @@ __all__ = [
     "ActCheckpointError",
     "CheckpointComponentFingerprints",
     "LoadedActCheckpoint",
+    "LoadedActCheckpointManifest",
     "assert_resume_compatible",
     "load_act_checkpoint",
+    "load_act_checkpoint_manifest",
     "save_act_checkpoint",
 ]

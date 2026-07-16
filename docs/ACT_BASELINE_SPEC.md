@@ -651,10 +651,110 @@ atomic promotion, and a last completion marker. A completed fingerprint root is 
 fixtures may validate the implementation but cannot claim real checkpoint inference, semantic
 completion, or physical target validation.
 
+The real combined M4.3a audit completed at Git
+`dfea8b3d7d28274909ff178cb9087a9a90e17ee7` over 108 observations and promoted evidence
+fingerprint `sha256:6342bdf4b019df203e6021947cbb39deacac2ea78cc585b5062091ed1d228671`.
+State-OneHot reached 37.96% full-task top-1, 76.85% target-object retrieval, and 50.93%
+destination-bin retrieval. TaskToken reached 24.07%, 50.00%, and 49.07% respectively and remains
+rejected. These results authorize one factorized repair because requested-object confusion and
+approximately random bin retrieval persist; they do not validate any repair quality or authorize
+the sealed final schedule.
+
+## M4.3b FactorFiLM compatibility boundary
+
+M4.3b introduces exactly one independent architecture, `ACT-Mixed-FactorFiLM`. It does not add a
+historical `ActVariant`, change any M4/M4.2 checkpoint, or alter the M3B feature schema. One shared
+training/inference conditioning component maps stable TaskSpec metadata into two canonical indices:
+
+- `TargetObjectConditionV0`: `red_cube=0`, `green_cube=1`, `blue_cube=2`;
+- `DestinationBinConditionV0`: `left_bin=0`, `right_bin=1`.
+
+Instruction text is never parsed. The policy still consumes only `observation.images.base_camera`
+and `PandaPolicyStateV0[9]`; there is no state-appended one-hot, object/bin one-hot, combined task
+token, language embedding, or LeRobot ENV feature.
+
+The object path uses a learned 32D embedding followed by a projection to 1,024 values. The first
+512 are gamma and the remaining 512 beta for the ResNet-18 layer-4 feature map
+`[B,512,8,8]`. Explicit `[B,512,1,1]` broadcasting applies
+`visual * (1 + gamma_object) + beta_object` after backbone extraction and before ACT's image
+projection. Destination identity cannot enter this path.
+
+The bin path uses a separate learned 32D embedding and projection to 1,024 values. Its gamma/beta
+each have shape `[B,512]` and modulate the encoded nine-dimensional Panda-state token after
+`nn.Linear(9,512)` and before Transformer processing. Target-object identity cannot enter this
+path. Projection weights use `normal(mean=0,std=1e-5)` and projection biases are zero, making both
+initial transforms close to identity without eliminating the first-step embedding gradient.
+
+For the locked primary ACT configuration, the unmodified ACT has 51,576,712 parameters. The object
+embedding/projection adds 33,888 and the bin embedding/projection adds 33,856, for an exact 67,744
+increase and 51,644,456 total. No other model capacity changes.
+
+The adapter uses these public LeRobot 0.6.0 symbols:
+
+```text
+lerobot.configs.PreTrainedConfig
+lerobot.policies.act.ACTConfig
+lerobot.policies.act.ACTPolicy
+lerobot.policies.act.make_act_pre_post_processors
+PreTrainedConfig.from_pretrained(pretrained_name_or_path, *, force_download=False,
+                                 resume_download=None, proxies=None, token=None,
+                                 cache_dir=None, local_files_only=False, revision=None,
+                                 **policy_kwargs)
+ACTPolicy(config: ACTConfig, **kwargs)
+ACTPolicy.forward(batch)
+ACTPolicy.predict_action_chunk(batch)
+ACTPolicy.select_action(batch)
+ACTPolicy.save_pretrained(save_directory, *, state_dict=None, repo_id=None,
+                          push_to_hub=False, card_kwargs=None, **push_to_hub_kwargs)
+ACTPolicy.from_pretrained(pretrained_name_or_path, *, config=None, force_download=False,
+                          resume_download=None, proxies=None, token=None, cache_dir=None,
+                          local_files_only=False, revision=None, strict=False, **kwargs)
+make_act_pre_post_processors(config, dataset_stats=None)
+```
+
+`ACTPolicy` exposes no public hook at the required intermediate stages. A single project-owned
+adapter therefore subclasses it and registers instance-local Torch forward hooks on the semi-stable
+`policy.model.backbone` and `policy.model.encoder_robot_state_input_proj` outputs. It neither imports
+the private `lerobot.policies.act.modeling_act.ACT` class directly nor monkey-patches global ACT
+behavior. A compatibility contract binds public signatures, LeRobot version, underlying model type,
+backbone dictionary key, `[B,512,8,8]` feature map, `[B,dim_model]` state projection, latent/state/64-
+image-token encoder structure, decoder position count, and `[B,chunk_size,8]` action head. Drift is
+a hard failure and never falls back to State-OneHot or TaskToken.
+
+FactorFiLM training extends the existing lifecycle after the installed LeRobot preprocessor. It
+uses the same 288 M3B train episodes, 36 validation episodes, train-only statistics, primary model
+and optimizer configuration, locked seed 0/data order, action chunk 50, 100,000 steps, 5,000-step checkpoint
+interval, expected 20 checkpoints, batch size 32, bfloat16 CUDA behavior, horizon 10, and `project`
+runtime as State-OneHot. Only the separated conditioning modules increase parameters.
+
+FactorFiLM run, architecture, mapping, processor, checkpoint, and selection identities are
+independent canonical-JSON/SHA-256 contracts. Checkpoints extend the M4 atomic format with both
+embeddings/projections and the architecture sidecar, while retaining base ACT, processors,
+train-only statistics, optimizer/scheduler/RNG state, versions, Git, dataset/split fingerprints,
+and global step. Direct saves reject nonempty destinations before upstream files are written.
+Resume rejects every dataset, split, mapping, embedding, injection, ACT, statistics, optimizer,
+schema, or completed-run mismatch, and accepts only the latest declared checkpoint or sole next
+atomically promoted orphan.
+
+Only M3B validation can select among the expected 20 checkpoints. The queue has a canonical
+fingerprint; selection embeds it and must match its run, schedule, checkpoint fingerprints, and
+steps. The ranking is success,
+wrong-object interaction, wrong object in target bin, target off table, timeout, action loss, then
+earlier step. M3B test, historical M4 fresh, `m42_dev_v0`, `m42_final_v0`, and semantic-audit
+observations are not selection inputs. Development rollout begins only after an immutable
+validation selection and is not part of this structural milestone.
+
+The local fixture may construct, optimize, save, and reload a reduced ACT model and processors. It
+must prove finite forward/backward, gradients in the base model and all four new parameter groups,
+separated injection, near-identity initialization, and deterministic fresh-instance inference. That
+evidence can set only FactorFiLM implementation/fixture flags. It cannot set training, checkpoint,
+selection, development, physical, final, or SmolVLA flags.
+
 ## Handoff
 
-The immediate handoff is M4.3a zero-training semantic audit, not M4.2-final or SmolVLA. M4.3b may
-implement exactly one factorized FiLM repair only after the real validation and `m42_dev_v0` audit
-artifacts pass immutable validation at a separate clean Git boundary. Audit completion alone does
-not authorize a final schedule or any language-policy milestone, and no command starts either
-automatically.
+The immediate handoff is a separately authorized clean-Git FactorFiLM target-development training
+run, not M4.2-final or SmolVLA. It must use the validated M4.3a evidence and exact M3B train/
+validation identities. Structural completion and fixture training leave
+`factor_film_training_completed=false`, `factor_film_checkpoint_selected=false`,
+`development_benchmark_completed=false`, `final_schedule_accessed=false`, and `smolvla_go=false`.
+No command starts a final or language-policy milestone automatically.
