@@ -236,6 +236,11 @@ document. Results must be copied only from a validated immutable target audit af
 
 ## Local structural validation status (2026-07-16)
 
+The standalone M4.3a implementation baseline is Git commit
+`ddead2c65134dd23c9188d35e8fe995143c79a88` (`feat: complete M4.3 semantic alignment audit`).
+This hash identifies the code and documentation that passed the structural gate below; the
+subsequent documentation-only binding commit does not change the implementation.
+
 The final M4.3a-focused selection reported 147 passed and one Windows symlink-creation permission
 skip. The complete CPU-safe suite reported 840 passed, 14 skipped, and 15 hardware/rendering tests
 deselected. Ruff formatting and lint checks, `pip check`, sdist/wheel build, and the non-target
