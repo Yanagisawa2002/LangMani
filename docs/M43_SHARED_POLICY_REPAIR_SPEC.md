@@ -2,10 +2,14 @@
 
 This document is the normative contract for LangMani milestone M4.3. M4.3 begins with a
 zero-training semantic audit of the frozen M4/M4.2 controls. That real M4.3a audit is complete and
-immutable. A separate M4.3b change now implements exactly one oracle-conditioned
+immutable. A separate M4.3b change implements exactly one oracle-conditioned
 `ACT-Mixed-FactorFiLM` policy plus its training/checkpoint contracts and local non-target fixture.
-M4.3b does not execute the 100,000-step target run, select a real checkpoint, run `m42_dev_v0`,
-access `m42_final_v0`, or start SmolVLA.
+One target-development execution is now authorized. Its architecture/training producer is fixed at
+Git commit `8ee0f1babf36b91d1ee2a39701e4a6db6003b660`; later evaluation/verifier code is a separate
+lineage and must not mutate that run. Its real preflight failed before training on the
+EpisodeExportRecord index contract; D-053 stops execution pending explicit producer
+reauthorization. No completed target result is claimed in this specification.
+M3B test, historical M4 fresh seeds, `m42_final_v0`, SmolVLA, and M5 remain unauthorized.
 
 M4.3 preserves the M1 task, camera, observation/no-leakage, success, action-space, `num_envs=1`, and
 `pd_joint_pos` contracts; the authoritative M3A archive; the immutable M3B export and scene-group
@@ -383,7 +387,9 @@ TaskToken, or unconditioned fallback.
 
 ## Training, identity, and checkpoint contract
 
-The intended target-development run is a fair architectural comparison with State-OneHot. It uses:
+The authorized target-development run is a fair architectural comparison with State-OneHot. Its
+architecture/training identity is fixed at clean Git commit
+`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. It uses:
 
 - the same 288 M3B train and 36 validation episodes;
 - dataset fingerprint `sha256:3f4d81471ac7c3ecc034206bc207524c4cbfbd1f7874b25eca894a5b607acfb4`;
@@ -426,7 +432,7 @@ M3B/evidence/source/Git/historical artifacts or traverse a symlink/junction.
 
 ## Validation selection and access locks
 
-The future selection queue contains exactly the 20 expected checkpoint steps, has its own canonical
+The selection queue contains exactly the 20 expected checkpoint steps, has its own canonical
 fingerprint, and evaluates only M3B validation. Each item includes the offline validation loss read
 from the checkpoint's fingerprint-bound training metric. A selection record embeds that queue and
 must match all 20 `(checkpoint fingerprint, step, loss)` tuples and its validation schedule. Its
@@ -437,7 +443,7 @@ deterministic ranking is:
 3. lowest wrong object in target bin rate;
 4. lowest target-off-table rate;
 5. lowest timeout rate;
-6. lower validation action loss;
+6. lower checkpoint-bound validation objective;
 7. earlier checkpoint step.
 
 M3B test, historical M4 fresh seeds, `m42_dev_v0`, `m42_final_v0`, and semantic-audit observations
@@ -447,9 +453,14 @@ validated as a lock artifact only; no M4.3b implementation, dry-run, fixture, tr
 selection command may enumerate its seeds, construct observations, reset an environment, run a
 policy, or authorize final evaluation.
 
+The legacy queue field named `offline_validation_action_loss` stores the same total ACT validation
+objective used by historical M4/M4.2 selection: action reconstruction plus weighted KL when the VAE
+is active. The schema name remains for compatibility; it is not an arm-only loss and is not
+recomputed under a new definition.
+
 ## Structural command and fixture boundary
 
-The project-owned command supports `--dry-run`, `--fixture`, and a future explicit
+The project-owned command supports `--dry-run`, `--fixture`, and the explicit
 `--target-development` contract:
 
 ```bash
@@ -464,7 +475,7 @@ python scripts/train_act_factor_film.py \
 python scripts/train_act_factor_film.py \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --output-root outputs/models/act-factor-film \
-  --evidence-root outputs/diagnostics/m43/remote-audit-dfea8b3/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
+  --evidence-root outputs/diagnostics/m43/semantic-audit/evidence/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
   --device cpu \
   --report outputs/diagnostics/m43/factor-film-dry-run.json \
   --dry-run
@@ -472,7 +483,7 @@ python scripts/train_act_factor_film.py \
 python scripts/train_act_factor_film.py \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --output-root outputs/models/act-factor-film \
-  --evidence-root outputs/diagnostics/m43/remote-audit-dfea8b3/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
+  --evidence-root outputs/diagnostics/m43/semantic-audit/evidence/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
   --device cpu \
   --report outputs/diagnostics/m43/factor-film-fixture.json \
   --fixture
@@ -485,13 +496,13 @@ instance, and compares deterministic inference with `atol=1e-6` and `rtol=1e-6`.
 object-only visual changes, bin-only state changes, untouched opposite pre-FiLM paths, explicit
 broadcasting, and near-identity initialization. It is never checkpoint-quality or physical evidence.
 
-The later GPU target-development command is exactly:
+The authorized GPU producer command is exactly:
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python scripts/train_act_factor_film.py \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --output-root outputs/models/act-factor-film \
-  --evidence-root outputs/diagnostics/m43/remote-audit-dfea8b3/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
+  --evidence-root outputs/diagnostics/m43/semantic-audit/evidence/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
   --device cuda \
   --report outputs/diagnostics/m43/factor-film-target-development.json \
   --clean-staging \
@@ -499,8 +510,173 @@ CUDA_VISIBLE_DEVICES=0 python scripts/train_act_factor_film.py \
 ```
 
 An interruption may resume only by adding the explicit `--resume-checkpoint` for a compatible
-incomplete run. This structural milestone does not execute either target path or create a real
-training directory.
+incomplete run. The historical structural gate did not execute this path; target results remain
+unclaimed until generated artifacts pass the independent verifier.
+
+## M4.3b target-development evidence boundary
+
+The completed training run is immutable and remains owned by producer commit
+`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. Selection, reload, development, semantic analysis,
+quality calculation, and independent verification may be implemented by a later commit, but that
+consumer Git identity is recorded separately and cannot change the run manifest, checkpoint bytes,
+checkpoint fingerprints, processor files, training metrics, or producer Git. Post-training
+evidence uses a separate fingerprint-owned root with owned staging, checksum validation, atomic
+promotion, and a last completion marker.
+
+The resumable post-training command contract is inspected with:
+
+```bash
+python scripts/evaluate_act_factor_film.py --help
+```
+
+Its stage order is fixed:
+
+1. validate the immutable 100,000-step producer, all scheduled metrics, and exactly 20 complete
+   checkpoints at steps `5000,10000,...,100000`;
+2. execute exactly 36 M3B-validation episodes for every checkpoint;
+3. publish and lock the predeclared seven-key validation-only selection;
+4. validate the selected checkpoint and processors in a fresh operating-system process;
+5. run the paired 216-episode `m42_dev_v0` comparison;
+6. publish separately identified validation and development semantic audits;
+7. publish exact first-interaction/post-grasp evidence and the conjunctive quality decision; and
+8. independently verify the completed evidence without writing to it.
+
+Each promoted stage is immutable. Resume may reuse a content-valid completed stage and continue to
+the next one, but it cannot alter a selection, overwrite a completed rollout, repair a changed
+checkpoint, or retrain. Missing, extra, linked, checksum-mismatched, identity-incompatible, or
+prohibited-source evidence fails closed.
+
+### Validation-only selection and fresh reload
+
+Every checkpoint uses the exact same six M3B validation scene groups times six tasks, for 36
+episodes per checkpoint and 720 validation episodes overall. M3B test, historical M4 test/fresh,
+semantic-audit observations, `m42_dev_v0`, and `m42_final_v0` cannot enter the queue or ranking.
+Selection uses counts, not rounded rates, in this exact order:
+
+1. highest task-success count;
+2. lowest wrong-object interaction count;
+3. lowest wrong-object-in-target-bin count;
+4. lowest target-off-table count;
+5. lowest timeout count;
+6. lower checkpoint-bound total ACT validation objective; and
+7. earlier checkpoint step.
+
+The selection record contains all 20 candidates and all seven fields, binds the run/schedule/queue
+and checkpoint fingerprints, and is immutable before any development observation is materialized.
+
+A new operating-system process must then reconstruct a fresh FactorFiLM policy, object/bin
+mappings, preprocessor, policy postprocessor, and explicit H=10/`project` action runtime. On one
+fixed validation observation it compares the complete postprocessed environment-semantic action
+chunk, not only the first action. Both references must have shape `[50,8]` and match with
+`atol=1e-6`, `rtol=1e-6`. A failed fingerprint, processor, architecture, shape, dtype, finiteness,
+or numerical comparison stops before development.
+
+### Paired development, semantic, and interaction evidence
+
+Development uses only the already-open immutable `m42_dev_v0` schedule with fingerprint
+`sha256:981547e771b2b5cd3a77e2788bb49d29fc45b3f59c607021a03a4e2ce70b43f1`. It evaluates exactly:
+
+- frozen PerTask selected checkpoints: 12 scenes x 6 tasks = 72 episodes;
+- frozen State-OneHot selected checkpoint: 12 scenes x 6 tasks = 72 episodes; and
+- selected FactorFiLM checkpoint: 12 scenes x 6 tasks = 72 episodes.
+
+The total is exactly 216 physical episodes. Every control receives the same ordered scene/task
+identities, M1 environment/success geometry, 200-step limit, policy reset behavior, H=10 queue,
+explicit `BoundedActionEnvPostprocessorV0(mode="project")`, control frequency, and renderer. The
+rollout path imports or invokes no M2 expert. PerTask, State-OneHot, and FactorFiLM episode records
+must be pairwise joinable by schedule/scene/task identity before aggregation.
+
+New `m42_dev_v0` rollout records use the explicit `EvaluationSplit.DEVELOPMENT` label. They must not
+reuse the historical `fresh_seed` label, because fresh-seed access is prohibited and audited
+independently. Immutable M4.2 development evidence keeps its legacy label under the narrow D-049
+compatibility rule and is never rewritten. The final path keeps its existing split semantics and
+remains disabled and inaccessible throughout M4.3b target-development.
+
+FactorFiLM semantic alignment is recomputed on M3B validation and `m42_dev_v0` as separately named
+sources through the existing M4.3a contracts. The primary metric remains action-range-normalized,
+arm-only L2 over H=10 actions before runtime projection. Reports retain full-task top-1/top-2/MRR/
+margin, per-task retrieval, object/global-bin/conditional-bin retrieval, deterministic confusions,
+task sensitivity, and its ratio to PerTask. State-OneHot uses the same observations and
+implementation for paired comparison. Distance magnitude alone is never semantic correctness.
+
+The new physical rollouts additionally capture requested object/bin, first grasped and first
+meaningfully displaced object, first approached bin, first object-entry bin, final per-object/bin
+relationships, first target grasp/release steps, maximum target height, closest target-bin
+distance, final pose/linear/angular velocity, final evaluation, and post-grasp class. The expert-
+only environment diagnostic accessor therefore includes cube orientation and angular velocity in
+addition to position and linear velocity. It is read only after policy action selection to classify
+evidence; none of these privileged values enters an observation, action, model input, or per-step
+`info`. Missing historical fields remain unavailable rather than inferred from aggregates.
+
+### Exact development quality gate
+
+`final_benchmark_authorized=true` only when all 16 conditions below pass without rounding or proxy
+substitution:
+
+| Condition | Required value |
+| --- | ---: |
+| FactorFiLM overall success count | at least 50/72 |
+| FactorFiLM overall success rate | at least 69.44% |
+| success gap to PerTask | at most 8 episodes |
+| each TaskSpec success | at least 7/12 |
+| wrong-object grasps | at most 6/72 |
+| wrong object in target bin | at most 2/72 |
+| timeouts | at most 22/72 |
+| target in wrong bin | 0 |
+| target off table | 0 |
+| arm projections | 0 |
+| NaN actions/results | 0 |
+| Inf actions/results | 0 |
+| malformed actions | 0 |
+| primary full-task top-1 retrieval | at least 70% |
+| target-object retrieval | at least 80% |
+| task-sensitivity ratio relative to PerTask | at least 0.75 |
+
+When every row passes, `development_quality_gate_passed=true` and
+`final_benchmark_authorized=true`; otherwise both are false. Experiment validity and quality are
+independent: a complete real CUDA/physical run may truthfully set `passed=true` and
+`physical_target_validated=true` while the quality gate is false.
+
+The post-training evaluator and independent read-only verifier commands are:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python scripts/evaluate_act_factor_film.py \
+  --target-development \
+  --training-git-commit 8ee0f1babf36b91d1ee2a39701e4a6db6003b660
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m43b.py \
+  --training-git-commit 8ee0f1babf36b91d1ee2a39701e4a6db6003b660 \
+  --training-run-root outputs/models/act-factor-film/<run-fingerprint> \
+  --evaluation-evidence-root outputs/diagnostics/m43/<evaluation-evidence-root> \
+  --structural-verification outputs/diagnostics/m43/target-development-preflight-verification/verification.json
+```
+
+It revalidates all 20 checkpoints and validation records, the seven-key ranking, fresh-process
+reload record, exact 216 paired development identities, semantic/interaction/post-grasp reports,
+all 16 gate calculations, checksums, producer/evaluator provenance, and access flags. It performs
+no training, rollout, selection mutation, or evidence repair. At every target-development outcome,
+`test_split_accessed=false`, `fresh_seed_accessed=false`, `final_schedule_accessed=false`, and
+`smolvla_go=false`; a true final authorization flag does not itself open or execute final.
+The structural report is required input, not optional discovery: the independent final `passed`
+flag also requires its `factor_film_implementation_validated=true` and
+`factor_film_fixture_training_validated=true`. This binds the real target evidence to the already
+validated architecture/fixture boundary but does not itself establish training, rollout, quality,
+or physical success.
+The target report exposes these independently rather than collapsing them into one pass bit:
+
+```text
+implementation_validated, semantic_audit_completed,
+factor_film_implementation_validated, factor_film_fixture_training_validated,
+factor_film_training_completed, factor_film_checkpoints_complete,
+factor_film_checkpoint_selected, validation_only_selection_validated,
+factor_film_reload_validated, development_benchmark_completed,
+post_grasp_analysis_completed, first_interaction_analysis_completed,
+correct_task_retrieval_validated, object_retrieval_validated,
+bin_retrieval_validated, raw_action_metrics_validated,
+runtime_action_metrics_validated, development_quality_gate_passed,
+final_benchmark_authorized, final_schedule_accessed,
+test_split_accessed, fresh_seed_accessed, smolvla_go,
+physical_target_validated, passed
+```
 
 ## M4.3b non-target verification truth
 

@@ -6,9 +6,14 @@ LangMani supports language-conditioned robotic manipulation in ManiSkill. M0 thr
 M4.1 explicit action-bound target smoke, and M4.2 target-development are complete. M4 full is
 experimentally and physically validated, but `baseline_quality_validated=false`; the M4.2 TaskToken
 candidate was rejected. The real M4.3a semantic-alignment audit is complete and authorizes one
-M4.3b `ACT-Mixed-FactorFiLM` implementation. M4.3b currently provides architecture, training,
-checkpoint, dry-run, and local fixture contracts only. No FactorFiLM target training, checkpoint
-selection, development rollout, sealed final benchmark, or M5 work has started.
+M4.3b `ACT-Mixed-FactorFiLM` implementation. M4.3b target-development is now authorized with the
+architecture and training identity fixed at
+`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. Target training, validation-only selection,
+fresh-process reload, and `m42_dev_v0` evaluation remain distinct evidence stages; no completed
+target result is claimed until the independent verifier accepts them. The locked producer's real
+preflight failed before training on the EpisodeExportRecord index contract and M4.3b is stopped
+pending explicit producer reauthorization under D-053. The sealed final benchmark
+and M5 have not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
@@ -112,9 +117,11 @@ python environment/verify_m42.py
 # M4.3 semantic-audit and FactorFiLM structural commands
 python scripts/audit_act_semantics.py --help
 python scripts/train_act_factor_film.py --help
+python scripts/evaluate_act_factor_film.py --help
 python scripts/train_act_factor_film.py --dry-run --fixture-contract
 python scripts/train_act_factor_film.py --fixture
 python environment/verify_m43.py
+python environment/verify_m43b.py --help
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,
@@ -158,16 +165,27 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m42.py --target-development
 # Separate future authorization only after all development selections are immutable.
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m42.py --target-final
 
-# Future M4.3b target training only after the structural implementation commit is clean and pushed.
-# This command trains and publishes the validation queue; it does not run m42_dev_v0 or final.
+# Authorized M4.3b target training. The immutable run remains bound to this exact clean
+# architecture/training commit even when later evaluation code is committed separately.
 CUDA_VISIBLE_DEVICES=0 python scripts/train_act_factor_film.py \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --output-root outputs/models/act-factor-film \
-  --evidence-root outputs/diagnostics/m43/remote-audit-dfea8b3/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
+  --evidence-root outputs/diagnostics/m43/semantic-audit/evidence/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
   --device cuda \
   --report outputs/diagnostics/m43/factor-film-target-development.json \
   --clean-staging \
   --target-development
+
+# Post-training selection/reload/development stages are resumable and write outside the immutable
+# training run. The independent verifier is read-only and never opens test/fresh/final schedules.
+CUDA_VISIBLE_DEVICES=0 python scripts/evaluate_act_factor_film.py \
+  --target-development \
+  --training-git-commit 8ee0f1babf36b91d1ee2a39701e4a6db6003b660
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m43b.py \
+  --training-git-commit 8ee0f1babf36b91d1ee2a39701e4a6db6003b660 \
+  --training-run-root outputs/models/act-factor-film/<run-fingerprint> \
+  --evaluation-evidence-root outputs/diagnostics/m43/<evaluation-evidence-root> \
+  --structural-verification outputs/diagnostics/m43/target-development-preflight-verification/verification.json
 ```
 
 The exact environment creation commands are maintained in `README.md`.
@@ -203,15 +221,20 @@ The exact environment creation commands are maintained in `README.md`.
   object order is red/green/blue and the bin order is left/right. Object FiLM may modify only the
   ResNet-18 feature map; bin FiLM may modify only the encoded 9D-state token. No combined task token
   or state-appended task feature is permitted.
-- FactorFiLM target training must remain a later explicit clean-Git command. Only the exact M3B train
-  view may train it, only M3B validation may select a checkpoint, and fixture forward/backward or
-  save/reload evidence must never set training, checkpoint, rollout, or physical-validation flags.
+- FactorFiLM target training is bound to exact clean Git commit
+  `8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. Its immutable run and checkpoint identities must
+  never be rewritten by a later evaluator commit. Only the exact M3B train view may train it, only
+  M3B validation may select a checkpoint, and fixture forward/backward or save/reload evidence must
+  never set training, checkpoint, rollout, or physical-validation flags.
 - Preserve raw, binary-transformed, projected, and executed action evidence as separate contracts.
   OneHot and TaskToken must always be described as oracle conditioning, never language understanding.
 - M4.3b target development is one seed-0 comparison only. Its model/optimization fingerprints,
   H=10/project runtime, exact 20-checkpoint queue, and validation-only selection are immutable.
   Reports, outputs, staging, and resume paths must reject protected or linked content before writes;
   only the latest declared checkpoint or sole next atomically promoted orphan is recoverable.
+- Source changes for target-development are authored, tested, committed, and pushed from the local
+  repository. The GPU server may only fetch/check out/pull those commits; never hot-patch source on
+  the server. Generated checkpoints/evidence remain server outputs and are never committed.
 - Do not describe a skipped, metadata-only, structural-only, or CPU-only check as physical GPU or
   rendering validation.
 
@@ -246,9 +269,10 @@ claim. M4.2 final is a later separate command requiring immutable selections, cl
 schedule authorization, paired PerTask/State-OneHot/TaskToken evaluation, and an explicit go/no-go;
 it never starts M5 automatically.
 M4.3a real validation and `m42_dev_v0` inputs passed immutable promotion with
-`semantic_audit_completed=true`. M4.3b local structural completion may validate the architecture,
-processor path, fixture optimization, and local checkpoint reload only. It must leave
-`factor_film_training_completed=false`, `factor_film_checkpoints_complete=false`,
-`factor_film_checkpoint_selected=false`, `development_benchmark_completed=false`,
-`final_schedule_accessed=false`, `smolvla_go=false`, and `physical_target_validated=false` until
-their separately authorized real stages complete.
+`semantic_audit_completed=true`. M4.3b local structural completion validates only architecture,
+processor, fixture optimization, and local checkpoint reload. Target-development acceptance
+additionally requires the exact 100,000-step/20-checkpoint run, all 20 x 36 validation rollouts,
+immutable seven-key selection, fresh-process `[50,8]` reload equivalence at `atol=rtol=1e-6`, the
+paired 3 x 72 `m42_dev_v0` comparison, semantic/first-interaction analysis, and an independent
+read-only verifier. Experiment/physical completion and the 16-condition development quality gate
+remain separate. Test, historical fresh, `m42_final_v0`, and SmolVLA stay inaccessible throughout.

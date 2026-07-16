@@ -6,6 +6,10 @@ import numpy as np
 import pytest
 import torch
 
+from langmani.policies.act_factor_film_types import (
+    FACTOR_FILM_BIN_INDEX_KEY,
+    FACTOR_FILM_OBJECT_INDEX_KEY,
+)
 from langmani.policies.act_task_token import TASK_TOKEN_FEATURE_KEY
 from langmani.policies.m42_evaluation import (
     M42CheckpointContext,
@@ -20,6 +24,8 @@ from langmani.policies.m43_audit_runtime import (
     audit_fixed_observations,
     combine_fixed_audit_computations,
     compute_fixed_observation_audits,
+    compute_named_fixed_observation_audits,
+    compute_per_task_reference_sensitivity,
     predict_postprocessed_action_chunk,
     validate_fixed_observation_set,
 )
@@ -58,8 +64,12 @@ class _Policy(_Resettable):
             index = self.task_index
         elif self.kind is M42PolicyKind.STATE_ONEHOT:
             index = int(torch.argmax(batch["observation.state"][0, 9:]).item())
-        else:
+        elif self.kind is M42PolicyKind.TASK_TOKEN:
             index = int(torch.argmax(batch[TASK_TOKEN_FEATURE_KEY][0]).item())
+        else:
+            object_index = int(batch[FACTOR_FILM_OBJECT_INDEX_KEY][0].item())
+            bin_index = int(batch[FACTOR_FILM_BIN_INDEX_KEY][0].item())
+            index = object_index * 2 + bin_index
         object_index, bin_index = divmod(index, 2)
         chunk = torch.zeros((1, 50, 8), dtype=torch.float32)
         chunk[:, :, 0] = float(object_index)
@@ -84,7 +94,9 @@ def _context(kind: M42PolicyKind, *, task_index: int | None = None) -> M42Checkp
         dataset_fingerprint=_DIGEST,
         split_digest=_DIGEST,
         statistics_fingerprint=_DIGEST,
-        architecture_fingerprint=_DIGEST if kind is M42PolicyKind.TASK_TOKEN else None,
+        architecture_fingerprint=(
+            _DIGEST if kind in {M42PolicyKind.TASK_TOKEN, M42PolicyKind.FACTOR_FILM} else None
+        ),
         task_id=task_id,
         git_commit="0" * 40,
     )
@@ -281,6 +293,48 @@ def test_semantic_correctness_requires_exact_consistent_retrieval() -> None:
     assert summary["task_retrieval"]["top1_accuracy"] > 0.5
     assert summary["semantic_interpretation"]["correct_semantic_alignment"] is False
     assert summary["semantic_interpretation"]["full_task_retrieval_consistent"] is False
+
+
+def test_named_candidate_audit_preserves_legacy_m43a_output_exactly() -> None:
+    policies = _policies()
+    legacy = compute_fixed_observation_audits(
+        observations=_observations(), policies=policies, distance_config=_distance_config()
+    )
+    generic = compute_named_fixed_observation_audits(
+        observations=_observations(),
+        per_task=policies.per_task,
+        candidates={
+            "state_onehot": policies.state_onehot,
+            "task_token": policies.task_token,
+        },
+        distance_config=_distance_config(),
+    )
+
+    assert generic.to_dict() == legacy.to_dict()
+
+
+def test_named_candidate_audit_supports_factor_film_conditions() -> None:
+    policies = _policies()
+    factor = _context(M42PolicyKind.FACTOR_FILM)
+    result = compute_named_fixed_observation_audits(
+        observations=_observations(),
+        per_task=policies.per_task,
+        candidates={"factor_film": factor},
+        distance_config=_distance_config(),
+    )
+
+    assert tuple(result.policy_audits) == ("factor_film",)
+    assert result.policy_runtime_summaries["factor_film"]["task_retrieval"]["top1_accuracy"] == 1.0
+
+
+def test_per_task_reference_sensitivity_uses_the_same_fixed_inputs() -> None:
+    result = compute_per_task_reference_sensitivity(
+        observations=_observations(), per_task=_policies().per_task
+    )
+
+    assert result["scene_count"] == 1
+    assert result["pair_count"] == 15
+    assert result["mean_full_chunk_rms"] > 0.0
 
 
 def test_policy_contexts_require_all_references_in_canonical_order() -> None:

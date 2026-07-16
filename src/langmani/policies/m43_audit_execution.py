@@ -729,6 +729,44 @@ def _requested_scope(mode: str) -> M43AuditScope:
     }[mode]
 
 
+def create_m43_audit_environment(*, rgb: bool) -> object:
+    """Create the unchanged M4.3 fixed-observation environment."""
+
+    return _create_environment(rgb=rgb)
+
+
+def load_m43_reference_policy_contexts(
+    inputs: RestrictedAuditInputs, *, device: str
+) -> SemanticPolicyContexts:
+    """Load the frozen PerTask/State-OneHot/TaskToken references."""
+
+    return _load_policy_contexts(inputs, device=device)
+
+
+def m43_action_chunk_distance_config(
+    *, env: object, policies: SemanticPolicyContexts, inputs: RestrictedAuditInputs
+) -> ActionChunkDistanceConfig:
+    """Reconstruct the locked H=10, arm-only normalized distance contract."""
+
+    return _distance_config(env=env, policies=policies, inputs=inputs)
+
+
+def load_m43_validation_observations(
+    inputs: RestrictedAuditInputs,
+) -> tuple[tuple[FixedPolicyObservation, ...], tuple[ObservationSourceIdentity, ...]]:
+    """Load the exact 36 M3B-validation fixed observations."""
+
+    return _validation_observations(inputs.dataset_root, inputs.validation_episodes)
+
+
+def load_m43_development_observations(
+    env: object,
+) -> tuple[tuple[FixedPolicyObservation, ...], tuple[ObservationSourceIdentity, ...]]:
+    """Materialize the exact 72 ``m42_dev_v0`` observations after authorization."""
+
+    return _development_observations(env)
+
+
 def run_semantic_audit(args: Namespace) -> dict[str, object]:
     """Execute one complete validation/development semantic audit."""
 
@@ -900,4 +938,12 @@ def run_semantic_audit(args: Namespace) -> dict[str, object]:
     }
 
 
-__all__ = ["M43_EXECUTION_SCHEMA_VERSION", "run_semantic_audit"]
+__all__ = [
+    "M43_EXECUTION_SCHEMA_VERSION",
+    "create_m43_audit_environment",
+    "load_m43_development_observations",
+    "load_m43_reference_policy_contexts",
+    "load_m43_validation_observations",
+    "m43_action_chunk_distance_config",
+    "run_semantic_audit",
+]

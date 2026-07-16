@@ -22,6 +22,7 @@ import torch
 
 from langmani.datasets.identity import sha256_hex
 from langmani.datasets.lerobot_types import STATE_FEATURE_KEY
+from langmani.datasets.schedule import CANONICAL_TASK_SPECS
 from langmani.environments.pick_place_by_instruction import (
     BIN_INTERIOR_HALF_SIZE,
     CUBE_HALF_SIZE,
@@ -43,6 +44,11 @@ from langmani.policies.act_evaluation import (
     load_checkpoint_selection,
     wilson_interval,
 )
+from langmani.policies.act_factor_film_conditioning import (
+    attach_factor_film_runtime_input,
+    factorized_runtime_input,
+)
+from langmani.policies.act_factor_film_types import FactorFiLMContractError
 from langmani.policies.act_rollout import ActManiSkillRolloutAdapter, latency_percentiles
 from langmani.policies.act_task_token import (
     TASK_TOKEN_FEATURE_KEY,
@@ -97,6 +103,7 @@ class M42PolicyKind(StrEnum):
     PER_TASK = "per_task"
     STATE_ONEHOT = "state_onehot"
     TASK_TOKEN = "task_token"
+    FACTOR_FILM = "factor_film"
 
 
 class _CheckpointIdentity(Protocol):
@@ -158,6 +165,10 @@ class M42CheckpointDescriptor:
                 raise M42EvaluationError("PerTask checkpoint requires one canonical task ID")
         elif self.task_id is not None:
             raise M42EvaluationError("mixed checkpoint descriptors cannot bind one task ID")
+        if self.policy_kind in {M42PolicyKind.TASK_TOKEN, M42PolicyKind.FACTOR_FILM} and (
+            self.architecture_fingerprint is None
+        ):
+            raise M42EvaluationError("custom mixed checkpoints require an architecture fingerprint")
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -337,6 +348,77 @@ def load_task_token_training_checkpoint_context(
     )
 
 
+def load_factor_film_training_checkpoint_context(
+    run_root: str | Path,
+    *,
+    expected_checkpoint_fingerprint: str,
+    expected_run_fingerprint: str | None = None,
+    expected_dataset_fingerprint: str | None = None,
+    expected_architecture_fingerprint: str | None = None,
+) -> M42CheckpointContext:
+    """Strictly load one FactorFiLM checkpoint from its immutable training manifest."""
+    from langmani.policies.act_factor_film_adapter import (
+        FactorFiLMACTPolicy,
+        validate_factor_film_policy_structure,
+    )
+    from langmani.policies.act_factor_film_types import FactorFiLMTrainingManifest
+
+    root = Path(run_root).resolve()
+    manifest = FactorFiLMTrainingManifest.from_dict(
+        _read_json_object(root / "run_manifest.json", "FactorFiLM training manifest")
+    )
+    if not manifest.training_complete:
+        raise M42EvaluationError("FactorFiLM checkpoint evaluation requires completed training")
+    identity = manifest.identity
+    architecture_fingerprint = manifest.architecture_identity.architecture_fingerprint
+    _assert_expected(identity.run_fingerprint, expected_run_fingerprint, "run fingerprint")
+    _assert_expected(
+        identity.m3b_export_fingerprint,
+        expected_dataset_fingerprint,
+        "M3B dataset fingerprint",
+    )
+    _assert_expected(
+        architecture_fingerprint,
+        expected_architecture_fingerprint,
+        "FactorFiLM architecture fingerprint",
+    )
+    record = next(
+        (
+            item
+            for item in manifest.checkpoints
+            if item.checkpoint_fingerprint == expected_checkpoint_fingerprint
+        ),
+        None,
+    )
+    if record is None:
+        raise M42EvaluationError("selected FactorFiLM checkpoint is absent from training manifest")
+    loaded = load_act_checkpoint(
+        run_root=root,
+        checkpoint_relative_path=record.relative_path,
+        expected_identity=cast(Any, identity),
+        restore_rng=False,
+        policy_class=FactorFiLMACTPolicy,
+    )
+    if loaded.record.checkpoint_fingerprint != expected_checkpoint_fingerprint:
+        raise M42EvaluationError("loaded FactorFiLM checkpoint differs from selection")
+    if not isinstance(loaded.policy, FactorFiLMACTPolicy):
+        raise M42EvaluationError("FactorFiLM strict reload returned the wrong policy type")
+    validate_factor_film_policy_structure(loaded.policy)
+    descriptor = M42CheckpointDescriptor(
+        policy_kind=M42PolicyKind.FACTOR_FILM,
+        run_fingerprint=identity.run_fingerprint,
+        checkpoint_fingerprint=expected_checkpoint_fingerprint,
+        checkpoint_relative_path=record.relative_path,
+        dataset_fingerprint=identity.m3b_export_fingerprint,
+        split_digest=identity.m3b_split_manifest_digest,
+        statistics_fingerprint=identity.train_statistics_fingerprint,
+        architecture_fingerprint=architecture_fingerprint,
+        task_id=None,
+        git_commit=identity.git_commit,
+    )
+    return M42CheckpointContext(descriptor=descriptor, loaded=loaded)
+
+
 def _single_numpy(value: object, *, label: str) -> np.ndarray:
     candidate = value.detach().cpu().numpy() if isinstance(value, torch.Tensor) else value
     result = np.asarray(candidate)
@@ -367,14 +449,22 @@ class _DiagnosticSnapshot:
     object_is_grasped: tuple[bool, bool, bool]
     evaluation: Mapping[str, bool]
     action: tuple[float, ...] | None
+    semantic_interaction: Mapping[str, object] | None
+
+    def semantic_interaction_dict(self) -> dict[str, object]:
+        """Return compact per-step privileged evidence outside the policy path."""
+        if self.semantic_interaction is None:
+            raise M42EvaluationError("semantic interaction capture was not authorized")
+        return dict(self.semantic_interaction)
 
 
 class _DiagnosticEnvironmentProxy:
     """Observe post-action privileged state without exposing it to the policy."""
 
-    def __init__(self, env: object) -> None:
+    def __init__(self, env: object, *, capture_semantic_interactions: bool = False) -> None:
         self._env = env
         self._base = getattr(env, "unwrapped", env)
+        self._capture_semantic_interactions = capture_semantic_interactions
         self.snapshots: list[_DiagnosticSnapshot] = []
 
     @property
@@ -428,6 +518,55 @@ class _DiagnosticEnvironmentProxy:
             if flattened.shape != (8,) or not np.all(np.isfinite(flattened)):
                 raise M42EvaluationError("executed M4.2 action must be finite float[8]")
             action_tuple = tuple(float(item) for item in flattened)
+        evaluation = _single_bool_mapping(evaluation_accessor())
+        semantic_interaction: dict[str, object] | None = None
+        if self._capture_semantic_interactions:
+            cube_positions = _single_numpy(diagnostic["cube_positions"], label="cube_positions")
+            cube_orientations = _single_numpy(
+                diagnostic["cube_orientations"], label="cube_orientations"
+            )
+            cube_velocities = _single_numpy(
+                diagnostic["cube_linear_velocities"], label="cube_linear_velocities"
+            )
+            cube_angular_velocities = _single_numpy(
+                diagnostic["cube_angular_velocities"], label="cube_angular_velocities"
+            )
+            bin_centers = _single_numpy(diagnostic["bin_floor_centers"], label="bin_floor_centers")
+            tcp_position = _single_numpy(diagnostic["tcp_position"], label="tcp_position")
+            object_in_bin = _single_numpy(diagnostic["object_in_bin"], label="object_in_bin")
+            if (
+                cube_positions.shape != (3, 3)
+                or cube_orientations.shape != (3, 4)
+                or cube_velocities.shape != (3, 3)
+                or cube_angular_velocities.shape != (3, 3)
+                or bin_centers.shape != (2, 3)
+                or tcp_position.shape != (3,)
+                or object_in_bin.shape != (3, 2)
+            ):
+                raise M42EvaluationError("M1 semantic-interaction diagnostics are malformed")
+            continuous = (
+                cube_positions,
+                cube_orientations,
+                cube_velocities,
+                cube_angular_velocities,
+                bin_centers,
+                tcp_position,
+            )
+            if not all(np.all(np.isfinite(value)) for value in continuous):
+                raise M42EvaluationError("M1 semantic-interaction diagnostics must be finite")
+            semantic_interaction = {
+                "step": step,
+                "cube_positions": cube_positions.tolist(),
+                "cube_orientations": cube_orientations.tolist(),
+                "cube_linear_velocities": cube_velocities.tolist(),
+                "cube_angular_velocities": cube_angular_velocities.tolist(),
+                "bin_floor_centers": bin_centers.tolist(),
+                "tcp_position": tcp_position.tolist(),
+                "object_is_grasped": [bool(item) for item in grasped],
+                "object_in_bin": object_in_bin.astype(np.bool_).tolist(),
+                "executed_action": None if action_tuple is None else list(action_tuple),
+                "evaluation": evaluation,
+            }
         self.snapshots.append(
             _DiagnosticSnapshot(
                 step=step,
@@ -436,8 +575,9 @@ class _DiagnosticEnvironmentProxy:
                 bin_center=tuple(float(item) for item in center),
                 target_to_bin_distance=float(distance[0]),
                 object_is_grasped=tuple(bool(item) for item in grasped),
-                evaluation=_single_bool_mapping(evaluation_accessor()),
+                evaluation=evaluation,
                 action=action_tuple,
+                semantic_interaction=semantic_interaction,
             )
         )
 
@@ -459,6 +599,23 @@ class _TaskTokenBatchAugmenter:
             task_id, device=state.device
         ).unsqueeze(0)
         return result
+
+
+class _FactorFiLMBatchAugmenter:
+    def __call__(self, batch: dict[str, torch.Tensor], task_id: str) -> dict[str, torch.Tensor]:
+        state = batch.get(STATE_FEATURE_KEY)
+        if not isinstance(state, torch.Tensor) or state.dtype != torch.float32:
+            raise M42EvaluationError("FactorFiLM rollout requires processed float32 Panda state")
+        if tuple(state.shape) != (1, 9):
+            raise M42EvaluationError("FactorFiLM rollout must keep Panda state at [1,9]")
+        try:
+            result = attach_factor_film_runtime_input(
+                batch,
+                factorized_runtime_input(task_id),
+            )
+        except (FactorFiLMContractError, TypeError, ValueError) as error:
+            raise M42EvaluationError(f"invalid FactorFiLM rollout task: {error}") from error
+        return cast(dict[str, torch.Tensor], result)
 
 
 class _M42RawActionTransform:
@@ -639,9 +796,10 @@ class M42EpisodeReport:
     binary_gripper_audits: tuple[Mapping[str, object], ...]
     post_grasp_failure_record: PostGraspFailureRecord | None
     runtime_projection_audits: tuple[Mapping[str, object], ...] = ()
+    semantic_interaction_snapshots: tuple[Mapping[str, object], ...] = ()
 
     def to_dict(self) -> dict[str, object]:
-        return {
+        result: dict[str, object] = {
             "scheduled_episode_id": self.scheduled_episode_id,
             "schedule_id": self.schedule_id,
             "episode_index": self.episode_index,
@@ -657,6 +815,11 @@ class M42EpisodeReport:
                 else self.post_grasp_failure_record.to_dict()
             ),
         }
+        if self.semantic_interaction_snapshots:
+            result["semantic_interaction_snapshots"] = [
+                dict(item) for item in self.semantic_interaction_snapshots
+            ]
+        return result
 
     @property
     def fingerprint(self) -> str:
@@ -962,6 +1125,10 @@ def _validate_episode_schedule(
     if len(schedule_ids) != 1:
         raise M42EvaluationError("benchmark episodes cannot mix schedules")
     schedule_id = next(iter(schedule_ids))
+    if policy_kind is M42PolicyKind.FACTOR_FILM and schedule_id != M42_DEV_SCHEDULE_ID:
+        raise M42EvaluationError(
+            "FactorFiLM target-development permits only the locked m42_dev_v0 schedule"
+        )
     schedule = load_locked_schedule(schedule_id)
     if schedule.schedule_fingerprint != schedule_fingerprint:
         raise M42EvaluationError("benchmark schedule fingerprint differs from committed lock")
@@ -1011,7 +1178,13 @@ def _run_checkpoint_benchmark(
     model_label: str,
     maximum_episode_steps: int = 200,
 ) -> M42BenchmarkReport:
-    proxy = _DiagnosticEnvironmentProxy(env)
+    capture_semantic_interactions = (
+        checkpoint.descriptor.policy_kind is M42PolicyKind.FACTOR_FILM
+        and schedule_id == M42_DEV_SCHEDULE_ID
+    )
+    proxy = _DiagnosticEnvironmentProxy(
+        env, capture_semantic_interactions=capture_semantic_interactions
+    )
     horizon_policy = ExecutionHorizonPolicyV0(
         cast(Any, checkpoint.loaded.policy), ExecutionHorizonConfig(execution_horizon)
     )
@@ -1022,6 +1195,7 @@ def _run_checkpoint_benchmark(
         M42PolicyKind.PER_TASK: ActVariant.PER_TASK,
         M42PolicyKind.STATE_ONEHOT: ActVariant.MIXED_TASK_ONEHOT,
         M42PolicyKind.TASK_TOKEN: ActVariant.MIXED_UNCONDITIONED,
+        M42PolicyKind.FACTOR_FILM: ActVariant.MIXED_UNCONDITIONED,
     }[checkpoint.descriptor.policy_kind]
     runtime_fingerprint = _fingerprint(
         {
@@ -1061,7 +1235,11 @@ def _run_checkpoint_benchmark(
         processed_observation_augmenter=(
             _TaskTokenBatchAugmenter()
             if checkpoint.descriptor.policy_kind is M42PolicyKind.TASK_TOKEN
-            else None
+            else (
+                _FactorFiLMBatchAugmenter()
+                if checkpoint.descriptor.policy_kind is M42PolicyKind.FACTOR_FILM
+                else None
+            )
         ),
         pre_bound_action_transform=raw_action_transform,
         projection_record_sink=retain_projection_record,
@@ -1118,6 +1296,11 @@ def _run_checkpoint_benchmark(
                 binary_gripper_audits=binary_audits,
                 post_grasp_failure_record=failure,
                 runtime_projection_audits=runtime_audits,
+                semantic_interaction_snapshots=(
+                    tuple(item.semantic_interaction_dict() for item in proxy.snapshots)
+                    if capture_semantic_interactions
+                    else ()
+                ),
             )
         )
     if projection_records:
@@ -1163,7 +1346,11 @@ def run_m42_checkpoint_benchmark(
         episodes=episodes,
         schedule_id=schedule_id,
         schedule_fingerprint=schedule_fingerprint,
-        split=EvaluationSplit.FRESH_SEED,
+        split=(
+            EvaluationSplit.DEVELOPMENT
+            if schedule_id == M42_DEV_SCHEDULE_ID
+            else EvaluationSplit.FRESH_SEED
+        ),
         execution_horizon=execution_horizon,
         gripper_mode=gripper_mode,
         model_label=model_label,
@@ -1181,29 +1368,61 @@ def run_m42_validation_benchmark(
     gripper_mode: GripperRuntimeMode,
     maximum_episode_steps: int = 200,
 ) -> M42BenchmarkReport:
-    """Evaluate TaskToken on exactly the frozen 36-episode M3B validation view."""
-    if checkpoint.descriptor.policy_kind is not M42PolicyKind.TASK_TOKEN:
-        raise M42EvaluationError("TaskToken checkpoint selection accepts only TaskToken models")
+    """Evaluate TaskToken or FactorFiLM on its exact frozen 36-episode validation view."""
+    policy_kind = checkpoint.descriptor.policy_kind
+    if policy_kind not in {M42PolicyKind.TASK_TOKEN, M42PolicyKind.FACTOR_FILM}:
+        raise M42EvaluationError(
+            "mixed checkpoint selection accepts only TaskToken or FactorFiLM models"
+        )
     _require_digest(validation_schedule_fingerprint, "validation_schedule_fingerprint")
     if len(schedule_records) != 36:
-        raise M42EvaluationError("TaskToken selection requires exactly 36 validation episodes")
+        raise M42EvaluationError(
+            "mixed checkpoint selection requires exactly 36 validation episodes"
+        )
     canonical_records = [dict(item) for item in schedule_records]
-    expected_fingerprint = _fingerprint(
-        {
-            "schema_version": "langmani-m42-m3b-validation-schedule-v0",
-            "m3b_dataset_fingerprint": checkpoint.descriptor.dataset_fingerprint,
-            "split_digest": checkpoint.descriptor.split_digest,
-            "episodes": canonical_records,
-        }
-    )
+    if policy_kind is M42PolicyKind.FACTOR_FILM:
+        expected_fingerprint = _fingerprint(
+            {
+                "schema_version": "langmani-m43-factor-film-validation-schedule-v0",
+                "m3b_export_fingerprint": checkpoint.descriptor.dataset_fingerprint,
+                "split_manifest_digest": checkpoint.descriptor.split_digest,
+                "source": "m3b_validation",
+                "episodes": canonical_records,
+            }
+        )
+    else:
+        expected_fingerprint = _fingerprint(
+            {
+                "schema_version": "langmani-m42-m3b-validation-schedule-v0",
+                "m3b_dataset_fingerprint": checkpoint.descriptor.dataset_fingerprint,
+                "split_digest": checkpoint.descriptor.split_digest,
+                "episodes": canonical_records,
+            }
+        )
     if expected_fingerprint != validation_schedule_fingerprint:
         raise M42EvaluationError("M3B validation schedule fingerprint is inconsistent")
-    parsed: list[tuple[int, TaskSpec]] = []
+    parsed: list[tuple[int, TaskSpec, str | None]] = []
     for index, record in enumerate(canonical_records):
-        task_value = record.get("task_spec")
-        if not isinstance(task_value, Mapping):
-            raise M42EvaluationError("validation schedule TaskSpec is malformed")
-        task_spec = TaskSpec.from_mapping(task_value)
+        if policy_kind is M42PolicyKind.FACTOR_FILM:
+            if set(record) != {"episode_index", "scene_group_id", "scene_seed", "task_id"}:
+                raise M42EvaluationError(
+                    "FactorFiLM validation records must use the exact schedule fields"
+                )
+            task_id = record.get("task_id")
+            scene_group_id = record.get("scene_group_id")
+            if (
+                task_id not in CANONICAL_TASK_IDS
+                or not isinstance(scene_group_id, str)
+                or not (scene_group_id)
+            ):
+                raise M42EvaluationError("FactorFiLM validation semantic record is malformed")
+            task_spec = CANONICAL_TASK_SPECS[CANONICAL_TASK_IDS.index(cast(str, task_id))]
+        else:
+            task_value = record.get("task_spec")
+            if not isinstance(task_value, Mapping):
+                raise M42EvaluationError("validation schedule TaskSpec is malformed")
+            task_spec = TaskSpec.from_mapping(task_value)
+            scene_group_id = None
         scene_seed = record.get("scene_seed")
         episode_index = record.get("episode_index")
         if (
@@ -1216,19 +1435,39 @@ def run_m42_validation_benchmark(
             raise M42EvaluationError("validation schedule semantic record is malformed")
         if index and episode_index <= int(canonical_records[index - 1]["episode_index"]):
             raise M42EvaluationError("validation episode indices must be strictly ordered")
-        parsed.append((scene_seed, task_spec))
+        parsed.append((scene_seed, task_spec, scene_group_id))
+    if policy_kind is M42PolicyKind.FACTOR_FILM:
+        grouped: dict[str, list[tuple[int, TaskSpec]]] = {}
+        for scene_seed, task_spec, scene_group_id in parsed:
+            grouped.setdefault(cast(str, scene_group_id), []).append((scene_seed, task_spec))
+        if len(grouped) != 6 or any(
+            len(values) != 6
+            or len({scene_seed for scene_seed, _ in values}) != 1
+            or tuple(task_spec for _, task_spec in values) != CANONICAL_TASK_SPECS
+            for values in grouped.values()
+        ):
+            raise M42EvaluationError(
+                "FactorFiLM validation requires six complete counterfactual scene groups"
+            )
+        group_indices = {scene_group_id: index for index, scene_group_id in enumerate(grouped)}
+    else:
+        group_indices = {}
     episodes = tuple(
         M42ScheduledEpisode(
             schedule_id="m3b_validation_v0",
             episode_index=index,
-            scene_index=index // 6,
+            scene_index=(
+                group_indices[cast(str, scene_group_id)]
+                if policy_kind is M42PolicyKind.FACTOR_FILM
+                else index // 6
+            ),
             task_index=CANONICAL_TASK_IDS.index(stable_task_id(task_spec)),
             scene_seed=scene_seed,
             scene_id=stable_scene_id(scene_seed),
             task_spec=task_spec,
             task_id=stable_task_id(task_spec),
         )
-        for index, (scene_seed, task_spec) in enumerate(parsed)
+        for index, (scene_seed, task_spec, scene_group_id) in enumerate(parsed)
     )
     if len({(item.scene_id, item.task_id) for item in episodes}) != 36:
         raise M42EvaluationError("M3B validation schedule contains duplicate semantic episodes")
@@ -1243,7 +1482,7 @@ def run_m42_validation_benchmark(
         split=EvaluationSplit.VALIDATION,
         execution_horizon=execution_horizon,
         gripper_mode=gripper_mode,
-        model_label=M42PolicyKind.TASK_TOKEN.value,
+        model_label=policy_kind.value,
         maximum_episode_steps=maximum_episode_steps,
     )
 
@@ -1358,6 +1597,7 @@ __all__ = [
     "M42EpisodeReport",
     "M42EvaluationError",
     "M42PolicyKind",
+    "load_factor_film_training_checkpoint_context",
     "load_m4_checkpoint_context",
     "load_task_token_checkpoint_context",
     "load_task_token_training_checkpoint_context",

@@ -19,6 +19,7 @@ from langmani.policies.act_checkpoint import (
     load_act_checkpoint,
     load_act_checkpoint_manifest,
     save_act_checkpoint,
+    validate_act_checkpoint_artifacts,
 )
 from langmani.policies.act_training import DeterministicResumeBatchSampler
 from langmani.policies.act_types import (
@@ -344,6 +345,15 @@ def test_checkpoint_is_staged_promoted_manifested_and_strictly_reloaded(tmp_path
         "total_loss": 0.25,
         "checkpoint_path": None,
     }
+    assert _FakePolicy.load_calls == []
+
+    validated = validate_act_checkpoint_artifacts(
+        run_root=tmp_path,
+        checkpoint_relative_path=record.relative_path,
+        expected_identity=identity,
+    )
+    assert validated.record == record
+    assert validated.component_fingerprints.model.startswith("sha256:")
     assert _FakePolicy.load_calls == []
 
     random.seed(101)

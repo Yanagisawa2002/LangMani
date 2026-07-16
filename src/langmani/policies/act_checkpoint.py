@@ -123,6 +123,17 @@ class LoadedActCheckpointManifest:
 
 
 @dataclass(frozen=True, slots=True)
+class ValidatedActCheckpointArtifacts:
+    """Content-validated immutable checkpoint without model deserialization."""
+
+    training_state: TrainingState
+    record: CheckpointRecord
+    checkpoint_root: Path
+    training_metric: Mapping[str, object] | None
+    component_fingerprints: CheckpointComponentFingerprints
+
+
+@dataclass(frozen=True, slots=True)
 class _ValidatedCheckpointManifest:
     checkpoint_root: Path
     manifest: Mapping[str, object]
@@ -314,6 +325,29 @@ def load_act_checkpoint_manifest(
         record=validated.record,
         checkpoint_root=validated.checkpoint_root,
         training_metric=validated.training_metric,
+    )
+
+
+def validate_act_checkpoint_artifacts(
+    *,
+    run_root: str | Path,
+    checkpoint_relative_path: str,
+    expected_identity: ActCheckpointIdentity,
+) -> ValidatedActCheckpointArtifacts:
+    """Validate marker, manifest and every persisted artifact without loading weights."""
+
+    validated = _load_validated_checkpoint_manifest(
+        run_root=run_root,
+        checkpoint_relative_path=checkpoint_relative_path,
+        expected_identity=expected_identity,
+    )
+    _validate_artifacts(validated.checkpoint_root, validated.manifest)
+    return ValidatedActCheckpointArtifacts(
+        training_state=validated.training_state,
+        record=validated.record,
+        checkpoint_root=validated.checkpoint_root,
+        training_metric=validated.training_metric,
+        component_fingerprints=_component_fingerprints(validated.manifest),
     )
 
 
@@ -812,8 +846,10 @@ __all__ = [
     "CheckpointComponentFingerprints",
     "LoadedActCheckpoint",
     "LoadedActCheckpointManifest",
+    "ValidatedActCheckpointArtifacts",
     "assert_resume_compatible",
     "load_act_checkpoint",
     "load_act_checkpoint_manifest",
     "save_act_checkpoint",
+    "validate_act_checkpoint_artifacts",
 ]

@@ -7,7 +7,11 @@ implemented its validated local LeRobotDataset v3 derivation. M4 and M4.1 establ
 ACT controls, closed-loop evaluation, and auditable action projection. M4.2 completed its
 oracle-conditioned development diagnosis and rejected TaskToken. M4.3a completed the real frozen-
 policy semantic audit. M4.3b now implements one factorized FiLM ACT architecture and its local
-training/checkpoint contracts; no FactorFiLM target training or rollout has started.
+training/checkpoint contracts. One target-development execution is authorized with the immutable
+architecture/training identity fixed at Git commit
+`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. Its real preflight failed before training on the
+EpisodeExportRecord index contract; D-053 keeps target execution stopped pending explicit producer
+reauthorization. No completed FactorFiLM target result is claimed yet.
 
 M4 implements six per-task ACT policies, one mixed unconditioned ACT, and one mixed ACT with an
 oracle six-way task one-hot. Standard ACT consumes no natural-language text, so M4 is not a language
@@ -778,7 +782,7 @@ retrieval is approximately random. The development evidence also retains shared-
 failures. TaskToken remains rejected. The promoted audit sets `semantic_audit_completed=true` and
 keeps test, historical-fresh, final-schedule access, final authorization, and SmolVLA false.
 
-## M4.3b factorized FiLM structural implementation
+## M4.3b factorized FiLM target development
 
 M4.3b implements exactly one oracle-conditioned policy, `ACT-Mixed-FactorFiLM`. Stable TaskSpec
 metadata is decomposed by one shared train/inference component into canonical target-object indices
@@ -805,10 +809,11 @@ shape, or token-layout drift fails rather than falling back to State-OneHot or T
 FactorFiLM saves require a new or empty real directory, so a refused overwrite cannot mutate
 existing weights.
 
-Only local non-target paths are authorized in this milestone:
+The local non-target structure and fixture commands remain available:
 
 ```bash
 python scripts/train_act_factor_film.py --help
+python scripts/evaluate_act_factor_film.py --help
 python scripts/train_act_factor_film.py \
   --dataset-root outputs/fixtures/m43/factor-film-dataset-contract \
   --output-root outputs/fixtures/m43/factor-film-dry-run \
@@ -819,52 +824,95 @@ python scripts/train_act_factor_film.py \
 python scripts/train_act_factor_film.py \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --output-root outputs/models/act-factor-film \
-  --evidence-root outputs/diagnostics/m43/remote-audit-dfea8b3/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
+  --evidence-root outputs/diagnostics/m43/semantic-audit/evidence/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
   --device cpu \
   --report outputs/diagnostics/m43/factor-film-dry-run.json \
   --dry-run
 python scripts/train_act_factor_film.py \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --output-root outputs/models/act-factor-film \
-  --evidence-root outputs/diagnostics/m43/remote-audit-dfea8b3/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
+  --evidence-root outputs/diagnostics/m43/semantic-audit/evidence/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
   --device cpu \
   --report outputs/diagnostics/m43/factor-film-fixture.json \
   --fixture
 python environment/verify_m43.py
+python environment/verify_m43b.py --help
 ```
 
 The dry-run and fixture validate model construction, separated conditioning, finite forward/
 backward, gradients in the base model and both FiLM paths, one optimizer step, processor and
 checkpoint persistence, fresh-instance reload, and deterministic output equivalence. They do not
 use a tolerance larger than `atol=1e-6`, `rtol=1e-6` and do not produce a target checkpoint or
-quality result. The future clean-Git target-development command is
-explicitly separate:
+quality result. The authorized CUDA producer is explicitly pinned to clean Git commit
+`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`:
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python scripts/train_act_factor_film.py \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --output-root outputs/models/act-factor-film \
-  --evidence-root outputs/diagnostics/m43/remote-audit-dfea8b3/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
+  --evidence-root outputs/diagnostics/m43/semantic-audit/evidence/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
   --device cuda \
   --report outputs/diagnostics/m43/factor-film-target-development.json \
   --clean-staging \
   --target-development
 ```
 
-That future run must reuse the exact 288 M3B train and 36 validation episodes, train-only 9D
-statistics, 100,000 steps, checkpoint interval 5,000, expected 20 checkpoints, batch size 32,
-locked seed 0,
-action chunk 50, bfloat16 CUDA path, horizon 10, and `project` runtime. Only M3B validation may rank
-checkpoints. The complete queue and every selection are fingerprint-bound to the same run,
-schedule, checkpoint fingerprints, steps, and checkpoint-bound offline validation losses. Target
-identities independently enforce canonical unique 288/36 episode lists. Compatible resume accepts only the latest declared
-checkpoint or the sole next 5,000-step atomically promoted orphan. Unsafe or linked output,
-report, and staging paths are rejected before any write. `m42_dev_v0` is a later rollout benchmark,
-never training or selection data. At the
-current structural boundary `factor_film_training_completed=false`,
-`factor_film_checkpoints_complete=false`, `factor_film_checkpoint_selected=false`,
-`development_benchmark_completed=false`, `final_schedule_accessed=false`, `smolvla_go=false`, and
-`physical_target_validated=false`.
+That run must reuse the exact 288 M3B train and 36 validation episodes, train-only 9D statistics,
+100,000 steps, checkpoint interval 5,000, expected 20 checkpoints, batch size 32, locked seed 0,
+action chunk 50, bfloat16 CUDA path, horizon 10, and `project` runtime. Compatible resume accepts
+only the latest declared checkpoint or the sole next 5,000-step atomically promoted orphan. Unsafe
+or linked output, report, and staging paths are rejected before any write.
+
+Selection and development are separate resumable stages and write fingerprint-owned evidence
+outside the immutable training run:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python scripts/evaluate_act_factor_film.py \
+  --target-development \
+  --training-git-commit 8ee0f1babf36b91d1ee2a39701e4a6db6003b660
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m43b.py \
+  --training-git-commit 8ee0f1babf36b91d1ee2a39701e4a6db6003b660 \
+  --training-run-root outputs/models/act-factor-film/<run-fingerprint> \
+  --evaluation-evidence-root outputs/diagnostics/m43/<evaluation-evidence-root> \
+  --structural-verification outputs/diagnostics/m43/target-development-preflight-verification/verification.json
+```
+
+All source changes are made and validated in the local repository, then committed and pushed. The
+target server only fetches/checks out/pulls those commits; it must not be hot-patched. Generated
+training/evaluation artifacts stay under ignored server output roots and are never committed.
+The independent verifier requires that explicit structural report so its final `passed` result is
+also gated by `factor_film_implementation_validated=true` and
+`factor_film_fixture_training_validated=true`. Supplying the report is a prerequisite check, not a
+claim that CUDA training or physical rollout succeeded.
+
+All 20 checkpoints run the same 36 M3B-validation episodes. The fixed rank is highest success,
+lowest wrong-object interaction, lowest wrong object in target bin, lowest off-table, lowest
+timeout, lower checkpoint-bound validation loss, then earlier step. The historical JSON field named
+`offline_validation_action_loss` contains the established total ACT validation objective, including
+the weighted KL term when VAE is active; its value is retained for fair historical ranking rather
+than renamed or recomputed. Selection is immutable before development access.
+
+The selected checkpoint, preprocessor, policy postprocessor, FactorFiLM mapping, and explicit
+action runtime are then loaded in a fresh operating-system process. One fixed validation
+observation must reproduce the complete postprocessed `[50,8]` environment-action chunk at
+`atol=1e-6`, `rtol=1e-6`. Only after that proof may the evaluator run the exact paired
+`m42_dev_v0` matrix: 72 PerTask, 72 State-OneHot, and 72 FactorFiLM episodes, 216 total, all with
+the same scene/task identities, horizon 10, `project` processor, M1 success geometry, and no M2
+expert call. Validation and development semantic audits remain separate; new development episodes
+also retain exact first-interaction and post-grasp diagnostics.
+
+New `m42_dev_v0` episode reports use the explicit `development` evaluation split rather than the
+legacy `fresh_seed` label. Existing M4.2 evidence is not rewritten and remains readable only through
+its narrow compatibility rule. The final path keeps its prior label/behavior and is disabled here,
+so new development records cannot be mistaken for historical fresh-seed or final access.
+
+The development decision is a conjunction of the 16 predeclared success, per-task, safety,
+projection, numerical-validity, retrieval, and task-sensitivity thresholds in
+[`docs/M43_SHARED_POLICY_REPAIR_SPEC.md`](docs/M43_SHARED_POLICY_REPAIR_SPEC.md). A correctly
+completed physical experiment may have `passed=true` and `physical_target_validated=true` while
+`development_quality_gate_passed=false`. M3B test, historical M4 fresh seeds, `m42_final_v0`,
+automatic retraining, and SmolVLA remain inaccessible. Until independent evidence exists, no target
+result flag is claimed.
 
 ## Target-machine setup
 
@@ -939,6 +987,7 @@ python environment/verify_m3b.py
 python environment/verify_m4.py
 python environment/verify_m42.py
 python environment/verify_m43.py
+python environment/verify_m43b.py --help
 ```
 
 The actual target-machine gate is stricter. The M2 command itself invokes the M0 installation gate
@@ -963,6 +1012,16 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --output-root outputs/models/act --action-bound-mode project
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m42.py --target-development
+# M4.3b uses the exact producer and post-training commands documented above; they are not folded
+# into the historical M0--M4.2 chain and never open the sealed final schedule.
+CUDA_VISIBLE_DEVICES=0 python scripts/evaluate_act_factor_film.py \
+  --target-development \
+  --training-git-commit 8ee0f1babf36b91d1ee2a39701e4a6db6003b660
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m43b.py \
+  --training-git-commit 8ee0f1babf36b91d1ee2a39701e4a6db6003b660 \
+  --training-run-root outputs/models/act-factor-film/<run-fingerprint> \
+  --evaluation-evidence-root outputs/diagnostics/m43/<evaluation-evidence-root> \
+  --structural-verification outputs/diagnostics/m43/target-development-preflight-verification/verification.json
 pytest
 ```
 
@@ -1062,11 +1121,14 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 | `python environment/verify_m42.py --target-development` | Yes | Yes | Yes; verifies the final lock but never materializes or executes sealed final episodes |
 | `python environment/verify_m42.py --target-final` | Yes | Yes | Yes; separate explicit authorization |
 | `python environment/verify_m43.py` | No | No | No; M4.3 audit plus FactorFiLM contracts/CPU fixture only |
+| `python environment/verify_m43b.py` | No | No | No; read-only structural/evidence audit unless target-development evidence is supplied |
 | `scripts/audit_act_semantics.py --dry-run` | No | No | No; validates an explicit audit plan only |
 | `scripts/audit_act_semantics.py` | Real audit host | According to checkpoint device | No environment rollout |
 | `scripts/train_act_factor_film.py --dry-run` | No | No | No; validates one immutable training identity only |
 | `scripts/train_act_factor_film.py --fixture` | No | No | No; local forward/backward and save/reload only |
 | `scripts/train_act_factor_film.py --target-development` | Yes | Yes | No rendering during offline training; no rollout or final access |
+| `scripts/evaluate_act_factor_film.py` target stages | Yes | Yes | Yes; validation selection, fresh reload, and `m42_dev_v0` only |
+| `python environment/verify_m43b.py` with completed target roots | Yes | No new training | No new rollout; independently audits completed physical evidence |
 | `scripts/export_lerobot_dataset.py` | Real export: yes | According to source/render backend | Yes |
 | `scripts/validate_lerobot_dataset.py` | Full source alignment: yes | According to source/render backend | Yes |
 | `scripts/inspect_lerobot_episode.py` | No | No | No |
@@ -1092,8 +1154,8 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 - `src/langmani/datasets/`: M3A immutable types, stable IDs, schedules, and native archive checks.
 - `src/langmani/datasets/lerobot_*.py`: M3B source gate, contracts, export, and validation.
 - `src/langmani/policies/`: M4 ACT, M4.2 runtime/TaskToken, M4.3a semantic audit, and M4.3b FactorFiLM boundaries.
-- `scripts/`: M3B data commands plus M4/M4.2 training/evaluation, M4.3a audit, and FactorFiLM training commands.
-- `environment/`: reproducible declaration plus M0 through M4.3 non-target and target diagnostics.
+- `scripts/`: M3B data commands plus M4/M4.2 training/evaluation, M4.3a audit, and FactorFiLM training/evaluation commands.
+- `environment/`: reproducible declaration plus M0 through M4.3 diagnostics and the independent M4.3b evidence verifier.
 - `tests/unit/`: environment/expert/data plus ACT identity, leakage, conditioning, checkpoint, and evaluation checks.
 - `tests/integration/`: LeRobot data/export plus ACT preprocessing, optimization, reload, and rollout boundaries.
 - `tests/smoke/`: dependency, simulator, vectorization, rendering, expert, and raw collection acceptance.

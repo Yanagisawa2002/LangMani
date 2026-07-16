@@ -30,6 +30,11 @@ from langmani.datasets.lerobot_types import IMAGE_FEATURE_KEY, STATE_FEATURE_KEY
 from langmani.datasets.schedule import CANONICAL_TASK_SPECS
 from langmani.environments.specs import BIN_IDS, OBJECT_IDS, stable_task_id
 from langmani.policies.act_conditioning import append_canonical_task_onehot
+from langmani.policies.act_factor_film_conditioning import (
+    attach_factor_film_runtime_input,
+    factorized_runtime_input,
+)
+from langmani.policies.act_factor_film_types import FactorFiLMContractError
 from langmani.policies.act_semantic_audit import (
     build_semantic_alignment_audit,
     classify_semantic_conclusions,
@@ -229,6 +234,9 @@ class FixedAuditComputation:
     locked_execution_horizon: int
 
     def to_dict(self) -> dict[str, object]:
+        labels = tuple(self.policy_audits)
+        if not labels or tuple(self.policy_runtime_summaries) != labels:
+            raise M43AuditRuntimeError("fixed audit policy labels are inconsistent")
         return {
             "schema_version": M43_AUDIT_RUNTIME_VERSION,
             "source_scope": self.source_scope,
@@ -240,10 +248,8 @@ class FixedAuditComputation:
             "deterministic_reset_validated": self.deterministic_reset_validated,
             "primary_gripper_excluded": True,
             "locked_execution_horizon": self.locked_execution_horizon,
-            "audits": {label: self.policy_audits[label].to_dict() for label in M43_POLICY_LABELS},
-            "summaries": {
-                label: dict(self.policy_runtime_summaries[label]) for label in M43_POLICY_LABELS
-            },
+            "audits": {label: self.policy_audits[label].to_dict() for label in labels},
+            "summaries": {label: dict(self.policy_runtime_summaries[label]) for label in labels},
             "test_split_accessed": False,
             "fresh_seed_schedule_accessed": False,
             "final_schedule_accessed": False,
@@ -282,7 +288,7 @@ def predict_postprocessed_action_chunk(
             raise M43AuditRuntimeError("PerTask reference queried with the wrong TaskSpec")
     elif kind is M42PolicyKind.STATE_ONEHOT:
         state = cast(torch.Tensor, append_canonical_task_onehot(state, task_id))
-    elif kind is not M42PolicyKind.TASK_TOKEN:
+    elif kind not in {M42PolicyKind.TASK_TOKEN, M42PolicyKind.FACTOR_FILM}:
         raise M43AuditRuntimeError("unsupported policy kind in semantic audit")
 
     raw = {
@@ -302,6 +308,16 @@ def predict_postprocessed_action_chunk(
         batch[TASK_TOKEN_FEATURE_KEY] = canonical_task_token(
             task_id, device=processed_state.device
         ).unsqueeze(0)
+    elif kind is M42PolicyKind.FACTOR_FILM:
+        try:
+            batch = cast(
+                dict[str, torch.Tensor],
+                attach_factor_film_runtime_input(batch, factorized_runtime_input(task_id)),
+            )
+        except (FactorFiLMContractError, TypeError, ValueError) as error:
+            raise M43AuditRuntimeError(
+                f"invalid FactorFiLM semantic task condition: {error}"
+            ) from error
 
     with torch.inference_mode():
         prediction = cast(Any, context.loaded.policy).predict_action_chunk(batch)
@@ -399,6 +415,36 @@ def _task_sensitivity(
         "nonzero_pair_fraction": sum(value > 0.0 for value in all_distances) / len(all_distances),
         "per_scene": per_scene,
     }
+
+
+def compute_per_task_reference_sensitivity(
+    *,
+    observations: Sequence[FixedPolicyObservation],
+    per_task: Mapping[str, M42CheckpointContext],
+) -> dict[str, object]:
+    """Measure the frozen PerTask oracle on the same fixed scene/task inputs.
+
+    This is intentionally separate from a shared-policy audit: each requested
+    task is inferred by its own frozen PerTask checkpoint, while scene RGB and
+    Panda state remain byte-identical across all six requests.
+    """
+
+    if tuple(per_task) != M43_CANONICAL_TASK_IDS:
+        raise M43AuditRuntimeError("PerTask sensitivity requires canonical checkpoint order")
+    groups = validate_fixed_observation_set(observations)
+    chunks_by_scene: list[dict[str, NDArray[np.float64]]] = []
+    for group in groups:
+        chunks_by_scene.append(
+            {
+                observation.requested_task_id: predict_postprocessed_action_chunk(
+                    context=per_task[observation.requested_task_id],
+                    observation=observation,
+                    task_id=observation.requested_task_id,
+                )
+                for observation in group
+            }
+        )
+    return _task_sensitivity(chunks_by_scene)
 
 
 def _raw_action_metrics(
@@ -799,49 +845,73 @@ def compute_fixed_observation_audits(
 ) -> FixedAuditComputation:
     """Run both candidate policies against six references on fixed scene inputs."""
 
+    return compute_named_fixed_observation_audits(
+        observations=observations,
+        per_task=policies.per_task,
+        candidates={
+            "state_onehot": policies.state_onehot,
+            "task_token": policies.task_token,
+        },
+        distance_config=distance_config,
+    )
+
+
+def compute_named_fixed_observation_audits(
+    *,
+    observations: Sequence[FixedPolicyObservation],
+    per_task: Mapping[str, M42CheckpointContext],
+    candidates: Mapping[str, M42CheckpointContext],
+    distance_config: ActionChunkDistanceConfig,
+) -> FixedAuditComputation:
+    """Audit any explicitly named shared-policy candidates against six PerTask references."""
+
+    labels = tuple(candidates)
+    if not labels or len(set(labels)) != len(labels) or any(not value for value in labels):
+        raise M43AuditRuntimeError("named semantic audit requires unique nonempty labels")
+    if tuple(per_task) != M43_CANONICAL_TASK_IDS:
+        raise M43AuditRuntimeError("named audit PerTask contexts changed canonical order")
+    for task_id, context in per_task.items():
+        if (
+            context.descriptor.policy_kind is not M42PolicyKind.PER_TASK
+            or context.descriptor.task_id != task_id
+        ):
+            raise M43AuditRuntimeError("named audit PerTask context identity mismatch")
+    dataset_fingerprints = {
+        value.descriptor.dataset_fingerprint for value in (*per_task.values(), *candidates.values())
+    }
+    if len(dataset_fingerprints) != 1:
+        raise M43AuditRuntimeError("named audit checkpoints do not bind one M3B dataset")
+
     groups = validate_fixed_observation_set(observations)
-    task_results: dict[str, list[SemanticRetrievalResult]] = {
-        label: [] for label in M43_POLICY_LABELS
-    }
-    object_results: dict[str, list[ObjectRetrievalResult]] = {
-        label: [] for label in M43_POLICY_LABELS
-    }
-    bin_results: dict[str, list[BinRetrievalResult]] = {label: [] for label in M43_POLICY_LABELS}
+    task_results: dict[str, list[SemanticRetrievalResult]] = {label: [] for label in labels}
+    object_results: dict[str, list[ObjectRetrievalResult]] = {label: [] for label in labels}
+    bin_results: dict[str, list[BinRetrievalResult]] = {label: [] for label in labels}
     candidate_chunks: dict[str, list[dict[str, NDArray[np.float64]]]] = {
-        label: [] for label in M43_POLICY_LABELS
+        label: [] for label in labels
     }
-    complete_distance_results: dict[str, dict[str, object]] = {
-        label: {} for label in M43_POLICY_LABELS
-    }
+    complete_distance_results: dict[str, dict[str, object]] = {label: {} for label in labels}
 
     deterministic_reset_validated = True
     for group_index, group in enumerate(groups):
         base = group[0]
         references = {
             task_id: predict_postprocessed_action_chunk(
-                context=policies.per_task[task_id], observation=base, task_id=task_id
+                context=per_task[task_id], observation=base, task_id=task_id
             )
             for task_id in M43_CANONICAL_TASK_IDS
         }
-        per_policy_scene = {label: {} for label in M43_POLICY_LABELS}
+        per_policy_scene = {label: {} for label in labels}
         for query in group:
             chunks = {
-                "state_onehot": predict_postprocessed_action_chunk(
-                    context=policies.state_onehot,
+                label: predict_postprocessed_action_chunk(
+                    context=context,
                     observation=query,
                     task_id=query.requested_task_id,
-                ),
-                "task_token": predict_postprocessed_action_chunk(
-                    context=policies.task_token,
-                    observation=query,
-                    task_id=query.requested_task_id,
-                ),
+                )
+                for label, context in candidates.items()
             }
             if group_index == 0:
-                for label, context in (
-                    ("state_onehot", policies.state_onehot),
-                    ("task_token", policies.task_token),
-                ):
+                for label, context in candidates.items():
                     repeated = predict_postprocessed_action_chunk(
                         context=context,
                         observation=query,
@@ -883,14 +953,14 @@ def compute_fixed_observation_audits(
                         config=distance_config,
                     )
                 )
-        for label in M43_POLICY_LABELS:
+        for label in labels:
             candidate_chunks[label].append(per_policy_scene[label])
 
     if not deterministic_reset_validated:
         raise M43AuditRuntimeError("reset deterministic inference produced different chunks")
     audits: dict[str, SemanticAlignmentAudit] = {}
     summaries: dict[str, Mapping[str, object]] = {}
-    for label in M43_POLICY_LABELS:
+    for label in labels:
         audit, summary = _candidate_audit(
             policy_label=label,
             task_results=task_results[label],
@@ -938,6 +1008,8 @@ __all__ = [
     "audit_fixed_observations",
     "combine_fixed_audit_computations",
     "compute_fixed_observation_audits",
+    "compute_named_fixed_observation_audits",
+    "compute_per_task_reference_sensitivity",
     "plan_semantic_audit",
     "predict_postprocessed_action_chunk",
     "reset_policy_components",

@@ -1,12 +1,15 @@
 # LangMani roadmap
 
-Milestone M4.3b is at structural implementation. M0 through M3B, M4 full, M4.1 target smoke, and
+Milestone M4.3b target-development is stopped after a real pre-training preflight failure. M0 through M3B, M4 full, M4.1 target smoke, and
 M4.2 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken after development; its
 sealed final benchmark remains unaccessed. The real M4.3a frozen-policy semantic audit is complete.
-M4.3b now implements one FactorFiLM architecture plus local fixture/training contracts, but no
-100,000-step FactorFiLM run, checkpoint selection, development rollout, final benchmark, or M5 work
-has begun.
+M4.3b implements one FactorFiLM architecture plus local fixture/training contracts. Its one real
+seed-0 training identity is fixed at Git commit
+`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`; later evaluation/verifier code is a separate Git
+lineage and writes evidence outside that immutable run. No completed target-development result,
+final benchmark, or M5 result is claimed yet. D-053 records the EpisodeExportRecord index defect,
+the isolated candidate compatibility commit, and the required explicit producer reauthorization.
 
 ## M0 — Reproducible environment foundation (complete)
 
@@ -163,7 +166,7 @@ confusion, approximately random bin retrieval, and shared-policy post-grasp fail
 `semantic_audit_completed=true` while final/test/historical-fresh access and SmolVLA remain false.
 The normative contract is `docs/M43_SHARED_POLICY_REPAIR_SPEC.md`.
 
-## M4.3b — One factorized FiLM repair (structural implementation complete; target development pending)
+## M4.3b — One factorized FiLM repair (target development authorized; result pending)
 
 Implement exactly one oracle `ACT-Mixed-FactorFiLM` with separate `TargetObjectConditionV0` and
 `DestinationBinConditionV0` mappings. Red/green/blue object embeddings modulate the ResNet-18
@@ -181,15 +184,24 @@ configuration, a fingerprint-bound 20-checkpoint schedule, validation-only ranki
 50, locked rollout horizon 10, and `project` runtime.
 Stable TaskSpec metadata supplies the two indices; language text is never parsed.
 
-The current stage implements typed identities, conditioning, processor integration, deterministic
-local forward/backward and save/reload fixtures, dry-run/fixture/development command contracts,
-compatible latest/sole-orphan resume, protected path rejection, queue-bound validation-only
-selection, and final-schedule prohibition. It does not execute
-the full CUDA run. Consequently `factor_film_training_completed=false`,
-`factor_film_checkpoints_complete=false`, `factor_film_checkpoint_selected=false`,
-`development_benchmark_completed=false`, `final_schedule_accessed=false`, `smolvla_go=false`, and
-`physical_target_validated=false` remain mandatory. A later explicitly authorized clean-Git target
-command may train it; audit completion or local fixture success cannot authorize `m42_final_v0`.
+The architecture/training producer is frozen at commit
+`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. The authorized target-development sequence is:
+
+1. one exact 100,000-step seed-0 CUDA run and 20 immutable checkpoints at 5,000-step intervals;
+2. 36 M3B-validation rollouts for each checkpoint and the predeclared seven-key selection;
+3. selected policy plus processors reloaded in a fresh process, with the full postprocessed
+   `[50,8]` chunk matching at `atol=rtol=1e-6`;
+4. a paired `m42_dev_v0` comparison of PerTask, State-OneHot, and FactorFiLM, 72 episodes each and
+   216 episodes total, all at horizon 10 with explicit `project` action handling;
+5. validation/development semantic retrieval, new first-interaction evidence, the exact
+   16-condition development quality gate, and a separate read-only verifier.
+
+Post-training evidence lives outside the completed training run and records its own evaluator Git
+commit while retaining the exact producer commit and checkpoint fingerprints. Correct execution
+may set experiment and physical flags true even when the conjunctive quality gate is false. M3B
+test, historical M4 fresh seeds, `m42_final_v0`, automatic retraining, SmolVLA, and M5 remain out of
+scope. Until real artifacts pass independent verification, all target-result flags remain pending;
+local fixture success cannot authorize `m42_final_v0`.
 
 ## M5 — SmolVLA baseline (planned)
 

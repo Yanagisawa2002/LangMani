@@ -524,7 +524,9 @@ class PickPlaceByInstructionEnv(BaseEnv):
         deployable policy input.
         """
         cube_positions = torch.stack([cube.pose.p for cube in self.cubes], dim=1)
+        cube_orientations = torch.stack([cube.pose.q for cube in self.cubes], dim=1)
         cube_velocities = torch.stack([cube.linear_velocity for cube in self.cubes], dim=1)
+        cube_angular_velocities = torch.stack([cube.angular_velocity for cube in self.cubes], dim=1)
         cube_is_grasped = torch.stack([self.agent.is_grasping(cube) for cube in self.cubes], dim=1)
         gather_xyz = self._target_object_indices[:, None, None].expand(-1, 1, 3)
         target_position = torch.gather(cube_positions, dim=1, index=gather_xyz).squeeze(1)
@@ -553,7 +555,9 @@ class PickPlaceByInstructionEnv(BaseEnv):
             ),
             "object_is_grasped": cube_is_grasped,
             "cube_positions": cube_positions,
+            "cube_orientations": cube_orientations,
             "cube_linear_velocities": cube_velocities,
+            "cube_angular_velocities": cube_angular_velocities,
             "bin_floor_centers": bin_centers,
             "tcp_position": self.agent.tcp.pose.p,
             "object_in_bin": object_in_bin,

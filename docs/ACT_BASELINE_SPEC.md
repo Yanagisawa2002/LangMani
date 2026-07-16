@@ -401,9 +401,12 @@ before test access:
 4. lowest offline validation action loss;
 5. earliest checkpoint step.
 
-The offline validation loss used here is checkpoint-bound evidence. Evaluation requires the
-external JSONL row to match the metric stored under the checkpoint fingerprint; editing
-`metrics.jsonl` cannot change ranking.
+The offline validation loss used here is checkpoint-bound evidence. The legacy field name
+`offline_validation_action_loss` stores the established total ACT validation objective: action
+reconstruction plus the configured weighted KL contribution when VAE is active. Historical M4,
+M4.2, and FactorFiLM comparisons preserve that value and schema; they do not reinterpret it as an
+arm-only loss. Evaluation requires the external JSONL row to match the metric stored under the
+checkpoint fingerprint, so editing `metrics.jsonl` cannot change ranking.
 
 The atomic, immutable selection record stores every candidate metric, deterministic ranking,
 selected fingerprint, timestamp, and the validation schedule digest. Test evaluation in full mode
@@ -721,8 +724,12 @@ backbone dictionary key, `[B,512,8,8]` feature map, `[B,dim_model]` state projec
 image-token encoder structure, decoder position count, and `[B,chunk_size,8]` action head. Drift is
 a hard failure and never falls back to State-OneHot or TaskToken.
 
-FactorFiLM training extends the existing lifecycle after the installed LeRobot preprocessor. It
-uses the same 288 M3B train episodes, 36 validation episodes, train-only statistics, primary model
+FactorFiLM training extends the existing lifecycle after the installed LeRobot preprocessor. Its
+architecture/training producer is fixed at clean Git commit
+`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`; later evaluation and verifier commits cannot alter
+the run or checkpoint identity. D-053 records that this producer failed real preflight before
+training and that the isolated compatibility commit is not authorized without an explicit lock
+change. It uses the same 288 M3B train episodes, 36 validation episodes, train-only statistics, primary model
 and optimizer configuration, locked seed 0/data order, action chunk 50, 100,000 steps, 5,000-step checkpoint
 interval, expected 20 checkpoints, batch size 32, bfloat16 CUDA behavior, horizon 10, and `project`
 runtime as State-OneHot. Only the separated conditioning modules increase parameters.
@@ -741,8 +748,9 @@ fingerprint; selection embeds it and must match its run, schedule, checkpoint fi
 steps. The ranking is success,
 wrong-object interaction, wrong object in target bin, target off table, timeout, action loss, then
 earlier step. M3B test, historical M4 fresh, `m42_dev_v0`, `m42_final_v0`, and semantic-audit
-observations are not selection inputs. Development rollout begins only after an immutable
-validation selection and is not part of this structural milestone.
+observations are not selection inputs. The queue field `offline_validation_action_loss` retains the
+historical total ACT objective described above. Development rollout begins only after immutable
+validation selection and a fresh-process reload proof.
 
 The local fixture may construct, optimize, save, and reload a reduced ACT model and processors. It
 must prove finite forward/backward, gradients in the base model and all four new parameter groups,
@@ -750,11 +758,51 @@ separated injection, near-identity initialization, and deterministic fresh-insta
 evidence can set only FactorFiLM implementation/fixture flags. It cannot set training, checkpoint,
 selection, development, physical, final, or SmolVLA flags.
 
+## M4.3b target-development evaluation
+
+The authorized experiment consists of one producer run and post-training evidence stages. The
+producer performs exactly 100,000 seed-0 CUDA steps and publishes checkpoints at steps
+`5000,10000,...,100000`. All 20 are evaluated on exactly six M3B validation scene groups times six
+tasks (36 episodes per checkpoint). The immutable seven-key ranking is highest success count,
+lowest wrong-object interaction count, lowest wrong-object-in-target-bin count, lowest off-table
+count, lowest timeout count, lower checkpoint-bound validation objective, then earlier step.
+Development observations cannot affect selection.
+
+After selection, a fresh operating-system process reconstructs the policy, both FactorFiLM
+mappings, preprocessor, policy postprocessor, and explicit H=10/`project` runtime. The complete
+postprocessed environment-semantic action chunk must have shape `[50,8]` and match the producer
+reference at `atol=1e-6`, `rtol=1e-6`. Any fingerprint, shape, value, processor, or runtime mismatch
+stops before a development reset.
+
+The fixed development matrix uses the existing `m42_dev_v0` schedule only after that lock. It runs
+the frozen six PerTask controls, frozen State-OneHot, and selected FactorFiLM on identical scene/
+task identities: 72 episodes per control and exactly 216 total. All use `num_envs=1`,
+`pd_joint_pos`, the unchanged M1 success contract, horizon 10, explicit project action handling,
+identical reset semantics, and no M2 expert. Validation and development semantic retrieval stay
+separately identified and use the M4.3a action-range-normalized arm-only H=10 metric before runtime
+projection. Newly executed development episodes retain exact first-interaction and post-grasp
+diagnostics; unavailable values are never reconstructed from aggregates.
+
+Final evaluation is authorized only when all 16 conditions pass conjunctively: at least 50/72
+successes and 69.44%, gap to PerTask at most eight, at least 7/12 per TaskSpec, at most six
+wrong-object grasps, at most two wrong objects in the target bin, at most 22 timeouts, zero target
+in wrong bin, zero target off table, zero arm projections, zero NaN, zero Inf, zero malformed
+action, at least 70% primary full-task top-1, at least 80% target-object retrieval, and task-
+sensitivity ratio to PerTask at least 0.75. No rounding, proxy, or threshold relaxation is allowed.
+Correct execution may therefore have `passed=true` and `physical_target_validated=true` while
+`development_quality_gate_passed=false` and `final_benchmark_authorized=false`.
+
+The post-training evaluator is `scripts/evaluate_act_factor_film.py`; its resumable evidence root is
+outside the immutable training run and binds both producer and evaluator Git identities. The
+read-only `environment/verify_m43b.py` independently validates all 20 checkpoints and validation
+records, ranking, reload, 216 paired identities, semantic/first-interaction/post-grasp reports,
+quality calculation, checksums, provenance, and access flags. It never trains, changes selection,
+or executes a rollout.
+
 ## Handoff
 
-The immediate handoff is a separately authorized clean-Git FactorFiLM target-development training
-run, not M4.2-final or SmolVLA. It must use the validated M4.3a evidence and exact M3B train/
-validation identities. Structural completion and fixture training leave
-`factor_film_training_completed=false`, `factor_film_checkpoint_selected=false`,
-`development_benchmark_completed=false`, `final_schedule_accessed=false`, and `smolvla_go=false`.
-No command starts a final or language-policy milestone automatically.
+The immediate handoff is completion and independent verification of the authorized FactorFiLM
+target-development sequence, not M4.2-final or SmolVLA. Until real evidence passes, training,
+selection, reload, development, and physical flags remain unclaimed. M3B test, historical M4 fresh,
+`m42_final_v0`, automatic retraining, SmolVLA, and M5 stay inaccessible, and no command starts a
+final or language-policy milestone automatically.

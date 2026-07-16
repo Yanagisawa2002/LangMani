@@ -6,9 +6,13 @@ authoritative ManiSkill-native raw archive, and M3B added deterministic LeRobotD
 derivation and validation. M4/M4.1 own three reproducible ACT controls, their checkpoints,
 closed-loop evaluation, and the explicit action-bound runtime. Completed M4.2 development adds only
 committed seed locks, runtime/post-grasp analysis, and one rejected oracle TaskToken ACT. Completed
-M4.3a adds a zero-training semantic-audit and immutable evidence boundary. M4.3b now adds one
-FactorFiLM architecture plus training/checkpoint and local fixture contracts, without target
-training or rollout. The root package stays lightweight, and importing
+M4.3a adds a zero-training semantic-audit and immutable evidence boundary. M4.3b adds one
+FactorFiLM architecture plus training/checkpoint and local fixture contracts. Its authorized
+target-development keeps the architecture/training producer fixed at
+`8ee0f1babf36b91d1ee2a39701e4a6db6003b660` and records later selection, reload, rollout, semantic,
+and independent-verifier evidence outside that immutable run. D-053 records that this locked
+producer failed real preflight before training and that a replacement producer requires explicit
+reauthorization. The root package stays lightweight, and importing
 `langmani.environments` is still the explicit registration boundary.
 
 ## Dependency direction
@@ -64,9 +68,11 @@ omits static actors; the accessor still exposes nothing through policy observati
 
 The environment still does not own planning, expert phase behavior, dataset persistence, training,
 checkpoint selection, or policy metrics. M4 adds only a narrow policy-rollout evaluation accessor.
-M4.2 may add a separate compact post-step diagnostic accessor for target/object/bin geometry and
-velocity, but those values are consumed only after action selection for failure classification.
-Neither boundary changes policy observations or exposes privileged values as model inputs.
+The compact expert-only post-step diagnostic now includes all cube positions/orientations and
+linear/angular velocities, bin centers, TCP position, and containment facts needed to classify a
+newly executed first interaction. Those values are read only after action selection for evidence;
+they are absent from policy observations and per-step `info`. This boundary does not change M1's
+visual no-leakage contract or expose privileged values as model inputs.
 
 ## Experts
 
@@ -226,11 +232,15 @@ M4.3a additionally owns `m43_types.py` for immutable contracts, `act_semantic_au
 ActionChunkDistanceV0/retrieval/confusion/taxonomy calculations, and `m43_evidence.py` for
 fingerprint-owned staging, validation, and atomic promotion.
 
-M4.3b adds four narrow policy modules: `act_factor_film_types.py` for mappings and portable
+M4.3b adds narrow policy modules: `act_factor_film_types.py` for mappings and portable
 architecture/run/checkpoint identities, `act_factor_film_conditioning.py` for stable TaskSpec-to-
 index conversion shared by training and inference, `act_factor_film_adapter.py` for the isolated
-LeRobot subclass/hooks, and `act_factor_film_training.py` for fair data, fixture, resume, and future
-validation-selection orchestration.
+LeRobot subclass/hooks, `act_factor_film_training.py` for fair data, fixture, resume, and training,
+`act_factor_film_evaluation.py` for validation ranking/reload/development quality contracts, and
+`act_factor_film_evidence.py` for fingerprint-owned post-training evidence. The separate
+`act_factor_film_verification.py` re-derives acceptance from completed roots without mutation.
+Evaluation code may be committed after the producer without changing the producer commit stored in
+the run/checkpoints.
 
 The base M4 package wraps installed LeRobot 0.6.0 public interfaces rather than copying ACT. M4
 implements exactly `per_task`, `mixed_unconditioned`, and `mixed_task_onehot`; it is not a generic
@@ -303,9 +313,15 @@ selection. Only M3B validation selects the TaskToken checkpoint.
 M4.3a keeps validation and `m42_dev_v0` audit sections independently identified even when one
 combined command produces both. It rejects test, historical fresh, and final identities before
 policy loading. M4.3b reuses the M4 training lifecycle but only M3B validation may select among its
-20 planned checkpoints. `m42_dev_v0` is reserved for a later post-selection development rollout;
-the structural stage creates neither evaluator output nor a selected checkpoint. Final remains
-sealed.
+20 checkpoints: each receives the same 36 episodes and the fixed seven-key rank. A selected
+checkpoint must reproduce one complete postprocessed `[50,8]` chunk in a fresh process at
+`atol=rtol=1e-6` before `m42_dev_v0` is available. Development then evaluates PerTask,
+State-OneHot, and FactorFiLM on the same 72 identities each, 216 episodes total, and publishes
+semantic, first-interaction, post-grasp, runtime-action, and quality-gate evidence. Experiment/
+physical completion remains independent from the 16-condition quality result. Final remains sealed.
+The legacy queue field `offline_validation_action_loss` retains the same total ACT validation
+objective used by historical M4/M4.2 selection (reconstruction plus weighted KL when active); the
+name is preserved for schema compatibility and is not interpreted as an arm-only loss.
 
 ## CLI
 
@@ -371,14 +387,16 @@ verifier exercises portable math, retrieval/confusion, serialization, lifecycle,
 the final-access prohibition.
 
 M4.3b adds `scripts/train_act_factor_film.py`. Its dry-run and fixture paths accept explicit dataset,
-output, evidence, device, and report paths and never start long training. The future explicit
+output, evidence, device, and report paths and never start long training. The authorized explicit
 `--target-development` path owns clean-Git/evidence/M3B gates, immutable run identity, 100,000-step
 seed-0 training, 20 checkpoints, and a fingerprint-bound validation queue; `--resume-checkpoint`
 accepts only the latest declared or sole next atomically promoted checkpoint, and
 `--clean-staging` removes only matching unlinked incomplete staging. Source/Git/data/evidence/
-historical paths are protected before report or output writes. `environment/verify_m43.py` now includes
-the local FactorFiLM architecture/fixture/checkpoint/selection contracts but cannot claim target
-training or rollout.
+historical paths are protected before report or output writes. Post-training work belongs to
+`scripts/evaluate_act_factor_film.py`, whose resumable stages write outside the immutable producer
+run. `environment/verify_m43b.py` independently reads and re-derives the evidence without training,
+selection mutation, or rollout. `environment/verify_m43.py` retains the local architecture/fixture
+contracts and cannot claim target training or rollout.
 
 ## Cross-cutting rules
 
@@ -394,7 +412,8 @@ training or rollout.
   M4 fresh, or `m42_final_v0`; its real immutable audit is complete.
 - M4.3b uses stable TaskSpec metadata for separate object/visual and bin/state FiLM paths. Training
   uses only M3B train, checkpoint selection uses only M3B validation, state stays 9D, and local
-  fixtures cannot set training, selection, rollout, physical, final, or SmolVLA flags.
+  fixtures cannot set training, selection, rollout, physical, final, or SmolVLA flags. Post-training
+  evidence records its own evaluator Git while preserving the exact `8ee0f1b...` producer identity.
 - OneHot and TaskToken are oracle discrete-task controls, not language understanding.
 - Simulator, CUDA, Vulkan, or rendering failures remain visible and cause strict verification to
   fail.

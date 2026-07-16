@@ -1552,7 +1552,7 @@ The exact later clean-Git target-development command is:
 CUDA_VISIBLE_DEVICES=0 python scripts/train_act_factor_film.py \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --output-root outputs/models/act-factor-film \
-  --evidence-root outputs/diagnostics/m43/remote-audit-dfea8b3/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
+  --evidence-root outputs/diagnostics/m43/semantic-audit/evidence/930ed848f8700a5ebc8734b1d3eb0fe22fd8fd4a3592c65825f2d813a32205e2 \
   --device cuda \
   --report outputs/diagnostics/m43/factor-film-target-development.json \
   --clean-staging \
@@ -1561,3 +1561,89 @@ CUDA_VISIBLE_DEVICES=0 python scripts/train_act_factor_film.py \
 
 An interrupted compatible run may add `--resume-checkpoint`; no implementation task may execute the
 command, select a real checkpoint, run `m42_dev_v0`, access `m42_final_v0`, or start SmolVLA.
+
+## D-052 — Separate the immutable FactorFiLM producer from target-development evidence
+
+M4.3b target-development is authorized as one seed-0 experiment, but authorization does not permit
+the target evaluator to redefine the architecture after observing results. The architecture and
+training producer is therefore fixed at clean Git commit
+`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. Its run manifest, 20 scheduled checkpoints,
+processors, metrics, producer Git identity, and fingerprints remain immutable. Selection, fresh-
+process reload, development rollout, semantic analysis, and the independent verifier may be added
+by a later commit; those artifacts record their evaluator Git separately and live in a
+fingerprint-owned evidence tree outside the training run. They cannot rewrite or relabel producer
+artifacts. This supersedes only D-051's time-local statement that target execution was deferred;
+the D-051 architecture, identity, data, resume, selection, and access constraints remain unchanged.
+All source repairs are authored/tested in the local repository and committed/pushed before the GPU
+server fetches or checks out them; direct server source edits are not valid experiment provenance.
+
+Only M3B validation selects a FactorFiLM checkpoint. Each of the exact 20 steps
+`5000,10000,...,100000` receives the same six scene groups times six tasks, for 36 closed-loop
+episodes. The predeclared rank is highest success count, lowest wrong-object interaction count,
+lowest wrong-object-in-target-bin count, lowest off-table count, lowest timeout count, lower
+checkpoint-bound validation objective, then earlier step. The queue's historical field name
+`offline_validation_action_loss` is retained for schema and comparison compatibility, but its value
+has always been the existing total ACT validation objective returned by the shared evaluator:
+action reconstruction plus the configured weighted KL term when the VAE is active. It is not an
+arm-only loss, and changing its name or numeric definition now would break fair comparison with
+M4/M4.2 rather than correct those immutable runs.
+
+Development access requires an immutable selection and a fresh operating-system-process reload of
+the selected policy, preprocessor, policy postprocessor, mappings, and H=10/`project` runtime. One
+fixed validation observation must reproduce the entire postprocessed environment-semantic
+`[50,8]` action chunk at `atol=1e-6`, `rtol=1e-6`. The development comparison then executes exactly
+72 PerTask, 72 State-OneHot, and 72 FactorFiLM episodes on paired `m42_dev_v0` identities, 216 total.
+It recomputes validation/development semantic retrieval separately and records new first-
+interaction, post-grasp, raw-action, and runtime-action evidence. M3B test, historical M4 fresh,
+`m42_final_v0`, automatic retraining, SmolVLA, and M5 remain prohibited.
+
+The shared rollout contract now includes an explicit `EvaluationSplit.DEVELOPMENT` value.
+`run_m42_checkpoint_benchmark` emits that value for newly executed `m42_dev_v0` episodes instead
+of mislabeling them as historical `fresh_seed`. This is a forward report-semantics repair only:
+D-049 continues to govern immutable M4.2 evidence already serialized with the legacy label, and no
+historical file is rewritten. The final-evaluation path retains its existing split behavior and is
+unavailable to this target-development workflow. Consequently prohibited-source audits can treat
+new `development` and historical fresh-seed evidence as distinct identities without weakening the
+compatibility exception for old M4.2 records.
+
+The new interaction audit requires exact cube orientation and angular velocity as well as position
+and linear velocity. The environment's narrow expert-only policy-rollout diagnostic accessor is
+therefore extended with those batched tensors. The accessor is consumed only after policy action
+selection to classify evidence. It does not change `PandaPolicyStateV0[9]`, visual observations,
+privileged-state gating, per-step `info`, M1 success geometry, or any policy input. Unit tests retain
+the visual no-leakage assertion and independently check the diagnostic shapes.
+
+Target-development evidence uses resumable, checksum-validated, atomically promoted stages and a
+separate read-only verifier. Completion/physical validity is independent from the 16-condition
+development quality gate: a correctly executed experiment may set `passed=true` and
+`physical_target_validated=true` while `development_quality_gate_passed=false` and
+`final_benchmark_authorized=false`. If the quality gate passes, authorization is recorded only; the
+evaluator still cannot open or run final. This decision records interfaces and evidence ownership,
+not a claim that target training, selection, reload, 216 rollouts, quality, or physical validation
+has already succeeded.
+
+## D-053 — Stop M4.3b before training when the locked producer fails real preflight
+
+On 2026-07-17, the real target dry-run at the clean locked producer commit
+`8ee0f1babf36b91d1ee2a39701e4a6db6003b660` exited with code 90 before policy construction,
+optimizer creation, GPU training, model-root creation, or checkpoint promotion. The immutable
+command report at
+`outputs/diagnostics/m43/factor-film-target-development-preflight.json` records
+`AttributeError: 'EpisodeExportRecord' object has no attribute 'episode_index'`. The M3B project
+type exposes the derived episode identity as `lerobot_episode_index`; the FactorFiLM validation
+schedule used the nonexistent legacy name.
+
+No target training, checkpoint, selection, development rollout, final access, or SmolVLA evidence
+was produced by this failed attempt. A local compatibility repair and real-type regression test are
+isolated in clean commit `0088e2937556c123c37c2dbe69f73301b1eebfd0`. That patch changes only
+the validation schedule's EpisodeExportRecord lookup and exposes its canonical records/digest; it
+does not change the FactorFiLM architecture, parameter count, optimization, dataset, split,
+train-only statistics, seed, checkpoint cadence, H=10/`project` runtime, selection order, or quality
+thresholds.
+
+Commit `0088e2937556c123c37c2dbe69f73301b1eebfd0` is a candidate compatibility producer, not an
+implicitly authorized replacement for D-052. Server hot patches, runtime monkeypatches, Git
+identity spoofing, or relabeling it as `8ee0f1b...` are prohibited. Until the training-producer lock
+is explicitly reauthorized, M4.3b remains stopped after preflight. The post-training evaluator and
+independent verifier accept an explicit full training Git commit and record training/evaluation
+lineages separately so a future authorization can remain exact and auditable.

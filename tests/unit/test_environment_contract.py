@@ -280,8 +280,12 @@ def test_policy_rollout_diagnostics_expose_m43_oracles_only_on_demand() -> None:
 
     def cube(position: tuple[float, float, float]) -> SimpleNamespace:
         return SimpleNamespace(
-            pose=SimpleNamespace(p=torch.tensor([position], dtype=torch.float32)),
+            pose=SimpleNamespace(
+                p=torch.tensor([position], dtype=torch.float32),
+                q=torch.tensor([[1.0, 0.0, 0.0, 0.0]], dtype=torch.float32),
+            ),
             linear_velocity=torch.zeros((1, 3), dtype=torch.float32),
+            angular_velocity=torch.zeros((1, 3), dtype=torch.float32),
         )
 
     red = cube((0.08, 0.18, 0.029))
@@ -300,12 +304,17 @@ def test_policy_rollout_diagnostics_expose_m43_oracles_only_on_demand() -> None:
     diagnostics = env.get_policy_rollout_diagnostics()
 
     assert diagnostics["cube_positions"].shape == (1, 3, 3)
+    assert diagnostics["cube_orientations"].shape == (1, 3, 4)
     assert diagnostics["cube_linear_velocities"].shape == (1, 3, 3)
+    assert diagnostics["cube_angular_velocities"].shape == (1, 3, 3)
     assert diagnostics["bin_floor_centers"].shape == (1, 2, 3)
     assert diagnostics["tcp_position"].shape == (1, 3)
     assert diagnostics["object_in_bin"].shape == (1, 3, 2)
     assert diagnostics["object_in_bin"][0, 0, 0]
     assert diagnostics["object_is_grasped"].tolist() == [[False, True, False]]
     assert "cube_positions" not in environment_module.build_observation_extra(
+        tcp_pose=torch.zeros((1, 7)), use_privileged_state=False
+    )
+    assert "cube_orientations" not in environment_module.build_observation_extra(
         tcp_pose=torch.zeros((1, 7)), use_privileged_state=False
     )

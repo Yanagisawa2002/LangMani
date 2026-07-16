@@ -101,6 +101,7 @@ class EvaluationSplit(StrEnum):
     VALIDATION = "validation"
     TEST = "test"
     FRESH_SEED = "fresh_seed"
+    DEVELOPMENT = "development"
 
 
 class RolloutStatus(StrEnum):
