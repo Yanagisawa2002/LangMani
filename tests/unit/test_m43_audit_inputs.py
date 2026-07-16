@@ -261,6 +261,7 @@ def _fixture(tmp_path: Path, *, task_token_std: tuple[float, ...] | None = None)
         capture_output=True,
         text=True,
     ).stdout.strip()
+    runtime_evaluation_git_commit = "b" * 40
     evaluation_implementation_fingerprint = _evaluation_implementation_fingerprint(
         evaluation_git_commit
     )
@@ -304,7 +305,7 @@ def _fixture(tmp_path: Path, *, task_token_std: tuple[float, ...] | None = None)
         "representative_per_task_checkpoint_fingerprint": per_task[2]["checkpoint_fingerprint"],
         "implementation_fingerprint": _digest(24),
         "experiment_manifest_fingerprint": _digest(25),
-        "evaluation_git_commit": evaluation_git_commit,
+        "evaluation_git_commit": runtime_evaluation_git_commit,
         "selection_evidence": {"experiment_manifest": "experiment_manifest.json"},
         "locked": True,
         "final_schedule_accessed": False,
@@ -448,7 +449,7 @@ def _fixture(tmp_path: Path, *, task_token_std: tuple[float, ...] | None = None)
         identity = {
             "schema_version": "langmani-m42-evaluation-artifact-v0",
             "stage": "validation_selection",
-            "evaluation_git_commit": runtime_raw["evaluation_git_commit"],
+            "evaluation_git_commit": evaluation_git_commit,
             "implementation_fingerprint": evaluation_implementation_fingerprint,
             "experiment_manifest_fingerprint": token_identity.experiment_manifest_fingerprint,
             "run_fingerprint": token_identity.run_fingerprint,
@@ -581,6 +582,8 @@ def _fixture(tmp_path: Path, *, task_token_std: tuple[float, ...] | None = None)
         "validation_evidence_root": development_root / "evidence",
         "dataset_fingerprint": dataset_fingerprint,
         "split_digest": split_digest,
+        "runtime_evaluation_git_commit": runtime_evaluation_git_commit,
+        "task_token_evaluation_git_commit": evaluation_git_commit,
         "action_std": action_std,
         "m4_runs": per_task + [onehot],
         "token_run_root": token_run_root,
@@ -830,6 +833,49 @@ def test_loader_binds_validation_selection_to_completed_full_run(tmp_path: Path)
     _write(run["run_root"] / "checkpoint_selection.json", foreign_selection.to_dict())
 
     with pytest.raises(M43AuditInputError, match="immutable validation-only lock"):
+        _load(paths, mode="validation")
+
+
+def test_task_token_validation_uses_its_producer_lineage_not_runtime_lineage(
+    tmp_path: Path,
+) -> None:
+    paths = _fixture(tmp_path)
+
+    assert paths["runtime_evaluation_git_commit"] != paths["task_token_evaluation_git_commit"]
+    result = _load(paths, mode="validation")
+
+    assert result.task_token_checkpoint.git_commit == paths["task_token_evaluation_git_commit"]
+
+
+def test_task_token_validation_queue_rejects_a_different_producer_commit(
+    tmp_path: Path,
+) -> None:
+    paths = _fixture(tmp_path)
+    queue = json.loads(paths["queue_path"].read_text(encoding="utf-8"))
+    queue["git_commit"] = "c" * 40
+    queue["queue_fingerprint"] = ""
+    _write(paths["queue_path"], queue)
+
+    with pytest.raises(
+        M43AuditInputError,
+        match="validation queue differs from its complete training identity",
+    ):
+        _load(paths, mode="validation")
+
+
+def test_task_token_validation_artifact_rejects_a_different_producer_commit(
+    tmp_path: Path,
+) -> None:
+    paths = _fixture(tmp_path)
+    artifact_path = next(paths["validation_evidence_root"].glob("*/artifact.json"))
+    artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+    artifact["identity"]["evaluation_git_commit"] = paths["runtime_evaluation_git_commit"]
+    _write(artifact_path, artifact)
+
+    with pytest.raises(
+        M43AuditInputError,
+        match="validation artifact differs from its immutable queue/identity",
+    ):
         _load(paths, mode="validation")
 
 

@@ -1408,3 +1408,23 @@ verifier. Focused M4.3a tests reported 147 passed and one Windows symlink-privil
 CPU-safe suite reported 840 passed, 14 skipped, and 15 hardware/rendering deselected. These results
 do not set semantic-audit completion, deterministic real-checkpoint reload, GPU execution, or
 physical-target validation. Real inference and GPU availability remain pending.
+
+## D-048 — Keep runtime-selection and TaskToken-validation producer lineages distinct
+
+The frozen M4.2 target-development archive has two independently committed producer lineages. The
+runtime lock was produced at `63ae2efbcd849428ccd9ec375bc818872a2073e5`, while all 20 immutable
+TaskToken validation artifacts, the TaskToken training manifest, and its completed validation queue
+bind `36bd6d81ff5e3b2c74977da1eec0fb0231d2f922`. Reconstructing validation artifact identities from
+the runtime producer therefore names 20 nonexistent directories even though the archive is intact.
+
+M4.3a now reconstructs the TaskToken validation evaluator closure from the Git commit jointly bound
+by the TaskToken manifest and validation queue. It still validates the runtime fingerprint, runtime
+source fingerprint, locked horizon/gripper selection, complete queue, all result fingerprints, and
+the validation-only selection independently. It neither enumerates directories to guess identities
+nor rewrites historical evidence. Malformed or cross-lineage queue/artifact metadata remains a hard
+failure.
+
+This is the verified lineage contract for the frozen M4.2 target-development evidence. If a future
+workflow evaluates a TaskToken training run from a different committed evaluator, that workflow
+must publish an explicit immutable validation-producer lineage index; it must not infer one from the
+runtime lock or silently generalize this compatibility rule.

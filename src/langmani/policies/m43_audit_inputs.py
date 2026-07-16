@@ -912,7 +912,7 @@ def _validation_artifact_identity(
     return {
         "schema_version": M42_EVALUATION_ARTIFACT_SCHEMA,
         "stage": "validation_selection",
-        "evaluation_git_commit": runtime.evaluation_git_commit,
+        "evaluation_git_commit": manifest.identity.git_commit,
         "implementation_fingerprint": implementation_fingerprint,
         "experiment_manifest_fingerprint": manifest.identity.experiment_manifest_fingerprint,
         "run_fingerprint": manifest.identity.run_fingerprint,
@@ -937,8 +937,11 @@ def _task_token_validation_results(
     queue: TaskTokenValidationQueue,
 ) -> tuple[TaskTokenValidationResult, ...]:
     results: list[TaskTokenValidationResult] = []
+    # Runtime selection and the frozen TaskToken validation archive have
+    # separate immutable producer lineages.  The archive is bound to the
+    # TaskToken run/queue commit, not to the earlier runtime-ablation commit.
     implementation_fingerprint = _evaluation_implementation_fingerprint(
-        runtime.evaluation_git_commit
+        manifest.identity.git_commit
     )
     for item in queue.checkpoints:
         identity = _validation_artifact_identity(
