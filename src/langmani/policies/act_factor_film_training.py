@@ -165,13 +165,16 @@ def validate_authorizing_semantic_audit(
     return completed
 
 
-def _validation_schedule_digest(
+def factor_film_validation_schedule_records(
     completed: CompletedM3BDataset,
-    validation_view: DatasetEpisodeView,
-) -> str:
-    records = {value.episode_index: value for value in completed.manifest.episodes}
-    episodes = []
-    for index in validation_view.episode_indices:
+    validation_view: DatasetEpisodeView | None = None,
+) -> tuple[dict[str, object], ...]:
+    """Return the exact canonical M3B-validation episode identity records."""
+
+    view = validation_view or completed.views.for_split(DatasetSplit.VALIDATION)
+    records = {value.lerobot_episode_index: value for value in completed.manifest.episodes}
+    episodes: list[dict[str, object]] = []
+    for index in view.episode_indices:
         value = records[index]
         episodes.append(
             {
@@ -181,6 +184,20 @@ def _validation_schedule_digest(
                 "task_id": value.task_id,
             }
         )
+    if len(episodes) != 36 or len({value["episode_index"] for value in episodes}) != 36:
+        raise FactorFiLMContractError(
+            "FactorFiLM validation schedule requires exactly 36 unique episodes"
+        )
+    return tuple(episodes)
+
+
+def factor_film_validation_schedule_digest(
+    completed: CompletedM3BDataset,
+    validation_view: DatasetEpisodeView | None = None,
+) -> str:
+    """Fingerprint the exact validation schedule without loading policy frames."""
+
+    episodes = factor_film_validation_schedule_records(completed, validation_view)
     return canonical_fingerprint(
         {
             "schema_version": "langmani-m43-factor-film-validation-schedule-v0",
@@ -230,7 +247,9 @@ def load_factor_film_data(dataset_root: str | Path) -> FactorFiLMDataBundle:
         train_view=train_view,
         validation_view=validation_view,
         statistics=statistics,
-        validation_schedule_digest=_validation_schedule_digest(completed, validation_view),
+        validation_schedule_digest=factor_film_validation_schedule_digest(
+            completed, validation_view
+        ),
     )
 
 
@@ -919,6 +938,8 @@ __all__ = [
     "build_factor_film_validation_queue",
     "create_factor_film_selection",
     "factor_film_dataloader",
+    "factor_film_validation_schedule_digest",
+    "factor_film_validation_schedule_records",
     "fixture_dry_run_report",
     "internal_act_experiment",
     "load_factor_film_data",

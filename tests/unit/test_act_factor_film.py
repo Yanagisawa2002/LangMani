@@ -11,6 +11,7 @@ import pytest
 import torch
 from lerobot.policies.act import ACTPolicy
 
+from langmani.datasets.lerobot_types import DatasetSplit, EpisodeExportRecord
 from langmani.datasets.schedule import CANONICAL_TASK_SPECS
 from langmani.environments.specs import stable_task_id
 from langmani.policies.act_factor_film_adapter import (
@@ -36,6 +37,7 @@ from langmani.policies.act_factor_film_training import (
     build_factor_film_policy_and_processors,
     build_factor_film_validation_queue,
     create_factor_film_selection,
+    factor_film_validation_schedule_records,
     rank_factor_film_validation_results,
 )
 from langmani.policies.act_factor_film_types import (
@@ -73,6 +75,50 @@ from scripts.train_act_factor_film import _resume_is_atomic_orphan
 _DIGEST_A = "sha256:" + "a" * 64
 _DIGEST_B = "sha256:" + "b" * 64
 _DIGEST_C = "sha256:" + "c" * 64
+
+
+def test_real_validation_schedule_uses_manifest_lerobot_episode_index() -> None:
+    records = tuple(
+        EpisodeExportRecord(
+            source_collection_run_id="fixture-run",
+            source_run_fingerprint=_DIGEST_A,
+            source_archive_digest=_DIGEST_B,
+            source_episode_id=f"episode-{index}",
+            source_scene_group_id=f"group-{index // 6}",
+            source_scene_seed=10_000 + index // 6,
+            scene_id=f"scene-{index // 6}",
+            task_id=stable_task_id(CANONICAL_TASK_SPECS[index % 6]),
+            target_object_id="red_cube",
+            target_bin_id="left_bin",
+            instruction_template_id="canonical_v0",
+            canonical_instruction="Pick up the red cube and place it in the left bin.",
+            source_shard_id="shard-000",
+            source_shard_path="shards/shard-000.h5",
+            source_trajectory_key=f"traj_{index}",
+            source_h5_sha256="a" * 64,
+            source_json_sha256="b" * 64,
+            source_checksum="c" * 64,
+            source_frame_count=10,
+            lerobot_episode_index=index,
+            split=DatasetSplit.VALIDATION,
+            raw_render_digest="d" * 64,
+            output_frame_count=10,
+        )
+        for index in range(36)
+    )
+    completed = SimpleNamespace(
+        manifest=SimpleNamespace(episodes=records),
+        views=SimpleNamespace(),
+    )
+    view = SimpleNamespace(episode_indices=tuple(range(36)))
+
+    observed = factor_film_validation_schedule_records(completed, view)
+
+    assert tuple(item["episode_index"] for item in observed) == tuple(range(36))
+    assert observed[0]["scene_group_id"] == "group-0"
+    assert observed[-1]["task_id"] == stable_task_id(CANONICAL_TASK_SPECS[-1])
+
+
 _DIGEST_D = "sha256:" + "d" * 64
 _DIGEST_E = "sha256:" + "e" * 64
 _GIT_COMMIT = "dfea8b3d7d28274909ff178cb9087a9a90e17ee7"
