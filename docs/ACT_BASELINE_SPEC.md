@@ -725,12 +725,13 @@ image-token encoder structure, decoder position count, and `[B,chunk_size,8]` ac
 a hard failure and never falls back to State-OneHot or TaskToken.
 
 FactorFiLM training extends the existing lifecycle after the installed LeRobot preprocessor. Its
-architecture/training producer is fixed at clean Git commit
-`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`; later evaluation and verifier commits cannot alter
-the run or checkpoint identity. D-053 records that this producer failed real preflight before
-training and that the isolated compatibility commit is not authorized without an explicit lock
-change. It uses the same 288 M3B train episodes, 36 validation episodes, train-only statistics, primary model
-and optimizer configuration, locked seed 0/data order, action chunk 50, 100,000 steps, 5,000-step checkpoint
+architecture/structural baseline is fixed at clean Git commit
+`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`; D-054 explicitly reauthorizes clean compatibility
+commit `0088e2937556c123c37c2dbe69f73301b1eebfd0` as the target-training producer. Later evaluation
+and verifier commits cannot alter that run or checkpoint identity. Post-training evaluator/verifier
+implementation is fixed at `1bacb66d2a6f7c3f2d18d6f65ad7865af9a12cd6`. It uses the same 288 M3B
+train episodes, 36 validation episodes, train-only statistics, primary model and optimizer
+configuration, locked seed 0/data order, action chunk 50, 100,000 steps, 5,000-step checkpoint
 interval, expected 20 checkpoints, batch size 32, bfloat16 CUDA behavior, horizon 10, and `project`
 runtime as State-OneHot. Only the separated conditioning modules increase parameters.
 
@@ -792,8 +793,9 @@ sensitivity ratio to PerTask at least 0.75. No rounding, proxy, or threshold rel
 Correct execution may therefore have `passed=true` and `physical_target_validated=true` while
 `development_quality_gate_passed=false` and `final_benchmark_authorized=false`.
 
-The post-training evaluator is `scripts/evaluate_act_factor_film.py`; its resumable evidence root is
-outside the immutable training run and binds both producer and evaluator Git identities. The
+The post-training evaluator is `scripts/evaluate_act_factor_film.py`; its implementation lineage is
+`1bacb66d2a6f7c3f2d18d6f65ad7865af9a12cd6`, its resumable evidence root is outside the immutable
+training run, and it binds both producer and evaluator Git identities. The
 read-only `environment/verify_m43b.py` independently validates all 20 checkpoints and validation
 records, ranking, reload, 216 paired identities, semantic/first-interaction/post-grasp reports,
 quality calculation, checksums, provenance, and access flags. It never trains, changes selection,

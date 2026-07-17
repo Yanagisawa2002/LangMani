@@ -6,13 +6,14 @@ LangMani supports language-conditioned robotic manipulation in ManiSkill. M0 thr
 M4.1 explicit action-bound target smoke, and M4.2 target-development are complete. M4 full is
 experimentally and physically validated, but `baseline_quality_validated=false`; the M4.2 TaskToken
 candidate was rejected. The real M4.3a semantic-alignment audit is complete and authorizes one
-M4.3b `ACT-Mixed-FactorFiLM` implementation. M4.3b target-development is now authorized with the
-architecture and training identity fixed at
-`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. Target training, validation-only selection,
+M4.3b `ACT-Mixed-FactorFiLM` implementation. M4.3b keeps its architecture and structural baseline
+fixed at `8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. After that baseline's real preflight failed
+before training on the EpisodeExportRecord index contract, D-054 explicitly reauthorized the
+compatibility-only clean commit `0088e2937556c123c37c2dbe69f73301b1eebfd0` as the target-training
+producer. Post-training evaluator/verifier implementation is fixed at
+`1bacb66d2a6f7c3f2d18d6f65ad7865af9a12cd6`. Target training, validation-only selection,
 fresh-process reload, and `m42_dev_v0` evaluation remain distinct evidence stages; no completed
-target result is claimed until the independent verifier accepts them. The locked producer's real
-preflight failed before training on the EpisodeExportRecord index contract and M4.3b is stopped
-pending explicit producer reauthorization under D-053. The sealed final benchmark
+target result is claimed until the independent verifier accepts them. The sealed final benchmark
 and M5 have not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
@@ -165,8 +166,8 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m42.py --target-development
 # Separate future authorization only after all development selections are immutable.
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m42.py --target-final
 
-# Authorized M4.3b target training. The immutable run remains bound to this exact clean
-# architecture/training commit even when later evaluation code is committed separately.
+# On the server, fetch and check out the exact clean compatibility producer
+# 0088e2937556c123c37c2dbe69f73301b1eebfd0 before this authorized M4.3b target training.
 CUDA_VISIBLE_DEVICES=0 python scripts/train_act_factor_film.py \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --output-root outputs/models/act-factor-film \
@@ -176,13 +177,14 @@ CUDA_VISIBLE_DEVICES=0 python scripts/train_act_factor_film.py \
   --clean-staging \
   --target-development
 
-# Post-training selection/reload/development stages are resumable and write outside the immutable
-# training run. The independent verifier is read-only and never opens test/fresh/final schedules.
+# For post-training work, check out the current clean authorization commit containing evaluator/
+# verifier implementation 1bacb66d2a6f7c3f2d18d6f65ad7865af9a12cd6. These stages are resumable,
+# write outside the immutable training run, and never open test/fresh/final schedules.
 CUDA_VISIBLE_DEVICES=0 python scripts/evaluate_act_factor_film.py \
   --target-development \
-  --training-git-commit 8ee0f1babf36b91d1ee2a39701e4a6db6003b660
+  --training-git-commit 0088e2937556c123c37c2dbe69f73301b1eebfd0
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m43b.py \
-  --training-git-commit 8ee0f1babf36b91d1ee2a39701e4a6db6003b660 \
+  --training-git-commit 0088e2937556c123c37c2dbe69f73301b1eebfd0 \
   --training-run-root outputs/models/act-factor-film/<run-fingerprint> \
   --evaluation-evidence-root outputs/diagnostics/m43/<evaluation-evidence-root> \
   --structural-verification outputs/diagnostics/m43/target-development-preflight-verification/verification.json
@@ -221,11 +223,12 @@ The exact environment creation commands are maintained in `README.md`.
   object order is red/green/blue and the bin order is left/right. Object FiLM may modify only the
   ResNet-18 feature map; bin FiLM may modify only the encoded 9D-state token. No combined task token
   or state-appended task feature is permitted.
-- FactorFiLM target training is bound to exact clean Git commit
-  `8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. Its immutable run and checkpoint identities must
-  never be rewritten by a later evaluator commit. Only the exact M3B train view may train it, only
-  M3B validation may select a checkpoint, and fixture forward/backward or save/reload evidence must
-  never set training, checkpoint, rollout, or physical-validation flags.
+- FactorFiLM architecture and structural evidence remain bound to
+  `8ee0f1babf36b91d1ee2a39701e4a6db6003b660`; target training is bound to the exact clean
+  compatibility producer `0088e2937556c123c37c2dbe69f73301b1eebfd0`. Its immutable run and
+  checkpoint identities must never be rewritten by a later evaluator commit. Only the exact M3B
+  train view may train it, only M3B validation may select a checkpoint, and fixture forward/backward
+  or save/reload evidence must never set training, checkpoint, rollout, or physical-validation flags.
 - Preserve raw, binary-transformed, projected, and executed action evidence as separate contracts.
   OneHot and TaskToken must always be described as oracle conditioning, never language understanding.
 - M4.3b target development is one seed-0 comparison only. Its model/optimization fingerprints,

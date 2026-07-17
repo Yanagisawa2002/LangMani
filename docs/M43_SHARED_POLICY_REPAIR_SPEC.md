@@ -4,11 +4,12 @@ This document is the normative contract for LangMani milestone M4.3. M4.3 begins
 zero-training semantic audit of the frozen M4/M4.2 controls. That real M4.3a audit is complete and
 immutable. A separate M4.3b change implements exactly one oracle-conditioned
 `ACT-Mixed-FactorFiLM` policy plus its training/checkpoint contracts and local non-target fixture.
-One target-development execution is now authorized. Its architecture/training producer is fixed at
-Git commit `8ee0f1babf36b91d1ee2a39701e4a6db6003b660`; later evaluation/verifier code is a separate
-lineage and must not mutate that run. Its real preflight failed before training on the
-EpisodeExportRecord index contract; D-053 stops execution pending explicit producer
-reauthorization. No completed target result is claimed in this specification.
+One target-development execution is now authorized. Its architecture/structural baseline remains
+Git commit `8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. After that baseline's real preflight failed before
+training on the EpisodeExportRecord index contract, D-054 explicitly authorized compatibility-only
+commit `0088e2937556c123c37c2dbe69f73301b1eebfd0` as the target-training producer. Post-training
+evaluator/verifier implementation is `1bacb66d2a6f7c3f2d18d6f65ad7865af9a12cd6` and must not mutate
+the training run. No completed target result is claimed in this specification.
 M3B test, historical M4 fresh seeds, `m42_final_v0`, SmolVLA, and M5 remain unauthorized.
 
 M4.3 preserves the M1 task, camera, observation/no-leakage, success, action-space, `num_envs=1`, and
@@ -388,8 +389,9 @@ TaskToken, or unconditioned fallback.
 ## Training, identity, and checkpoint contract
 
 The authorized target-development run is a fair architectural comparison with State-OneHot. Its
-architecture/training identity is fixed at clean Git commit
-`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. It uses:
+architecture/structural identity is fixed at clean Git commit
+`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`, and its compatibility-only target-training producer is
+fixed at `0088e2937556c123c37c2dbe69f73301b1eebfd0`. It uses:
 
 - the same 288 M3B train and 36 validation episodes;
 - dataset fingerprint `sha256:3f4d81471ac7c3ecc034206bc207524c4cbfbd1f7874b25eca894a5b607acfb4`;
@@ -496,7 +498,8 @@ instance, and compares deterministic inference with `atol=1e-6` and `rtol=1e-6`.
 object-only visual changes, bin-only state changes, untouched opposite pre-FiLM paths, explicit
 broadcasting, and near-identity initialization. It is never checkpoint-quality or physical evidence.
 
-The authorized GPU producer command is exactly:
+The target server must fetch and check out exact clean producer
+`0088e2937556c123c37c2dbe69f73301b1eebfd0`; the authorized GPU command is exactly:
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python scripts/train_act_factor_film.py \
@@ -516,8 +519,10 @@ unclaimed until generated artifacts pass the independent verifier.
 ## M4.3b target-development evidence boundary
 
 The completed training run is immutable and remains owned by producer commit
+`0088e2937556c123c37c2dbe69f73301b1eebfd0`, while architecture/structural evidence remains owned by
 `8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. Selection, reload, development, semantic analysis,
-quality calculation, and independent verification may be implemented by a later commit, but that
+quality calculation, and independent verification use implementation commit
+`1bacb66d2a6f7c3f2d18d6f65ad7865af9a12cd6`, but that
 consumer Git identity is recorded separately and cannot change the run manifest, checkpoint bytes,
 checkpoint fingerprints, processor files, training metrics, or producer Git. Post-training
 evidence uses a separate fingerprint-owned root with owned staging, checksum validation, atomic
@@ -642,9 +647,9 @@ The post-training evaluator and independent read-only verifier commands are:
 ```bash
 CUDA_VISIBLE_DEVICES=0 python scripts/evaluate_act_factor_film.py \
   --target-development \
-  --training-git-commit 8ee0f1babf36b91d1ee2a39701e4a6db6003b660
+  --training-git-commit 0088e2937556c123c37c2dbe69f73301b1eebfd0
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m43b.py \
-  --training-git-commit 8ee0f1babf36b91d1ee2a39701e4a6db6003b660 \
+  --training-git-commit 0088e2937556c123c37c2dbe69f73301b1eebfd0 \
   --training-run-root outputs/models/act-factor-film/<run-fingerprint> \
   --evaluation-evidence-root outputs/diagnostics/m43/<evaluation-evidence-root> \
   --structural-verification outputs/diagnostics/m43/target-development-preflight-verification/verification.json

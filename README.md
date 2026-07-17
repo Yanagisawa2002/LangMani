@@ -7,11 +7,12 @@ implemented its validated local LeRobotDataset v3 derivation. M4 and M4.1 establ
 ACT controls, closed-loop evaluation, and auditable action projection. M4.2 completed its
 oracle-conditioned development diagnosis and rejected TaskToken. M4.3a completed the real frozen-
 policy semantic audit. M4.3b now implements one factorized FiLM ACT architecture and its local
-training/checkpoint contracts. One target-development execution is authorized with the immutable
-architecture/training identity fixed at Git commit
-`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. Its real preflight failed before training on the
-EpisodeExportRecord index contract; D-053 keeps target execution stopped pending explicit producer
-reauthorization. No completed FactorFiLM target result is claimed yet.
+training/checkpoint contracts. The architecture/structural baseline remains Git commit
+`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. After its real preflight failed before training on the
+EpisodeExportRecord index contract, D-054 explicitly authorized compatibility-only commit
+`0088e2937556c123c37c2dbe69f73301b1eebfd0` as the target-training producer. Post-training
+evaluator/verifier implementation is `1bacb66d2a6f7c3f2d18d6f65ad7865af9a12cd6`. No completed
+FactorFiLM target result is claimed yet.
 
 M4 implements six per-task ACT policies, one mixed unconditioned ACT, and one mixed ACT with an
 oracle six-way task one-hot. Standard ACT consumes no natural-language text, so M4 is not a language
@@ -843,8 +844,10 @@ The dry-run and fixture validate model construction, separated conditioning, fin
 backward, gradients in the base model and both FiLM paths, one optimizer step, processor and
 checkpoint persistence, fresh-instance reload, and deterministic output equivalence. They do not
 use a tolerance larger than `atol=1e-6`, `rtol=1e-6` and do not produce a target checkpoint or
-quality result. The authorized CUDA producer is explicitly pinned to clean Git commit
-`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`:
+quality result. The architecture/structural baseline remains
+`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`, and the authorized CUDA training producer is explicitly
+pinned to clean compatibility commit `0088e2937556c123c37c2dbe69f73301b1eebfd0`. The target server
+must fetch and check out that exact commit before running:
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python scripts/train_act_factor_film.py \
@@ -863,15 +866,17 @@ action chunk 50, bfloat16 CUDA path, horizon 10, and `project` runtime. Compatib
 only the latest declared checkpoint or the sole next 5,000-step atomically promoted orphan. Unsafe
 or linked output, report, and staging paths are rejected before any write.
 
-Selection and development are separate resumable stages and write fingerprint-owned evidence
-outside the immutable training run:
+Selection and development are separate resumable stages implemented at
+`1bacb66d2a6f7c3f2d18d6f65ad7865af9a12cd6`. The target server checks out the current clean
+authorization commit containing that implementation; the stages write fingerprint-owned evidence
+outside the immutable training run and explicitly bind the producer commit:
 
 ```bash
 CUDA_VISIBLE_DEVICES=0 python scripts/evaluate_act_factor_film.py \
   --target-development \
-  --training-git-commit 8ee0f1babf36b91d1ee2a39701e4a6db6003b660
+  --training-git-commit 0088e2937556c123c37c2dbe69f73301b1eebfd0
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m43b.py \
-  --training-git-commit 8ee0f1babf36b91d1ee2a39701e4a6db6003b660 \
+  --training-git-commit 0088e2937556c123c37c2dbe69f73301b1eebfd0 \
   --training-run-root outputs/models/act-factor-film/<run-fingerprint> \
   --evaluation-evidence-root outputs/diagnostics/m43/<evaluation-evidence-root> \
   --structural-verification outputs/diagnostics/m43/target-development-preflight-verification/verification.json
@@ -1016,9 +1021,9 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m42.py --target-development
 # into the historical M0--M4.2 chain and never open the sealed final schedule.
 CUDA_VISIBLE_DEVICES=0 python scripts/evaluate_act_factor_film.py \
   --target-development \
-  --training-git-commit 8ee0f1babf36b91d1ee2a39701e4a6db6003b660
+  --training-git-commit 0088e2937556c123c37c2dbe69f73301b1eebfd0
 CUDA_VISIBLE_DEVICES=0 python environment/verify_m43b.py \
-  --training-git-commit 8ee0f1babf36b91d1ee2a39701e4a6db6003b660 \
+  --training-git-commit 0088e2937556c123c37c2dbe69f73301b1eebfd0 \
   --training-run-root outputs/models/act-factor-film/<run-fingerprint> \
   --evaluation-evidence-root outputs/diagnostics/m43/<evaluation-evidence-root> \
   --structural-verification outputs/diagnostics/m43/target-development-preflight-verification/verification.json

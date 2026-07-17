@@ -1,15 +1,15 @@
 # LangMani roadmap
 
-Milestone M4.3b target-development is stopped after a real pre-training preflight failure. M0 through M3B, M4 full, M4.1 target smoke, and
+Milestone M4.3b target-development is reauthorized after a real pre-training preflight failure. M0 through M3B, M4 full, M4.1 target smoke, and
 M4.2 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken after development; its
 sealed final benchmark remains unaccessed. The real M4.3a frozen-policy semantic audit is complete.
-M4.3b implements one FactorFiLM architecture plus local fixture/training contracts. Its one real
-seed-0 training identity is fixed at Git commit
-`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`; later evaluation/verifier code is a separate Git
-lineage and writes evidence outside that immutable run. No completed target-development result,
-final benchmark, or M5 result is claimed yet. D-053 records the EpisodeExportRecord index defect,
-the isolated candidate compatibility commit, and the required explicit producer reauthorization.
+M4.3b implements one FactorFiLM architecture plus local fixture/training contracts. Its
+architecture/structural baseline remains `8ee0f1babf36b91d1ee2a39701e4a6db6003b660`; D-054 authorizes exactly
+one real seed-0 training producer at clean compatibility commit
+`0088e2937556c123c37c2dbe69f73301b1eebfd0`. Post-training evaluator/verifier implementation is
+`1bacb66d2a6f7c3f2d18d6f65ad7865af9a12cd6` and writes evidence outside that immutable run. No
+completed target-development result, final benchmark, or M5 result is claimed yet.
 
 ## M0 — Reproducible environment foundation (complete)
 
@@ -184,8 +184,9 @@ configuration, a fingerprint-bound 20-checkpoint schedule, validation-only ranki
 50, locked rollout horizon 10, and `project` runtime.
 Stable TaskSpec metadata supplies the two indices; language text is never parsed.
 
-The architecture/training producer is frozen at commit
-`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. The authorized target-development sequence is:
+The architecture/structural baseline is frozen at commit
+`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`, while the compatibility-only target-training producer
+is frozen at `0088e2937556c123c37c2dbe69f73301b1eebfd0`. The authorized target-development sequence is:
 
 1. one exact 100,000-step seed-0 CUDA run and 20 immutable checkpoints at 5,000-step intervals;
 2. 36 M3B-validation rollouts for each checkpoint and the predeclared seven-key selection;

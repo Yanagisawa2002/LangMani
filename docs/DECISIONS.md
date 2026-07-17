@@ -1647,3 +1647,30 @@ identity spoofing, or relabeling it as `8ee0f1b...` are prohibited. Until the tr
 is explicitly reauthorized, M4.3b remains stopped after preflight. The post-training evaluator and
 independent verifier accept an explicit full training Git commit and record training/evaluation
 lineages separately so a future authorization can remain exact and auditable.
+
+## D-054 — Reauthorize the compatibility producer without changing the FactorFiLM experiment
+
+The explicit post-D-053 authorization on 2026-07-17 keeps the M4.3b architecture and structural
+baseline at `8ee0f1babf36b91d1ee2a39701e4a6db6003b660` and reauthorizes exactly one target-training
+producer at clean commit `0088e2937556c123c37c2dbe69f73301b1eebfd0`. This producer contains only
+the compatibility repair already isolated by D-053: it reads the real M3B
+`EpisodeExportRecord.lerobot_episode_index` field when constructing the immutable validation
+schedule. It does not change FactorFiLM architecture, parameter count, M3B data or fingerprints,
+train/validation split, train-only normalization, ACT or optimizer configuration, seed/data order,
+100,000-step budget, 5,000-step checkpoint cadence, exact 20-checkpoint queue, H=10/`project`
+runtime, seven-key validation-only ranking, semantic metrics, or any of the 16 quality thresholds.
+
+The GPU server must fetch and check out `0088e2937556c123c37c2dbe69f73301b1eebfd0` before training;
+server source hot patches, monkeypatches, Git identity spoofing, and relabeling remain prohibited.
+The immutable training manifest, checkpoints, processors, metrics, and fingerprints retain that
+exact producer identity. Post-training selection, fresh-process reload, `m42_dev_v0` evaluation,
+semantic/interaction evidence, and the independent verifier use implementation commit
+`1bacb66d2a6f7c3f2d18d6f65ad7865af9a12cd6`. The server checks out the current clean authorization
+commit containing that implementation for those stages, writes outside the immutable training run,
+and passes `--training-git-commit 0088e2937556c123c37c2dbe69f73301b1eebfd0` explicitly to both the
+evaluator and read-only verifier.
+
+This decision authorizes execution, not a completed result. M3B test, historical M4 fresh seeds,
+`m42_final_v0`, automatic retraining, final authorization, SmolVLA, and M5 remain inaccessible. No
+training, selection, reload, physical rollout, quality, or final flag becomes true until the real
+artifacts pass their declared stages and the independent verifier.

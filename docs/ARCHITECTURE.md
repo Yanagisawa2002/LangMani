@@ -7,13 +7,13 @@ derivation and validation. M4/M4.1 own three reproducible ACT controls, their ch
 closed-loop evaluation, and the explicit action-bound runtime. Completed M4.2 development adds only
 committed seed locks, runtime/post-grasp analysis, and one rejected oracle TaskToken ACT. Completed
 M4.3a adds a zero-training semantic-audit and immutable evidence boundary. M4.3b adds one
-FactorFiLM architecture plus training/checkpoint and local fixture contracts. Its authorized
-target-development keeps the architecture/training producer fixed at
-`8ee0f1babf36b91d1ee2a39701e4a6db6003b660` and records later selection, reload, rollout, semantic,
-and independent-verifier evidence outside that immutable run. D-053 records that this locked
-producer failed real preflight before training and that a replacement producer requires explicit
-reauthorization. The root package stays lightweight, and importing
-`langmani.environments` is still the explicit registration boundary.
+FactorFiLM architecture plus training/checkpoint and local fixture contracts. Its architecture and
+structural baseline stays fixed at `8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. D-054 authorizes the
+compatibility-only target-training producer `0088e2937556c123c37c2dbe69f73301b1eebfd0` after the
+baseline's real preflight failed before training; post-training evaluator/verifier implementation
+is `1bacb66d2a6f7c3f2d18d6f65ad7865af9a12cd6` and records selection, reload, rollout, semantic, and
+independent-verifier evidence outside that immutable run. The root package stays lightweight, and
+importing `langmani.environments` is still the explicit registration boundary.
 
 ## Dependency direction
 
@@ -240,7 +240,8 @@ LeRobot subclass/hooks, `act_factor_film_training.py` for fair data, fixture, re
 `act_factor_film_evidence.py` for fingerprint-owned post-training evidence. The separate
 `act_factor_film_verification.py` re-derives acceptance from completed roots without mutation.
 Evaluation code may be committed after the producer without changing the producer commit stored in
-the run/checkpoints.
+the run/checkpoints. The authorized lineages are architecture/structure `8ee0f1b...`, target
+training `0088e293...`, and post-training evaluator/verifier implementation `1bacb66d...`.
 
 The base M4 package wraps installed LeRobot 0.6.0 public interfaces rather than copying ACT. M4
 implements exactly `per_task`, `mixed_unconditioned`, and `mixed_task_onehot`; it is not a generic
@@ -413,7 +414,8 @@ contracts and cannot claim target training or rollout.
 - M4.3b uses stable TaskSpec metadata for separate object/visual and bin/state FiLM paths. Training
   uses only M3B train, checkpoint selection uses only M3B validation, state stays 9D, and local
   fixtures cannot set training, selection, rollout, physical, final, or SmolVLA flags. Post-training
-  evidence records its own evaluator Git while preserving the exact `8ee0f1b...` producer identity.
+  evidence records its own evaluator Git while preserving architecture baseline `8ee0f1b...` and
+  exact target-training producer `0088e293...` as separate identities.
 - OneHot and TaskToken are oracle discrete-task controls, not language understanding.
 - Simulator, CUDA, Vulkan, or rendering failures remain visible and cause strict verification to
   fail.
