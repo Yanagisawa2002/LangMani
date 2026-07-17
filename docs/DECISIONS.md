@@ -1,14 +1,17 @@
 # Environment and dependency decisions
 
-This file records M0 through M4 decisions as of 2026-07-13. “Metadata-compatible” means official package
-requirements have a non-empty version intersection; it is not a claim of native Linux GPU or
-rendering success.
+This file records decisions through the active M5A milestone as of 2026-07-18.
+“Metadata-compatible” means official package requirements have a non-empty version intersection;
+it is not a claim of native Linux GPU or rendering success.
 
 ## D-001 — Platform boundary
 
-The acceptance platform is native Linux with an NVIDIA RTX 4090. Windows-native and WSL-specific
-workarounds are intentionally out of scope because ManiSkill documents GPU simulation and rendering
-support on native Linux/NVIDIA, while WSL lacks those paths.
+The acceptance platform is native Linux with a compatible NVIDIA GPU. Initial acceptance evidence
+used an RTX 4090, and later milestone-specific target evidence also used RTX 5090 hosts. A GPU model
+name alone is never acceptance: each target command must still prove its required CUDA, Vulkan,
+PhysX, rendering, and dependency contracts. Windows-native and WSL-specific workarounds are
+intentionally out of scope because ManiSkill documents GPU simulation and rendering support on
+native Linux/NVIDIA, while WSL lacks those paths.
 
 NVIDIA drivers, the Vulkan loader/ICD, and `vulkaninfo` are system responsibilities. The diagnostic
 reports them but never installs or changes system packages.
@@ -1674,3 +1677,110 @@ This decision authorizes execution, not a completed result. M3B test, historical
 `m42_final_v0`, automatic retraining, final authorization, SmolVLA, and M5 remain inaccessible. No
 training, selection, reload, physical rollout, quality, or final flag becomes true until the real
 artifacts pass their declared stages and the independent verifier.
+
+## D-055 — Close the shared-ACT search after the completed FactorFiLM development result
+
+The authorized compatibility producer completed its exact 100,000-step seed-0 FactorFiLM run and
+all 20 immutable checkpoints. M3B-validation-only selection chose step 70,000. A fresh process
+reloaded the selected policy and both processors and reproduced the full postprocessed `[50,8]`
+action chunk with maximum absolute and relative error both zero. The paired physical
+`m42_dev_v0` comparison completed 72 episodes for each policy: PerTask 56/72 (77.78%),
+State-OneHot 36/72 (50.00%), and FactorFiLM 38/72 (52.78%). FactorFiLM recorded six wrong-object
+grasps, two wrong objects in a target bin, 34 timeouts, zero target-in-wrong-bin, zero target-off-
+table, zero arm projection, and no non-finite or malformed action. The independent verifier
+accepted the experiment and physical evidence while the 16-condition development quality gate
+remained false.
+
+This is a valid negative architecture result, not an infrastructure failure. FactorFiLM final
+authorization is false; M3B test, historical M4 fresh, and `m42_final_v0` were not accessed. The
+shared-ACT architecture search stops here. M4 PerTask checkpoints remain the frozen low-level
+control ceiling, and no further TaskToken, FactorFiLM, or other shared-ACT tuning is authorized.
+
+## D-056 — Adopt modular language routing over the six frozen PerTask controllers
+
+M5A separates command understanding from continuous control. A project-owned router maps one
+out-of-band command to a canonical M1 `TaskSpec`, or rejects it before execution. A portable
+registry then selects exactly one of the six already selected PerTask ACT checkpoints. M1 is reset
+with the scheduled oracle task even when the predicted route is wrong; only controller selection
+uses the predicted task. This preserves the M1 success oracle and makes routing and control failure
+independently attributable.
+
+M5A compares a deterministic rule router, one factorized compact text classifier, and one pinned
+structured local instruct-model router. The corpus is deterministic, balanced, SHA-256 identified,
+and split by template family across train, validation, development, and final. The classifier uses
+train only for gradients and validation only for selection, calibration, and threshold selection.
+The local LLM uses one versioned prompt artifact frozen before development and strict project-owned
+JSON validation with at most one repair. All few-shot example IDs are train-family only; validation
+may freeze the prompt/configuration but never supplies in-context examples. Language-only and
+control evaluation consume the same prompt template, ordered example IDs, generation configuration,
+and prompt fingerprint. Rejection contains no executable task and cannot dispatch, reset, or step.
+
+The four locks `m5a_language_dev_v0`, `m5a_language_final_v0`, `m5a_control_dev_v0`, and
+`m5a_control_final_v0` are created before training. Development contains 12 new scenes times six
+tasks; final contains 30 new scenes times six tasks. Both exclude prior
+M3A/M3B/M4/M4.1/M4.2/M4.3 seed sources. Target-development may validate final fingerprints but
+cannot materialize final commands or episodes. M3B test frames/actions/videos, `m42_final_v0`, M2
+expert rollout, controller retraining, cloud APIs, SmolVLA, and automatic final execution remain
+prohibited. The normative contract is `docs/M5A_LANGUAGE_ROUTING_SPEC.md`.
+
+For M5A, `passed=true` means the declared target-development evidence chain completed correctly;
+it does not imply `development_quality_gate_passed=true`. `final_benchmark_authorized` is the OR of
+the learned-router gates, records permission only, and never executes final. Final, test-content,
+`m42_final_v0`, and SmolVLA access flags remain false throughout development.
+
+## D-057 — Pin the Transformers 5 runtime required by M5A
+
+LeRobot 0.6.0 declares Transformers `>=5.4,<5.6`; the project environment previously obtained no
+direct Transformers installation from `lerobot[dataset]`. The unrelated system Python contained
+Transformers 4.57.3 with a Hugging Face Hub requirement incompatible with the project environment,
+so it is not a valid integration source. M5A therefore adds direct pins
+`transformers==5.4.0`, `tokenizers==0.22.2`, and the directly imported
+`safetensors==0.8.0` to both package and environment declarations. A local Python 3.12 fixture
+using the project Torch 2.11 runtime verified a tiny DistilBERT forward pass,
+`save_pretrained`, local-only reload, and exact output/tokenization reproduction. CUDA support and
+the real pinned model revisions remain target-development evidence, not a local claim.
+
+Transformers 5.4 exposes deterministic generation but no declared JSON-schema or grammar-guided
+generation interface in the installed API. M5A therefore records `do_sample=false` as the effective
+deterministic mechanism, parses output through a strict stdlib schema, allows at most one explicit
+repair, and rejects malformed output after that bound. A requested temperature of zero is not
+misrepresented as an active sampling temperature. No extra JSON-schema framework or grammar
+dependency is introduced. Actual encoder/LLM model IDs and immutable revisions are recorded only
+when the target command successfully loads the explicitly configured artifacts.
+
+## D-058 — Keep M5A controller discovery metadata-only and final language lazily sealed
+
+M5A must prove that its six frozen PerTask controllers are deployable without reopening historical
+evaluation content. `load_controller_registry_metadata` therefore uses an explicit allowlist: the
+M3B completion marker, completed PerTask run manifests, validation-only checkpoint selections,
+selected checkpoint artifact manifests/hashes, selected validation runtime manifests, and the
+M4.2 runtime-selection lock plus its referenced experiment manifest. It rejects comparison and
+verification summaries and paths belonging to test, historical fresh, or final results. The
+portable registry retains only deployable action/state/image metadata and an opaque fingerprint of
+the full source data contract; it does not expand historical evaluation schedules. Active M1 action
+bounds are checked against the frozen validation contract before controller loading.
+
+Development corpus construction likewise cannot carry final command strings. It creates the final
+manifest from opaque semantic IDs, exact counts, and a sealed content digest without importing
+`_final_language_authority.py`. Only a separately authorized future-final entry point may lazily
+import that module and pass the explicit final-authorization guard. Target-development may validate
+the seal and final schedule identities but cannot materialize raw final text or control episodes.
+Structural and near-duplicate identities are computed from split-independent template skeletons
+and are themselves bound into the isolation report; split names cannot make isolation pass by
+construction. A future authorized final run resolves opaque schedule slots through a deterministic
+semantic-slot map after opening the final authority.
+
+Access flags describe content access, not exclusion-only identities. `test_split_accessed=false`
+still permits finalized M3B sidecar split/scene-seed IDs and the completion fingerprint solely to
+prevent seed reuse; no test rows, observations, actions, frames, video, or results may be opened.
+`historical_fresh_accessed=false` permits only the committed exclusion summary's prior seed IDs,
+opaque digest, and configuration lock, never the runtime schedule, episode commands, or evaluation
+results. `m42_final_accessed=false` and the M5A final-access flags permit sealed lock IDs/digests and
+exclusion-only seed identities, but prohibit materialization, reset, render, or rollout. These
+semantics keep audit provenance useful without treating an opaque lock as benchmark execution.
+
+Target development also records a dedicated active-M1 rejection probe. It must prove zero
+controller lookup, reset, and environment step and is independently rehashed before
+`rejection_noop_probe_validated=true`. M5A action evidence has distinct raw,
+binary-transformed, projected, and executed streams; under the locked project-only runtime the
+binary-transformed entries are explicitly absent rather than copied from another stream.

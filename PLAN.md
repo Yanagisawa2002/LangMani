@@ -1,15 +1,13 @@
 # LangMani roadmap
 
-Milestone M4.3b target-development is reauthorized after a real pre-training preflight failure. M0 through M3B, M4 full, M4.1 target smoke, and
-M4.2 target-development are complete on native targets. M4 full is experimentally and physically
-validated, but its declared quality gate is false. M4.2 rejected TaskToken after development; its
-sealed final benchmark remains unaccessed. The real M4.3a frozen-policy semantic audit is complete.
-M4.3b implements one FactorFiLM architecture plus local fixture/training contracts. Its
-architecture/structural baseline remains `8ee0f1babf36b91d1ee2a39701e4a6db6003b660`; D-054 authorizes exactly
-one real seed-0 training producer at clean compatibility commit
-`0088e2937556c123c37c2dbe69f73301b1eebfd0`. Post-training evaluator/verifier implementation is
-`1bacb66d2a6f7c3f2d18d6f65ad7865af9a12cd6` and writes evidence outside that immutable run. No
-completed target-development result, final benchmark, or M5 result is claimed yet.
+M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
+target-development are complete on native targets. M4 full is experimentally and physically
+validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected
+FactorFiLM after development; `m42_final_v0` remains sealed and unaccessed. The shared-ACT
+architecture search is therefore closed. M5A is the active implementation milestone: it adds
+modular language-to-TaskSpec routing over the six frozen PerTask ACT controls. M5A target
+classifier/LLM training and language/control development evidence are not yet claimed, its own
+final schedules remain sealed, and SmolVLA has not started.
 
 ## M0 — Reproducible environment foundation (complete)
 
@@ -166,7 +164,7 @@ confusion, approximately random bin retrieval, and shared-policy post-grasp fail
 `semantic_audit_completed=true` while final/test/historical-fresh access and SmolVLA remain false.
 The normative contract is `docs/M43_SHARED_POLICY_REPAIR_SPEC.md`.
 
-## M4.3b — One factorized FiLM repair (target development authorized; result pending)
+## M4.3b — One factorized FiLM repair (target development complete; rejected)
 
 Implement exactly one oracle `ACT-Mixed-FactorFiLM` with separate `TargetObjectConditionV0` and
 `DestinationBinConditionV0` mappings. Red/green/blue object embeddings modulate the ResNet-18
@@ -197,17 +195,41 @@ is frozen at `0088e2937556c123c37c2dbe69f73301b1eebfd0`. The authorized target-d
 5. validation/development semantic retrieval, new first-interaction evidence, the exact
    16-condition development quality gate, and a separate read-only verifier.
 
-Post-training evidence lives outside the completed training run and records its own evaluator Git
-commit while retaining the exact producer commit and checkpoint fingerprints. Correct execution
-may set experiment and physical flags true even when the conjunctive quality gate is false. M3B
-test, historical M4 fresh seeds, `m42_final_v0`, automatic retraining, SmolVLA, and M5 remain out of
-scope. Until real artifacts pass independent verification, all target-result flags remain pending;
-local fixture success cannot authorize `m42_final_v0`.
+The real run completed 100,000 steps and all 20 checkpoints. M3B-validation-only selection chose
+step 70,000; a fresh process reproduced the full postprocessed `[50,8]` chunk with zero absolute
+and relative error. The paired physical development result was PerTask 56/72, State-OneHot 36/72,
+and FactorFiLM 38/72. FactorFiLM produced six wrong-object grasps, two wrong objects in a target
+bin, 34 timeouts, zero target-in-wrong-bin, zero target-off-table, zero arm projections, and no
+non-finite or malformed action. The independent verifier passed the experiment and physical
+evidence, but the 16-condition quality gate failed. Final authorization remains false; M3B test,
+historical M4 fresh seeds, and `m42_final_v0` were not accessed. Further shared-ACT architecture
+tuning is prohibited.
 
-## M5 — SmolVLA baseline (planned)
+## M5A — Modular language-to-TaskSpec routing (implementation in progress)
 
-Add SmolVLA-specific preprocessing, training, and evaluation only if the immutable M4.2-final
-decision is `go_for_smolvla`. M4.2 never starts M5 automatically.
+Use the six immutable selected PerTask ACT checkpoints as the low-level skill library. Build a
+deterministic family-split language corpus and compare `RuleRouterV0`, one factorized compact text
+classifier, and one explicitly pinned structured local instruct-model router. Every route becomes
+one canonical M1 `TaskSpec`; ambiguous, unsupported, or malformed input is rejected before policy
+or environment execution.
+
+M5A owns four locked schedules, strict structured decisions, classifier validation-only selection
+and calibration, one frozen local-LLM prompt whose few-shot examples are train-family only, a
+portable six-controller registry,
+oracle-versus-predicted 72-episode development comparisons, and exact routing/control failure
+attribution. M1, M3A, M3B, frozen controllers, H=10/`project` runtime, and prior evidence remain
+unchanged. Language/control final schedules are fingerprinted but inaccessible during development.
+M3B test sidecar identity may support seed/provenance validation, but its observations, actions,
+frames, Parquet content, and videos remain inaccessible. Correct experiment completion and the
+learned-router quality gate are separate; authorization never executes final automatically.
+The normative contract is `docs/M5A_LANGUAGE_ROUTING_SPEC.md`.
+
+## M5B — Sealed modular final and possible SmolVLA handoff (planned)
+
+Run a separate immutable M5A final benchmark only if at least one learned router passes every
+development gate. A future SmolVLA comparison requires a later explicit decision and must preserve
+the M5A schedules, frozen-controller ceiling, and failure attribution. M5A never starts it
+automatically.
 
 ## M6 — Evaluation and release hardening (planned)
 

@@ -6,14 +6,13 @@ authoritative ManiSkill-native raw archive, and M3B added deterministic LeRobotD
 derivation and validation. M4/M4.1 own three reproducible ACT controls, their checkpoints,
 closed-loop evaluation, and the explicit action-bound runtime. Completed M4.2 development adds only
 committed seed locks, runtime/post-grasp analysis, and one rejected oracle TaskToken ACT. Completed
-M4.3a adds a zero-training semantic-audit and immutable evidence boundary. M4.3b adds one
-FactorFiLM architecture plus training/checkpoint and local fixture contracts. Its architecture and
-structural baseline stays fixed at `8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. D-054 authorizes the
-compatibility-only target-training producer `0088e2937556c123c37c2dbe69f73301b1eebfd0` after the
-baseline's real preflight failed before training; post-training evaluator/verifier implementation
-is `1bacb66d2a6f7c3f2d18d6f65ad7865af9a12cd6` and records selection, reload, rollout, semantic, and
-independent-verifier evidence outside that immutable run. The root package stays lightweight, and
-importing `langmani.environments` is still the explicit registration boundary.
+M4.3a adds a zero-training semantic-audit and immutable evidence boundary. M4.3b added one
+FactorFiLM architecture, completed its target-development evidence, and failed its quality gate;
+the shared-ACT search is closed. M5A adds a separate `langmani.language` subsystem for a derived
+family-split command corpus, three language-to-TaskSpec routers, strict rejection, an immutable
+six-PerTask controller registry, and routing-versus-control attribution. It does not change M1,
+M3A/M3B, or frozen policy bytes. The root package stays lightweight, and importing
+`langmani.environments` remains the explicit task-registration boundary.
 
 ## Dependency direction
 
@@ -29,6 +28,8 @@ policy evaluation -> environments and policy interfaces
 M4.2 -> completed M4 evidence plus completed M3B schemas
 M4.3a -> completed M4/M4.2 evidence plus completed M3B validation schemas
 M4.3b -> immutable M4.3a evidence plus completed M3B train/validation schemas and installed ACT
+M5A language -> M1 TaskSpec schemas plus project-owned corpus/router contracts and Transformers
+M5A dispatch -> router decisions plus frozen M4 PerTask/M4.2 runtime evidence and M1 evaluation
 ```
 
 Shared schemas should live at the narrowest neutral boundary. ManiSkill-specific objects must not
@@ -399,6 +400,54 @@ run. `environment/verify_m43b.py` independently reads and re-derives the evidenc
 selection mutation, or rollout. `environment/verify_m43.py` retains the local architecture/fixture
 contracts and cannot claim target training or rollout.
 
+## Language routing
+
+`langmani.language` owns M5A's modular boundary:
+
+```text
+langmani.language
+├── router_types.py          # immutable decisions, examples, metrics, and identities
+├── corpus.py / splits.py    # deterministic generation and family-level isolation
+├── _final_language_authority.py # lazy final-only command source; never imported by development
+├── schedules.py             # development locks and sealed final locks
+├── rule_router.py           # deterministic lexical/conflict/rejection baseline
+├── text_classifier.py       # shared encoder plus status/object/bin heads
+├── text_training.py         # train-only optimization and immutable artifacts
+├── text_calibration.py      # validation-only temperature and threshold selection
+├── schema_validation.py     # strict structured local-LLM output boundary
+├── llm_router.py            # one pinned local instruct model with bounded repair
+├── router_evaluation.py     # immutable language-only summaries and quality gates
+├── controller_registry.py   # portable six-PerTask controller identity
+├── dispatcher.py            # one predicted controller or zero safe dispatch
+├── failure_attribution.py   # disjoint routing/control failure classes
+├── evaluation.py            # paired control summaries and development gates
+└── artifact_validation.py   # independent corpus/router/control evidence revalidation
+```
+
+Corpus template-family IDs are not M1 instruction-template IDs. A valid language route always
+constructs the existing `canonical_v0` TaskSpec. Text stays out of policy observations, numeric
+state, and per-step info. The language subsystem may read M3B sidecar seed identities to exclude
+prior layouts, but it does not reopen M3A or load M3B test observations/actions/video.
+
+The controller registry is assembled from a narrow metadata allowlist: the M3B completion marker,
+six completed PerTask manifests and validation selections, selected checkpoint artifacts/hashes,
+selected validation runtime manifests, and the M4.2 runtime lock. It rejects M4 comparison,
+verification, test, historical-fresh, and final result paths and does not copy source evaluation
+schedules into the portable registry. Portable fingerprints exclude locator paths but bind all
+semantic run, checkpoint, processor, statistics, M3B, Git, and H=10/`project` runtime identities.
+The active M1 action-space contract is checked before controller loading. Dispatch uses the
+scheduled oracle TaskSpec for M1 reset and evaluation while the predicted TaskSpec selects the
+policy. Rejection returns before controller lookup or any environment action. The registry cannot
+reselect, overwrite, blend, or retrain a controller.
+
+`scripts/build_language_corpus.py`, `scripts/train_text_router.py`,
+`scripts/evaluate_language_routers.py`, and `scripts/run_language_control.py` are thin explicit
+command boundaries. `environment/verify_m5a.py` separates portable fixtures from native target
+development and reports quality separately from correct experiment execution. Final language and
+control locks may be validated but are not materialized by development commands. The ordinary
+corpus path keeps only opaque final IDs/counts/digests and never imports
+`_final_language_authority.py`; only a separately authorized future final entry point may load it.
+
 ## Cross-cutting rules
 
 - Project-owned interfaces use static typing and tests.
@@ -416,6 +465,17 @@ contracts and cannot claim target training or rollout.
   fixtures cannot set training, selection, rollout, physical, final, or SmolVLA flags. Post-training
   evidence records its own evaluator Git while preserving architecture baseline `8ee0f1b...` and
   exact target-training producer `0088e293...` as separate identities.
+- M5A gradients use language train only; classifier selection/calibration uses validation only.
+  LLM prompt/configuration may be frozen from train/validation evidence, but every few-shot example
+  ID remains train-family only and the same immutable prompt artifact is reused in language and
+  control evaluation. Language/control development measure generalization only, and all final
+  texts/episodes, M3B test frames, historical fresh evaluation, and `m42_final_v0` remain sealed.
+- M5A rejection has no executable TaskSpec and must return before policy or environment execution.
+  Expected TaskSpec, router decision, selected controller, and active EpisodeSpec remain separate
+  evidence so routing and control failures cannot be collapsed.
+- Target development independently revalidates a real rejection no-op probe and retains four action
+  streams: raw policy output, optional binary-transformed output, bounds-projected output, and the
+  action actually executed. The locked project-only runtime records the binary stream as absent.
 - OneHot and TaskToken are oracle discrete-task controls, not language understanding.
 - Simulator, CUDA, Vulkan, or rendering failures remain visible and cause strict verification to
   fail.

@@ -5,16 +5,11 @@
 LangMani supports language-conditioned robotic manipulation in ManiSkill. M0 through M3B, M4 full,
 M4.1 explicit action-bound target smoke, and M4.2 target-development are complete. M4 full is
 experimentally and physically validated, but `baseline_quality_validated=false`; the M4.2 TaskToken
-candidate was rejected. The real M4.3a semantic-alignment audit is complete and authorizes one
-M4.3b `ACT-Mixed-FactorFiLM` implementation. M4.3b keeps its architecture and structural baseline
-fixed at `8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. After that baseline's real preflight failed
-before training on the EpisodeExportRecord index contract, D-054 explicitly reauthorized the
-compatibility-only clean commit `0088e2937556c123c37c2dbe69f73301b1eebfd0` as the target-training
-producer. Post-training evaluator/verifier implementation is fixed at
-`1bacb66d2a6f7c3f2d18d6f65ad7865af9a12cd6`. Target training, validation-only selection,
-fresh-process reload, and `m42_dev_v0` evaluation remain distinct evidence stages; no completed
-target result is claimed until the independent verifier accepts them. The sealed final benchmark
-and M5 have not started.
+candidate was rejected. The real M4.3a semantic-alignment audit and M4.3b FactorFiLM
+target-development are complete. FactorFiLM passed experiment/physical verification but failed its
+quality gate, so the shared-ACT architecture search is closed and `m42_final_v0` remains sealed.
+M5A modular language-to-TaskSpec routing over the six frozen PerTask ACT controllers is the active
+milestone. M5A target training/evaluation, its sealed final benchmark, and SmolVLA have not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
@@ -22,8 +17,8 @@ splits, train-only normalization, validation-only checkpoint selection, and a lo
 Standard ACT is not language conditioned; task OneHot and TaskToken are oracle command conditions.
 M4.2 must not change M1 bounds/success, M3A/M3B data, train-only statistics, historical M4
 weights/loss, or existing checkpoint fingerprints. Do not retrain old M4 controls, materialize or
-execute `m42_final_v0` during development, start M5, add new data/tasks, invoke M2 during rollout,
-or hide projection as clipping. Binary gripper handling is permitted only as the explicit versioned
+execute `m42_final_v0` during development, start SmolVLA, add new robot data/tasks, invoke M2 during
+rollout, or hide projection as clipping. Binary gripper handling is permitted only as the explicit versioned
 M4.2 component-7 ablation defined in `docs/M42_ORACLE_CONTROL_SPEC.md`. The immutable M4.3a audit
 used only frozen PerTask, State-OneHot, and rejected TaskToken checkpoints on M3B validation and
 `m42_dev_v0`, with those sources kept separate and M3B test, M4 fresh, and `m42_final_v0` excluded.
@@ -31,6 +26,16 @@ M4.3b must keep `PandaPolicyStateV0` at nine dimensions and use only the canonic
 visual FiLM path plus destination-bin state/context FiLM path. It must not silently fall back to
 State-OneHot/TaskToken, train from semantic-audit observations, select on development data, or
 authorize the final schedule or SmolVLA.
+
+M5A must use canonical M1 TaskSpecs and keep natural language out of observations and per-step
+info. Corpus template families are not M1 instruction-template IDs. Classifier gradients use train
+only; validation alone selects/calibrates; development only measures generalization. One explicitly
+pinned local LLM may run through strict JSON validation and at most one repair; no hosted API or
+fallback model is permitted. Rejection must contain no executable TaskSpec and return before
+controller lookup, policy/environment reset, or `env.step`. The environment reset/evaluation task
+remains the oracle schedule task while the predicted TaskSpec selects one frozen controller.
+Language/control final locks, M3B test content, historical fresh evaluation, `m42_final_v0`, and
+SmolVLA remain inaccessible during M5A target-development.
 
 ## Directory ownership
 
@@ -41,6 +46,7 @@ authorize the final schedule or SmolVLA.
 | `src/langmani/datasets/` | M3A raw schemas, stable IDs, schedules, and native archive validation |
 | `src/langmani/datasets/lerobot_*.py` | M3B source gate, contracts, writer/export, and validation |
 | `src/langmani/policies/` | M4 ACT contracts, completed-data views, conditioning, training, checkpoints, rollout, and evaluation |
+| `src/langmani/language/` | M5A corpus, routers, strict schemas, frozen-controller registry, dispatch, evaluation, and attribution |
 | `scripts/` | M3B data commands plus M4 train, evaluate, compare, and checkpoint-inspection commands |
 | `environment/` | Environment declaration, diagnostics, expert rollout, benchmark, and verification commands |
 | `tests/unit/` | Fast tests of project-owned behavior |
@@ -124,6 +130,13 @@ python scripts/train_act_factor_film.py --fixture
 python environment/verify_m43.py
 python environment/verify_m43b.py --help
 
+# M5A modular language-routing commands
+python scripts/build_language_corpus.py --help
+python scripts/train_text_router.py --help
+python scripts/evaluate_language_routers.py --help
+python scripts/run_language_control.py --help
+python environment/verify_m5a.py
+
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,
 # then delegates planner construction and expert rollouts to the side runtime.
@@ -188,6 +201,19 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m43b.py \
   --training-run-root outputs/models/act-factor-film/<run-fingerprint> \
   --evaluation-evidence-root outputs/diagnostics/m43/<evaluation-evidence-root> \
   --structural-verification outputs/diagnostics/m43/target-development-preflight-verification/verification.json
+
+# M5A target development: lock all four language/control schedules first, train/select/calibrate
+# one classifier, freeze one local-LLM prompt, then run language development and the paired
+# oracle/rule/classifier/LLM control benchmark. This command never runs either final schedule.
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m5a.py --target-development \
+  --m43-independent-verification <completed-m43b-independent-verification.json> \
+  --llm-model-id <pinned-local-instruct-model-id> \
+  --llm-model-revision <exact-model-revision> \
+  --llm-tokenizer-revision <exact-tokenizer-revision> \
+  --llm-license <reviewed-license> \
+  --llm-license-reviewed \
+  --llm-model-card-reviewed \
+  --device cuda
 ```
 
 The exact environment creation commands are maintained in `README.md`.
@@ -238,6 +264,21 @@ The exact environment creation commands are maintained in `README.md`.
 - Source changes for target-development are authored, tested, committed, and pushed from the local
   repository. The GPU server may only fetch/check out/pull those commits; never hot-patch source on
   the server. Generated checkpoints/evidence remain server outputs and are never committed.
+- M5A language examples are split by template family and near-duplicate structural identity.
+  Train, validation, development, and final families must remain disjoint; final command texts and
+  final control episodes cannot be materialized during target-development.
+- M5A routeable decisions use exactly the six canonical `canonical_v0` TaskSpecs. Rejected
+  decisions contain no TaskSpec and cannot dispatch or step. Oracle reset TaskSpec, predicted
+  TaskSpec, selected controller, and active EpisodeSpec remain separately recorded.
+- M5A uses only the six frozen selected PerTask ACT controllers at H=10 with explicit `project`
+  action handling. It cannot reselect/retrain/blend controls, pass confidence into ACT, use a shared
+  ACT as the deployed controller, call M2, or collapse raw/binary-transformed/projected/executed
+  action evidence. Target development must independently validate a real rejection no-op probe.
+- Factorized text-classifier gradients use train only; checkpoint selection, temperature, and
+  threshold use validation only. The single local LLM requires explicit pinned model/tokenizer
+  revisions, deterministic generation, strict structured validation, and at most one repair. Cloud
+  APIs, model/encoder sweeps, prompt edits after development starts, and fabricated confidence are
+  prohibited.
 - Do not describe a skipped, metadata-only, structural-only, or CPU-only check as physical GPU or
   rendering validation.
 
@@ -279,3 +320,12 @@ immutable seven-key selection, fresh-process `[50,8]` reload equivalence at `ato
 paired 3 x 72 `m42_dev_v0` comparison, semantic/first-interaction analysis, and an independent
 read-only verifier. Experiment/physical completion and the 16-condition development quality gate
 remain separate. Test, historical fresh, `m42_final_v0`, and SmolVLA stay inaccessible throughout.
+M5A portable completion requires deterministic exact-count corpus generation, family/near-duplicate
+split isolation, all four schedule locks, three router fixtures, strict rejection/JSON behavior, a
+portable six-controller registry, zero-dispatch rejection, failure attribution, CPU-safe tests, and
+truthful non-target flags. M5A target-development additionally requires one pinned classifier
+training run with validation-only selection/calibration/threshold, one pinned local-LLM prompt and
+model, language development for all three routers, paired oracle plus three-router 72-episode
+control development, and independent provenance/action/failure checks. Correct experiment
+execution and the learned-router quality gate remain separate. It must leave language/control
+final, M3B test content, `m42_final_v0`, and SmolVLA unaccessed and must not run final automatically.

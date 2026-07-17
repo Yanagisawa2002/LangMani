@@ -6,27 +6,27 @@ privileged Panda expert, M3A implemented the authoritative ManiSkill-native raw 
 implemented its validated local LeRobotDataset v3 derivation. M4 and M4.1 established reproducible
 ACT controls, closed-loop evaluation, and auditable action projection. M4.2 completed its
 oracle-conditioned development diagnosis and rejected TaskToken. M4.3a completed the real frozen-
-policy semantic audit. M4.3b now implements one factorized FiLM ACT architecture and its local
-training/checkpoint contracts. The architecture/structural baseline remains Git commit
-`8ee0f1babf36b91d1ee2a39701e4a6db6003b660`. After its real preflight failed before training on the
-EpisodeExportRecord index contract, D-054 explicitly authorized compatibility-only commit
-`0088e2937556c123c37c2dbe69f73301b1eebfd0` as the target-training producer. Post-training
-evaluator/verifier implementation is `1bacb66d2a6f7c3f2d18d6f65ad7865af9a12cd6`. No completed
-FactorFiLM target result is claimed yet.
+policy semantic audit. M4.3b completed one factorized FiLM ACT target-development run, passed its
+experiment/physical verifier, and failed its quality gate. The shared-ACT architecture search is
+closed. M5A now implements modular language-to-TaskSpec routing over the six frozen PerTask ACT
+controllers; target classifier/LLM training and language/control development results are not yet
+claimed.
 
 M4 implements six per-task ACT policies, one mixed unconditioned ACT, and one mixed ACT with an
 oracle six-way task one-hot. Standard ACT consumes no natural-language text, so M4 is not a language
 understanding milestone. M4.2 added runtime ablations and exactly one oracle TaskToken ACT. M4.3a
 added no model and established that output changes are not reliably aligned with requested object/
-bin semantics. M4.3b adds one oracle `ACT-Mixed-FactorFiLM`, not language understanding. It does not
-add SmolVLA, rewrite M3B, reopen M3A during normal training, invoke M2 during policy rollouts,
-publish to Hub, access the sealed final schedule, or change the M1/M2 task.
+bin semantics. M4.3b added one oracle `ACT-Mixed-FactorFiLM`, not language understanding. M5A adds
+three explicit language routers and strict rejection, but keeps continuous control frozen. It does
+not add SmolVLA, rewrite M3B, reopen M3A, invoke M2 during policy rollouts, publish models to Hub,
+access any sealed final schedule, or change the M1/M2 task.
 
 ## Target platform
 
-The acceptance target is a **native Linux** workstation with an NVIDIA RTX 4090, a compatible
-NVIDIA driver, CUDA-capable PyTorch wheels, and a working Vulkan installation. Windows-native and
-WSL execution are not supported target configurations.
+The acceptance target is a **native Linux** workstation with a compatible NVIDIA GPU, NVIDIA
+driver, CUDA-capable PyTorch wheels, and a working Vulkan installation. Initial acceptance evidence
+was produced on an RTX 4090; later milestone-specific target evidence also used RTX 5090 hosts.
+Windows-native and WSL execution are not supported target configurations.
 
 ## M1 environment
 
@@ -915,9 +915,82 @@ The development decision is a conjunction of the 16 predeclared success, per-tas
 projection, numerical-validity, retrieval, and task-sensitivity thresholds in
 [`docs/M43_SHARED_POLICY_REPAIR_SPEC.md`](docs/M43_SHARED_POLICY_REPAIR_SPEC.md). A correctly
 completed physical experiment may have `passed=true` and `physical_target_validated=true` while
-`development_quality_gate_passed=false`. M3B test, historical M4 fresh seeds, `m42_final_v0`,
-automatic retraining, and SmolVLA remain inaccessible. Until independent evidence exists, no target
-result flag is claimed.
+`development_quality_gate_passed=false`. That is the observed result: validation selected step
+70,000, fresh reload matched exactly, and the paired scores were PerTask 56/72, State-OneHot 36/72,
+and FactorFiLM 38/72. FactorFiLM had six wrong-object grasps, two wrong objects in a target bin, 34
+timeouts, zero wrong-bin target placements, zero off-table targets, zero arm projections, and no
+non-finite or malformed action. M3B test, historical M4 fresh seeds, and `m42_final_v0` remained
+inaccessible. The quality gate failed and the shared-ACT search is closed.
+
+## M5A modular language routing
+
+M5A treats the six selected PerTask ACT policies as an immutable skill library:
+
+```text
+natural-language command
+    -> RuleRouterV0 | FactorizedTextClassifierV0 | StructuredLocalLLMRouterV0
+    -> strict RouterDecision (one canonical TaskSpec or explicit rejection)
+    -> exactly one frozen PerTask ACT controller, or no execution
+    -> routing-versus-control failure attribution
+```
+
+The project-owned language corpus is generated deterministically, balanced across the six tasks,
+and split by template family rather than shuffled sentence. Train/validation/development/final
+families and near-duplicate structures cannot overlap. Ambiguous, contradictory, unsupported, and
+malformed commands have explicit rejection labels. Final command texts and final control episodes
+remain sealed during development.
+
+The classifier uses one shared pretrained encoder with separate status, object, and bin heads.
+Only train supplies gradients; validation alone selects a checkpoint, calibrates status
+temperature, and chooses the selective-routing threshold. The local LLM is one explicitly supplied
+0.5B-3B instruct model with a pinned revision, deterministic greedy generation, strict JSON parsing,
+and at most one format repair. It never calls a hosted API and does not invent confidence. Exactly
+one versioned prompt artifact is frozen before development. Every few-shot example ID belongs to a
+train family; validation may freeze the prompt/configuration but is never used as in-context text.
+Language-only evaluation and control reuse the byte-identical prompt template, ordered example IDs,
+generation configuration, and prompt fingerprint.
+
+The target local-LLM default is `bfloat16`; the only supported quantization mode is `none`. Both are
+recorded in the router identity, and the runtime fails instead of silently changing dtype,
+quantizing, or selecting another model.
+
+Control development uses 12 new scenes times six tasks. The environment is reset with the schedule's
+oracle TaskSpec while the predicted TaskSpec selects the controller, so wrong routing cannot change
+the M1 success oracle. Oracle routing and all three routers use the same H=10/`project` runtime and
+72 episode identities. Rejection returns before controller lookup, policy reset, environment reset,
+or `env.step`. Registry validation may read finalized M3B sidecar identities and frozen M4
+provenance, but it uses a metadata-only allowlist: the M3B completion marker, six completed PerTask
+manifests and validation selections, selected checkpoint manifests/hashes, selected validation
+runtime manifests, and the M4.2 runtime lock. It never opens M4 comparison/test/fresh-result
+artifacts or M3B test observations, actions, frames, Parquet content, or videos. Before loading a
+controller, the active M1 action-space contract must reproduce the frozen validation bounds.
+
+The four locks are `m5a_language_dev_v0`, `m5a_language_final_v0`, `m5a_control_dev_v0`, and
+`m5a_control_final_v0`. They are created before training; target development materializes only the
+development payloads and retains only sealed final identities/fingerprints. `passed=true` means the
+declared target-development evidence chain completed correctly, not that a learned router met the
+quality gate. `final_benchmark_authorized` is the logical OR of the classifier and local-LLM gates;
+authorization records permission only and never executes final. All final, M3B-test-content,
+`m42_final_v0`, and SmolVLA access flags remain false.
+
+Run the complete resumable target-development chain only after the independent M4.3b prerequisite
+has passed:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m5a.py --target-development \
+  --m43-independent-verification <completed-m43b-independent-verification.json> \
+  --llm-model-id <pinned-local-instruct-model-id> \
+  --llm-model-revision <exact-model-revision> \
+  --llm-tokenizer-revision <exact-tokenizer-revision> \
+  --llm-license <reviewed-license> \
+  --llm-license-reviewed \
+  --llm-model-card-reviewed \
+  --device cuda
+```
+
+This command stops after development and never starts a final benchmark or SmolVLA. The complete
+contract and gates are in
+[`docs/M5A_LANGUAGE_ROUTING_SPEC.md`](docs/M5A_LANGUAGE_ROUTING_SPEC.md).
 
 ## Target-machine setup
 
@@ -953,6 +1026,13 @@ M3B activates `lerobot[dataset]==0.6.0`; the base package alone deliberately ref
 PyArrow 25.0.0, PyAV 15.1.0, TorchCodec 0.11.1, and jsonlines 4.0.0. M3B explicitly uses PyAV for
 writing and reading because the installed Windows TorchCodec DLL chain is not loadable. Exact
 LeRobot/PyAV/libavcodec values are checked and stored in every export fingerprint and manifest.
+
+M5A directly pins `transformers==5.4.0`, `tokenizers==0.22.2`, and the directly imported
+`safetensors==0.8.0`, matching the inspected local classifier/checkpoint stack and LeRobot 0.6.0's
+declared Transformers 5 compatibility. The unrelated system Python's older Transformers
+installation is not part of the project runtime. Real classifier and local-LLM commands require
+explicit model and tokenizer revisions and fail instead of selecting or downloading a different
+model silently.
 
 On native Linux, ManiSkill 3.0.1's package metadata installs `mplib==0.1.1`; Windows does not receive
 that conditional dependency. LangMani does not change or duplicate the upstream pin. The main
@@ -993,6 +1073,7 @@ python environment/verify_m4.py
 python environment/verify_m42.py
 python environment/verify_m43.py
 python environment/verify_m43b.py --help
+python environment/verify_m5a.py
 ```
 
 The actual target-machine gate is stricter. The M2 command itself invokes the M0 installation gate
@@ -1094,6 +1175,7 @@ python environment/verify_m3b.py
 python environment/verify_m4.py
 python environment/verify_m42.py
 python environment/verify_m43.py
+python environment/verify_m5a.py
 ```
 
 The same documented OpenCV dual-wheel risk applies to this review environment.
@@ -1134,6 +1216,8 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 | `scripts/train_act_factor_film.py --target-development` | Yes | Yes | No rendering during offline training; no rollout or final access |
 | `scripts/evaluate_act_factor_film.py` target stages | Yes | Yes | Yes; validation selection, fresh reload, and `m42_dev_v0` only |
 | `python environment/verify_m43b.py` with completed target roots | Yes | No new training | No new rollout; independently audits completed physical evidence |
+| `python environment/verify_m5a.py` | No | No | No; deterministic corpus/router/dispatch CPU fixtures only |
+| `python environment/verify_m5a.py --target-development` | Yes | Yes | Yes; one classifier, one local LLM, language development, and oracle plus three-router 72-episode control development; final stays sealed |
 | `scripts/export_lerobot_dataset.py` | Real export: yes | According to source/render backend | Yes |
 | `scripts/validate_lerobot_dataset.py` | Full source alignment: yes | According to source/render backend | Yes |
 | `scripts/inspect_lerobot_episode.py` | No | No | No |
@@ -1159,10 +1243,11 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 - `src/langmani/datasets/`: M3A immutable types, stable IDs, schedules, and native archive checks.
 - `src/langmani/datasets/lerobot_*.py`: M3B source gate, contracts, export, and validation.
 - `src/langmani/policies/`: M4 ACT, M4.2 runtime/TaskToken, M4.3a semantic audit, and M4.3b FactorFiLM boundaries.
-- `scripts/`: M3B data commands plus M4/M4.2 training/evaluation, M4.3a audit, and FactorFiLM training/evaluation commands.
-- `environment/`: reproducible declaration plus M0 through M4.3 diagnostics and the independent M4.3b evidence verifier.
-- `tests/unit/`: environment/expert/data plus ACT identity, leakage, conditioning, checkpoint, and evaluation checks.
-- `tests/integration/`: LeRobot data/export plus ACT preprocessing, optimization, reload, and rollout boundaries.
+- `src/langmani/language/`: M5A corpus/split/schedule locks, routers, strict schemas, metadata-only controller registry, dispatch, evaluation, artifact validation, and failure attribution.
+- `scripts/`: M3B data commands; M4/M4.2/M4.3 training and evaluation; and M5A corpus, classifier, router-evaluation, and control commands.
+- `environment/`: reproducible declaration plus M0 through M5A diagnostics, including independent M4.3b evidence and M5A target-development verification.
+- `tests/unit/`: environment/expert/data, ACT contracts, and M5A corpus/router/registry/dispatch/evidence checks.
+- `tests/integration/`: LeRobot/ACT boundaries plus M5A classifier training, local-LLM inference, and frozen-controller dispatch.
 - `tests/smoke/`: dependency, simulator, vectorization, rendering, expert, and raw collection acceptance.
 - `docs/`: subsystem boundaries and decision records.
 - `outputs/`: ignored generated diagnostics, datasets, checkpoints, and experiment outputs.

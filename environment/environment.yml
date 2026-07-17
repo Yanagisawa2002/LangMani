@@ -19,6 +19,9 @@ dependencies:
       - sapien==3.0.3
       - mani-skill==3.0.1
       - lerobot[dataset]==0.6.0
+      - safetensors==0.8.0
+      - tokenizers==0.22.2
+      - transformers==5.4.0
       - build==1.3.0
       - pytest==8.4.2
       - ruff==0.15.21

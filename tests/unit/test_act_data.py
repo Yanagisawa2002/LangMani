@@ -284,6 +284,32 @@ def test_completed_m3b_gate_uses_only_local_completion_evidence(
     assert completed.split_manifest_digest.startswith("sha256:")
 
 
+def test_metadata_only_completed_gate_never_opens_parquet_video_or_episode_content(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest = _manifest()
+    root = tmp_path / "dataset"
+    _completed_fixture(root, manifest)
+    content_calls: list[str] = []
+
+    def fail_content_access(*_args: object, **_kwargs: object) -> None:
+        content_calls.append("called")
+        pytest.fail("metadata-only M3B gate attempted to open episode content")
+
+    monkeypatch.setattr(act_data, "_validate_local_storage", fail_content_access)
+    monkeypatch.setattr(act_data, "_lerobot_public_apis", fail_content_access)
+
+    completed = load_completed_m3b_dataset(
+        root,
+        require_full=False,
+        validate_storage=False,
+    )
+
+    assert completed.export_fingerprint == manifest.export_fingerprint
+    assert completed.views.test.episode_indices == ()
+    assert content_calls == []
+
+
 def test_completed_gate_rejects_missing_or_tampered_marker(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

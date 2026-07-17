@@ -247,8 +247,9 @@ Pretrained backbone weights are disabled so an offline run cannot depend on an u
 download. Batch size, chunk length, and executed actions are the only allowed bounded development
 search dimensions, and their search space must be declared before test performance is available.
 The table records the selected primary values; fixtures use a much smaller model solely to validate
-the API path and are never quality evidence. Peak CUDA memory and training throughput are pending a
-real target run and must be copied from structured metrics, never estimated or fabricated.
+the API path and are never quality evidence. Completed target runs retain peak CUDA memory and
+training throughput in their immutable structured metrics. Any reported value must be read from
+those artifacts, never estimated, reconstructed from a fixture, or fabricated.
 
 ## Temporal sampling and action chunks
 
@@ -801,10 +802,32 @@ records, ranking, reload, 216 paired identities, semantic/first-interaction/post
 quality calculation, checksums, provenance, and access flags. It never trains, changes selection,
 or executes a rollout.
 
+The target sequence completed correctly. Validation-only selection chose step 70,000 and the fresh
+reload action-chunk error was zero. The paired results were PerTask 56/72, State-OneHot 36/72, and
+FactorFiLM 38/72. Independent experiment and physical verification passed, but the conjunctive
+quality gate failed. FactorFiLM recorded six wrong-object grasps, two wrong objects in the target
+bin, 34 timeouts, zero target-in-wrong-bin, zero target-off-table, zero arm projection, and no
+non-finite or malformed action. Final authorization remains false and the shared-ACT search ends.
+
+## M5A frozen-controller compatibility boundary
+
+M5A may consume only the six selected PerTask controls from the completed M4 evidence. It cannot
+select a different checkpoint, retrain a controller, modify saved processors, or use
+Mixed-Unconditioned, State-OneHot, TaskToken, or FactorFiLM as the deployed controller. Its
+portable registry binds each run/checkpoint/processor/train-statistics/M3B/Git identity and the
+M4.2 H=10/`project` runtime while keeping filesystem locator paths outside the fingerprint.
+
+M5A route confidence selects no continuous action and never enters ACT observations. The scheduled
+oracle TaskSpec remains the M1 reset/evaluation target; a predicted TaskSpec selects only one frozen
+PerTask policy. Raw, binary-transformed, projected, and executed action evidence retains this
+document's existing semantics; the selected project-only runtime records the binary stream as
+absent instead of merging it with projection. A dedicated target rejection probe must show zero
+controller lookup, policy reset, environment reset, and `env.step`. M2 is not imported or called
+during rollout.
+
 ## Handoff
 
-The immediate handoff is completion and independent verification of the authorized FactorFiLM
-target-development sequence, not M4.2-final or SmolVLA. Until real evidence passes, training,
-selection, reload, development, and physical flags remain unclaimed. M3B test, historical M4 fresh,
-`m42_final_v0`, automatic retraining, SmolVLA, and M5 stay inaccessible, and no command starts a
-final or language-policy milestone automatically.
+The immediate handoff is the modular language-routing milestone defined in
+`docs/M5A_LANGUAGE_ROUTING_SPEC.md`, not M4.2 final or SmolVLA. M3B test observations/actions/video,
+historical M4 fresh, and `m42_final_v0` remain inaccessible. M5A language/control final schedules
+are separately sealed, and no command starts a final or VLA milestone automatically.
