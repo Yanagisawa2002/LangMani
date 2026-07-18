@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import inspect
+import re
 from collections.abc import Mapping
 from pathlib import Path
 from typing import cast
 
 import pytest
 
+import scripts.evaluate_neuro_symbolic_safety_gate as safety_command
 from langmani.environments.specs import TaskSpec
 from langmani.language.corpus import build_language_corpus
 from langmani.language.neuro_symbolic_router import (
@@ -336,3 +339,27 @@ def test_m5a41_evidence_rejects_path_escape(tmp_path: Path) -> None:
 )
 def test_forbidden_and_physical_flags_default_false(flag: str) -> None:
     assert initial_m5a41_flags()[flag] is False
+
+
+def test_classifier_negative_is_preflighted_before_gpu_loader() -> None:
+    source = inspect.getsource(safety_command._execute_target)
+    assert source.index("_preflight_classifier_negative(") < source.index(
+        "TransformersLocalTextGenerator("
+    )
+
+
+def test_classifier_preflight_reports_the_explicit_artifact_root(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    artifact = tmp_path / "imported-rejection-analysis"
+
+    def fail(**_: object) -> tuple[object, dict[str, object]]:
+        raise safety_command.RejectionReportError("M5A.1 analysis artifact is missing")
+
+    monkeypatch.setattr(safety_command, "_load_classifier_negative", fail)
+    with pytest.raises(safety_command.M5A41CommandError, match=re.escape(str(artifact))):
+        safety_command._preflight_classifier_negative(
+            checkpoint=tmp_path / "validation_best.pt",
+            rejection_root=artifact,
+            local_files_only=True,
+        )

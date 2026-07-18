@@ -314,6 +314,10 @@ def verify_m5a41_evidence(evidence_root: str | Path) -> dict[str, object]:
     if read_object(root / "development" / "neuro_symbolic_safety_gate.json") != gate.to_dict():
         raise M5A41VerificationError("development safety gate does not recompute")
     selection = read_object(root / "candidate_selection.json")
+    classifier_identity = _mapping(
+        selection.get("classifier_negative_baseline"),
+        label="classifier negative-baseline identity",
+    )
     if (
         selection.get("learned_router_selected") is not gate.passed
         or selection.get("one_scene_control_smoke_authorized") is not gate.passed
@@ -321,6 +325,12 @@ def verify_m5a41_evidence(evidence_root: str | Path) -> dict[str, object]:
         or flags.get("learned_router_selected") is not gate.passed
         or flags.get("one_scene_control_smoke_authorized") is not gate.passed
         or flags.get("exact_rejection_taxonomy_quality_passed") is not taxonomy.exact_quality_passed
+        or runtime.get("classifier_analysis_fingerprint")
+        != classifier_identity.get("analysis_fingerprint")
+        or runtime.get("classifier_checkpoint_fingerprint")
+        != classifier_identity.get("checkpoint_fingerprint")
+        or runtime.get("classifier_selection_fingerprint")
+        != classifier_identity.get("selection_fingerprint")
     ):
         raise M5A41VerificationError("selection flags differ from independently recomputed gates")
     limitations = read_object(root / "limitations.json")

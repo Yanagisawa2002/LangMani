@@ -1153,6 +1153,7 @@ CUDA_VISIBLE_DEVICES=0 python scripts/evaluate_neuro_symbolic_safety_gate.py \
   --target-development --local-files-only \
   --source-evidence-root outputs/diagnostics/m5a/neuro-symbolic-router/\
 183bc09b0ec7a30dbc50c349bab1a1a1d9368392b3f52551f509b716c83bbf7c \
+  --classifier-rejection-evidence outputs/diagnostics/m5a/rejection-analysis \
   --output-root outputs/diagnostics/m5a/neuro-symbolic-safety-gate \
   --report outputs/diagnostics/m5a/stages/neuro-symbolic-safety-gate.json
 
@@ -1161,6 +1162,8 @@ python environment/verify_m5a41.py \
 ```
 
 The exact rejection status/reason metrics remain mandatory report fields and explicit limitations.
+Cloned or migrated target machines must pass the actual immutable M5A.1 analysis root explicitly;
+the command validates that artifact and the selected classifier checkpoint before GPU inference.
 Only the unchanged hybrid is promotion-eligible, and only the execution-safety/TaskSpec gate can
 authorize a later one-scene control smoke. M5A.4.1 itself stops before all robot control.
 

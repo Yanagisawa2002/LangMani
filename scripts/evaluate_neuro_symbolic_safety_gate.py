@@ -72,6 +72,7 @@ from langmani.language.offline_language_development import (
     CLASSIFIER_NEGATIVE_ELIGIBILITY,
     RULE_ROUTER_ELIGIBILITY,
 )
+from langmani.language.rejection_report import RejectionReportError
 from langmani.language.router_types import LanguageExample, LanguageSplit
 from langmani.language.rule_router import RuleRouterV0
 from langmani.policies.act_runtime import atomic_write_json, inspect_git_state
@@ -81,6 +82,7 @@ from scripts.evaluate_neuro_symbolic_router import (
     DEFAULT_CORPUS_ROOT,
     DEFAULT_QWEN4B_EVIDENCE,
     DEFAULT_QWEN17B_EVIDENCE,
+    NeuroSymbolicCommandError,
     _archive_fingerprint_prelock,
     _dependencies,
     _eligibility,
@@ -183,6 +185,24 @@ def _source_objects(root: Path) -> dict[str, dict[str, object]]:
             "runtime_identity",
         )
     }
+
+
+def _preflight_classifier_negative(
+    *, checkpoint: Path, rejection_root: Path, local_files_only: bool
+) -> tuple[object, dict[str, object]]:
+    """Validate the frozen classifier inputs before any expensive GPU inference."""
+
+    try:
+        return _load_classifier_negative(
+            checkpoint=checkpoint,
+            rejection_root=rejection_root,
+            local_files_only=local_files_only,
+        )
+    except (NeuroSymbolicCommandError, RejectionReportError, OSError) as exc:
+        raise M5A41CommandError(
+            "frozen classifier input preflight failed; pass the authoritative "
+            f"--classifier-rejection-evidence root (received {rejection_root}): {exc}"
+        ) from exc
 
 
 def _split_fingerprints(corpus: object) -> dict[str, str]:
@@ -348,6 +368,11 @@ def _execute_target(args: argparse.Namespace, paths: Mapping[str, Path]) -> dict
     )
     qwen17_identity = _frozen_baseline_identity(paths["qwen17"], label="Qwen3-1.7B")
     qwen4_identity = _frozen_baseline_identity(paths["qwen4"], label="direct Qwen3-4B")
+    classifier, classifier_identity = _preflight_classifier_negative(
+        checkpoint=paths["classifier"],
+        rejection_root=paths["rejection"],
+        local_files_only=bool(args.local_files_only),
+    )
     runtime_payload = {
         "implementation_git": git.commit,
         "source_m5a4_runtime_fingerprint": source["owner"]["runtime_fingerprint"],
@@ -375,6 +400,9 @@ def _execute_target(args: argparse.Namespace, paths: Mapping[str, Path]) -> dict
         "gpu_total_memory_bytes": torch.cuda.get_device_properties(0).total_memory,
         "qwen17_source": qwen17_identity["artifact_fingerprint"],
         "qwen4_source": qwen4_identity["artifact_fingerprint"],
+        "classifier_analysis_fingerprint": classifier_identity["analysis_fingerprint"],
+        "classifier_checkpoint_fingerprint": classifier_identity["checkpoint_fingerprint"],
+        "classifier_selection_fingerprint": classifier_identity["selection_fingerprint"],
     }
     runtime_fingerprint = f"sha256:{sha256_hex(runtime_payload)}"
     owner = {
@@ -490,11 +518,6 @@ def _execute_target(args: argparse.Namespace, paths: Mapping[str, Path]) -> dict
     development_started_ns = time.time_ns()
     development_examples = corpus.examples_for_split(LanguageSplit.DEVELOPMENT)
     _validate_development_after_lock(paths["corpus"], development_examples)
-    classifier, classifier_identity = _load_classifier_negative(
-        checkpoint=paths["classifier"],
-        rejection_root=paths["rejection"],
-        local_files_only=bool(args.local_files_only),
-    )
     direct_prompt_examples = select_structured_routing_prompt_examples(
         corpus.examples_for_split(LanguageSplit.TRAIN)
     )

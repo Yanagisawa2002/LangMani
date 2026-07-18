@@ -2005,3 +2005,9 @@ strict execution-safety gate that adds explicit zero-route checks for contradict
 unsupported spatial reference. Exact taxonomy failure remains a limitation but does not control a
 different physical action: every rejection returns before lookup, reset, or step. This decision
 authorizes no training, controller load, environment construction, final source, or robot rollout.
+
+Migrated target machines may retain the same immutable M5A.1 analysis under a different directory
+name. M5A.4.1 therefore accepts that root only through the explicit
+`--classifier-rejection-evidence` input, validates it with the selected checkpoint before loading a
+GPU model, and binds its analysis, checkpoint, and selection fingerprints into the run identity.
+Automatic discovery or fallback remains prohibited.
