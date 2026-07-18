@@ -253,6 +253,14 @@ routeable full TaskSpec accuracy, but only 71.21%/80.56%/94.44% ambiguous/unsupp
 recall. The full conjunctive gate failed, so no runtime was published, the classifier is frozen,
 and additional training or seed authorization remains false. Language development did not start.
 
+M5A.2 adjusts the next stage rather than reopening that result. The classifier is evaluated only
+as a frozen offline negative baseline, RuleRouter remains the deterministic baseline, and the sole
+learned candidate is pinned `Qwen/Qwen3-1.7B` through `StructuredLocalLLMRouterV0`. One train-only
+smoke precedes one complete validation pass; the complete language-development split opens only
+if every validation threshold passes. Immutable evidence and an independent verifier recompute the
+raw metrics and gates. This stage performs no training or robot rollout and can at most authorize,
+never execute, the later one-scene control smoke.
+
 ## M5B — Sealed modular final and possible SmolVLA handoff (planned)
 
 Run a separate immutable M5A final benchmark only if at least one learned router passes every

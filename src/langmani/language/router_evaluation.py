@@ -240,6 +240,7 @@ def evaluate_language_router(
     repeat_count: int = 2,
     ece_bins: int = 10,
     clock: Callable[[], float] = time.perf_counter,
+    repeat_fingerprint: Callable[[RouterDecision], str] | None = None,
 ) -> tuple[tuple[RouterEvaluationRecord, ...], RouterEvaluationSummary]:
     """Evaluate one router without opening train/final or any controller schedule."""
 
@@ -250,6 +251,11 @@ def evaluate_language_router(
         raise RouterEvaluationError("all language examples must match the declared split")
     if isinstance(repeat_count, bool) or not isinstance(repeat_count, int) or repeat_count < 1:
         raise RouterEvaluationError("repeat_count must be a positive integer")
+    fingerprint = (
+        (lambda decision: decision.decision_fingerprint)
+        if repeat_fingerprint is None
+        else repeat_fingerprint
+    )
     expected_tasks = {
         example.example_id: example.expected_task_spec
         for example in values
@@ -279,9 +285,7 @@ def evaluate_language_router(
                 expected_rejection_reason=example.expected_rejection_reason,
                 decision=decision,
                 latency_ms=elapsed,
-                repeat_decision_fingerprints=tuple(
-                    value.decision_fingerprint for value in decisions
-                ),
+                repeat_decision_fingerprints=tuple(fingerprint(value) for value in decisions),
             )
         )
     frozen = tuple(records)

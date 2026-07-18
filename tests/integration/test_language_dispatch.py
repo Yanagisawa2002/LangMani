@@ -170,7 +170,7 @@ def _dispatch(decision: RouterDecision, *, oracle: TaskSpec):
                     "status": "route",
                     "target_object_id": "blue_cube",
                     "target_bin_id": "left_bin",
-                    "reason": "route",
+                    "reason": "explicit_object_and_destination",
                 }
             ).route("Put the blue cube in the left bin."),
             TaskSpec("blue_cube", "left_bin", "canonical_v0"),

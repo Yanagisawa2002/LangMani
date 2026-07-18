@@ -22,6 +22,37 @@ ROUTER_OUTPUT_STATUSES = (
 )
 ROUTER_OUTPUT_FIELDS = frozenset({"status", "target_object_id", "target_bin_id", "reason"})
 _REASON_PATTERN = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
+ROUTER_REASON_CODE_VERSION = "langmani-m5a-router-reason-codes-v1"
+ROUTER_REASON_CODES_BY_STATUS = {
+    "route": frozenset({"explicit_object_and_destination"}),
+    "reject_ambiguous": frozenset(
+        {
+            "missing_object",
+            "missing_destination",
+            "conflicting_objects",
+            "conflicting_destinations",
+            "unresolved_correction",
+            "multiple_sequential_tasks",
+            "contradictory_negation",
+        }
+    ),
+    "reject_unsupported": frozenset(
+        {
+            "unsupported_object",
+            "unsupported_destination",
+            "unsupported_action",
+            "unsupported_spatial_reference",
+        }
+    ),
+    "reject_malformed": frozenset(
+        {
+            "meaningless_or_noise",
+            "malformed_input",
+            "malformed_model_output",
+        }
+    ),
+}
+ROUTER_REASON_CODES = frozenset().union(*ROUTER_REASON_CODES_BY_STATUS.values())
 
 
 class RouterSchemaError(ValueError):
@@ -42,6 +73,8 @@ class StrictRouterPayload:
             raise RouterSchemaError(f"unsupported router status: {self.status!r}")
         if not isinstance(self.reason, str) or _REASON_PATTERN.fullmatch(self.reason) is None:
             raise RouterSchemaError("reason must be a short lowercase machine-readable identifier")
+        if self.reason not in ROUTER_REASON_CODES_BY_STATUS[self.status]:
+            raise RouterSchemaError("reason is outside the versioned vocabulary for this status")
         if self.status == "route":
             if self.target_object_id not in OBJECT_IDS:
                 raise RouterSchemaError("a route requires one supported target_object_id")
@@ -131,6 +164,9 @@ def parse_strict_router_json(raw_text: str) -> StrictRouterPayload:
 
 
 __all__ = [
+    "ROUTER_REASON_CODES",
+    "ROUTER_REASON_CODES_BY_STATUS",
+    "ROUTER_REASON_CODE_VERSION",
     "ROUTER_OUTPUT_FIELDS",
     "ROUTER_OUTPUT_STATUSES",
     "RouterSchemaError",

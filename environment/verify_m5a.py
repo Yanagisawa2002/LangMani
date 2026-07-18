@@ -67,6 +67,9 @@ from langmani.language.failure_attribution import (  # noqa: E402
     FailureAttributionEvidence,
     attribute_end_to_end,
 )
+from langmani.language.language_development_verifier import (  # noqa: E402
+    verify_language_development_evidence,
+)
 from langmani.language.llm_router import (  # noqa: E402
     StructuredLLMRouterConfig,
     StructuredLocalLLMRouterV0,
@@ -616,14 +619,25 @@ class StageVerificationReport:
     checkpoint_weights_unchanged: bool = False
     classifier_runtime_selected: bool = False
     classifier_candidate_frozen: bool = False
+    classifier_offline_baseline_validated: bool = False
+    classifier_dispatch_prohibited: bool = False
+    rule_router_validation_completed: bool = False
     additional_training_authorized: bool = False
     additional_seed_authorized: bool = False
     artifact_reload_validated: bool = False
     cuda_training_validated: bool = False
     pilot_checkpoint_audit: dict[str, object] = field(default_factory=dict)
     llm_router_loaded: bool = False
+    llm_model_identity_validated: bool = False
     llm_prompt_locked: bool = False
+    llm_train_smoke_completed: bool = False
+    llm_validation_completed: bool = False
+    llm_validation_gate_passed: bool = False
     language_development_completed: bool = False
+    llm_language_quality_gate_passed: bool = False
+    learned_router_selected: bool = False
+    one_scene_control_smoke_authorized: bool = False
+    real_gpu_inference_validated: bool = False
     one_scene_control_smoke_completed: bool = False
     three_scene_control_screen_completed: bool = False
     selected_router_locked: bool = False
@@ -689,9 +703,12 @@ class StageVerificationReport:
                 self.checkpoint_weights_unchanged,
             ),
             M5AStage.LANGUAGE_DEVELOPMENT.value: (
-                self.llm_router_loaded,
-                self.llm_prompt_locked,
-                self.language_development_completed,
+                self.implementation_validated,
+                self.classifier_candidate_frozen,
+                self.classifier_dispatch_prohibited,
+                self.llm_model_identity_validated,
+                self.llm_train_smoke_completed,
+                self.real_gpu_inference_validated,
             ),
             M5AStage.ONE_SCENE_CONTROL_SMOKE.value: (
                 self.one_scene_control_smoke_completed,
@@ -979,12 +996,12 @@ def _llm_config() -> StructuredLLMRouterConfig:
 def _verify_llm_fixture(report: Report) -> None:
     parsed = parse_strict_router_json(
         '{"status":"route","target_object_id":"green_cube",'
-        '"target_bin_id":"right_bin","reason":"route"}'
+        '"target_bin_id":"right_bin","reason":"explicit_object_and_destination"}'
     )
     route_generator = _FixtureGenerator(
         [
             '{"status":"route","target_object_id":"green_cube",'
-            '"target_bin_id":"right_bin","reason":"route"}'
+            '"target_bin_id":"right_bin","reason":"explicit_object_and_destination"}'
         ]
     )
     route = StructuredLocalLLMRouterV0(config=_llm_config(), generator=route_generator).route(
@@ -3606,11 +3623,47 @@ def _verify_stage_evidence(stage: M5AStage, path: Path) -> StageVerificationRepo
                 f"{type(error).__name__}: {error}",
             )
     elif stage is M5AStage.LANGUAGE_DEVELOPMENT:
-        report.llm_router_loaded = payload.get("llm_router_loaded") is True
-        report.llm_prompt_locked = payload.get("llm_prompt_locked") is True
-        report.language_development_completed = (
-            payload.get("language_development_completed") is True
-        )
+        evidence_root = payload.get("evidence_root")
+        checkpoint_path = payload.get("classifier_checkpoint_path")
+        try:
+            if not isinstance(evidence_root, str) or not isinstance(checkpoint_path, str):
+                raise ValueError("language stage report omitted evidence/checkpoint paths")
+            independent = verify_language_development_evidence(
+                evidence_root,
+                corpus=build_language_corpus(),
+                classifier_checkpoint=checkpoint_path,
+            )
+            for name in (
+                "implementation_validated",
+                "classifier_candidate_frozen",
+                "classifier_offline_baseline_validated",
+                "classifier_dispatch_prohibited",
+                "rule_router_validation_completed",
+                "llm_model_identity_validated",
+                "llm_prompt_locked",
+                "llm_train_smoke_completed",
+                "llm_validation_completed",
+                "llm_validation_gate_passed",
+                "language_development_completed",
+                "llm_language_quality_gate_passed",
+                "learned_router_selected",
+                "one_scene_control_smoke_authorized",
+                "real_gpu_inference_validated",
+                "physical_target_validated",
+            ):
+                setattr(report, name, independent.get(name) is True)
+            report.llm_router_loaded = report.real_gpu_inference_validated
+            report.check(
+                "independent M5A.2 evidence verification",
+                independent.get("passed") is True,
+                cast(str, independent.get("artifact_fingerprint")),
+            )
+        except Exception as error:  # noqa: BLE001 - independent verifier preserves diagnostics
+            report.check(
+                "independent M5A.2 evidence verification",
+                False,
+                f"{type(error).__name__}: {error}",
+            )
     elif stage in {
         M5AStage.ONE_SCENE_CONTROL_SMOKE,
         M5AStage.THREE_SCENE_CONTROL_SCREEN,

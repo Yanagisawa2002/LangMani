@@ -29,24 +29,20 @@ def test_classifier_writer_rejects_historical_evidence_root(tmp_path: Path) -> N
 
 def _evaluation_args(tmp_path: Path):  # type: ignore[no-untyped-def]
     corpus = tmp_path / "corpus"
-    classifier = tmp_path / "classifier"
+    checkpoint = tmp_path / "classifier.pt"
+    rejection = tmp_path / "classifier-rejection"
     corpus.mkdir()
-    classifier.mkdir()
+    checkpoint.write_bytes(b"fixture")
+    rejection.mkdir()
     return evaluate_cli.parse_args(
         [
             "--fixture",
             "--corpus-root",
             str(corpus),
-            "--classifier-artifact",
-            str(classifier),
-            "--llm-model-id",
-            "fixture/local",
-            "--llm-model-revision",
-            "a" * 40,
-            "--llm-tokenizer-revision",
-            "b" * 40,
-            "--llm-license",
-            "fixture",
+            "--classifier-checkpoint",
+            str(checkpoint),
+            "--classifier-rejection-evidence",
+            str(rejection),
             "--device",
             "cpu",
             "--output-root",
@@ -57,7 +53,10 @@ def _evaluation_args(tmp_path: Path):  # type: ignore[no-untyped-def]
     )
 
 
-@pytest.mark.parametrize("input_name", ["corpus_root", "classifier_artifact"])
+@pytest.mark.parametrize(
+    "input_name",
+    ["corpus_root", "classifier_checkpoint", "classifier_rejection_evidence"],
+)
 def test_language_evaluation_output_rejects_each_immutable_input(
     tmp_path: Path,
     input_name: str,
@@ -71,9 +70,9 @@ def test_language_evaluation_output_rejects_each_immutable_input(
 
 def test_language_evaluation_rejects_overlapping_inputs(tmp_path: Path) -> None:
     args = _evaluation_args(tmp_path)
-    nested = args.corpus_root / "classifier"
+    nested = args.corpus_root / "classifier-rejection"
     nested.mkdir()
-    args.classifier_artifact = nested
+    args.classifier_rejection_evidence = nested
 
     with pytest.raises(evaluate_cli.LanguageRouterEvaluationCommandError, match="inputs cannot"):
         evaluate_cli._safe_paths(args)

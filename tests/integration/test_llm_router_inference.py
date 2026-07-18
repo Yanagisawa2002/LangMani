@@ -16,7 +16,7 @@ class _DeterministicFixtureGenerator:
                 "status": "route",
                 "target_object_id": "green_cube",
                 "target_bin_id": "left_bin",
-                "reason": "route",
+                "reason": "explicit_object_and_destination",
             },
             sort_keys=True,
         )

@@ -386,6 +386,10 @@ requested stage completed correctly; it does not imply promotion to the next sta
 | `classifier_recovery_resume_authorized`, `classifier_recovery_resume_completed`, `classifier_full_quality_gate_passed` | D-061 authorized the exact rejected pilot continuation; bounded execution completed; and, separately, the unchanged full validation gate passed or failed. |
 | `classifier_training_completed`, `classifier_checkpoint_selected`, `classifier_calibration_validated` | The promoted single-seed run completed or early-stopped; validation only selected and calibrated it. |
 | `llm_router_loaded`, `llm_prompt_locked`, `language_development_completed` | One pinned inference-only LLM and immutable train-example prompt were evaluated with the offline routers. |
+| `classifier_candidate_frozen`, `classifier_offline_baseline_validated`, `classifier_dispatch_prohibited` | M5A.2 retained the M5A.1 checkpoint as descriptive read-only evidence and gave it no dispatch authority. |
+| `llm_model_identity_validated`, `llm_train_smoke_completed`, `llm_validation_completed`, `llm_validation_gate_passed` | The exact Qwen identity and train-only smoke passed structural/runtime checks; validation completion and quality promotion remain separate. |
+| `llm_language_quality_gate_passed`, `learned_router_selected`, `one_scene_control_smoke_authorized` | Development quality alone may lock the local LLM and authorize, but not execute, the next physical stage. |
+| `real_gpu_inference_validated`, `physical_target_validated` | M5A.2 sets only the first after real local-model inference; the second stays false because no robot rollout occurs. |
 | `one_scene_control_smoke_completed`, `three_scene_control_screen_completed`, `selected_router_locked` | The staged physical gates completed and, separately, screening selected one router. |
 | `oracle_control_development_completed`, `predicted_control_development_completed` | Oracle and the single selected router each completed the 36-pair full-development partition. |
 | `failure_attribution_validated`, `physical_target_validated` | Independent attribution/action checks passed over the requested real target stage; fixtures never set physical validation. |
@@ -483,3 +487,55 @@ was 71.21% ambiguous, 80.56% unsupported, and 94.44% malformed. Those three thre
 Both independent verifiers passed the no-training/checksum/access contracts. The authoritative
 conclusion is `classifier_rejected_after_posthoc_calibration`; no runtime exists and additional
 training/seed authorization is false.
+
+## M5A.2 offline language-development comparison
+
+M5A.2 changes the language-development eligibility contract without reopening M5A.1. The selected
+`ConservativeRouteDecoderV0` remains a mandatory descriptive negative baseline, but it has no
+dispatch, promotion, or final-selection authority. `RuleRouterV0` is the mandatory deterministic
+offline baseline and is not a learned-router candidate. Exactly one learned candidate exists:
+`StructuredLocalLLMRouterV0` backed by `Qwen/Qwen3-1.7B`.
+
+The model and tokenizer both pin Hugging Face revision
+`70d244cc86ccca08cf5af4e1e306ecf908b1ad5e`, use the declared Apache-2.0 license, BF16, no
+quantization, and the public Transformers loading APIs. Evidence records the size and SHA-256 of
+every required repository file. The official Qwen chat template is invoked with
+`enable_thinking=False`; generation is greedy with `do_sample=false`, `num_beams=1`, one tokenizer
+EOS policy, and at most 128 new tokens. No chain of thought is requested. Valid schema-only JSON is
+retained for audit, while any non-schema text is retained only by hash and character count.
+
+The versioned prompt declares the six object/bin combinations, four statuses, strict four-field
+schema, bounded reason-code vocabulary, rejection policy, and no-guess/no-reasoning instructions.
+Its fixed few-shot set contains six route examples plus twelve rejection examples, all from train.
+The fixed train-only semantic smoke contains one example per canonical TaskSpec and one per each of
+the fourteen corpus rejection reasons. A prompt lock is promoted only after real deterministic
+smoke inference passes; a fixture cannot create validation/development metrics or authorize
+control.
+
+The output parser accepts exactly one JSON object with `status`, `target_object_id`,
+`target_bin_id`, and `reason`. Route results require one of the three object IDs and two bin IDs;
+all rejection results require both targets to be null. Unknown values, duplicate or extra fields,
+multiple JSON objects, surrounding prose, mismatched reason/status pairs, and non-finite constants
+are rejected. One schema-only repair is permitted. A failed repair becomes a non-executable
+`reject_malformed` decision.
+
+After smoke, the exact prompt/model/parser/generation runtime evaluates the complete 300-example
+validation split once. Development opens only when all validation thresholds in this specification
+pass conjunctively. It then evaluates all three routers on the complete 420-example
+`m5a_language_dev_v0` split without tuning. The local LLM alone may produce a locked
+`LanguageRouterSelectionV0`, and only when both validation and development gates pass. That lock
+authorizes, but never starts, the later one-scene control smoke.
+
+M5A.2 evidence is runtime-fingerprint-owned, written in staging, flushed, checksum-validated, and
+atomically promoted. An independent reader recomputes all metrics and gates from raw records,
+checks prompt train-only identity and immutability, verifies the pinned model files, proves the
+classifier checkpoint/model remained unchanged with no optimizer, and rejects any development
+files after a failed validation gate. A controller-registry boundary artifact contains only the
+six canonical task IDs and explicitly records that no registry, ACT checkpoint, controller,
+environment, or environment step was opened. Language final, every control schedule, M3B test,
+historical fresh evaluation, `m42_final_v0`, and SmolVLA remain inaccessible.
+
+For this language-only stage, `passed=true` means the requested smoke/validation and conditional
+development protocol completed and independently verified. It does not imply a quality pass.
+`real_gpu_inference_validated=true` requires real pinned-model inference;
+`physical_target_validated` remains false because M5A.2 performs no robot rollout.

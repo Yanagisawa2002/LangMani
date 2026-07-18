@@ -52,7 +52,7 @@ def _route_json() -> str:
             "status": "route",
             "target_object_id": "red_cube",
             "target_bin_id": "right_bin",
-            "reason": "route",
+            "reason": "explicit_object_and_destination",
         }
     )
 
@@ -62,10 +62,11 @@ def _route_json() -> str:
     (
         '```json\n{"status":"route"}\n```',
         '{"status":"route","status":"route","target_object_id":"red_cube",'
-        '"target_bin_id":"left_bin","reason":"route"}',
+        '"target_bin_id":"left_bin","reason":"explicit_object_and_destination"}',
         '{"status":"route","target_object_id":"red_cube","target_bin_id":"left_bin",'
-        '"reason":"route","extra":1}',
-        '{"status":"route","target_object_id":"red_cube","target_bin_id":null,"reason":"route"}',
+        '"reason":"explicit_object_and_destination","extra":1}',
+        '{"status":"route","target_object_id":"red_cube","target_bin_id":null,'
+        '"reason":"explicit_object_and_destination"}',
         '{"status":"route","target_object_id":"red_cube","target_bin_id":"left_bin","reason":NaN}',
     ),
 )
@@ -111,8 +112,11 @@ def test_structured_llm_allows_exactly_one_format_repair() -> None:
 
     assert decision.status is RouterStatus.ROUTE
     assert decision.evidence["format_repair_attempts"] == 1
-    assert "generation_outputs" not in decision.evidence
-    assert invalid not in json.dumps(dict(decision.evidence))
+    assert invalid not in repr(decision.evidence)
+    outputs = decision.evidence["generation_outputs"]
+    assert outputs[0]["stored"] is False
+    assert outputs[1]["stored"] is True
+    assert outputs[1]["text"] == _route_json()
     assert len(decision.evidence["generation_output_fingerprints"]) == 2
     assert len(generator.prompts) == 2
     assert "Repair only the JSON format" in generator.prompts[1]
@@ -176,11 +180,15 @@ def test_canonical_prompt_selection_is_stable_and_covers_tasks_and_rejections() 
         for example in train
         if example.expected_rejection_reason is not None
     }
-    assert {
+    selected_reasons = {
         example.expected_rejection_reason
         for example in first
         if example.expected_rejection_reason is not None
-    } == expected_reasons
+    }
+    assert selected_reasons == expected_reasons - {
+        RouterRejectionReason.EMPTY_TEXT,
+        RouterRejectionReason.MALFORMED_CONTROL_CHARACTERS,
+    }
 
 
 def test_structured_llm_config_records_greedy_temperature_semantics() -> None:

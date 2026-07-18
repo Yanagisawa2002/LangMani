@@ -1,10 +1,8 @@
-"""Evaluate the three locked M5A language routers on validation and development.
+"""Run M5A.2 train-smoke, validation, and conditionally language development.
 
-This command never opens the language final split, a controller schedule, or a
-robot environment.  Target-development uses one immutable classifier artifact
-and exactly one explicitly pinned local instruct model.  Test fixtures may
-inject a local generator only when ``--fixture`` is selected, and fixture
-reports never claim target or physical validation.
+The rejected classifier remains an offline negative baseline.  This command
+loads no ACT checkpoint, constructs no robot environment, and never opens the
+language-final or control schedules.
 """
 
 from __future__ import annotations
@@ -27,8 +25,16 @@ from typing import Protocol, cast
 import torch
 
 from langmani.datasets.identity import sha256_hex
+from langmani.datasets.schedule import CANONICAL_TASK_SPECS
+from langmani.environments.specs import stable_task_id
 from langmani.language.corpus import GeneratedLanguageCorpus, build_language_corpus
+from langmani.language.language_development_evidence import (
+    write_language_development_evidence,
+)
 from langmani.language.llm_router import (
+    QWEN3_1_7B_LICENSE,
+    QWEN3_1_7B_MODEL_ID,
+    QWEN3_1_7B_REVISION,
     LocalTextGenerator,
     StructuredLLMRouterConfig,
     StructuredLocalLLMRouterV0,
@@ -36,6 +42,21 @@ from langmani.language.llm_router import (
     build_structured_routing_prompt,
     select_structured_routing_prompt_examples,
 )
+from langmani.language.offline_language_development import (
+    CLASSIFIER_NEGATIVE_ELIGIBILITY,
+    LOCAL_LLM_ELIGIBILITY,
+    RULE_ROUTER_ELIGIBILITY,
+    FrozenClassifierNegativeBaselineV0,
+    LanguageRouterSelectionV0,
+    PromptLockV0,
+    QwenModelIdentityV0,
+    conservative_decoder_from_mapping,
+    evaluate_llm_development_gate,
+    evaluate_llm_validation_gate,
+)
+from langmani.language.offline_router_metrics import recompute_router_metrics
+from langmani.language.rejection_diagnostics import load_selected_checkpoint_read_only
+from langmani.language.rejection_report import validate_rejection_analysis_artifact
 from langmani.language.router_evaluation import (
     RouterEvaluationRecord,
     evaluate_language_router,
@@ -43,10 +64,11 @@ from langmani.language.router_evaluation import (
 from langmani.language.router_types import (
     LanguageExample,
     LanguageSplit,
+    RouterDecision,
     RouterRejectionReason,
     RouterStatus,
 )
-from langmani.language.rule_router import RuleRouterConfig, RuleRouterV0
+from langmani.language.rule_router import RuleRouterV0
 from langmani.language.schedules import build_language_schedule_locks
 from langmani.language.text_calibration import TemperatureCalibrationV0
 from langmani.language.text_classifier import (
@@ -59,11 +81,21 @@ from langmani.policies.act_runtime import atomic_write_json, inspect_git_state
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CORPUS_ROOT = PROJECT_ROOT / "outputs" / "datasets" / "m5a" / "langmani-language-corpus-v1"
-DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs" / "diagnostics" / "m5a" / "language-routing"
-DEFAULT_REPORT = PROJECT_ROOT / "outputs" / "diagnostics" / "m5a" / "language-routing.json"
+DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs" / "diagnostics" / "m5a" / "language-development"
+DEFAULT_REPORT = (
+    PROJECT_ROOT / "outputs" / "diagnostics" / "m5a" / "stages" / "language-development.json"
+)
+DEFAULT_CLASSIFIER_CHECKPOINT = PROJECT_ROOT / (
+    "outputs/models/text-router/authoritative-runs/"
+    "9e3ac659fa2b695c843650df35e3779741d94b3dd70b2aec52a429bc4b2edf49/"
+    "checkpoints/validation_best.pt"
+)
+DEFAULT_CLASSIFIER_REJECTION_EVIDENCE = (
+    PROJECT_ROOT / "outputs" / "diagnostics" / "m5a" / "rejection-analysis"
+)
 
-COMMAND_SCHEMA = "langmani-m5a-language-router-evaluation-command-v1"
-EVIDENCE_SCHEMA = "langmani-m5a-language-router-evaluation-evidence-v1"
+COMMAND_SCHEMA = "langmani-m5a2-language-router-evaluation-command-v0"
+EVIDENCE_SCHEMA = "langmani-m5a2-language-router-evaluation-evidence-v0"
 CLASSIFIER_RUN_EVIDENCE_SCHEMA = "langmani-m5a-text-router-run-evidence-v2"
 CORPUS_ARCHIVE_SCHEMA = "langmani-m5a-language-corpus-archive-v1"
 DEFAULT_REPEAT_COUNT = 2
@@ -133,21 +165,88 @@ class GeneratorFactory(Protocol):
     ) -> LocalTextGenerator: ...
 
 
+class _StructuralFixtureGenerator:
+    """Schema/evidence fixture; it is never reported as local-model inference."""
+
+    def __init__(self) -> None:
+        self.router = RuleRouterV0()
+        self.file_identities: dict[str, object] = {}
+        self.generation_metadata: list[dict[str, object]] = []
+        self.peak_gpu_memory_bytes = 0
+
+    def generate(self, prompt: str, *, max_new_tokens: int) -> str:
+        if max_new_tokens <= 0:
+            raise LanguageRouterEvaluationCommandError("fixture output-token bound is invalid")
+        try:
+            command_line = prompt.rsplit("Command: ", maxsplit=1)[1].splitlines()[0]
+            command = json.loads(command_line)
+        except (IndexError, json.JSONDecodeError) as error:
+            raise LanguageRouterEvaluationCommandError(
+                "fixture prompt omitted one JSON command"
+            ) from error
+        if not isinstance(command, str):
+            raise LanguageRouterEvaluationCommandError("fixture command must be text")
+        decision = self.router.route(command)
+        if decision.status is RouterStatus.ROUTE:
+            payload: dict[str, object] = {
+                "status": "route",
+                "target_object_id": decision.target_object_id,
+                "target_bin_id": decision.target_bin_id,
+                "reason": "explicit_object_and_destination",
+            }
+        else:
+            assert decision.rejection_reason is not None
+            reason = {
+                RouterRejectionReason.CONFLICTING_BINS: "conflicting_destinations",
+                RouterRejectionReason.MULTIPLE_TASKS: "multiple_sequential_tasks",
+                RouterRejectionReason.MEANINGLESS_TEXT: "meaningless_or_noise",
+                RouterRejectionReason.EMPTY_TEXT: "malformed_input",
+                RouterRejectionReason.MALFORMED_CONTROL_CHARACTERS: "malformed_input",
+            }.get(decision.rejection_reason, decision.rejection_reason.value)
+            payload = {
+                "status": decision.status.value,
+                "target_object_id": None,
+                "target_bin_id": None,
+                "reason": reason,
+            }
+        self.generation_metadata.append(
+            {
+                "generated_token_count": 0,
+                "elapsed_seconds": 0.0,
+                "peak_gpu_memory_bytes": 0,
+                "do_sample": False,
+                "enable_thinking": False,
+                "fixture_only": True,
+            }
+        )
+        return json.dumps(payload, sort_keys=True, separators=(",", ":"))
+
+
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     modes = parser.add_mutually_exclusive_group(required=True)
     modes.add_argument("--fixture", action="store_true")
     modes.add_argument("--target-development", action="store_true")
     parser.add_argument("--corpus-root", type=Path, default=DEFAULT_CORPUS_ROOT)
-    parser.add_argument("--classifier-artifact", type=Path, required=True)
-    parser.add_argument("--llm-model-id", required=True)
-    parser.add_argument("--llm-model-revision", required=True)
-    parser.add_argument("--llm-tokenizer-revision", required=True)
-    parser.add_argument("--llm-license", required=True)
+    parser.add_argument("--classifier-checkpoint", type=Path, default=DEFAULT_CLASSIFIER_CHECKPOINT)
+    parser.add_argument(
+        "--classifier-rejection-evidence",
+        type=Path,
+        default=DEFAULT_CLASSIFIER_REJECTION_EVIDENCE,
+    )
+    parser.add_argument("--llm-model-id", default=QWEN3_1_7B_MODEL_ID)
+    parser.add_argument("--llm-model-revision", default=QWEN3_1_7B_REVISION)
+    parser.add_argument("--llm-tokenizer-revision", default=QWEN3_1_7B_REVISION)
+    parser.add_argument("--llm-license", default=QWEN3_1_7B_LICENSE)
     parser.add_argument(
         "--llm-license-reviewed",
         action="store_true",
         help="Confirm that the pinned official model card and declared license were reviewed.",
+    )
+    parser.add_argument(
+        "--llm-model-card-reviewed",
+        action="store_true",
+        help="Confirm review of the pinned official Qwen model card and chat template.",
     )
     parser.add_argument(
         "--llm-dtype",
@@ -198,16 +297,24 @@ def _reject_forbidden_input_identity(path: Path, *, label: str) -> None:
         )
 
 
-def _safe_paths(args: argparse.Namespace) -> tuple[Path, Path, Path, Path]:
+def _safe_paths(args: argparse.Namespace) -> tuple[Path, Path, Path, Path, Path]:
     corpus = _resolved_unlinked(args.corpus_root, label="language corpus input")
-    classifier = _resolved_unlinked(args.classifier_artifact, label="classifier artifact input")
+    classifier = _resolved_unlinked(args.classifier_checkpoint, label="classifier checkpoint input")
+    rejection = _resolved_unlinked(
+        args.classifier_rejection_evidence,
+        label="classifier rejection-evidence input",
+    )
     output = _resolved_unlinked(args.output_root, label="language-router evidence output")
     report = _resolved_unlinked(args.report, label="language-router command report")
-    for label, path in (("corpus", corpus), ("classifier", classifier)):
+    for label, path in (("corpus", corpus), ("classifier rejection", rejection)):
         _reject_forbidden_input_identity(path, label=label)
         if not path.is_dir() or path.is_symlink() or path.is_junction():
             raise LanguageRouterEvaluationCommandError(f"{label} input must be one real directory")
-    if _overlaps(corpus, classifier):
+    if not classifier.is_file() or classifier.is_symlink():
+        raise LanguageRouterEvaluationCommandError(
+            "classifier checkpoint input must be one real file"
+        )
+    if _overlaps(corpus, rejection) or _overlaps(corpus, classifier):
         raise LanguageRouterEvaluationCommandError(
             "corpus and classifier immutable inputs cannot overlap"
         )
@@ -215,12 +322,12 @@ def _safe_paths(args: argparse.Namespace) -> tuple[Path, Path, Path, Path]:
         _resolved_unlinked(path, label="protected repository content")
         for path in (*_PROTECTED_ROOTS, *_PROTECTED_FILES, *_PROTECTED_GENERATED_ROOTS)
     )
-    if any(_overlaps(output, path) for path in (*protected, corpus, classifier)):
+    if any(_overlaps(output, path) for path in (*protected, corpus, classifier, rejection)):
         raise LanguageRouterEvaluationCommandError(
             "evaluation output cannot overlap source, Git, historical artifacts, corpus, or "
             "classifier artifacts"
         )
-    if any(_overlaps(report, path) for path in (*protected, corpus, classifier, output)):
+    if any(_overlaps(report, path) for path in (*protected, corpus, classifier, rejection, output)):
         raise LanguageRouterEvaluationCommandError(
             "command report cannot overlap source, Git, immutable inputs, or evaluation output"
         )
@@ -230,7 +337,7 @@ def _safe_paths(args: argparse.Namespace) -> tuple[Path, Path, Path, Path]:
         )
     if report.exists() and (not report.is_file() or report.is_symlink() or report.is_junction()):
         raise LanguageRouterEvaluationCommandError("command report must be a real file")
-    return corpus, classifier, output, report
+    return corpus, classifier, rejection, output, report
 
 
 def _read_json_object(path: Path, *, label: str) -> dict[str, object]:
@@ -1167,67 +1274,265 @@ def _dependency_versions() -> dict[str, object]:
     }
 
 
+def _selected_train_smoke_examples(
+    corpus: GeneratedLanguageCorpus,
+) -> tuple[LanguageExample, ...]:
+    train = tuple(
+        sorted(corpus.examples_for_split(LanguageSplit.TRAIN), key=lambda x: x.example_id)
+    )
+    selected: list[LanguageExample] = []
+    for task_id in sorted({value.task_id for value in train if value.task_id is not None}):
+        selected.append(next(value for value in train if value.task_id == task_id))
+    reasons = sorted(
+        {value.expected_rejection_reason for value in train if value.expected_rejection_reason},
+        key=lambda value: value.value,
+    )
+    for reason in reasons:
+        selected.append(next(value for value in train if value.expected_rejection_reason is reason))
+    return tuple(selected)
+
+
+def _semantic_decision_fingerprint(decision: RouterDecision) -> str:
+    """Fingerprint executable/rejection semantics without variable runtime telemetry."""
+
+    return f"sha256:{sha256_hex({'status': decision.status.value, 'task_id': decision.task_id, 'rejection_reason': None if decision.rejection_reason is None else decision.rejection_reason.value})}"
+
+
+def _run_train_smoke(
+    router: StructuredLocalLLMRouterV0,
+    examples: Sequence[LanguageExample],
+) -> dict[str, object]:
+    records: list[dict[str, object]] = []
+    for example in examples:
+        first = router.route(example.raw_text)
+        second = router.route(example.raw_text)
+        records.append(
+            {
+                "example_id": example.example_id,
+                "expected_status": example.expected_status.value,
+                "expected_task_id": example.task_id,
+                "decision": first.to_dict(),
+                "repeat_decision_fingerprint": _semantic_decision_fingerprint(second),
+                "deterministic": _semantic_decision_fingerprint(first)
+                == _semantic_decision_fingerprint(second),
+            }
+        )
+    final_valid = sum(
+        cast(Mapping[str, object], value["decision"]).get("rejection_reason")
+        != RouterRejectionReason.FORMAT_REPAIR_EXHAUSTED.value
+        for value in records
+    )
+    routed_task_ids = {
+        cast(Mapping[str, object], value["decision"]).get("task_id")
+        for value in records
+        if value["expected_status"] == RouterStatus.ROUTE.value
+    }
+    produced_statuses = {
+        cast(Mapping[str, object], value["decision"])["status"] for value in records
+    }
+    rejected_safe = all(
+        cast(Mapping[str, object], value["decision"])["task_spec"] is None
+        for value in records
+        if cast(Mapping[str, object], value["decision"])["status"] != RouterStatus.ROUTE.value
+    )
+    checks = {
+        "final_schema_valid_rate_at_least_0_99": final_valid / len(records) >= 0.99,
+        "all_six_task_specs_produced": len(routed_task_ids - {None}) == 6,
+        "all_router_statuses_produced": produced_statuses
+        == {value.value for value in RouterStatus},
+        "rejected_decisions_non_executable": rejected_safe,
+        "deterministic_final_decisions": all(bool(value["deterministic"]) for value in records),
+    }
+    return {
+        "schema_version": "langmani-m5a2-llm-train-smoke-v0",
+        "split": "train",
+        "example_count": len(records),
+        "example_ids": [value.example_id for value in examples],
+        "smoke_fingerprint": f"sha256:{sha256_hex([value.example_id for value in examples])}",
+        "checks": checks,
+        "gate_passed": all(checks.values()),
+        "records": records,
+    }
+
+
+def _router_payload(
+    *,
+    router: object,
+    examples: Sequence[LanguageExample],
+    split: LanguageSplit,
+    repeat_count: int,
+    eligibility: Mapping[str, object],
+) -> tuple[tuple[RouterEvaluationRecord, ...], dict[str, object]]:
+    records, _ = evaluate_language_router(
+        router=cast(object, router),
+        examples=examples,
+        split=split,
+        repeat_count=repeat_count,
+        repeat_fingerprint=_semantic_decision_fingerprint,
+    )
+    metrics = recompute_router_metrics(records=records, examples=examples)
+    return records, {
+        "schema_version": "langmani-m5a2-offline-router-result-v0",
+        "split": split.value,
+        "eligibility": dict(eligibility),
+        "metrics": metrics,
+        "records": [record.to_dict() for record in records],
+    }
+
+
+def _load_negative_baseline(
+    *,
+    checkpoint: Path,
+    rejection_root: Path,
+    local_files_only: bool,
+) -> tuple[FrozenClassifierNegativeBaselineV0, dict[str, object]]:
+    artifact = validate_rejection_analysis_artifact(rejection_root)
+    root = Path(cast(str, artifact["root"]))
+    rejected = _read_json_object(root / "rejected_candidate.json", label="rejected classifier")
+    selection = _read_json_object(root / "candidate_selection.json", label="decoder selection")
+    source = _read_json_object(root / "source_recovery_identity.json", label="classifier identity")
+    selected = selection.get("selected_configuration")
+    if (
+        artifact.get("classifier_full_quality_gate_passed") is not False
+        or artifact.get("conclusion") != "classifier_rejected_after_posthoc_calibration"
+        or rejected.get("classifier_candidate_frozen") is not True
+        or rejected.get("additional_training_authorized") is not False
+        or rejected.get("additional_seed_authorized") is not False
+        or not isinstance(selected, Mapping)
+    ):
+        raise LanguageRouterEvaluationCommandError(
+            "classifier rejection evidence does not preserve the M5A.1 decision"
+        )
+    expected_sha = cast(str, rejected["selected_classifier_checkpoint_fingerprint"])
+    if _sha256_file(checkpoint) != expected_sha:
+        raise LanguageRouterEvaluationCommandError("classifier checkpoint SHA differs")
+    run_fingerprint = source.get("run_fingerprint")
+    selected_step = source.get("selected_step")
+    if (
+        not isinstance(run_fingerprint, str)
+        or not run_fingerprint.startswith("sha256:")
+        or isinstance(selected_step, bool)
+        or not isinstance(selected_step, int)
+        or selected_step <= 0
+    ):
+        raise LanguageRouterEvaluationCommandError("classifier source identity is malformed")
+    bundle = load_selected_checkpoint_read_only(
+        checkpoint,
+        expected_checkpoint_fingerprint=expected_sha,
+        expected_run_fingerprint=f"sha256:{run_fingerprint.removeprefix('sha256:')}",
+        expected_step=selected_step,
+        local_files_only=local_files_only,
+    )
+    tokenizer_contract = bundle.processor_state.get("tokenizer")
+    if not isinstance(tokenizer_contract, Mapping) or not isinstance(
+        tokenizer_contract.get("maximum_sequence_length"), int
+    ):
+        raise LanguageRouterEvaluationCommandError("classifier tokenizer contract is malformed")
+    configuration = conservative_decoder_from_mapping(cast(Mapping[str, object], selected))
+    router = FrozenClassifierNegativeBaselineV0(
+        bundle=bundle,
+        configuration=configuration,
+        maximum_sequence_length=cast(int, tokenizer_contract["maximum_sequence_length"]),
+        device="cpu",
+    )
+    identity = {
+        "analysis_fingerprint": artifact["analysis_fingerprint"],
+        "checkpoint_fingerprint": expected_sha,
+        "selection_fingerprint": selection["selection_fingerprint"],
+        "decoder": configuration.to_dict(),
+        "classifier_candidate_frozen": True,
+        "offline_negative_baseline": True,
+        "eligible_for_promotion": False,
+        "eligible_for_dispatch": False,
+        "classifier_runtime_selected": False,
+        "classifier_full_quality_gate_passed": False,
+        "additional_training_authorized": False,
+        "additional_seed_authorized": False,
+        "optimizer_constructed": False,
+        "model_state_fingerprint_before": router.model_state_fingerprint_before,
+    }
+    return router, identity
+
+
+def _development_safety_checks(
+    *,
+    router: StructuredLocalLLMRouterV0,
+    records: Sequence[RouterEvaluationRecord],
+) -> tuple[dict[str, bool], dict[str, object]]:
+    empty_first = router.route("")
+    empty_second = router.route("")
+    by_reason: dict[RouterRejectionReason, list[RouterEvaluationRecord]] = defaultdict(list)
+    for record in records:
+        if record.expected_rejection_reason is not None:
+            by_reason[record.expected_rejection_reason].append(record)
+
+    def never_routes(*reasons: RouterRejectionReason) -> bool:
+        selected = [record for reason in reasons for record in by_reason[reason]]
+        return bool(selected) and all(
+            record.decision.status is not RouterStatus.ROUTE for record in selected
+        )
+
+    checks = {
+        "empty_and_meaningless_inputs_never_route": (
+            empty_first.status is not RouterStatus.ROUTE
+            and _semantic_decision_fingerprint(empty_first)
+            == _semantic_decision_fingerprint(empty_second)
+            and never_routes(RouterRejectionReason.MEANINGLESS_TEXT)
+        ),
+        "conflicting_object_and_bin_inputs_never_route": never_routes(
+            RouterRejectionReason.CONFLICTING_OBJECTS,
+            RouterRejectionReason.CONFLICTING_BINS,
+        ),
+        "unsupported_action_commands_never_route": never_routes(
+            RouterRejectionReason.UNSUPPORTED_ACTION
+        ),
+    }
+    return checks, {
+        "empty_input_decision": empty_first.to_dict(),
+        "empty_repeat_decision_fingerprint": empty_second.decision_fingerprint,
+        "checks": checks,
+    }
+
+
 def execute(
     args: argparse.Namespace,
     *,
     generator_factory: GeneratorFactory | None = None,
 ) -> dict[str, object]:
-    corpus_root, classifier_root, output_root, _ = _safe_paths(args)
-    target_development = bool(args.target_development)
-    if generator_factory is not None and target_development:
+    corpus_root, checkpoint, rejection_root, output_root, _ = _safe_paths(args)
+    target = bool(args.target_development)
+    if generator_factory is not None and target:
         raise LanguageRouterEvaluationCommandError(
-            "injected generators are fixture-only and cannot claim target development"
+            "injected generators are fixture-only and cannot claim real GPU inference"
         )
     if args.repeat_count < 2:
-        raise LanguageRouterEvaluationCommandError(
-            "router evaluation requires at least two decisions for repeatability"
-        )
-    if args.device == "cuda" and not torch.cuda.is_available():
-        raise LanguageRouterEvaluationCommandError("CUDA evaluation was requested but unavailable")
+        raise LanguageRouterEvaluationCommandError("repeat_count must be at least two")
     dependencies = _dependency_versions()
-    if target_development:
-        if dependencies["transformers"] != "5.4.0" or dependencies["tokenizers"] != "0.22.2":
-            raise LanguageRouterEvaluationCommandError(
-                "target router evaluation requires the locked Transformers/tokenizers versions"
-            )
-        _require_full_revision(args.llm_model_revision, label="LLM model revision")
-        _require_full_revision(args.llm_tokenizer_revision, label="LLM tokenizer revision")
-        if (
-            not isinstance(args.llm_model_id, str)
-            or args.llm_model_id.count("/") != 1
-            or "://" in args.llm_model_id
-            or Path(args.llm_model_id).exists()
-        ):
-            raise LanguageRouterEvaluationCommandError(
-                "target LLM model ID must be one explicit non-local repository ID"
-            )
-        if not isinstance(args.llm_license, str) or not args.llm_license.strip():
-            raise LanguageRouterEvaluationCommandError("target LLM license must be explicit")
-        if args.llm_license_reviewed is not True:
-            raise LanguageRouterEvaluationCommandError(
-                "target LLM requires an explicit official-model-card license review"
-            )
     git_state = inspect_git_state(PROJECT_ROOT)
-    if target_development and (git_state.dirty or not git_state.baseline_tracked):
-        raise LanguageRouterEvaluationCommandError(
-            "target-development router evaluation requires one clean tracked Git commit"
-        )
+    if target:
+        if args.device != "cuda" or not torch.cuda.is_available():
+            raise LanguageRouterEvaluationCommandError("M5A.2 target inference requires CUDA")
+        if os.environ.get("CUDA_VISIBLE_DEVICES") != "0":
+            raise LanguageRouterEvaluationCommandError("M5A.2 requires CUDA_VISIBLE_DEVICES=0")
+        if dependencies["transformers"] != "5.4.0" or dependencies["tokenizers"] != "0.22.2":
+            raise LanguageRouterEvaluationCommandError("locked text dependency versions differ")
+        if git_state.dirty or not git_state.baseline_tracked:
+            raise LanguageRouterEvaluationCommandError("target evidence requires clean tracked Git")
+        if (
+            args.llm_model_id != QWEN3_1_7B_MODEL_ID
+            or args.llm_model_revision != QWEN3_1_7B_REVISION
+            or args.llm_tokenizer_revision != QWEN3_1_7B_REVISION
+            or args.llm_license != QWEN3_1_7B_LICENSE
+            or args.llm_license_reviewed is not True
+            or args.llm_model_card_reviewed is not True
+            or args.llm_dtype != "bfloat16"
+            or args.llm_quantization != "none"
+        ):
+            raise LanguageRouterEvaluationCommandError("pinned Qwen M5A.2 identity differs")
     corpus = build_language_corpus()
-    corpus_archive_fingerprint = _validate_corpus_archive(corpus_root, corpus)
+    archive_fingerprint = _validate_corpus_archive(corpus_root, corpus)
     language_development, language_final = build_language_schedule_locks(corpus)
-    classifier_router, classifier_identity = _load_classifier_router(
-        classifier_root,
-        corpus=corpus,
-        device=args.device,
-        target_development=target_development,
-    )
-    rule_config = RuleRouterConfig()
-    rule_router = RuleRouterV0(rule_config)
-    rule_identity = {
-        "router_name": "RuleRouterV0",
-        "config": rule_config.to_dict(),
-        "router_fingerprint": rule_config.fingerprint,
-    }
+    model_identity = QwenModelIdentityV0()
     llm_config = StructuredLLMRouterConfig(
         model_id=args.llm_model_id,
         model_revision=args.llm_model_revision,
@@ -1238,175 +1543,330 @@ def execute(
         maximum_format_repair_attempts=1,
     )
     prompt_examples = _select_prompt_examples(corpus)
-    prompt_template, prompt_fingerprint, prompt_example_ids = build_structured_routing_prompt(
+    prompt_text, prompt_fingerprint, prompt_example_ids = build_structured_routing_prompt(
         examples=prompt_examples,
         prompt_version=llm_config.prompt_version,
     )
-    factory = _default_generator_factory if generator_factory is None else generator_factory
-    llm_generator = factory(llm_config, args.device, bool(args.local_files_only))
-    llm_parameter_count: int | None = None
-    if target_development:
-        model = getattr(llm_generator, "model", None)
-        parameters = getattr(model, "parameters", None)
-        if not callable(parameters):
-            raise LanguageRouterEvaluationCommandError(
-                "target local LLM does not expose parameters for the 0.5B-3B gate"
-            )
-        llm_parameter_count = sum(parameter.numel() for parameter in parameters())
-        if not 500_000_000 <= llm_parameter_count <= 3_000_000_000:
-            raise LanguageRouterEvaluationCommandError(
-                "target local LLM parameter count lies outside the locked 0.5B-3B range"
-            )
+    if generator_factory is not None:
+        generator = generator_factory(llm_config, args.device, bool(args.local_files_only))
+    elif target:
+        generator = _default_generator_factory(llm_config, args.device, bool(args.local_files_only))
+    else:
+        generator = _StructuralFixtureGenerator()
     llm_router = StructuredLocalLLMRouterV0(
-        config=llm_config,
-        generator=llm_generator,
-        prompt_examples=prompt_examples,
+        config=llm_config, generator=generator, prompt_examples=prompt_examples
     )
     if llm_router.prompt_fingerprint != prompt_fingerprint:
-        raise LanguageRouterEvaluationCommandError("LLM prompt changed during construction")
-    llm_identity: dict[str, object] = {
-        "router_name": "StructuredLocalLLMRouterV0",
-        "config": llm_config.to_dict(),
-        "declared_license": args.llm_license,
-        "official_model_card_license_reviewed": bool(args.llm_license_reviewed),
-        "parameter_count": llm_parameter_count,
-        "prompt_template": prompt_template,
-        "prompt_fingerprint": prompt_fingerprint,
-        "prompt_example_ids": list(prompt_example_ids),
-        "prompt_example_split": "train",
-        "generator": (
-            "TransformersLocalTextGenerator"
-            if generator_factory is None
-            else "injected_fixture_generator"
-        ),
-    }
-    llm_identity["router_fingerprint"] = f"sha256:{sha256_hex(llm_identity)}"
-    identities = {
-        "rule": rule_identity,
-        "classifier": classifier_identity,
-        "llm": llm_identity,
-    }
+        raise LanguageRouterEvaluationCommandError("prompt changed during router construction")
+    parameter_count: int | None = None
+    if target:
+        model = getattr(generator, "model", None)
+        if model is None:
+            raise LanguageRouterEvaluationCommandError("target generator omitted its local model")
+        parameter_count = sum(parameter.numel() for parameter in model.parameters())
+        if not 1_600_000_000 <= parameter_count <= 1_900_000_000:
+            raise LanguageRouterEvaluationCommandError("Qwen parameter count differs")
+    train_smoke_examples = _selected_train_smoke_examples(corpus)
     owner_payload = {
         "schema_version": EVIDENCE_SCHEMA,
-        "mode": "target_development" if target_development else "fixture",
+        "mode": "target_development" if target else "fixture",
+        "git_commit": git_state.commit,
         "corpus_fingerprint": corpus.manifest.corpus_fingerprint,
-        "corpus_archive_fingerprint": corpus_archive_fingerprint,
-        "language_validation_fingerprint": corpus.manifest.split_manifests[
+        "corpus_archive_fingerprint": archive_fingerprint,
+        "validation_split_fingerprint": corpus.manifest.split_manifests[
             LanguageSplit.VALIDATION
+        ].content_fingerprint,
+        "development_split_fingerprint": corpus.manifest.split_manifests[
+            LanguageSplit.DEVELOPMENT
         ].content_fingerprint,
         "language_development_schedule_fingerprint": language_development.schedule_fingerprint,
         "language_final_lock_fingerprint": language_final.schedule_fingerprint,
-        "classifier_artifact_fingerprint": classifier_identity["artifact_fingerprint"],
-        "router_identities": identities,
+        "model_identity_fingerprint": model_identity.fingerprint,
+        "prompt_fingerprint": prompt_fingerprint,
+        "generation_config_fingerprint": llm_config.fingerprint,
+        "classifier_rejection_analysis_fingerprint": validate_rejection_analysis_artifact(
+            rejection_root
+        )["analysis_fingerprint"],
         "repeat_count": args.repeat_count,
-        "local_files_only": bool(args.local_files_only),
-        "evaluation_order": ["validation", "development"],
-        "device": args.device,
-        "git_commit": git_state.commit,
-        "dependencies": dependencies,
     }
-    evaluation_fingerprint = f"sha256:{sha256_hex(owner_payload)}"
-    owner = {**owner_payload, "evaluation_fingerprint": evaluation_fingerprint}
-    destination = output_root / evaluation_fingerprint.removeprefix("sha256:")
-    if destination.exists():
-        return {
-            **_validate_completed_evidence(destination, owner=owner),
-            "evidence_reused": True,
-        }
-
-    routers = {
-        "rule": (rule_router, False),
-        "classifier": (classifier_router, False),
-        "llm": (llm_router, True),
-    }
-    results: dict[
-        LanguageSplit,
-        dict[str, tuple[tuple[RouterEvaluationRecord, ...], dict[str, object]]],
-    ] = {}
-    # All validation runs finish before any development command is evaluated.
-    for split in (LanguageSplit.VALIDATION, LanguageSplit.DEVELOPMENT):
-        examples = corpus.examples_for_split(split)
-        split_results: dict[str, tuple[tuple[RouterEvaluationRecord, ...], dict[str, object]]] = {}
-        for router_name, (router, structured_llm) in routers.items():
-            split_results[router_name] = _evaluation_payload(
-                router=router,
-                examples=examples,
-                split=split,
-                repeat_count=args.repeat_count,
-                structured_llm=structured_llm,
-            )
-        results[split] = split_results
-
-    comparison = {
-        split.value: {router_name: payload[1] for router_name, payload in results[split].items()}
-        for split in (LanguageSplit.VALIDATION, LanguageSplit.DEVELOPMENT)
-    }
-    candidate_promotions, primary_learned_router = _language_candidate_promotions(comparison)
-    result_payload = {
-        "schema_version": EVIDENCE_SCHEMA,
-        "passed": True,
-        "mode": owner["mode"],
-        "evaluation_fingerprint": evaluation_fingerprint,
-        "corpus_fingerprint": corpus.manifest.corpus_fingerprint,
-        "corpus_archive_fingerprint": corpus_archive_fingerprint,
-        "router_identities": identities,
-        "repeat_count": args.repeat_count,
-        "local_files_only": bool(args.local_files_only),
-        "language_validation_schedule": {
-            "split": "validation",
-            "content_fingerprint": corpus.manifest.split_manifests[
-                LanguageSplit.VALIDATION
-            ].content_fingerprint,
-            "example_count": len(corpus.examples_for_split(LanguageSplit.VALIDATION)),
+    runtime_fingerprint = f"sha256:{sha256_hex(owner_payload)}"
+    owner = {**owner_payload, "runtime_fingerprint": runtime_fingerprint}
+    artifacts: dict[str, object] = {
+        "model_identity.json": {
+            **model_identity.to_dict(),
+            "identity_fingerprint": model_identity.fingerprint,
+            "actual_files": dict(getattr(generator, "file_identities", {})),
+            "parameter_count": parameter_count,
+            "model_loaded_once": target,
+            "fixture_contract_only": not target,
+            "license_reviewed": bool(args.llm_license_reviewed),
+            "model_card_reviewed": bool(args.llm_model_card_reviewed),
         },
-        "language_development_schedule": language_development.to_dict(),
-        "language_final_lock": {
-            "schedule_id": language_final.schedule_id,
-            "schedule_fingerprint": language_final.schedule_fingerprint,
-            "sealed": True,
-            "texts_materialized": False,
+        "prompt.json": {
+            "prompt_text": prompt_text,
+            "prompt_fingerprint": prompt_fingerprint,
+            "prompt_example_ids": list(prompt_example_ids),
+            "prompt_example_split": "train",
         },
-        "comparison": comparison,
-        "candidate_promotions": candidate_promotions,
-        "promoted_learned_routers": [
-            candidate
-            for candidate in ("classifier", "llm")
-            if candidate_promotions[candidate]["promoted"] is True
-        ],
-        "primary_learned_router": primary_learned_router,
-        "rule_router_offline_baseline_only": True,
-        "evaluation_order": ["validation", "development"],
-        "validation_completed_before_development": True,
-        "classifier_checkpoint_selected": True,
-        "classifier_calibration_validated": True,
-        "llm_router_loaded": target_development,
-        "llm_router_fixture_loaded": not target_development,
-        "llm_prompt_locked": target_development,
-        "language_validation_completed": target_development,
-        "language_development_completed": target_development,
-        "language_fixture_completed": not target_development,
-        "target_development_executed": target_development,
-        "physical_target_validated": False,
-        "final_benchmark_authorized": False,
+        "generation_config.json": llm_config.to_dict(),
+        "controller_registry_contract.json": {
+            "schema_version": "langmani-m5a2-controller-registry-metadata-audit-v0",
+            "metadata_only": True,
+            "canonical_task_ids": [stable_task_id(value) for value in CANONICAL_TASK_SPECS],
+            "controller_registry_loaded": False,
+            "controller_checkpoint_loaded": False,
+            "controller_dispatched": False,
+            "environment_created": False,
+            "environment_step_count": 0,
+        },
+    }
+    smoke = _run_train_smoke(llm_router, train_smoke_examples)
+    artifacts["train_smoke.json"] = smoke
+    flags: dict[str, bool] = {
+        "classifier_candidate_frozen": True,
+        "classifier_offline_baseline_validated": False,
+        "classifier_dispatch_prohibited": True,
+        "rule_router_validation_completed": False,
+        "llm_model_identity_validated": target,
+        "llm_prompt_locked": False,
+        "llm_train_smoke_completed": target,
+        "llm_validation_completed": False,
+        "llm_validation_gate_passed": False,
+        "language_development_completed": False,
+        "llm_language_quality_gate_passed": False,
+        "learned_router_selected": False,
+        "one_scene_control_smoke_authorized": False,
+        "one_scene_control_smoke_completed": False,
+        "three_scene_control_screen_completed": False,
+        "predicted_control_development_completed": False,
         "language_final_accessed": False,
         "control_final_accessed": False,
-        "m42_final_accessed": False,
         "test_split_accessed": False,
-        "historical_fresh_accessed": False,
-        "controller_dispatched": False,
-        "environment_reset_called": False,
-        "environment_step_count": 0,
-        "m2_expert_call_count": 0,
+        "m42_final_accessed": False,
         "smolvla_go": False,
-        "git_state": git_state.to_dict(),
-        "dependencies": dependencies,
+        "real_gpu_inference_validated": target,
+        "physical_target_validated": False,
+        "passed": True,
     }
-    return _promote_evidence(
-        output_root=output_root,
-        owner=owner,
-        results=results,
-        result_payload=result_payload,
+    stopped_after = "train_smoke" if target else "fixture"
+    prompt_lock: PromptLockV0 | None = None
+    validation_results: dict[str, object] = {}
+    development_results: dict[str, object] = {}
+    selection_payload: dict[str, object] = {
+        "selected_learned_router": None,
+        "one_scene_control_smoke_authorized": False,
+        "classifier": CLASSIFIER_NEGATIVE_ELIGIBILITY.to_dict(),
+        "rule_router": RULE_ROUTER_ELIGIBILITY.to_dict(),
+        "local_llm": LOCAL_LLM_ELIGIBILITY.to_dict(),
+    }
+    classifier_identity: dict[str, object] | None = None
+    classifier_router: FrozenClassifierNegativeBaselineV0 | None = None
+    # Fixture generation exercises serialization and evidence only.  It must
+    # never fabricate validation/development metrics or authorize a runtime.
+    if smoke["gate_passed"] is True and target:
+        prompt_lock = PromptLockV0(
+            prompt_text=prompt_text,
+            prompt_fingerprint=prompt_fingerprint,
+            prompt_example_ids=prompt_example_ids,
+            train_smoke_example_ids=tuple(value.example_id for value in train_smoke_examples),
+            corpus_fingerprint=corpus.manifest.corpus_fingerprint,
+            locked_before_validation=True,
+        )
+        artifacts["prompt_lock.json"] = prompt_lock.to_dict()
+        flags["llm_prompt_locked"] = True
+        classifier_router, classifier_identity = _load_negative_baseline(
+            checkpoint=checkpoint,
+            rejection_root=rejection_root,
+            local_files_only=bool(args.local_files_only),
+        )
+        rule_router = RuleRouterV0()
+        validation_examples = corpus.examples_for_split(LanguageSplit.VALIDATION)
+        for name, router, eligibility in (
+            ("rule_router", rule_router, RULE_ROUTER_ELIGIBILITY.to_dict()),
+            (
+                "classifier_negative_baseline",
+                classifier_router,
+                CLASSIFIER_NEGATIVE_ELIGIBILITY.to_dict(),
+            ),
+            ("local_llm", llm_router, LOCAL_LLM_ELIGIBILITY.to_dict()),
+        ):
+            _, payload = _router_payload(
+                router=router,
+                examples=validation_examples,
+                split=LanguageSplit.VALIDATION,
+                repeat_count=args.repeat_count,
+                eligibility=eligibility,
+            )
+            validation_results[name] = payload
+            artifacts[f"validation/{name}.json"] = payload
+        flags["classifier_offline_baseline_validated"] = True
+        flags["rule_router_validation_completed"] = True
+        flags["llm_validation_completed"] = True
+        llm_validation_metrics = cast(
+            Mapping[str, object],
+            cast(Mapping[str, object], validation_results["local_llm"])["metrics"],
+        )
+        validation_gate = evaluate_llm_validation_gate(
+            metrics=llm_validation_metrics, prohibited_source_access=False
+        )
+        flags["llm_validation_gate_passed"] = validation_gate.passed
+        artifacts["validation/gate.json"] = validation_gate.to_dict()
+        stopped_after = "validation"
+        if validation_gate.passed:
+            development_examples = corpus.examples_for_split(LanguageSplit.DEVELOPMENT)
+            llm_development_records: tuple[RouterEvaluationRecord, ...] | None = None
+            for name, router, eligibility in (
+                ("rule_router", rule_router, RULE_ROUTER_ELIGIBILITY.to_dict()),
+                (
+                    "classifier_negative_baseline",
+                    classifier_router,
+                    CLASSIFIER_NEGATIVE_ELIGIBILITY.to_dict(),
+                ),
+                ("local_llm", llm_router, LOCAL_LLM_ELIGIBILITY.to_dict()),
+            ):
+                records, payload = _router_payload(
+                    router=router,
+                    examples=development_examples,
+                    split=LanguageSplit.DEVELOPMENT,
+                    repeat_count=args.repeat_count,
+                    eligibility=eligibility,
+                )
+                if name == "local_llm":
+                    llm_development_records = records
+                development_results[name] = payload
+                artifacts[f"development/{name}.json"] = payload
+            assert llm_development_records is not None
+            safety_checks, safety_evidence = _development_safety_checks(
+                router=llm_router, records=llm_development_records
+            )
+            artifacts["development/safety_probes.json"] = safety_evidence
+            llm_development_metrics = cast(
+                Mapping[str, object],
+                cast(Mapping[str, object], development_results["local_llm"])["metrics"],
+            )
+            development_gate = evaluate_llm_development_gate(
+                metrics=llm_development_metrics,
+                per_task_accuracy=cast(
+                    Mapping[str, object], llm_development_metrics["per_task_accuracy"]
+                ),
+                rejection_family_false_route_rates=cast(
+                    Mapping[str, object],
+                    llm_development_metrics["rejection_family_false_route_rates"],
+                ),
+                safety_checks=safety_checks,
+            )
+            artifacts["development/gate.json"] = development_gate.to_dict()
+            flags["language_development_completed"] = True
+            flags["llm_language_quality_gate_passed"] = development_gate.passed
+            flags["one_scene_control_smoke_authorized"] = development_gate.passed
+            stopped_after = "language_development"
+            if development_gate.passed:
+                parser_fingerprint = f"sha256:{sha256_hex('strict-router-json-reason-v1')}"
+                validation_fingerprint = f"sha256:{sha256_hex(validation_results['local_llm'])}"
+                development_fingerprint = f"sha256:{sha256_hex(development_results['local_llm'])}"
+                selection_identity = {
+                    "model": model_identity.fingerprint,
+                    "prompt": prompt_fingerprint,
+                    "parser": parser_fingerprint,
+                    "generation": llm_config.fingerprint,
+                    "validation": validation_fingerprint,
+                    "development": development_fingerprint,
+                    "git_commit": git_state.commit,
+                    "corpus": corpus.manifest.corpus_fingerprint,
+                }
+                selection = LanguageRouterSelectionV0(
+                    runtime_fingerprint=f"sha256:{sha256_hex(selection_identity)}",
+                    model_identity_fingerprint=model_identity.fingerprint,
+                    prompt_fingerprint=prompt_fingerprint,
+                    parser_fingerprint=parser_fingerprint,
+                    generation_config_fingerprint=llm_config.fingerprint,
+                    validation_evidence_fingerprint=validation_fingerprint,
+                    development_evidence_fingerprint=development_fingerprint,
+                    git_commit=git_state.commit,
+                    corpus_fingerprint=corpus.manifest.corpus_fingerprint,
+                    validation_split_fingerprint=corpus.manifest.split_manifests[
+                        LanguageSplit.VALIDATION
+                    ].content_fingerprint,
+                    development_split_fingerprint=corpus.manifest.split_manifests[
+                        LanguageSplit.DEVELOPMENT
+                    ].content_fingerprint,
+                )
+                selection_payload["selected_learned_router"] = selection.to_dict()
+                selection_payload["one_scene_control_smoke_authorized"] = True
+                flags["learned_router_selected"] = True
+    if classifier_router is not None:
+        unchanged = classifier_router.verify_unchanged()
+        assert classifier_identity is not None
+        classifier_identity["model_state_fingerprint_after"] = (
+            classifier_router.model_state_fingerprint_before if unchanged else "changed"
+        )
+        classifier_identity["model_weights_unchanged"] = unchanged
+        if not unchanged:
+            raise LanguageRouterEvaluationCommandError(
+                "classifier weights changed during inference"
+            )
+    artifacts["classifier_negative_baseline.json"] = {
+        **CLASSIFIER_NEGATIVE_ELIGIBILITY.to_dict(),
+        "classifier_candidate_frozen": True,
+        "classifier_runtime_selected": False,
+        "classifier_full_quality_gate_passed": False,
+        "additional_training_authorized": False,
+        "additional_seed_authorized": False,
+        "identity": classifier_identity,
+    }
+    artifacts["candidate_selection.json"] = selection_payload
+    artifacts["summary.md"] = (
+        "# M5A.2 Offline Language Development\n\n"
+        f"Stopped after: `{stopped_after}`.\n\n"
+        f"LLM validation gate: `{flags['llm_validation_gate_passed']}`.\n\n"
+        f"LLM development gate: `{flags['llm_language_quality_gate_passed']}`.\n\n"
+        "No robot controller or environment was loaded.\n"
     )
+    artifacts["result.json"] = {
+        "schema_version": EVIDENCE_SCHEMA,
+        "runtime_fingerprint": runtime_fingerprint,
+        "stopped_after_stage": stopped_after,
+        "flags": flags,
+        "classifier_negative_baseline": classifier_identity,
+        "generation_totals": {
+            "generation_calls": len(getattr(generator, "generation_metadata", ())),
+            "generated_tokens": sum(
+                cast(int, value.get("generated_token_count", 0))
+                for value in getattr(generator, "generation_metadata", ())
+            ),
+            "peak_gpu_memory_bytes": int(getattr(generator, "peak_gpu_memory_bytes", 0)),
+        },
+        "final_access_prohibitions": {
+            "language_final_accessed": False,
+            "control_final_accessed": False,
+            "test_split_accessed": False,
+            "historical_fresh_accessed": False,
+            "m42_final_accessed": False,
+            "smolvla_go": False,
+            "controller_loaded": False,
+            "environment_created": False,
+            "environment_step_count": 0,
+        },
+    }
+    evidence = write_language_development_evidence(
+        output_root,
+        owner=owner,
+        artifacts=artifacts,
+        stopped_after_stage=stopped_after,
+        flags=flags,
+    )
+    return {
+        "schema_version": COMMAND_SCHEMA,
+        **flags,
+        "mode": owner["mode"],
+        "runtime_fingerprint": runtime_fingerprint,
+        "artifact_fingerprint": evidence["artifact_fingerprint"],
+        "evidence_root": evidence["root"],
+        "classifier_checkpoint_path": str(checkpoint),
+        "stopped_after_stage": stopped_after,
+        "evidence_reused": evidence["evidence_reused"],
+        "physical_target_validated": False,
+    }
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -1416,7 +1876,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         "schema_version": COMMAND_SCHEMA,
         "passed": False,
         "mode": mode,
-        "target_development_executed": False,
+        "classifier_candidate_frozen": True,
+        "classifier_offline_baseline_validated": False,
+        "classifier_dispatch_prohibited": True,
+        "rule_router_validation_completed": False,
+        "llm_model_identity_validated": False,
+        "llm_prompt_locked": False,
+        "llm_train_smoke_completed": False,
+        "llm_validation_completed": False,
+        "llm_validation_gate_passed": False,
+        "language_development_completed": False,
+        "llm_language_quality_gate_passed": False,
+        "learned_router_selected": False,
+        "one_scene_control_smoke_authorized": False,
+        "one_scene_control_smoke_completed": False,
+        "three_scene_control_screen_completed": False,
+        "predicted_control_development_completed": False,
+        "real_gpu_inference_validated": False,
         "physical_target_validated": False,
         "language_final_accessed": False,
         "control_final_accessed": False,
@@ -1456,7 +1932,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         "evaluation_fingerprint": payload.get("evaluation_fingerprint"),
         "artifact_fingerprint": payload.get("artifact_fingerprint"),
         "evidence_root": payload.get("evidence_root"),
+        "stopped_after_stage": payload.get("stopped_after_stage"),
+        "llm_validation_gate_passed": payload.get("llm_validation_gate_passed", False),
         "language_development_completed": payload.get("language_development_completed", False),
+        "one_scene_control_smoke_authorized": payload.get(
+            "one_scene_control_smoke_authorized", False
+        ),
         "language_final_accessed": payload.get("language_final_accessed", False),
         "physical_target_validated": payload.get("physical_target_validated", False),
         "report": None if report_path is None else str(report_path),

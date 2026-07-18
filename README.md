@@ -1048,6 +1048,35 @@ evidence `sha256:f2401fcb5b054c79c3b7e9674321eefcf9576dc4dcc5407bd96151db9e9b518
 passed both independent verifiers. The classifier is frozen, no runtime was created, and no later
 M5A stage was opened.
 
+M5A.2 keeps that classifier as an offline negative baseline and compares it with the deterministic
+RuleRouter and exactly one learned candidate: `Qwen/Qwen3-1.7B`. Model and tokenizer both pin
+revision `70d244cc86ccca08cf5af4e1e306ecf908b1ad5e`; target inference uses BF16, no quantization,
+the official non-thinking chat-template path, greedy decoding, strict four-field JSON, and at most
+one repair. The fixture only validates structure and immutable evidence. It cannot create real
+validation/development metrics or authorize control.
+
+```bash
+python scripts/evaluate_language_routers.py --fixture \
+  --device cpu \
+  --output-root outputs/diagnostics/m5a/language-development-fixture \
+  --report outputs/diagnostics/m5a/stages/language-development-fixture.json
+
+CUDA_VISIBLE_DEVICES=0 python scripts/evaluate_language_routers.py --target-development \
+  --device cuda \
+  --llm-license-reviewed \
+  --llm-model-card-reviewed \
+  --output-root outputs/diagnostics/m5a/language-development \
+  --report outputs/diagnostics/m5a/stages/language-development.json
+python environment/verify_m5a.py --verify-stage language_development \
+  --stage-report outputs/diagnostics/m5a/stages/language-development.json
+```
+
+The target command loads the model once, runs the fixed train-only smoke, evaluates all three
+routers on the complete validation split, and opens `m5a_language_dev_v0` only after the LLM
+validation gate passes. It stops before controller lookup or environment creation. Passing the
+command means the requested offline protocol completed correctly; the separate quality and
+`one_scene_control_smoke_authorized` flags may remain false.
+
 Other later stages still require separate authorization and use ordinary `--target-resume` only
 for an originally promoted pilot, followed by offline language evaluation and
 `run_language_control.py --stage {one_scene_control_smoke,three_scene_control_screen,full_control_development}`.

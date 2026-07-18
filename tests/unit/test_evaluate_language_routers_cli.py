@@ -170,11 +170,15 @@ def test_prompt_selection_is_stable_balanced_and_train_only() -> None:
         for example in corpus.examples_for_split(LanguageSplit.TRAIN)
         if example.expected_rejection_reason is not None
     }
-    assert {
+    selected_reasons = {
         example.expected_rejection_reason
         for example in first
         if example.expected_rejection_reason is not None
-    } == expected_reasons
+    }
+    assert selected_reasons == expected_reasons - {
+        cli.RouterRejectionReason.EMPTY_TEXT,
+        cli.RouterRejectionReason.MALFORMED_CONTROL_CHARACTERS,
+    }
 
 
 def _args(tmp_path: Path, *, target: bool = False):
@@ -184,16 +188,10 @@ def _args(tmp_path: Path, *, target: bool = False):
             mode,
             "--corpus-root",
             str(tmp_path / "corpus"),
-            "--classifier-artifact",
-            str(tmp_path / "classifier"),
-            "--llm-model-id",
-            "fixture/local-instruct",
-            "--llm-model-revision",
-            "a" * 40,
-            "--llm-tokenizer-revision",
-            "b" * 40,
-            "--llm-license",
-            "fixture-only",
+            "--classifier-checkpoint",
+            str(tmp_path / "classifier.pt"),
+            "--classifier-rejection-evidence",
+            str(tmp_path / "classifier-rejection"),
             "--device",
             "cpu",
             "--output-root",
@@ -207,7 +205,8 @@ def _args(tmp_path: Path, *, target: bool = False):
 def test_injected_generator_cannot_masquerade_as_target(tmp_path: Path) -> None:
     args = _args(tmp_path, target=True)
     args.corpus_root.mkdir()
-    args.classifier_artifact.mkdir()
+    args.classifier_checkpoint.write_bytes(b"fixture")
+    args.classifier_rejection_evidence.mkdir()
 
     with pytest.raises(cli.LanguageRouterEvaluationCommandError, match="fixture-only"):
         cli.execute(args, generator_factory=lambda *_args: object())
@@ -227,14 +226,22 @@ class _RuleBackedGenerator:
                 "status": "route",
                 "target_object_id": decision.target_object_id,
                 "target_bin_id": decision.target_bin_id,
-                "reason": "route",
+                "reason": "explicit_object_and_destination",
             }
         else:
             payload = {
                 "status": decision.status.value,
                 "target_object_id": None,
                 "target_bin_id": None,
-                "reason": cast(object, decision.rejection_reason).value,
+                "reason": {
+                    "conflicting_bins": "conflicting_destinations",
+                    "meaningless_or_noise_text": "meaningless_or_noise",
+                    "empty_text": "malformed_input",
+                    "malformed_control_characters": "malformed_input",
+                }.get(
+                    cast(object, decision.rejection_reason).value,
+                    cast(object, decision.rejection_reason).value,
+                ),
             }
         return json.dumps(payload, sort_keys=True)
 
@@ -244,16 +251,12 @@ def test_fixture_evaluation_is_immutable_and_never_claims_target(
 ) -> None:
     args = _args(tmp_path)
     corpus_cli.build_archive(args.corpus_root)
-    args.classifier_artifact.mkdir()
-    classifier_identity = {
-        "artifact_fingerprint": "sha256:" + "1" * 64,
-        "router_fingerprint": "sha256:" + "2" * 64,
-        "run_fingerprint": "sha256:" + "3" * 64,
-    }
+    args.classifier_checkpoint.write_bytes(b"fixture")
+    args.classifier_rejection_evidence.mkdir()
     monkeypatch.setattr(
         cli,
-        "_load_classifier_router",
-        lambda *_args, **_kwargs: (RuleRouterV0(), classifier_identity),
+        "validate_rejection_analysis_artifact",
+        lambda *_args, **_kwargs: {"analysis_fingerprint": "sha256:" + "1" * 64},
     )
     monkeypatch.setattr(
         cli,
@@ -272,12 +275,13 @@ def test_fixture_evaluation_is_immutable_and_never_claims_target(
     )
 
     assert result["passed"] is True
-    assert result["language_fixture_completed"] is True
-    assert result["target_development_executed"] is False
+    assert result["mode"] == "fixture"
+    assert result["real_gpu_inference_validated"] is False
+    assert result["llm_validation_completed"] is False
+    assert result["language_development_completed"] is False
+    assert result["one_scene_control_smoke_authorized"] is False
     assert result["physical_target_validated"] is False
     assert result["language_final_accessed"] is False
-    assert result["controller_dispatched"] is False
-    assert result["environment_step_count"] == 0
     assert not (args.corpus_root / "final.jsonl").exists()
     evidence_root = Path(cast(str, result["evidence_root"]))
     first_result = (evidence_root / "result.json").read_bytes()
@@ -289,7 +293,7 @@ def test_fixture_evaluation_is_immutable_and_never_claims_target(
     assert (evidence_root / "result.json").read_bytes() == first_result
 
     (evidence_root / "result.json").write_text("{}\n", encoding="utf-8")
-    with pytest.raises(cli.LanguageRouterEvaluationCommandError, match="checksum manifest"):
+    with pytest.raises(RuntimeError, match="checksums differ"):
         cli.execute(
             args,
             generator_factory=lambda *_args: _RuleBackedGenerator(),

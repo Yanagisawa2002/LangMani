@@ -1895,3 +1895,27 @@ but reached only 71.21%/80.56%/94.44% rejection-class recall. The original conju
 therefore failed. Independent artifact and stage verification passed; the classifier is frozen, no
 runtime was published, and no additional training, seed, language development, control, final, or
 SmolVLA work was started.
+
+## D-063 — Compare one pinned local LLM while retaining the rejected classifier as negative evidence
+
+The completed M5A.1 decision is permanent: the seed-0 classifier and selected
+`ConservativeRouteDecoderV0` remain frozen, descriptive, and ineligible for dispatch, promotion, or
+final selection. Language development no longer requires an eligible classifier runtime.
+`RuleRouterV0` remains a deterministic offline baseline, and exactly one learned candidate is
+permitted: `StructuredLocalLLMRouterV0` with `Qwen/Qwen3-1.7B`.
+
+M5A.2 pins model and tokenizer revision
+`70d244cc86ccca08cf5af4e1e306ecf908b1ad5e`, Apache-2.0, BF16, no quantization, and the public
+Transformers runtime. It records exact model-file SHA-256 identities and uses the official chat
+template with `enable_thinking=False`, greedy generation, a versioned strict reason vocabulary,
+and at most one schema repair. Non-schema model text is not persisted. This is a project-owned
+interface/evidence change; the already pinned dependency versions do not change.
+
+A fixed train-only smoke precedes one complete validation pass. The complete language-development
+split is opened only after the unchanged conjunctive validation thresholds pass. Fixture results
+cannot fabricate these metrics or authorize control. Evidence uses staging, checksums, atomic
+promotion, and independent raw-record metric/gate recomputation. The comparison loads no ACT
+controller or robot environment and never opens language final, control schedules, M3B test,
+historical fresh results, `m42_final_v0`, or SmolVLA. A passing offline experiment and a passing
+LLM quality gate remain separate; even a selected LLM only authorizes a later separately executed
+one-scene smoke.
