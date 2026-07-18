@@ -135,11 +135,20 @@ def test_control_schedule_excludes_prior_seeds_and_locks_all_four_ids() -> None:
     assert bundle.language_final.schedule_id == M5A_LANGUAGE_FINAL_SCHEDULE_ID
     assert bundle.control_development.schedule_id == M5A_CONTROL_DEV_SCHEDULE_ID
     assert bundle.control_final.schedule_id == M5A_CONTROL_FINAL_SCHEDULE_ID
-    assert len(bundle.control_development.ordered_scene_seeds) == 12
-    assert len(bundle.control_final.ordered_scene_seeds) == 30
-    assert bundle.control_development.episode_count == 72
-    assert bundle.control_final.episode_count == 180
-    assert len(bundle.development_episodes) == 72
+    assert len(bundle.control_development.ordered_scene_seeds) == 10
+    assert len(bundle.control_final.ordered_scene_seeds) == 12
+    assert bundle.control_development.episode_count == 60
+    assert bundle.control_final.episode_count == 72
+    assert len(bundle.development_episodes) == 60
+    assert len(bundle.one_scene_control_smoke.episodes) == 6
+    assert len(bundle.three_scene_control_screen.episodes) == 18
+    assert len(bundle.full_control_development.episodes) == 36
+    assert (
+        bundle.one_scene_control_smoke.ordered_scene_seeds
+        + bundle.three_scene_control_screen.ordered_scene_seeds
+        + bundle.full_control_development.ordered_scene_seeds
+        == bundle.control_development.ordered_scene_seeds
+    )
 
     development_seeds = set(bundle.control_development.ordered_scene_seeds)
     final_seeds = set(bundle.control_final.ordered_scene_seeds)

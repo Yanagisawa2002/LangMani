@@ -192,6 +192,12 @@ def _router_evaluation_fixture(
                 "prompt_example_ids": list(prompt_ids),
             },
         },
+        "candidate_promotions": {
+            "classifier": {"promoted": True},
+            "llm": {"promoted": True},
+        },
+        "promoted_learned_routers": ["classifier", "llm"],
+        "primary_learned_router": "classifier",
         "language_final_accessed": False,
         "control_final_accessed": False,
         "m42_final_accessed": False,
@@ -382,11 +388,13 @@ def test_execute_requires_authoritative_wrapper_but_direct_loader_remains_availa
         str(tmp_path / "output"),
         "--report",
         str(tmp_path / "report.json"),
+        "--stage",
+        "one_scene_control_smoke",
         "--dry-run",
     ]
     result = command.execute(command.parse_args(["--control-schedule", str(wrapper), *common]))
     assert result["passed"] is True
-    assert result["schedule_fingerprint"] == bundle.control_development.schedule_fingerprint
+    assert result["schedule_fingerprint"] == bundle.one_scene_control_smoke.schedule_fingerprint
 
     with pytest.raises(
         command.LanguageControlCommandError,
@@ -396,7 +404,7 @@ def test_execute_requires_authoritative_wrapper_but_direct_loader_remains_availa
     assert corpus.manifest.corpus_fingerprint == result["corpus_fingerprint"]
 
 
-def test_four_router_control_is_ordered_resumable_and_rejection_is_zero_step(
+def test_one_scene_promoted_control_is_ordered_resumable_and_rejection_is_zero_step(
     tmp_path: Path,
 ) -> None:
     command = _load_command()
@@ -404,21 +412,17 @@ def test_four_router_control_is_ordered_resumable_and_rejection_is_zero_step(
     inputs = command.prepare_development_inputs(
         schedule=bundle.control_development,
         corpus=corpus,
+        stage=command.M5AStage.ONE_SCENE_CONTROL_SMOKE,
     )
     registry = build_fixture_controller_registry()
     loader = FixturePerTaskControllerLoader()
     environment = _SpyEnvironment()
     dispatcher = ControllerDispatcher(registry=registry, loader=loader)
-    rule = RuleRouterV0()
     provider_calls: list[tuple[str, int]] = []
 
     def oracle(episode, _example):
         provider_calls.append(("oracle", episode.episode_index))
         return command._oracle_provider(episode, _example)
-
-    def rule_provider(episode, example):
-        provider_calls.append(("rule", episode.episode_index))
-        return rule.route(example.raw_text)
 
     def classifier(episode, _example):
         provider_calls.append(("classifier", episode.episode_index))
@@ -456,7 +460,6 @@ def test_four_router_control_is_ordered_resumable_and_rejection_is_zero_step(
 
     providers = {
         "oracle": oracle,
-        "rule": rule_provider,
         "classifier": classifier,
         "llm": llm,
     }
@@ -472,13 +475,15 @@ def test_four_router_control_is_ordered_resumable_and_rejection_is_zero_step(
     )
 
     assert result["passed"] is True
-    assert result["completed_episode_atoms"] == 288
+    assert result["completed_episode_atoms"] == 18
     assert provider_calls == [
-        (router, episode_index) for router in command.ROUTER_ORDER for episode_index in range(72)
+        (router, episode_index)
+        for router in ("oracle", "classifier", "llm")
+        for episode_index in range(6)
     ]
-    assert environment.reset_count == environment.step_count == 287
+    assert environment.reset_count == environment.step_count == 17
     assert result["summaries"]["classifier"]["safe_rejection_count"] == 1
-    assert result["summaries"]["classifier"]["dispatched_count"] == 71
+    assert result["summaries"]["classifier"]["dispatched_count"] == 5
     assert result["summaries"]["classifier"]["wrong_object_interaction_available"] is True
     assert result["summaries"]["classifier"]["wrong_object_interaction_count"] == 0
     assert result["summaries"]["classifier"]["invalid_action_count"] == 0
@@ -492,9 +497,9 @@ def test_four_router_control_is_ordered_resumable_and_rejection_is_zero_step(
     assert result["zero_dispatch_after_rejection_validated"] is True
     assert result["m2_expert_call_count"] == 0
     assert result["m2_expert_free_validated"] is True
-    assert result["summaries"]["oracle"]["episode_count"] == 72
-    assert result["summaries"]["rule"]["episode_count"] == 72
-    assert result["summaries"]["llm"]["episode_count"] == 72
+    assert result["summaries"]["oracle"]["episode_count"] == 6
+    assert result["summaries"]["llm"]["episode_count"] == 6
+    assert result["promoted_to_next_stage"] == ["llm"]
 
     provider_calls.clear()
     before_steps = environment.step_count
@@ -543,6 +548,7 @@ def test_completed_control_evidence_is_checksum_validated(tmp_path: Path) -> Non
     inputs = command.prepare_development_inputs(
         schedule=bundle.control_development,
         corpus=corpus,
+        stage=command.M5AStage.ONE_SCENE_CONTROL_SMOKE,
     )
     registry = build_fixture_controller_registry()
     environment = _SpyEnvironment()
@@ -564,7 +570,7 @@ def test_completed_control_evidence_is_checksum_validated(tmp_path: Path) -> Non
         registry=registry,
         dispatcher=dispatcher,
         environment=environment,
-        providers={name: correct for name in command.ROUTER_ORDER},
+        providers={name: correct for name in ("oracle", "classifier", "llm")},
         output_root=tmp_path / "control",
         run_identity={"fixture": "checksum"},
     )
@@ -579,7 +585,7 @@ def test_completed_control_evidence_is_checksum_validated(tmp_path: Path) -> Non
             registry=registry,
             dispatcher=dispatcher,
             environment=environment,
-            providers={name: correct for name in command.ROUTER_ORDER},
+            providers={name: correct for name in ("oracle", "classifier", "llm")},
             output_root=tmp_path / "control",
             run_identity={"fixture": "checksum"},
         )

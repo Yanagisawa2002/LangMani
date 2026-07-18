@@ -6,16 +6,23 @@ import hashlib
 import json
 import math
 import os
+import random
 import shutil
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import cast
+from typing import Any, cast
 
+import numpy as np
 import torch
 from torch import nn
 
 from langmani.datasets.identity import sha256_hex
+from langmani.language.stage_protocol import (
+    CheckpointRetentionPolicy,
+    ClassifierStageMetrics,
+    ClassifierStageTrainingConfig,
+)
 from langmani.language.text_calibration import (
     RoutingThresholdExample,
     RoutingThresholdSelectionV0,
@@ -224,6 +231,60 @@ class TextRouterCalibrationSelection:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class StagedTextTrainingResult:
+    """Pause/resume result from the one authoritative classifier run."""
+
+    run_fingerprint: str
+    phase: str
+    completed_steps: int
+    completed_epochs: int
+    resumed_from_step: int
+    pilot_checkpoint: str
+    latest_checkpoint: str
+    best_checkpoint: str
+    selected_step: int | None
+    stopped_early: bool
+    pilot_metrics: ClassifierStageMetrics | None
+    final_metrics: ClassifierStageMetrics | None
+    validation_records: tuple[TextCheckpointValidation, ...]
+    classifier_training_seeds: int = 1
+    robustness_across_training_seeds_not_evaluated: bool = True
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "run_fingerprint": self.run_fingerprint,
+            "phase": self.phase,
+            "completed_steps": self.completed_steps,
+            "completed_epochs": self.completed_epochs,
+            "resumed_from_step": self.resumed_from_step,
+            "pilot_checkpoint": self.pilot_checkpoint,
+            "latest_checkpoint": self.latest_checkpoint,
+            "best_checkpoint": self.best_checkpoint,
+            "selected_step": self.selected_step,
+            "stopped_early": self.stopped_early,
+            "pilot_metrics": None if self.pilot_metrics is None else self.pilot_metrics.to_dict(),
+            "final_metrics": None if self.final_metrics is None else self.final_metrics.to_dict(),
+            "validation_records": [
+                {
+                    "checkpoint_id": value.checkpoint_id,
+                    "step": value.step,
+                    "validation_examples": value.validation_examples,
+                    "total_loss": value.total_loss,
+                    "status_loss": value.status_loss,
+                    "object_loss": value.object_loss,
+                    "bin_loss": value.bin_loss,
+                    "evidence_split": value.evidence_split,
+                }
+                for value in self.validation_records
+            ],
+            "classifier_training_seeds": self.classifier_training_seeds,
+            "robustness_across_training_seeds_not_evaluated": (
+                self.robustness_across_training_seeds_not_evaluated
+            ),
+        }
+
+
 def train_factorized_text_step(
     *,
     model: FactorizedTextClassifierV0,
@@ -313,6 +374,50 @@ def collect_factorized_validation_outputs(
         status_labels=torch.cat(status_labels),
         object_labels=torch.cat(object_labels),
         bin_labels=torch.cat(bin_labels),
+    )
+
+
+def collect_factorized_tiny_train_outputs(
+    *,
+    model: FactorizedTextClassifierV0,
+    batches: Sequence[FactorizedTextBatch],
+) -> FactorizedValidationOutputs:
+    """Collect tiny-train logits without mislabelling them as held-out validation."""
+
+    values = tuple(batches)
+    if not values or any(batch.split != "train" for batch in values):
+        raise TextTrainingError("tiny-overfit evidence must come from train-only batches")
+    try:
+        device = next(model.parameters()).device
+    except StopIteration as error:
+        raise TextTrainingError("classifier has no parameters") from error
+    model.eval()
+    output_parts: list[FactorizedTextClassifierOutput] = []
+    status_labels: list[torch.Tensor] = []
+    object_labels: list[torch.Tensor] = []
+    bin_labels: list[torch.Tensor] = []
+    with torch.inference_mode():
+        for original in values:
+            batch = _batch_on_device(original, device)
+            output = model(input_ids=batch.input_ids, attention_mask=batch.attention_mask)
+            output_parts.append(
+                FactorizedTextClassifierOutput(
+                    status_logits=output.status_logits.detach().cpu(),
+                    object_logits=output.object_logits.detach().cpu(),
+                    bin_logits=output.bin_logits.detach().cpu(),
+                )
+            )
+            status_labels.append(batch.status_labels.detach().cpu())
+            object_labels.append(batch.object_labels.detach().cpu())
+            bin_labels.append(batch.bin_labels.detach().cpu())
+    return FactorizedValidationOutputs(
+        status_logits=torch.cat([value.status_logits for value in output_parts]),
+        object_logits=torch.cat([value.object_logits for value in output_parts]),
+        bin_logits=torch.cat([value.bin_logits for value in output_parts]),
+        status_labels=torch.cat(status_labels),
+        object_labels=torch.cat(object_labels),
+        bin_labels=torch.cat(bin_labels),
+        evidence_split="tiny_train",
     )
 
 
@@ -450,6 +555,417 @@ def run_bounded_factorized_text_training(
         selected_step=selected.step,
         checkpoint_validations=tuple(records),
         config_fingerprint=f"sha256:{sha256_hex(config.to_dict())}",
+    )
+
+
+def classifier_stage_metrics(outputs: FactorizedValidationOutputs) -> ClassifierStageMetrics:
+    """Compute every explicit pilot/training gate from validation or tiny outputs."""
+
+    if outputs.evidence_split not in {"validation", "tiny_train"}:
+        raise TextTrainingError("classifier stage metrics accept validation or tiny-train only")
+    tensors = (
+        outputs.status_logits,
+        outputs.object_logits,
+        outputs.bin_logits,
+    )
+    finite = all(bool(torch.isfinite(value).all()) for value in tensors)
+    status = outputs.status_logits.argmax(dim=-1)
+    objects = outputs.object_logits.argmax(dim=-1)
+    bins = outputs.bin_logits.argmax(dim=-1)
+    routeable = outputs.status_labels == ROUTE_STATUS_INDEX
+    rejected = ~routeable
+
+    def mean(mask: torch.Tensor) -> float:
+        return float(mask.float().mean()) if mask.numel() else 0.0
+
+    routed_count = int(routeable.sum())
+    rejected_count = int(rejected.sum())
+    if routed_count <= 0 or rejected_count <= 0:
+        raise TextTrainingError("classifier stage metrics require routeable and rejected examples")
+    routed_status = status[routeable] == ROUTE_STATUS_INDEX
+    object_correct = objects[routeable] == outputs.object_labels[routeable]
+    bin_correct = bins[routeable] == outputs.bin_labels[routeable]
+    full_correct = routed_status & object_correct & bin_correct
+    false_route = status[rejected] == ROUTE_STATUS_INDEX
+
+    def recall(label: str) -> float:
+        index = STATUS_LABELS.index(label)
+        mask = outputs.status_labels == index
+        if int(mask.sum()) <= 0:
+            return 0.0
+        return mean(status[mask] == index)
+
+    return ClassifierStageMetrics(
+        full_task_spec_accuracy=mean(full_correct),
+        object_accuracy=mean(object_correct),
+        bin_accuracy=mean(bin_correct),
+        false_route_rate=mean(false_route),
+        schema_valid_rate=1.0,
+        ambiguous_rejection_recall=recall("reject_ambiguous"),
+        unsupported_rejection_recall=recall("reject_unsupported"),
+        malformed_rejection_recall=recall("reject_malformed"),
+        status_accuracy=mean(status == outputs.status_labels),
+        finite=finite,
+    )
+
+
+def _checkpoint_validation_from_dict(payload: Mapping[str, object]) -> TextCheckpointValidation:
+    try:
+        return TextCheckpointValidation(
+            checkpoint_id=cast(str, payload["checkpoint_id"]),
+            step=cast(int, payload["step"]),
+            validation_examples=cast(int, payload["validation_examples"]),
+            total_loss=float(cast(float, payload["total_loss"])),
+            status_loss=float(cast(float, payload["status_loss"])),
+            object_loss=float(cast(float, payload["object_loss"])),
+            bin_loss=float(cast(float, payload["bin_loss"])),
+            evidence_split=cast(str, payload["evidence_split"]),
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise TextTrainingError("resumable checkpoint validation record is malformed") from error
+
+
+def _rng_state() -> dict[str, object]:
+    return {
+        "python": random.getstate(),
+        "numpy": np.random.get_state(),
+        "torch_cpu": torch.get_rng_state(),
+        "torch_cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else [],
+    }
+
+
+def _restore_rng_state(payload: Mapping[str, object]) -> None:
+    try:
+        random.setstate(cast(tuple[object, ...], payload["python"]))
+        np.random.set_state(cast(tuple[Any, ...], payload["numpy"]))
+        torch.set_rng_state(cast(torch.Tensor, payload["torch_cpu"]))
+        cuda = payload["torch_cuda"]
+        if torch.cuda.is_available():
+            torch.cuda.set_rng_state_all(cast(list[torch.Tensor], cuda))
+    except (KeyError, TypeError, RuntimeError, ValueError) as error:
+        raise TextTrainingError("resumable checkpoint RNG state is malformed") from error
+
+
+def _atomic_torch_save(path: Path, payload: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.tmp")
+    if temporary.exists():
+        temporary.unlink()
+    try:
+        torch.save(payload, temporary)
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+
+def _save_staged_checkpoint(
+    *,
+    path: Path,
+    role: str,
+    run_fingerprint: str,
+    config: ClassifierStageTrainingConfig,
+    model: FactorizedTextClassifierV0,
+    optimizer: torch.optim.Optimizer,
+    scheduler: torch.optim.lr_scheduler.LRScheduler,
+    processor_state: Mapping[str, object],
+    step: int,
+    records: Sequence[TextCheckpointValidation],
+    best_loss: float,
+    best_step: int | None,
+    best_state: Mapping[str, torch.Tensor] | None,
+    non_improving: int,
+) -> None:
+    if role not in CheckpointRetentionPolicy().retained_roles:
+        raise TextTrainingError("checkpoint role is outside the bounded retention policy")
+    payload = {
+        "schema_version": "langmani-m5a-resumable-text-checkpoint-v0",
+        "role": role,
+        "run_fingerprint": run_fingerprint,
+        "training_config": config.to_dict(),
+        "training_config_fingerprint": config.fingerprint,
+        "processor_state": dict(processor_state),
+        "step": step,
+        "model_state": model.state_dict(),
+        "optimizer_state": optimizer.state_dict(),
+        "scheduler_state": scheduler.state_dict(),
+        "rng_state": _rng_state(),
+        "validation_records": [
+            {
+                "checkpoint_id": value.checkpoint_id,
+                "step": value.step,
+                "validation_examples": value.validation_examples,
+                "total_loss": value.total_loss,
+                "status_loss": value.status_loss,
+                "object_loss": value.object_loss,
+                "bin_loss": value.bin_loss,
+                "evidence_split": value.evidence_split,
+            }
+            for value in records
+        ],
+        "best_loss": best_loss,
+        "best_step": best_step,
+        "best_state": None if best_state is None else dict(best_state),
+        "non_improving": non_improving,
+    }
+    _atomic_torch_save(path, payload)
+
+
+def _load_staged_checkpoint(
+    *,
+    path: Path,
+    run_fingerprint: str,
+    config: ClassifierStageTrainingConfig,
+    processor_state: Mapping[str, object],
+    model: FactorizedTextClassifierV0,
+    optimizer: torch.optim.Optimizer,
+    scheduler: torch.optim.lr_scheduler.LRScheduler,
+) -> tuple[
+    int,
+    list[TextCheckpointValidation],
+    float,
+    int | None,
+    dict[str, torch.Tensor] | None,
+    int,
+]:
+    if not path.is_file() or path.is_symlink():
+        raise TextTrainingError("requested resumable classifier checkpoint is missing or linked")
+    try:
+        payload = torch.load(path, map_location="cpu", weights_only=False)
+    except (OSError, RuntimeError, ValueError) as error:
+        raise TextTrainingError("could not load resumable classifier checkpoint") from error
+    if not isinstance(payload, Mapping):
+        raise TextTrainingError("resumable classifier checkpoint must contain one mapping")
+    if (
+        payload.get("schema_version") != "langmani-m5a-resumable-text-checkpoint-v0"
+        or payload.get("run_fingerprint") != run_fingerprint
+        or payload.get("training_config_fingerprint") != config.fingerprint
+        or payload.get("training_config") != config.to_dict()
+        or payload.get("processor_state") != dict(processor_state)
+    ):
+        raise TextTrainingError("resumable classifier checkpoint identity differs")
+    try:
+        model.load_state_dict(cast(Mapping[str, torch.Tensor], payload["model_state"]), strict=True)
+        optimizer.load_state_dict(cast(dict[str, object], payload["optimizer_state"]))
+        scheduler.load_state_dict(cast(dict[str, object], payload["scheduler_state"]))
+        _restore_rng_state(cast(Mapping[str, object], payload["rng_state"]))
+        step = int(cast(int, payload["step"]))
+        raw_records = cast(Sequence[Mapping[str, object]], payload["validation_records"])
+        records = [_checkpoint_validation_from_dict(value) for value in raw_records]
+        best_loss = float(cast(float, payload["best_loss"]))
+        best_step_raw = payload["best_step"]
+        best_step = None if best_step_raw is None else int(cast(int, best_step_raw))
+        state_raw = payload["best_state"]
+        best_state = (
+            None
+            if state_raw is None
+            else {
+                name: value for name, value in cast(Mapping[str, torch.Tensor], state_raw).items()
+            }
+        )
+        non_improving = int(cast(int, payload["non_improving"]))
+    except (KeyError, TypeError, RuntimeError, ValueError) as error:
+        raise TextTrainingError("resumable classifier checkpoint state is malformed") from error
+    if not 0 <= step <= config.maximum_steps:
+        raise TextTrainingError("resumable classifier step lies outside the declared budget")
+    return step, records, best_loss, best_step, best_state, non_improving
+
+
+def run_staged_factorized_text_training(
+    *,
+    model: FactorizedTextClassifierV0,
+    train_batches: Sequence[FactorizedTextBatch],
+    validation_batches: Sequence[FactorizedTextBatch],
+    config: ClassifierStageTrainingConfig,
+    run_fingerprint: str,
+    checkpoint_root: Path,
+    processor_state: Mapping[str, object],
+    stop_after_pilot: bool,
+    resume: bool,
+) -> StagedTextTrainingResult:
+    """Pause once at pilot, then resume the same optimizer/scheduler/RNG state."""
+
+    training = tuple(train_batches)
+    validation = tuple(validation_batches)
+    if not training or any(value.split != "train" for value in training):
+        raise TextTrainingError("staged classifier gradients require train-only batches")
+    if not validation or any(value.split != "validation" for value in validation):
+        raise TextTrainingError("staged classifier selection requires validation-only batches")
+    digest = run_fingerprint.removeprefix("sha256:")
+    if len(digest) != 64 or any(value not in "0123456789abcdef" for value in digest):
+        raise TextTrainingError("staged classifier run requires a full SHA-256 identity")
+    root = _resolved_unlinked(checkpoint_root, label="staged classifier checkpoint root")
+    root.mkdir(parents=True, exist_ok=True)
+    if root.is_symlink() or root.is_junction():
+        raise TextTrainingError("staged classifier checkpoint root cannot be linked")
+    paths = {role: root / f"{role}.pt" for role in CheckpointRetentionPolicy().retained_roles}
+    if not resume and any(path.exists() for path in paths.values()):
+        raise TextTrainingError("authoritative run already has checkpoints; use explicit resume")
+    for parameter in model.encoder.parameters():
+        parameter.requires_grad_(True)
+    optimizer = torch.optim.AdamW(
+        (parameter for parameter in model.parameters() if parameter.requires_grad),
+        lr=float(config.learning_rate),
+        weight_decay=float(config.weight_decay),
+    )
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lambda _step: 1.0)
+    try:
+        device = next(model.parameters()).device
+    except StopIteration as error:
+        raise TextTrainingError("classifier has no parameters") from error
+    records: list[TextCheckpointValidation] = []
+    best_loss = math.inf
+    best_step: int | None = None
+    best_state: dict[str, torch.Tensor] | None = None
+    non_improving = 0
+    resumed_from_step = 0
+    if resume:
+        (
+            resumed_from_step,
+            records,
+            best_loss,
+            best_step,
+            best_state,
+            non_improving,
+        ) = _load_staged_checkpoint(
+            path=paths["latest"],
+            run_fingerprint=run_fingerprint,
+            config=config,
+            processor_state=processor_state,
+            model=model,
+            optimizer=optimizer,
+            scheduler=scheduler,
+        )
+        if resumed_from_step < config.pilot_step:
+            raise TextTrainingError("full training cannot resume before the completed pilot")
+    else:
+        random.seed(config.seed)
+        np.random.seed(config.seed)
+        torch.manual_seed(config.seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(config.seed)
+    validation_steps = set(config.validation_steps)
+    stopped_early = False
+    completed_step = resumed_from_step
+    pilot_metrics: ClassifierStageMetrics | None = None
+    final_metrics: ClassifierStageMetrics | None = None
+    for step in range(resumed_from_step + 1, config.maximum_steps + 1):
+        train_factorized_text_step(
+            model=model,
+            optimizer=optimizer,
+            batch=_batch_on_device(training[(step - 1) % len(training)], device),
+            maximum_gradient_norm=float(config.maximum_gradient_norm),
+        )
+        scheduler.step()
+        completed_step = step
+        if step not in validation_steps:
+            continue
+        outputs = collect_factorized_validation_outputs(model=model, batches=validation)
+        metrics = classifier_stage_metrics(outputs)
+        record = _validation_record(outputs=outputs, step=step)
+        records.append(record)
+        improved = record.total_loss < best_loss - 1e-12
+        if improved:
+            best_loss = record.total_loss
+            best_step = step
+            best_state = {
+                name: value.detach().cpu().clone() for name, value in model.state_dict().items()
+            }
+            non_improving = 0
+        else:
+            non_improving += 1
+        _save_staged_checkpoint(
+            path=paths["latest"],
+            role="latest",
+            run_fingerprint=run_fingerprint,
+            config=config,
+            model=model,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            processor_state=processor_state,
+            step=step,
+            records=records,
+            best_loss=best_loss,
+            best_step=best_step,
+            best_state=best_state,
+            non_improving=non_improving,
+        )
+        if improved:
+            _save_staged_checkpoint(
+                path=paths["validation_best"],
+                role="validation_best",
+                run_fingerprint=run_fingerprint,
+                config=config,
+                model=model,
+                optimizer=optimizer,
+                scheduler=scheduler,
+                processor_state=processor_state,
+                step=step,
+                records=records,
+                best_loss=best_loss,
+                best_step=best_step,
+                best_state=best_state,
+                non_improving=non_improving,
+            )
+        if step == config.pilot_step:
+            pilot_metrics = metrics
+            _save_staged_checkpoint(
+                path=paths["pilot"],
+                role="pilot",
+                run_fingerprint=run_fingerprint,
+                config=config,
+                model=model,
+                optimizer=optimizer,
+                scheduler=scheduler,
+                processor_state=processor_state,
+                step=step,
+                records=records,
+                best_loss=best_loss,
+                best_step=best_step,
+                best_state=best_state,
+                non_improving=non_improving,
+            )
+            if stop_after_pilot:
+                return StagedTextTrainingResult(
+                    run_fingerprint=run_fingerprint,
+                    phase="pilot_paused",
+                    completed_steps=step,
+                    completed_epochs=step // config.steps_per_epoch,
+                    resumed_from_step=0,
+                    pilot_checkpoint=str(paths["pilot"]),
+                    latest_checkpoint=str(paths["latest"]),
+                    best_checkpoint=str(paths["validation_best"]),
+                    selected_step=best_step,
+                    stopped_early=False,
+                    pilot_metrics=pilot_metrics,
+                    final_metrics=None,
+                    validation_records=tuple(records),
+                )
+        final_metrics = metrics
+        if non_improving >= config.early_stopping_patience:
+            stopped_early = True
+            break
+    if stop_after_pilot:
+        raise TextTrainingError("pilot stage did not stop at its declared checkpoint")
+    if best_state is None or best_step is None or final_metrics is None:
+        raise TextTrainingError("resumed classifier training produced no selected validation state")
+    model.load_state_dict(best_state, strict=True)
+    selected_outputs = collect_factorized_validation_outputs(model=model, batches=validation)
+    final_metrics = classifier_stage_metrics(selected_outputs)
+    return StagedTextTrainingResult(
+        run_fingerprint=run_fingerprint,
+        phase="training_complete",
+        completed_steps=completed_step,
+        completed_epochs=math.ceil(completed_step / config.steps_per_epoch),
+        resumed_from_step=resumed_from_step,
+        pilot_checkpoint=str(paths["pilot"]),
+        latest_checkpoint=str(paths["latest"]),
+        best_checkpoint=str(paths["validation_best"]),
+        selected_step=best_step,
+        stopped_early=stopped_early,
+        pilot_metrics=None,
+        final_metrics=final_metrics,
+        validation_records=tuple(records),
     )
 
 
@@ -832,10 +1348,14 @@ __all__ = [
     "TextTrainingConfig",
     "TextTrainingError",
     "TextTrainingStepResult",
+    "StagedTextTrainingResult",
     "calibrate_and_select_text_router",
+    "classifier_stage_metrics",
     "collect_factorized_validation_outputs",
+    "collect_factorized_tiny_train_outputs",
     "read_text_classifier_run_evidence",
     "run_bounded_factorized_text_training",
+    "run_staged_factorized_text_training",
     "select_validation_checkpoint",
     "stage_and_promote_text_classifier",
     "text_classifier_run_fingerprint",

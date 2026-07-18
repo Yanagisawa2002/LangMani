@@ -13,6 +13,7 @@ from langmani.language.corpus import (
     GeneratedLanguageCorpus,
 )
 from langmani.language.router_types import LanguageSplit
+from langmani.language.stage_protocol import M5A_PHYSICAL_STAGE_BUDGETS, M5AStage
 from langmani.policies.m42_schedule import load_exclusion_sources, validate_locked_schedules
 
 M5A_SCHEDULE_SCHEMA_VERSION = "langmani-m5a-schedules-v1"
@@ -22,8 +23,8 @@ M5A_LANGUAGE_DEV_SCHEDULE_ID = "m5a_language_dev_v0"
 M5A_LANGUAGE_FINAL_SCHEDULE_ID = "m5a_language_final_v0"
 M5A_CONTROL_DEV_SCHEDULE_ID = "m5a_control_dev_v0"
 M5A_CONTROL_FINAL_SCHEDULE_ID = "m5a_control_final_v0"
-M5A_DEVELOPMENT_SCENE_COUNT = 12
-M5A_FINAL_SCENE_COUNT = 30
+M5A_DEVELOPMENT_SCENE_COUNT = 10
+M5A_FINAL_SCENE_COUNT = 12
 M5A_DEFAULT_CANDIDATE_SEED_START = 2_000_000_000
 _MAX_SCENE_SEED = 2**31 - 1
 
@@ -346,6 +347,65 @@ class ScheduledControlEpisode:
 
 
 @dataclass(frozen=True, slots=True)
+class StagedControlSchedule:
+    """One disjoint stage view over the predeclared development/final locks."""
+
+    stage: M5AStage
+    parent_schedule_fingerprint: str
+    ordered_scene_seeds: tuple[int, ...]
+    episodes: tuple[ScheduledControlEpisode, ...]
+    schedule_fingerprint: str = ""
+    sealed: bool = False
+    schema_version: str = M5A_SCHEDULE_SCHEMA_VERSION
+
+    def __post_init__(self) -> None:
+        budget = M5A_PHYSICAL_STAGE_BUDGETS.get(self.stage)
+        if budget is None:
+            raise M5AScheduleError("staged control view requires one physical M5A stage")
+        if len(self.ordered_scene_seeds) != budget.scene_count:
+            raise M5AScheduleError("staged control view has the wrong scene count")
+        if len(self.episodes) != budget.oracle_episodes:
+            raise M5AScheduleError("staged control view has the wrong episode count")
+        if len(set(self.ordered_scene_seeds)) != len(self.ordered_scene_seeds):
+            raise M5AScheduleError("staged control view scene seeds must be unique")
+        if tuple(dict.fromkeys(value.scene_seed for value in self.episodes)) != (
+            self.ordered_scene_seeds
+        ):
+            raise M5AScheduleError("staged episodes do not preserve the stage scene order")
+        if tuple(value.episode_index for value in self.episodes) != tuple(
+            range(len(self.episodes))
+        ):
+            raise M5AScheduleError("staged episode indices must be dense and local")
+        _require_fingerprint(
+            self.parent_schedule_fingerprint,
+            name="parent_schedule_fingerprint",
+        )
+        if self.sealed is not budget.final:
+            raise M5AScheduleError("only the final staged schedule may be sealed")
+        expected = _fingerprint(self.fingerprint_payload())
+        if self.schedule_fingerprint and self.schedule_fingerprint != expected:
+            raise M5AScheduleError("staged control schedule fingerprint differs")
+        object.__setattr__(self, "schedule_fingerprint", expected)
+
+    def fingerprint_payload(self) -> dict[str, object]:
+        return {
+            "stage": self.stage.value,
+            "parent_schedule_fingerprint": self.parent_schedule_fingerprint,
+            "ordered_scene_seeds": list(self.ordered_scene_seeds),
+            "episodes": [value.to_dict() for value in self.episodes],
+            "sealed": self.sealed,
+            "schema_version": self.schema_version,
+        }
+
+    @property
+    def schedule_id(self) -> str:
+        return f"m5a_control_{self.stage.value}_v0"
+
+    def to_dict(self) -> dict[str, object]:
+        return {**self.fingerprint_payload(), "schedule_fingerprint": self.schedule_fingerprint}
+
+
+@dataclass(frozen=True, slots=True)
 class M5AScheduleBundle:
     """All four predeclared locks plus development-only materialization."""
 
@@ -354,12 +414,22 @@ class M5AScheduleBundle:
     control_development: ControlScheduleLock
     control_final: ControlScheduleLock
     development_episodes: tuple[ScheduledControlEpisode, ...]
+    one_scene_control_smoke: StagedControlSchedule
+    three_scene_control_screen: StagedControlSchedule
+    full_control_development: StagedControlSchedule
 
     def __post_init__(self) -> None:
-        if len(self.development_episodes) != 72:
-            raise M5AScheduleError("M5A development must contain exactly 72 episodes")
+        if len(self.development_episodes) != 60:
+            raise M5AScheduleError("M5A staged development authority must contain 60 episodes")
         if self.language_final.sealed is not True or self.control_final.sealed is not True:
             raise M5AScheduleError("both final M5A schedules must remain sealed")
+        stage_seeds = (
+            self.one_scene_control_smoke.ordered_scene_seeds
+            + self.three_scene_control_screen.ordered_scene_seeds
+            + self.full_control_development.ordered_scene_seeds
+        )
+        if stage_seeds != self.control_development.ordered_scene_seeds:
+            raise M5AScheduleError("development stages must partition the locked scene order")
 
 
 def _select_scene_seeds(config: ControlScheduleConfig) -> tuple[tuple[int, ...], tuple[int, ...]]:
@@ -377,7 +447,7 @@ def _select_scene_seeds(config: ControlScheduleConfig) -> tuple[tuple[int, ...],
                 tuple(selected[:M5A_DEVELOPMENT_SCENE_COUNT]),
                 tuple(selected[M5A_DEVELOPMENT_SCENE_COUNT:]),
             )
-    raise M5AScheduleError("could not generate 42 unexcluded scene seeds within the bound")
+    raise M5AScheduleError("could not generate 22 unexcluded scene seeds within the bound")
 
 
 def build_language_schedule_locks(
@@ -483,12 +553,24 @@ def build_m5a_schedule_bundle(
     if set(final.ordered_scene_seeds) & config.excluded_scene_seeds:
         raise M5AScheduleError("final control schedule overlaps excluded seeds")
     development_episodes = materialize_control_schedule(development)
+    one_scene_control_smoke = build_staged_control_schedule(
+        development, stage=M5AStage.ONE_SCENE_CONTROL_SMOKE
+    )
+    three_scene_control_screen = build_staged_control_schedule(
+        development, stage=M5AStage.THREE_SCENE_CONTROL_SCREEN
+    )
+    full_control_development = build_staged_control_schedule(
+        development, stage=M5AStage.FULL_CONTROL_DEVELOPMENT
+    )
     return M5AScheduleBundle(
         language_development=language_development,
         language_final=language_final,
         control_development=development,
         control_final=final,
         development_episodes=development_episodes,
+        one_scene_control_smoke=one_scene_control_smoke,
+        three_scene_control_screen=three_scene_control_screen,
+        full_control_development=full_control_development,
     )
 
 
@@ -524,6 +606,57 @@ def materialize_control_schedule(
                 )
             )
     return tuple(episodes)
+
+
+def build_staged_control_schedule(
+    schedule: ControlScheduleLock,
+    *,
+    stage: M5AStage,
+    authorize_final: bool = False,
+) -> StagedControlSchedule:
+    """Build one disjoint 1/3/6-scene view, or the separately authorized final view."""
+
+    budget = M5A_PHYSICAL_STAGE_BUDGETS.get(stage)
+    if budget is None:
+        raise M5AScheduleError("unknown physical M5A stage")
+    if stage is M5AStage.SEALED_FINAL:
+        if schedule.split is not LanguageSplit.FINAL or authorize_final is not True:
+            raise FinalControlScheduleAccessError(
+                "m5a_control_final_v0 requires separate explicit final authorization"
+            )
+        original = materialize_control_schedule(schedule, authorize_final=True)
+        scene_offset = 0
+    else:
+        if schedule.split is LanguageSplit.FINAL or authorize_final:
+            raise FinalControlScheduleAccessError(
+                "development stages cannot materialize the sealed final schedule"
+            )
+        original = materialize_control_schedule(schedule)
+        scene_offset = budget.development_scene_offset
+    scene_seeds = schedule.ordered_scene_seeds[scene_offset : scene_offset + budget.scene_count]
+    selected = tuple(value for value in original if value.scene_seed in frozenset(scene_seeds))
+    local: list[ScheduledControlEpisode] = []
+    for index, value in enumerate(selected):
+        local.append(
+            ScheduledControlEpisode(
+                schedule_id=f"{schedule.schedule_id}:{stage.value}",
+                episode_index=index,
+                scene_index=index // len(CANONICAL_TASK_SPECS),
+                task_index=value.task_index,
+                scene_seed=value.scene_seed,
+                scene_id=value.scene_id,
+                task_spec=value.task_spec,
+                task_id=value.task_id,
+                language_example_id=value.language_example_id,
+            )
+        )
+    return StagedControlSchedule(
+        stage=stage,
+        parent_schedule_fingerprint=schedule.schedule_fingerprint,
+        ordered_scene_seeds=scene_seeds,
+        episodes=tuple(local),
+        sealed=budget.final,
+    )
 
 
 def exclusion_sources_from_mapping(

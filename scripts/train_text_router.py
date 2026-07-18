@@ -1,10 +1,4 @@
-"""Train the single pinned M5A factorized DistilBERT text router.
-
-The real ``--target-development`` path uses corpus train examples for gradients
-and corpus validation examples for checkpoint selection, temperature scaling,
-and routing-threshold selection.  Development and sealed-final command text are
-never materialized by this command.
-"""
+"""Run one explicit stage of the single-seed M5A text-router pipeline."""
 
 from __future__ import annotations
 
@@ -16,14 +10,21 @@ import sys
 import tempfile
 import traceback
 from collections.abc import Mapping, Sequence
+from dataclasses import replace
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import cast
 
 import torch
 
+from langmani.datasets.identity import sha256_hex
 from langmani.language.corpus import build_language_corpus
 from langmani.language.router_types import LanguageExample, LanguageSplit, RouterStatus
+from langmani.language.stage_protocol import (
+    M5A_CLASSIFIER_TRAINING_SEEDS,
+    ClassifierStageTrainingConfig,
+    stage_protocol_manifest,
+)
 from langmani.language.text_classifier import (
     BIN_LABELS,
     OBJECT_LABELS,
@@ -40,10 +41,14 @@ from langmani.language.text_training import (
     TextRouterCalibrationSelection,
     TextTrainingConfig,
     calibrate_and_select_text_router,
+    classifier_stage_metrics,
+    collect_factorized_tiny_train_outputs,
     collect_factorized_validation_outputs,
     run_bounded_factorized_text_training,
+    run_staged_factorized_text_training,
     stage_and_promote_text_classifier,
     text_classifier_run_fingerprint,
+    train_factorized_text_step,
 )
 from langmani.policies.act_runtime import atomic_write_json, inspect_git_state
 
@@ -54,23 +59,27 @@ MODEL_ID = TEXT_CLASSIFIER_MODEL_ID
 MODEL_REVISION = TEXT_CLASSIFIER_MODEL_REVISION
 TOKENIZER_REVISION = TEXT_CLASSIFIER_TOKENIZER_REVISION
 TARGET_TRAINING_CONFIG = TextTrainingConfig(
-    maximum_steps=600,
-    checkpoint_steps=(100, 200, 300, 400, 500, 600),
+    maximum_steps=145,
+    checkpoint_steps=(29, 58, 87, 116, 145),
     learning_rate=2e-5,
     seed=0,
     weight_decay=0.01,
     maximum_gradient_norm=1.0,
-    early_stopping_patience=3,
+    early_stopping_patience=1,
     encoder_trainable=True,
 )
+TARGET_STAGE_TRAINING_CONFIG = ClassifierStageTrainingConfig(train_example_count=900)
+TINY_OVERFIT_MAXIMUM_STEPS = 200
+TINY_ROUTEABLE_EXAMPLES_PER_TASK = 4
+TINY_REJECTED_EXAMPLES_PER_STATUS = 8
 TARGET_BATCH_SIZE = 32
 TARGET_MAXIMUM_SEQUENCE_LENGTH = 64
 TARGET_DROPOUT = 0.1
 THRESHOLD_CANDIDATES = tuple(index / 100.0 for index in range(0, 101, 5))
 MAXIMUM_FALSE_ROUTE_RATE = 0.03
 TEMPERATURE_ITERATIONS = 64
-COMMAND_SCHEMA = "langmani-m5a-train-text-router-command-v1"
-RUN_EVIDENCE_SCHEMA = "langmani-m5a-text-router-run-evidence-v1"
+COMMAND_SCHEMA = "langmani-m5a-train-text-router-command-v2"
+RUN_EVIDENCE_SCHEMA = "langmani-m5a-text-router-run-evidence-v2"
 
 _PROTECTED_SOURCE_ROOTS = tuple(
     PROJECT_ROOT / name for name in ("src", "scripts", "environment", "tests", "docs", ".git")
@@ -110,7 +119,14 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     modes = parser.add_mutually_exclusive_group(required=True)
     modes.add_argument("--dry-run", action="store_true")
     modes.add_argument("--fixture", action="store_true")
-    modes.add_argument("--target-development", action="store_true")
+    modes.add_argument("--tiny-overfit", action="store_true")
+    modes.add_argument("--target-pilot", action="store_true")
+    modes.add_argument("--target-resume", action="store_true")
+    modes.add_argument(
+        "--target-development",
+        action="store_true",
+        help="Retired compatibility flag; use --target-pilot then --target-resume.",
+    )
     parser.add_argument(
         "--clean-staging",
         action="store_true",
@@ -676,7 +692,7 @@ def _dry_run_payload(git_state: object) -> dict[str, object]:
         "corpus_fingerprint": corpus.manifest.corpus_fingerprint,
         "split_fingerprints": _split_fingerprints(corpus.manifest.to_dict()),
         "training_config": {
-            "optimization": TARGET_TRAINING_CONFIG.to_dict(),
+            "optimization": TARGET_STAGE_TRAINING_CONFIG.to_dict(),
             "batch_size": TARGET_BATCH_SIZE,
             "maximum_sequence_length": TARGET_MAXIMUM_SEQUENCE_LENGTH,
             "dropout": TARGET_DROPOUT,
@@ -690,16 +706,396 @@ def _dry_run_payload(git_state: object) -> dict[str, object]:
         },
         "git_state": git_to_dict(),
         "dependencies": _dependency_versions(),
+        "stage_protocol": stage_protocol_manifest(),
+        "first_target_stage": "classifier_fixture",
+        "target_development_monolith_enabled": False,
         "development_examples_materialized": False,
         "final_examples_materialized": False,
     }
 
 
+def _balanced_tiny_examples(examples: Sequence[LanguageExample]) -> tuple[LanguageExample, ...]:
+    """Select a stable train-only subset spanning every task and rejection status."""
+
+    by_task: dict[str, list[LanguageExample]] = {}
+    by_status: dict[RouterStatus, list[LanguageExample]] = {
+        status: [] for status in RouterStatus if status is not RouterStatus.ROUTE
+    }
+    for example in examples:
+        if example.split is not LanguageSplit.TRAIN:
+            raise TextRouterCommandError("tiny-overfit subset may use train examples only")
+        if example.expected_status is RouterStatus.ROUTE:
+            if example.task_id is None:
+                raise TextRouterCommandError("tiny routeable example is missing a task ID")
+            by_task.setdefault(example.task_id, []).append(example)
+        else:
+            by_status[example.expected_status].append(example)
+    if len(by_task) != 6:
+        raise TextRouterCommandError("tiny-overfit subset must contain all six TaskSpecs")
+    selected: list[LanguageExample] = []
+    for task_id in sorted(by_task):
+        candidates = sorted(by_task[task_id], key=lambda value: value.example_id)
+        if len(candidates) < TINY_ROUTEABLE_EXAMPLES_PER_TASK:
+            raise TextRouterCommandError("tiny-overfit task does not have enough examples")
+        selected.extend(candidates[:TINY_ROUTEABLE_EXAMPLES_PER_TASK])
+    for status in sorted(by_status, key=lambda value: value.value):
+        candidates = sorted(by_status[status], key=lambda value: value.example_id)
+        if len(candidates) < TINY_REJECTED_EXAMPLES_PER_STATUS:
+            raise TextRouterCommandError("tiny-overfit rejection class lacks enough examples")
+        selected.extend(candidates[:TINY_REJECTED_EXAMPLES_PER_STATUS])
+    if len({value.example_id for value in selected}) != len(selected):
+        raise TextRouterCommandError("tiny-overfit subset contains duplicate examples")
+    return tuple(selected)
+
+
+def _authoritative_run_identity(
+    *, corpus_manifest: Mapping[str, object], git_state: object
+) -> tuple[dict[str, object], str]:
+    git_to_dict = getattr(git_state, "to_dict", None)
+    if not callable(git_to_dict):
+        raise TextRouterCommandError("Git state does not support serialization")
+    identity = {
+        "schema_version": "langmani-m5a-authoritative-classifier-run-v0",
+        "corpus_fingerprint": corpus_manifest["corpus_fingerprint"],
+        "split_fingerprints": _split_fingerprints(corpus_manifest),
+        "model_id": MODEL_ID,
+        "model_revision": MODEL_REVISION,
+        "tokenizer_revision": TOKENIZER_REVISION,
+        "training_config": TARGET_STAGE_TRAINING_CONFIG.to_dict(),
+        "batch_size": TARGET_BATCH_SIZE,
+        "maximum_sequence_length": TARGET_MAXIMUM_SEQUENCE_LENGTH,
+        "dropout": TARGET_DROPOUT,
+        "git_state": git_to_dict(),
+        "dependencies": _dependency_versions(),
+        "classifier_training_seeds": M5A_CLASSIFIER_TRAINING_SEEDS,
+        "robustness_across_training_seeds_not_evaluated": True,
+        "gradient_split": "train",
+        "selection_split": "validation",
+        "development_examples_materialized": False,
+        "final_examples_materialized": False,
+    }
+    return identity, f"sha256:{sha256_hex(identity)}"
+
+
+def _write_or_validate_stage(path: Path, payload: Mapping[str, object]) -> None:
+    if path.exists():
+        try:
+            existing = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as error:
+            raise TextRouterCommandError("existing stage evidence cannot be parsed") from error
+        if existing != dict(payload):
+            raise TextRouterCommandError("immutable stage evidence differs from this run")
+        return
+    atomic_write_json(path, dict(payload))
+
+
+def _run_tiny_overfit(
+    *, args: argparse.Namespace, output_root: Path, git_state: object
+) -> dict[str, object]:
+    _validate_target_prerequisites(git_state)
+    corpus = build_language_corpus()
+    examples = _balanced_tiny_examples(corpus.examples_for_split(LanguageSplit.TRAIN))
+    torch.manual_seed(0)
+    torch.cuda.manual_seed_all(0)
+    model, tokenizer = _target_model_and_tokenizer()
+    model.to("cuda")
+    batches = _factorized_batches(
+        tokenizer=tokenizer,
+        examples=examples,
+        split=LanguageSplit.TRAIN,
+        batch_size=TARGET_BATCH_SIZE,
+        maximum_sequence_length=TARGET_MAXIMUM_SEQUENCE_LENGTH,
+        seed=0,
+    )
+    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=0.0)
+    for step in range(TINY_OVERFIT_MAXIMUM_STEPS):
+        train_factorized_text_step(
+            model=model,
+            optimizer=optimizer,
+            batch=replace(
+                batches[step % len(batches)],
+                input_ids=batches[step % len(batches)].input_ids.to("cuda"),
+                attention_mask=batches[step % len(batches)].attention_mask.to("cuda"),
+                status_labels=batches[step % len(batches)].status_labels.to("cuda"),
+                object_labels=batches[step % len(batches)].object_labels.to("cuda"),
+                bin_labels=batches[step % len(batches)].bin_labels.to("cuda"),
+            ),
+        )
+    metrics = classifier_stage_metrics(
+        collect_factorized_tiny_train_outputs(model=model, batches=batches)
+    )
+    manifest = classifier_manifest(
+        model_id=MODEL_ID,
+        model_revision=MODEL_REVISION,
+        tokenizer_revision=TOKENIZER_REVISION,
+        hidden_size=model.hidden_size,
+        dropout=model.dropout_probability,
+    )
+    evidence = {
+        "schema_version": "langmani-m5a-classifier-tiny-overfit-v0",
+        "corpus_fingerprint": corpus.manifest.corpus_fingerprint,
+        "tiny_example_ids": [value.example_id for value in examples],
+        "tiny_example_count": len(examples),
+        "optimization_steps": TINY_OVERFIT_MAXIMUM_STEPS,
+        "seed": 0,
+        "classifier_training_seeds": 1,
+        "gradient_split": "train",
+        "validation_examples_materialized": False,
+        "development_examples_materialized": False,
+        "final_examples_materialized": False,
+        "metrics": metrics.to_dict(),
+        "git_state": git_state.to_dict(),
+    }
+    run_fingerprint = text_classifier_run_fingerprint(
+        classifier_manifest=manifest, run_evidence=evidence
+    )
+    artifact = stage_and_promote_text_classifier(
+        output_root=output_root / "tiny-overfit",
+        run_fingerprint=run_fingerprint,
+        model=model,
+        tokenizer=tokenizer,
+        classifier_manifest=manifest,
+        run_evidence=evidence,
+        clean_matching_staging=bool(args.clean_staging),
+    )
+    reloaded, reloaded_tokenizer, reloaded_manifest = load_factorized_text_classifier(artifact)
+    reloaded.to("cuda")
+    if reloaded_manifest != manifest:
+        raise TextRouterCommandError("tiny-overfit checkpoint reload changed its manifest")
+    reloaded_batches = _factorized_batches(
+        tokenizer=reloaded_tokenizer,
+        examples=examples,
+        split=LanguageSplit.TRAIN,
+        batch_size=TARGET_BATCH_SIZE,
+        maximum_sequence_length=TARGET_MAXIMUM_SEQUENCE_LENGTH,
+        seed=0,
+    )
+    original_outputs = collect_factorized_tiny_train_outputs(model=model, batches=batches)
+    reloaded_outputs = collect_factorized_tiny_train_outputs(
+        model=reloaded, batches=reloaded_batches
+    )
+    reload_matches = all(
+        torch.equal(left, right)
+        for left, right in (
+            (original_outputs.status_logits, reloaded_outputs.status_logits),
+            (original_outputs.object_logits, reloaded_outputs.object_logits),
+            (original_outputs.bin_logits, reloaded_outputs.bin_logits),
+        )
+    )
+    if not reload_matches:
+        raise TextRouterCommandError("tiny-overfit checkpoint reload changed deterministic logits")
+    return {
+        "run_fingerprint": run_fingerprint,
+        "artifact_root": str(artifact),
+        "tiny_subset": {
+            "example_count": len(examples),
+            "routeable_count": 6 * TINY_ROUTEABLE_EXAMPLES_PER_TASK,
+            "rejected_count": 3 * TINY_REJECTED_EXAMPLES_PER_STATUS,
+            "all_six_tasks_present": True,
+            "all_router_statuses_present": True,
+        },
+        "tiny_metrics": metrics.to_dict(),
+        "classifier_tiny_overfit_validated": metrics.tiny_overfit_gate_passed,
+        "artifact_reload_validated": True,
+        "cuda_training_validated": True,
+    }
+
+
+def _run_authoritative_stage(
+    *,
+    args: argparse.Namespace,
+    output_root: Path,
+    git_state: object,
+    resume: bool,
+) -> dict[str, object]:
+    _validate_target_prerequisites(git_state)
+    corpus = build_language_corpus()
+    train = corpus.examples_for_split(LanguageSplit.TRAIN)
+    validation = corpus.examples_for_split(LanguageSplit.VALIDATION)
+    if len(train) != TARGET_STAGE_TRAINING_CONFIG.train_example_count:
+        raise TextRouterCommandError("authoritative train count differs from the frozen config")
+    identity, run_fingerprint = _authoritative_run_identity(
+        corpus_manifest=corpus.manifest.to_dict(), git_state=git_state
+    )
+    run_root = output_root / "authoritative-runs" / run_fingerprint.removeprefix("sha256:")
+    run_root.mkdir(parents=True, exist_ok=True)
+    _write_or_validate_stage(run_root / "owner.json", identity)
+    pilot_path = run_root / "pilot.json"
+    training_path = run_root / "training_complete.json"
+    if not resume and pilot_path.exists():
+        payload = json.loads(pilot_path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict) or payload.get("run_fingerprint") != run_fingerprint:
+            raise TextRouterCommandError("existing pilot evidence belongs to another run")
+        return {**payload, "stage_reused": True}
+    if resume:
+        if not pilot_path.is_file():
+            raise TextRouterCommandError("target resume requires completed pilot evidence")
+        pilot = json.loads(pilot_path.read_text(encoding="utf-8"))
+        if (
+            not isinstance(pilot, dict)
+            or pilot.get("run_fingerprint") != run_fingerprint
+            or pilot.get("classifier_pilot_completed") is not True
+            or pilot.get("classifier_pilot_promoted") is not True
+        ):
+            raise TextRouterCommandError("classifier pilot did not authorize resume")
+        if training_path.exists():
+            payload = json.loads(training_path.read_text(encoding="utf-8"))
+            if not isinstance(payload, dict) or payload.get("run_fingerprint") != run_fingerprint:
+                raise TextRouterCommandError("existing training evidence belongs to another run")
+            return {**payload, "stage_reused": True}
+    torch.manual_seed(0)
+    torch.cuda.manual_seed_all(0)
+    model, tokenizer = _target_model_and_tokenizer()
+    model.to("cuda")
+    train_batches = _factorized_batches(
+        tokenizer=tokenizer,
+        examples=train,
+        split=LanguageSplit.TRAIN,
+        batch_size=TARGET_BATCH_SIZE,
+        maximum_sequence_length=TARGET_MAXIMUM_SEQUENCE_LENGTH,
+        seed=0,
+    )
+    validation_batches = _factorized_batches(
+        tokenizer=tokenizer,
+        examples=validation,
+        split=LanguageSplit.VALIDATION,
+        batch_size=TARGET_BATCH_SIZE,
+        maximum_sequence_length=TARGET_MAXIMUM_SEQUENCE_LENGTH,
+        seed=0,
+    )
+    result = run_staged_factorized_text_training(
+        model=model,
+        train_batches=train_batches,
+        validation_batches=validation_batches,
+        config=TARGET_STAGE_TRAINING_CONFIG,
+        run_fingerprint=run_fingerprint,
+        checkpoint_root=run_root / "checkpoints",
+        processor_state={
+            "model_id": MODEL_ID,
+            "model_revision": MODEL_REVISION,
+            "tokenizer_revision": TOKENIZER_REVISION,
+            "maximum_sequence_length": TARGET_MAXIMUM_SEQUENCE_LENGTH,
+        },
+        stop_after_pilot=not resume,
+        resume=resume,
+    )
+    if not resume:
+        metrics = result.pilot_metrics
+        if metrics is None:
+            raise TextRouterCommandError("pilot stage did not produce validation metrics")
+        payload = {
+            "schema_version": "langmani-m5a-classifier-pilot-v0",
+            "run_fingerprint": run_fingerprint,
+            "classifier_pilot_completed": True,
+            "classifier_pilot_promoted": metrics.pilot_gate_passed,
+            "pilot_step": TARGET_STAGE_TRAINING_CONFIG.pilot_step,
+            "same_authoritative_run_required_for_resume": True,
+            "metrics": metrics.to_dict(),
+            "training_result": result.to_dict(),
+            "classifier_training_seeds": 1,
+            "robustness_across_training_seeds_not_evaluated": True,
+            "passed": True,
+        }
+        _write_or_validate_stage(pilot_path, payload)
+        return payload
+    metrics = result.final_metrics
+    if metrics is None or result.selected_step is None:
+        raise TextRouterCommandError("resumed training did not produce selected validation metrics")
+    outputs = collect_factorized_validation_outputs(model=model, batches=validation_batches)
+    selection = calibrate_and_select_text_router(
+        outputs=outputs,
+        threshold_candidates=THRESHOLD_CANDIDATES,
+        maximum_false_route_rate=MAXIMUM_FALSE_ROUTE_RATE,
+        temperature_iterations=TEMPERATURE_ITERATIONS,
+    )
+    manifest = classifier_manifest(
+        model_id=MODEL_ID,
+        model_revision=MODEL_REVISION,
+        tokenizer_revision=TOKENIZER_REVISION,
+        hidden_size=model.hidden_size,
+        dropout=model.dropout_probability,
+    )
+    legacy_result = {
+        "completed_steps": result.completed_steps,
+        "stopped_early": result.stopped_early,
+        "parameter_count": sum(parameter.numel() for parameter in model.parameters()),
+        "selected_checkpoint_id": f"step_{result.selected_step:08d}",
+        "selected_step": result.selected_step,
+        "checkpoint_validations": result.to_dict()["validation_records"],
+        "config_fingerprint": TARGET_STAGE_TRAINING_CONFIG.fingerprint,
+        "resumed_from_step": result.resumed_from_step,
+    }
+    evidence = _run_evidence(
+        mode="target_training_complete",
+        corpus_manifest=corpus.manifest.to_dict(),
+        git_state=git_state,
+        dependencies=_dependency_versions(),
+        training_config=TARGET_TRAINING_CONFIG,
+        batch_size=TARGET_BATCH_SIZE,
+        maximum_sequence_length=TARGET_MAXIMUM_SEQUENCE_LENGTH,
+        training_result=legacy_result,
+        selection=selection,
+        model_id=MODEL_ID,
+        model_revision=MODEL_REVISION,
+        tokenizer_revision=TOKENIZER_REVISION,
+        training_device="cuda",
+        train_examples=len(train),
+        validation_examples=len(validation),
+    )
+    evidence.update(
+        {
+            "authoritative_run_fingerprint": run_fingerprint,
+            "classifier_training_seeds": 1,
+            "robustness_across_training_seeds_not_evaluated": True,
+            "classifier_training_promoted": metrics.training_gate_passed,
+            "classifier_training_metrics": metrics.to_dict(),
+        }
+    )
+    artifact_fingerprint = text_classifier_run_fingerprint(
+        classifier_manifest=manifest, run_evidence=evidence
+    )
+    artifact = stage_and_promote_text_classifier(
+        output_root=output_root / "promoted",
+        run_fingerprint=artifact_fingerprint,
+        model=model,
+        tokenizer=tokenizer,
+        classifier_manifest=manifest,
+        run_evidence=evidence,
+        clean_matching_staging=bool(args.clean_staging),
+    )
+    payload = {
+        "schema_version": "langmani-m5a-classifier-training-complete-v0",
+        "run_fingerprint": run_fingerprint,
+        "artifact_run_fingerprint": artifact_fingerprint,
+        "artifact_root": str(artifact),
+        "classifier_training_completed": True,
+        "classifier_checkpoint_selected": True,
+        "classifier_calibration_validated": True,
+        "classifier_training_promoted": metrics.training_gate_passed,
+        "metrics": metrics.to_dict(),
+        "calibration_selection": selection.to_dict(),
+        "training_result": result.to_dict(),
+        "resumed_same_authoritative_run": result.resumed_from_step
+        == TARGET_STAGE_TRAINING_CONFIG.pilot_step,
+        "classifier_training_seeds": 1,
+        "robustness_across_training_seeds_not_evaluated": True,
+        "passed": True,
+    }
+    _write_or_validate_stage(training_path, payload)
+    return payload
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     mode = (
-        "target_development"
+        "target_development_retired"
         if args.target_development
+        else "target_resume"
+        if args.target_resume
+        else "target_pilot"
+        if args.target_pilot
+        else "tiny_overfit"
+        if args.tiny_overfit
         else "fixture"
         if args.fixture
         else "dry_run"
@@ -709,7 +1105,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         "passed": False,
         "mode": mode,
         "classifier_training_completed": False,
-        "classifier_fixture_completed": False,
+        "classifier_fixture_validated": False,
+        "classifier_tiny_overfit_validated": False,
+        "classifier_pilot_completed": False,
+        "classifier_pilot_promoted": False,
         "classifier_checkpoint_selected": False,
         "classifier_calibration_validated": False,
         "artifact_reload_validated": False,
@@ -727,8 +1126,38 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         output_root, report_path = _safe_paths(args.output_root, args.report)
         git_state = inspect_git_state(PROJECT_ROOT)
+        if args.target_development:
+            raise TextRouterCommandError(
+                "--target-development was retired by the staged M5A protocol; "
+                "run --target-pilot and then separately authorize --target-resume"
+            )
         if args.dry_run:
             payload["plan"] = _dry_run_payload(git_state)
+        elif args.tiny_overfit:
+            payload.update(
+                _run_tiny_overfit(args=args, output_root=output_root, git_state=git_state)
+            )
+        elif args.target_pilot:
+            payload.update(
+                _run_authoritative_stage(
+                    args=args,
+                    output_root=output_root,
+                    git_state=git_state,
+                    resume=False,
+                )
+            )
+            payload["cuda_training_validated"] = True
+        elif args.target_resume:
+            payload.update(
+                _run_authoritative_stage(
+                    args=args,
+                    output_root=output_root,
+                    git_state=git_state,
+                    resume=True,
+                )
+            )
+            payload["artifact_reload_validated"] = True
+            payload["cuda_training_validated"] = True
         else:
             result = _train_and_promote(
                 args=args,
@@ -739,12 +1168,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             payload.update(result)
             payload.update(
                 {
-                    "classifier_training_completed": bool(args.target_development),
-                    "classifier_fixture_completed": bool(args.fixture),
-                    "classifier_checkpoint_selected": True,
-                    "classifier_calibration_validated": True,
+                    "classifier_training_completed": False,
+                    "classifier_fixture_validated": bool(args.fixture),
+                    "classifier_checkpoint_selected": False,
+                    "classifier_calibration_validated": False,
                     "artifact_reload_validated": True,
-                    "cuda_training_validated": bool(args.target_development),
+                    "cuda_training_validated": False,
                 }
             )
         payload["passed"] = True
@@ -769,7 +1198,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             "passed",
             "mode",
             "classifier_training_completed",
-            "classifier_fixture_completed",
+            "classifier_fixture_validated",
+            "classifier_tiny_overfit_validated",
+            "classifier_pilot_completed",
+            "classifier_pilot_promoted",
             "classifier_checkpoint_selected",
             "classifier_calibration_validated",
             "artifact_reload_validated",

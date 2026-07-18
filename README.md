@@ -942,7 +942,11 @@ remain sealed during development.
 
 The classifier uses one shared pretrained encoder with separate status, object, and bin heads.
 Only train supplies gradients; validation alone selects a checkpoint, calibrates status
-temperature, and chooses the selective-routing threshold. The local LLM is one explicitly supplied
+temperature, and chooses the selective-routing threshold. Development uses exactly seed 0, at most
+five epochs/145 optimizer steps, a step-29 authoritative pilot, patience-one validation early
+stopping, and only `pilot`, `latest`, and `validation_best` checkpoint roles. Promotion resumes the
+same run with model/optimizer/scheduler/processor/RNG state; no seed or encoder sweep is allowed.
+The local LLM is one explicitly supplied
 0.5B-3B instruct model with a pinned revision, deterministic greedy generation, strict JSON parsing,
 and at most one format repair. It never calls a hosted API and does not invent confidence. Exactly
 one versioned prompt artifact is frozen before development. Every few-shot example ID belongs to a
@@ -954,10 +958,12 @@ The target local-LLM default is `bfloat16`; the only supported quantization mode
 recorded in the router identity, and the runtime fails instead of silently changing dtype,
 quantizing, or selecting another model.
 
-Control development uses 12 new scenes times six tasks. The environment is reset with the schedule's
+Control development uses ten new scenes partitioned before execution into disjoint 1-scene smoke,
+3-scene screen, and 6-scene full-development stages. The environment is reset with the schedule's
 oracle TaskSpec while the predicted TaskSpec selects the controller, so wrong routing cannot change
-the M1 success oracle. Oracle routing and all three routers use the same H=10/`project` runtime and
-72 episode identities. Rejection returns before controller lookup, policy reset, environment reset,
+the M1 success oracle. Oracle is retained at every physical stage; only language-promoted learned
+routers proceed, RuleRouter stays offline, and exactly one screened router reaches the full stage.
+The maximum routed physical cost before final is 18 + 54 + 72 = 144 episodes. Rejection returns before controller lookup, policy reset, environment reset,
 or `env.step`. Registry validation may read finalized M3B sidecar identities and frozen M4
 provenance, but it uses a metadata-only allowlist: the M3B completion marker, six completed PerTask
 manifests and validation selections, selected checkpoint manifests/hashes, selected validation
@@ -965,31 +971,30 @@ runtime manifests, and the M4.2 runtime lock. It never opens M4 comparison/test/
 artifacts or M3B test observations, actions, frames, Parquet content, or videos. Before loading a
 controller, the active M1 action-space contract must reproduce the frozen validation bounds.
 
-The four locks are `m5a_language_dev_v0`, `m5a_language_final_v0`, `m5a_control_dev_v0`, and
-`m5a_control_final_v0`. They are created before training; target development materializes only the
-development payloads and retains only sealed final identities/fingerprints. `passed=true` means the
-declared target-development evidence chain completed correctly, not that a learned router met the
-quality gate. `final_benchmark_authorized` is the logical OR of the classifier and local-LLM gates;
-authorization records permission only and never executes final. All final, M3B-test-content,
-`m42_final_v0`, and SmolVLA access flags remain false.
+The four parent locks are `m5a_language_dev_v0`, `m5a_language_final_v0`, `m5a_control_dev_v0`, and
+`m5a_control_final_v0`; each physical substage is additionally content-bound to its parent and
+predecessor promotion report. The final lock contains 12 new scenes x 6 tasks. A later separately
+authorized final runs Oracle 72 plus one locked router 72, exactly 144 episodes. Development
+materializes only development payloads and retains only sealed final identities/fingerprints.
+`passed=true` means the requested stage completed correctly, not that the next stage was promoted.
+All final, M3B-test-content, `m42_final_v0`, and SmolVLA access flags remain false.
 
-Run the complete resumable target-development chain only after the independent M4.3b prerequisite
-has passed:
+After the implementation commit is pushed, the first separately authorized target stage is the
+classifier fixture:
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python environment/verify_m5a.py --target-development \
-  --m43-independent-verification <completed-m43b-independent-verification.json> \
-  --llm-model-id <pinned-local-instruct-model-id> \
-  --llm-model-revision <exact-model-revision> \
-  --llm-tokenizer-revision <exact-tokenizer-revision> \
-  --llm-license <reviewed-license> \
-  --llm-license-reviewed \
-  --llm-model-card-reviewed \
-  --device cuda
+CUDA_VISIBLE_DEVICES=0 python scripts/train_text_router.py --fixture \
+  --output-root outputs/models/text-router \
+  --report outputs/diagnostics/m5a/stages/classifier-fixture.json
+python environment/verify_m5a.py --verify-stage classifier_fixture \
+  --stage-report outputs/diagnostics/m5a/stages/classifier-fixture.json
 ```
 
-This command stops after development and never starts a final benchmark or SmolVLA. The complete
-contract and gates are in
+Later stages require separate authorization and use `--tiny-overfit`, `--target-pilot`, and
+`--target-resume`, followed by offline language evaluation and
+`run_language_control.py --stage {one_scene_control_smoke,three_scene_control_screen,full_control_development}`.
+The retired monolithic `verify_m5a.py --target-development` entry point fails without starting
+work. No stage starts final or SmolVLA. The complete contract and gates are in
 [`docs/M5A_LANGUAGE_ROUTING_SPEC.md`](docs/M5A_LANGUAGE_ROUTING_SPEC.md).
 
 ## Target-machine setup
@@ -1217,7 +1222,7 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 | `scripts/evaluate_act_factor_film.py` target stages | Yes | Yes | Yes; validation selection, fresh reload, and `m42_dev_v0` only |
 | `python environment/verify_m43b.py` with completed target roots | Yes | No new training | No new rollout; independently audits completed physical evidence |
 | `python environment/verify_m5a.py` | No | No | No; deterministic corpus/router/dispatch CPU fixtures only |
-| `python environment/verify_m5a.py --target-development` | Yes | Yes | Yes; one classifier, one local LLM, language development, and oracle plus three-router 72-episode control development; final stays sealed |
+| `python environment/verify_m5a.py --verify-stage <stage>` | Stage-dependent | Stage-dependent | Independently validates exactly one immutable M5A stage report; final stays sealed |
 | `scripts/export_lerobot_dataset.py` | Real export: yes | According to source/render backend | Yes |
 | `scripts/validate_lerobot_dataset.py` | Full source alignment: yes | According to source/render backend | Yes |
 | `scripts/inspect_lerobot_episode.py` | No | No | No |

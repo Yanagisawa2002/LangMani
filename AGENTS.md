@@ -9,7 +9,10 @@ candidate was rejected. The real M4.3a semantic-alignment audit and M4.3b Factor
 target-development are complete. FactorFiLM passed experiment/physical verification but failed its
 quality gate, so the shared-ACT architecture search is closed and `m42_final_v0` remains sealed.
 M5A modular language-to-TaskSpec routing over the six frozen PerTask ACT controllers is the active
-milestone. M5A target training/evaluation, its sealed final benchmark, and SmolVLA have not started.
+milestone. Its implementation now uses separately authorized fixture, tiny-overfit, authoritative
+single-seed pilot/resume, language-development, 1-scene smoke, 3-scene screen, and 6-scene full
+development stages. M5A target training/evaluation, its sealed final benchmark, and SmolVLA have
+not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
@@ -36,6 +39,14 @@ controller lookup, policy/environment reset, or `env.step`. The environment rese
 remains the oracle schedule task while the predicted TaskSpec selects one frozen controller.
 Language/control final locks, M3B test content, historical fresh evaluation, `m42_final_v0`, and
 SmolVLA remain inaccessible during M5A target-development.
+
+M5A classifier development uses exactly seed 0, at most five epochs/145 optimization steps, a
+step-29 pilot checkpoint, validation-only patience 1, and only `pilot`, `latest`, and
+`validation_best` checkpoint roles. A promoted pilot resumes the same run fingerprint and complete
+optimizer/scheduler/processor/RNG state; it never restarts from step zero. Physical candidates are
+progressively filtered. The disjoint 1/3/6-scene stages cost at most 18/54/72 episodes and at most
+144 before final. The separately authorized 12-scene final costs 144 episodes and is never started
+automatically.
 
 ## Directory ownership
 
@@ -202,18 +213,18 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m43b.py \
   --evaluation-evidence-root outputs/diagnostics/m43/<evaluation-evidence-root> \
   --structural-verification outputs/diagnostics/m43/target-development-preflight-verification/verification.json
 
-# M5A target development: lock all four language/control schedules first, train/select/calibrate
-# one classifier, freeze one local-LLM prompt, then run language development and the paired
-# oracle/rule/classifier/LLM control benchmark. This command never runs either final schedule.
-CUDA_VISIBLE_DEVICES=0 python environment/verify_m5a.py --target-development \
-  --m43-independent-verification <completed-m43b-independent-verification.json> \
-  --llm-model-id <pinned-local-instruct-model-id> \
-  --llm-model-revision <exact-model-revision> \
-  --llm-tokenizer-revision <exact-tokenizer-revision> \
-  --llm-license <reviewed-license> \
-  --llm-license-reviewed \
-  --llm-model-card-reviewed \
-  --device cuda
+# M5A begins with one separately authorized fixture. Do not chain later stages in this shell.
+CUDA_VISIBLE_DEVICES=0 python scripts/train_text_router.py --fixture \
+  --output-root outputs/models/text-router \
+  --report outputs/diagnostics/m5a/stages/classifier-fixture.json
+python environment/verify_m5a.py --verify-stage classifier_fixture \
+  --stage-report outputs/diagnostics/m5a/stages/classifier-fixture.json
+
+# Subsequent separately authorized classifier modes are --tiny-overfit, --target-pilot, then
+# --target-resume. The pilot and resume share one authoritative run fingerprint. Physical control
+# uses run_language_control.py --stage one_scene_control_smoke, then
+# three_scene_control_screen, then full_control_development; later stages consume the preceding
+# report. The retired verify_m5a.py --target-development interface must fail and start no work.
 ```
 
 The exact environment creation commands are maintained in `README.md`.
@@ -275,7 +286,10 @@ The exact environment creation commands are maintained in `README.md`.
   ACT as the deployed controller, call M2, or collapse raw/binary-transformed/projected/executed
   action evidence. Target development must independently validate a real rejection no-op probe.
 - Factorized text-classifier gradients use train only; checkpoint selection, temperature, and
-  threshold use validation only. The single local LLM requires explicit pinned model/tokenizer
+  threshold use validation only. Development uses one seed, no encoder sweep, an explicit pilot
+  promotion gate, same-run resume, patience-one early stopping, and bounded checkpoint roles.
+  Fixture/tiny/pilot/training completion and promotion remain separate evidence. The single local
+  LLM requires explicit pinned model/tokenizer
   revisions, deterministic generation, strict structured validation, and at most one repair. Cloud
   APIs, model/encoder sweeps, prompt edits after development starts, and fabricated confidence are
   prohibited.
@@ -323,9 +337,10 @@ remain separate. Test, historical fresh, `m42_final_v0`, and SmolVLA stay inacce
 M5A portable completion requires deterministic exact-count corpus generation, family/near-duplicate
 split isolation, all four schedule locks, three router fixtures, strict rejection/JSON behavior, a
 portable six-controller registry, zero-dispatch rejection, failure attribution, CPU-safe tests, and
-truthful non-target flags. M5A target-development additionally requires one pinned classifier
-training run with validation-only selection/calibration/threshold, one pinned local-LLM prompt and
-model, language development for all three routers, paired oracle plus three-router 72-episode
-control development, and independent provenance/action/failure checks. Correct experiment
-execution and the learned-router quality gate remain separate. It must leave language/control
-final, M3B test content, `m42_final_v0`, and SmolVLA unaccessed and must not run final automatically.
+truthful non-target flags. M5A target work is accepted one report at a time: fixture, tiny overfit,
+pilot, same-run training, language development, 1-scene smoke, 3-scene screen, and 6-scene full
+development. Failed candidates do not consume later budgets. Oracle remains in every physical
+stage, RuleRouter remains an offline baseline, and only one screen-selected learned router reaches
+the 36-pair full stage. Correct stage execution and next-stage promotion remain separate. Every
+development stage must leave language/control final, M3B test content, `m42_final_v0`, and SmolVLA
+unaccessed and must not run final automatically.

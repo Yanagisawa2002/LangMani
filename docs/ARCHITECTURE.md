@@ -412,8 +412,9 @@ langmani.language
 ├── schedules.py             # development locks and sealed final locks
 ├── rule_router.py           # deterministic lexical/conflict/rejection baseline
 ├── text_classifier.py       # shared encoder plus status/object/bin heads
-├── text_training.py         # train-only optimization and immutable artifacts
+├── text_training.py         # train-only staged optimization and resumable artifacts
 ├── text_calibration.py      # validation-only temperature and threshold selection
+├── stage_protocol.py        # promotion states, budgets, and bounded checkpoint policy
 ├── schema_validation.py     # strict structured local-LLM output boundary
 ├── llm_router.py            # one pinned local instruct model with bounded repair
 ├── router_evaluation.py     # immutable language-only summaries and quality gates
@@ -466,6 +467,9 @@ corpus path keeps only opaque final IDs/counts/digests and never imports
   evidence records its own evaluator Git while preserving architecture baseline `8ee0f1b...` and
   exact target-training producer `0088e293...` as separate identities.
 - M5A gradients use language train only; classifier selection/calibration uses validation only.
+  Classifier development uses one seed and one immutable run: fixture and tiny-overfit precede a
+  step-29 pilot, and promotion resumes the same model/optimizer/scheduler/processor/RNG state up to
+  at most step 145. Validation patience is one and checkpoint roles are bounded to pilot/latest/best.
   LLM prompt/configuration may be frozen from train/validation evidence, but every few-shot example
   ID remains train-family only and the same immutable prompt artifact is reused in language and
   control evaluation. Language/control development measure generalization only, and all final
@@ -473,6 +477,10 @@ corpus path keeps only opaque final IDs/counts/digests and never imports
 - M5A rejection has no executable TaskSpec and must return before policy or environment execution.
   Expected TaskSpec, router decision, selected controller, and active EpisodeSpec remain separate
   evidence so routing and control failures cannot be collapsed.
+- M5A physical development uses disjoint 1/3/6-scene partitions. Oracle runs at every stage,
+  failed learned candidates are removed, RuleRouter remains offline, and only one screened router
+  reaches the 36-pair full stage. The 12-scene final authority is lazily sealed and separately
+  authorized.
 - Target development independently revalidates a real rejection no-op probe and retains four action
   streams: raw policy output, optional binary-transformed output, bounds-projected output, and the
   action actually executed. The locked project-only runtime records the binary stream as absent.

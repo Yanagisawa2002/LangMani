@@ -103,11 +103,21 @@ The following identities are generated and locked together before training:
 3. `m5a_control_dev_v0`
 4. `m5a_control_final_v0`
 
-Development control contains 12 new scene seeds times six canonical tasks, 72 episodes. Final
-control contains 30 different new seeds times six tasks, 180 episodes. The generator excludes all
+The development control authority contains 10 new scene seeds partitioned before execution into
+three disjoint, ordered stages: one smoke scene, three screening scenes, and six full-development
+scenes. These contain 6, 18, and 36 scene-task pairs respectively. The sealed final authority
+contains 12 different new seeds times six tasks, or 72 scene-task pairs. The generator excludes all
 available M3A accepted and rejected candidates, all M3B split seeds, M4 fresh/smoke/tiny seeds,
 M4.1 diagnostics, both M4.2 locks, and the M4.3 development source. Sidecar test seed identities
 may be read only for exclusion; M3B test observations, actions, frames, and videos remain unopened.
+
+Each physical stage has its own content fingerprint and parent-authority fingerprint. Smoke always
+runs Oracle for six episodes and one primary promoted learned router for six; a second learned
+router runs six more only if language development promoted it, for a maximum of 18. Screening runs
+Oracle for 18 and each smoke-promoted learned router for 18, for a maximum of 54. Full development
+runs Oracle for 36 and exactly one screen-selected learned router for 36, exactly 72. RuleRouterV0
+remains a mandatory offline baseline and does not consume the expanded physical budget. Across all
+pre-final stages the maximum routed physical cost is 144 episodes.
 
 Target-development may validate final locks and fingerprints but cannot materialize final language
 texts or final control episodes. A future final command requires separate authorization. No M5A
@@ -135,6 +145,36 @@ The object and bin losses are masked for rejected examples. The preferred encode
 must stop instead of choosing a different model. Train examples are the only gradient source.
 Validation alone selects a checkpoint, fits status temperature, and selects a routing threshold.
 Development and final cannot affect those choices.
+
+Development uses exactly one training seed (`0`), one encoder/revision, and one optimizer
+configuration. It does not claim robustness across initializations. The declared maximum is five
+epochs; with the locked 900-example training corpus and batch size 32 this is 29 steps per epoch and
+at most 145 optimization steps. The authoritative run pauses after the first completed epoch
+(step 29, which is earlier than 20% of the maximum only when those points differ), writes a
+resumable checkpoint, and resumes the same immutable run fingerprint. That checkpoint includes
+model, optimizer, constant scheduler, processor, Python/NumPy/Torch CPU and CUDA RNG state, best
+validation state, and validation history. Restarting from step zero or changing seed/encoder is a
+different run and is rejected.
+
+Before the authoritative run, a fixture must prove gradients, finite masked losses, one optimizer
+step, and deterministic reload. A deterministic 48-example tiny-overfit set covers all six
+TaskSpecs, all four statuses, and all major rejection classes. Its gate requires at least 98%
+status accuracy, at least 98% full TaskSpec accuracy on routeable examples, no executable rejected
+decision, finite losses, and exact reload behavior.
+
+The pilot validation gate requires routeable full TaskSpec accuracy at least 85%, object/bin
+accuracy at least 90%, rejected-command false-route rate at most 10%, 100% schema validity, finite
+values, and nonzero recall for every rejection class. Pilot completion and pilot promotion are
+separate facts. Failure preserves the checkpoint and stops the classifier path; it never triggers
+another seed or encoder.
+
+After promotion, validation runs at steps 29, 58, 87, 116, and 145 with patience one completed
+interval after the best. Only the fixed `pilot`, `latest`, and `validation_best` checkpoint roles
+are retained; role updates are atomic and no periodic checkpoint sweep is created. The final
+classifier promotion gate requires routeable full TaskSpec accuracy at least 95%, object/bin
+accuracy at least 97%, false-route rate at most 3%, ambiguous rejection recall at least 90%,
+unsupported and malformed rejection recall at least 95%, and 100% schema validity. Validation only
+selects the best checkpoint, status temperature, and routing threshold.
 
 A command routes only when calibrated status predicts `route`, object and bin heads are valid, and
 full-route confidence meets the threshold. The predeclared threshold objective maximizes valid
@@ -199,15 +239,23 @@ episode limit, renderer, and M1 success definition.
 
 ## Evaluation and failure attribution
 
-Language-only evaluation runs RuleRouter, the selected/calibrated classifier, and the frozen local
-LLM on validation and `m5a_language_dev_v0`. It reports routeable TaskSpec/object/bin accuracy,
+Language-only evaluation runs RuleRouter, the selected/calibrated classifier when its training gate
+passed, and the frozen local LLM on validation and `m5a_language_dev_v0`. It reports routeable TaskSpec/object/bin accuracy,
 route recall, false rejection, per-task/family results and confusion matrices; rejected accuracy,
 precision, recall, false-route rate and reason recalls; and overall schema validity, malformed
 rate, coverage, selective accuracy, supported calibration metrics, latency percentiles, and fixed-
 configuration repeatability. Rejected examples never share the ordinary TaskSpec denominator.
 
-Control development evaluates oracle routing and all three routers on the same 72 routeable
-episodes. It records the expected task, decision, dispatched controller, active M1 episode spec,
+Learned candidates are promoted only when development full TaskSpec accuracy is at least 95%,
+object/bin accuracy at least 97%, false-route rate at most 3%, ambiguous rejection recall at least
+90%, unsupported/malformed rejection recall at least 95%, schema validity at least 99%, and
+deterministic repeatability is 100%. The LLM additionally requires malformed output after bounded
+repair at most 1%. Promoted routers are ranked by full TaskSpec accuracy, false-route rate,
+rejection macro recall, malformed rate, then p95 latency. One primary router is locked for smoke;
+the other learned router may remain an offline comparator unless it independently passed.
+
+Physical development progresses through the immutable 1/3/6-scene partitions and excludes every
+failed candidate. Each stage records the expected task, decision, dispatched controller, active M1 episode spec,
 task outcome, safety/task diagnostics, action evidence, inference latency, and end-to-end latency.
 In addition, target execution runs one dedicated rejection probe against the active M1 environment
 before the routeable schedule. Its immutable evidence must show zero controller lookup, zero reset,
@@ -235,19 +283,24 @@ of these values. A correctly rejected language-only command produces a safe reje
 no control episode; it is not mislabeled as control success. Routing-correct controller failure is
 not counted as a language error, and wrong routing is not attributed to ACT.
 
-## Development quality gate
+## Progressive physical gates
 
-At least one learned router (classifier or local LLM) must satisfy every applicable language gate:
-routeable full TaskSpec accuracy at least 95%, object/bin accuracy at least 97%, false-route rate at
-most 3%, ambiguous rejection recall at least 90%, unsupported and malformed rejection recall at
-least 95%, schema validity at least 99%, and deterministic repeatability 100%. The LLM additionally
-requires malformed structured output after bounded repair at most 1%.
+The one-scene smoke is a wiring/safety gate, not a generalization claim. Any rejection that reaches
+controller lookup or `env.step`, controller/TaskSpec disagreement, uncleared policy queue,
+infrastructure failure, or M2 expert use stops the candidate.
 
-Its predicted control result must be within five percentage points of oracle, with at most 2/72
-wrong-object routes, 2/72 wrong-bin routes, and 3/72 false rejections. Target-in-wrong-bin,
-target-off-table, arm projection, non-finite action, malformed action, post-rejection dispatch, and
-M2 expert calls must all be zero. PerTask controller timeouts do not by themselves invalidate the
-router.
+The three-scene screen permits at most 1/18 routing error, wrong-object route, wrong-bin route, or
+false rejection. Controller execution after rejection, target in wrong bin, target off table, arm
+projection, non-finite/malformed action, and M2 expert use must be zero. Candidates are ranked by
+success gap to Oracle, routing errors, false routes on rejected commands, wrong-object
+interactions, then p95 latency. Exactly one router is locked for full development.
+
+The six-scene full-development gate retains the language gate and requires the selected router's
+success gap to Oracle at most 2/36; wrong-object and wrong-bin routing at most 2/36 each; false
+rejection at most 3/36; and zero target-in-wrong-bin, target-off-table, arm projection,
+non-finite/malformed action, post-rejection execution, or M2 expert call. Passing sets
+`development_quality_gate_passed=true` and `final_benchmark_authorized=true`; failure leaves both
+false. Correct stage execution and quality promotion remain separate.
 
 The observed identity
 `P(correct route) * P(control success | correct route)` is reported beside direct counts; it never
@@ -271,37 +324,37 @@ provenance, and failure-attribution counts; and then cross-checks them against t
 experiment manifest. A lifecycle flag is set only after its persistent evidence survives that
 independent validation.
 
-The principal target-development flags have these meanings:
+The stage verifier reports the following independent flags. `passed=true` means only that the
+requested stage completed correctly; it does not imply promotion to the next stage:
 
 | Flag or flag group | Required meaning |
 | --- | --- |
-| `implementation_validated` | The declared target-development chain is internally complete and has no failed check; this is not a quality claim. |
-| `prior_m43b_target_validated` | The supplied immutable M4.3b independent verification passed and retained all forbidden-access flags as false. |
-| `corpus_validated`, `split_isolation_validated`, `final_schedules_locked` | Exact corpus counts, visible-family isolation, sealed-final attestation, and all four schedule identities were independently checked. |
-| `rule_router_validated`, `controller_registry_validated` | The deterministic router contracts and exactly six metadata-only frozen controller entries/checkpoint artifacts passed validation. |
-| `classifier_training_completed`, `classifier_checkpoint_selected`, `classifier_calibration_validated` | One classifier trained from train only; validation only selected its checkpoint, temperature, and threshold. |
-| `llm_router_loaded`, `llm_prompt_locked` | Exactly one pinned local model loaded and the train-example-only prompt/generation identity was frozen before development. |
-| `llm_license_reviewed`, `llm_model_card_reviewed` | The operator explicitly attested review of the declared license and official model card; these flags do not infer legal approval. |
-| `language_validation_completed`, `language_development_completed` | All three routers completed the declared language-only validation and development schedules with immutable evidence. |
-| `oracle_control_development_completed`, `predicted_control_development_completed`, `control_development_completed` | The paired oracle plus three-router 72-episode control development completed under the same frozen controller/runtime identities. |
-| `rejection_noop_probe_validated` | A real active-M1 rejection probe proved zero controller lookup, policy call, reset, and environment step, and the independent validator accepted its immutable evidence. |
-| `failure_attribution_validated`, `physical_target_validated` | Independent attribution/action checks passed over real target rollouts; the latter is never set by portable fixtures. |
-| `experiment_manifest_validated` | The final target-development manifest matches independently rederived corpus, router, controller, schedule, and evidence fingerprints. |
-| `development_quality_gate_passed`, `final_benchmark_authorized` | These are equal to the OR of the learned-router gates. Authorization records permission only and is independent of correct experiment execution. |
-| `final_benchmark_completed` | Always false in target-development. |
+| `implementation_validated`, `corpus_validated`, `split_isolation_validated`, `rule_router_validated` | Portable implementation, exact counts/isolation, and deterministic RuleRouter contracts passed. |
+| `classifier_fixture_validated`, `classifier_tiny_overfit_validated` | The two bounded pre-training gates independently passed. Neither claims full training. |
+| `classifier_pilot_completed`, `classifier_pilot_promoted` | The authoritative run reached and saved step 29; the second flag alone records whether validation authorized same-run resume. |
+| `classifier_training_completed`, `classifier_checkpoint_selected`, `classifier_calibration_validated` | The promoted single-seed run completed or early-stopped; validation only selected and calibrated it. |
+| `llm_router_loaded`, `llm_prompt_locked`, `language_development_completed` | One pinned inference-only LLM and immutable train-example prompt were evaluated with the offline routers. |
+| `one_scene_control_smoke_completed`, `three_scene_control_screen_completed`, `selected_router_locked` | The staged physical gates completed and, separately, screening selected one router. |
+| `oracle_control_development_completed`, `predicted_control_development_completed` | Oracle and the single selected router each completed the 36-pair full-development partition. |
+| `failure_attribution_validated`, `physical_target_validated` | Independent attribution/action checks passed over the requested real target stage; fixtures never set physical validation. |
+| `development_quality_gate_passed`, `final_benchmark_authorized` | The full 6-scene development gate passed and authorizes, but does not execute, final. |
+| `language_final_accessed`, `control_final_accessed`, `test_split_accessed`, `smolvla_go` | Must remain false throughout development. |
 
 Non-target verification validates implementation and fixtures only. It must leave classifier
 training, development evaluations, authorization, all final access, SmolVLA, and physical target
 validation false while still allowing `passed=true`.
 
-Target-development may set experiment/physical flags only after real classifier training,
-validation-only selection/calibration, one pinned local LLM, language development, oracle and
-predicted 72-episode control development, failure attribution, and independent evidence checks.
+Each target command produces one stage report, and `--verify-stage` validates only that report.
+The retired monolithic `--target-development` interface fails clearly rather than starting the
+chain. A physical stage may set its own completion/physical flags only after its immutable atoms,
+failure attribution, action evidence, provenance, and forbidden-access fields pass independent
+checks. Pilot completion may pass verification while promotion is false; likewise a completed
+screen may pass while no router is selected, and a completed full stage may pass while quality is
+false.
 It must finish with `language_final_accessed=false`, `control_final_accessed=false`,
 `m42_final_accessed=false`, `test_split_accessed=false`, `historical_fresh_accessed=false`,
 `final_benchmark_completed=false`, and `smolvla_go=false`. It records but does not execute any final
-authorization. `passed=true` means the experiment and evidence chain completed correctly; it does
-not imply `development_quality_gate_passed=true`.
+authorization.
 
 The access flags distinguish identity-only exclusion checks from opening evaluation content:
 

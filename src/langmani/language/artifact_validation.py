@@ -46,7 +46,7 @@ from langmani.language.router_types import (
     RouterRejectionReason,
     RouterStatus,
 )
-from langmani.language.schedules import ControlScheduleLock, ScheduledControlEpisode
+from langmani.language.schedules import ScheduledControlEpisode, StagedControlSchedule
 
 CORPUS_ARCHIVE_SCHEMA = "langmani-m5a-language-corpus-archive-v1"
 ROUTER_EVALUATION_EVIDENCE_SCHEMA = "langmani-m5a-language-router-evaluation-evidence-v1"
@@ -54,7 +54,7 @@ CONTROL_RUN_SCHEMA = "langmani-m5a-language-control-run-v0"
 CONTROL_EPISODE_SCHEMA = "langmani-m5a-language-control-episode-v0"
 CONTROL_COMPLETION_SCHEMA = "langmani-m5a-language-control-complete-v0"
 REJECTION_NOOP_PROBE_SCHEMA = "langmani-m5a-rejection-noop-probe-v0"
-CONTROL_ROUTER_ORDER = ("oracle", "rule", "classifier", "llm")
+CONTROL_ROUTER_ORDER = ("oracle", "classifier", "llm")
 _LANGUAGE_ROUTER_NAMES = {
     "rule": "RuleRouterV0",
     "classifier": "FactorizedTextClassifierV0",
@@ -70,7 +70,7 @@ class M5AArtifactValidationError(RuntimeError):
 class DevelopmentControlInputsLike(Protocol):
     """Structural boundary accepted from the control command's frozen input bundle."""
 
-    schedule: ControlScheduleLock
+    schedule: StagedControlSchedule
     episodes: tuple[ScheduledControlEpisode, ...]
     examples_by_id: Mapping[str, LanguageExample]
     corpus_fingerprint: str
@@ -905,7 +905,7 @@ def _episode_identity(
     *,
     run_fingerprint: str,
     router_label: str,
-    schedule: ControlScheduleLock,
+    schedule: StagedControlSchedule,
     episode: ScheduledControlEpisode,
     example: LanguageExample,
 ) -> dict[str, object]:
@@ -1446,11 +1446,11 @@ def validate_development_control_evidence(
     inputs: DevelopmentControlInputsLike,
     registry: ControllerRegistry,
 ) -> ValidatedControlEvidence:
-    """Rehash all 288 control atoms and independently rebuild completion summaries."""
+    """Rehash every atom in one promoted 1/3/6-scene control stage."""
 
     run_root = _require_real_directory(root, label="development control evidence")
-    if len(inputs.episodes) != 72:
-        raise M5AArtifactValidationError("development control inputs must contain 72 episodes")
+    if len(inputs.episodes) not in {6, 18, 36}:
+        raise M5AArtifactValidationError("staged control inputs must contain 6, 18, or 36 episodes")
     owner = _read_object(run_root / "owner.json", label="control evidence owner")
     registry_payload = _read_object(
         run_root / "controller_registry.json", label="control controller registry"
@@ -1470,13 +1470,23 @@ def validate_development_control_evidence(
         raise M5AArtifactValidationError("control owner fingerprint differs")
     if run_root.name != run_fingerprint.removeprefix("sha256:"):
         raise M5AArtifactValidationError("control evidence is not at its run-owned path")
+    router_order = identity.get("router_order")
+    if (
+        not isinstance(router_order, list)
+        or not router_order
+        or router_order[0] != "oracle"
+        or any(value not in CONTROL_ROUTER_ORDER for value in router_order)
+        or len(set(router_order)) != len(router_order)
+    ):
+        raise M5AArtifactValidationError("control owner router order is not Oracle plus learned")
     expected_identity_fields = {
         "schema_version": CONTROL_RUN_SCHEMA,
         "schedule_fingerprint": inputs.schedule.schedule_fingerprint,
         "corpus_fingerprint": inputs.corpus_fingerprint,
         "controller_registry_fingerprint": registry.registry_fingerprint,
-        "router_order": list(CONTROL_ROUTER_ORDER),
-        "episode_count_per_router": 72,
+        "stage": inputs.schedule.stage.value,
+        "router_order": router_order,
+        "episode_count_per_router": len(inputs.episodes),
     }
     for key, value in expected_identity_fields.items():
         if identity.get(key) != value:
@@ -1514,14 +1524,13 @@ def validate_development_control_evidence(
     completion_fingerprint = completion_base.pop("completion_fingerprint", None)
     if completion_fingerprint != f"sha256:{sha256_hex(completion_base)}":
         raise M5AArtifactValidationError("control completion fingerprint differs")
-    expected_atoms = len(CONTROL_ROUTER_ORDER) * len(inputs.episodes)
+    expected_atoms = len(router_order) * len(inputs.episodes)
     if (
         complete.get("schema_version") != CONTROL_COMPLETION_SCHEMA
         or complete.get("run_fingerprint") != run_fingerprint
         or complete.get("passed") is not True
         or complete.get("completed_episode_atoms") != expected_atoms
         or complete.get("expected_episode_atoms") != expected_atoms
-        or expected_atoms != 288
     ):
         raise M5AArtifactValidationError("control completion identity or counts differ")
     for key, value in {
@@ -1529,7 +1538,8 @@ def validate_development_control_evidence(
         "schedule_fingerprint": inputs.schedule.schedule_fingerprint,
         "corpus_fingerprint": inputs.corpus_fingerprint,
         "controller_registry_fingerprint": registry.registry_fingerprint,
-        "router_order": list(CONTROL_ROUTER_ORDER),
+        "stage": inputs.schedule.stage.value,
+        "router_order": router_order,
     }.items():
         if complete.get(key) != value:
             raise M5AArtifactValidationError(f"control completion {key} differs")
@@ -1538,7 +1548,7 @@ def validate_development_control_evidence(
     expected_files = {"owner.json", "controller_registry.json", "complete.json"}
     if rejection_probe is not None:
         expected_files.add("rejection_noop_probe.json")
-    for router_label in CONTROL_ROUTER_ORDER:
+    for router_label in router_order:
         records: list[dict[str, object]] = []
         for episode in inputs.episodes:
             example = inputs.examples_by_id.get(episode.language_example_id)

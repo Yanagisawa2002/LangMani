@@ -1784,3 +1784,36 @@ controller lookup, reset, and environment step and is independently rehashed bef
 `rejection_noop_probe_validated=true`. M5A action evidence has distinct raw,
 binary-transformed, projected, and executed streams; under the locked project-only runtime the
 binary-transformed entries are explicitly absent rather than copied from another stream.
+
+## D-059 — Gate M5A compute through one authoritative classifier run and progressive control
+
+The router architectures, language metrics, safety contracts, provenance, rejection boundary,
+frozen controller registry, and sealed-final rigor from D-056 remain unchanged. Its execution and
+budgeting model is superseded. M5A development now advances only through separately authorized
+implementation, fixture, tiny-overfit, pilot, resumed training, language-development, one-scene
+smoke, three-scene screen, and six-scene full-development stages. A failed candidate is recorded
+but does not receive another seed, encoder, model sweep, or larger physical schedule.
+
+`FactorizedTextClassifierV0` uses exactly training seed 0 and reports that initialization
+robustness was not evaluated. The locked 900-example train view with batch size 32 has 29 steps per
+epoch. The maximum is five epochs/145 steps, with validation at 29-step intervals and patience one.
+The one authoritative run pauses at step 29 and retains model, optimizer, constant scheduler,
+processor, Python/NumPy/Torch CPU/CUDA RNG state, validation history, and best-state identity.
+Promotion resumes that exact run fingerprint rather than restarting. Checkpoint retention has
+three atomic roles only: `pilot`, `latest`, and `validation_best`. Fixture, tiny-overfit, pilot
+completion, pilot promotion, final training completion, selection, and calibration are distinct
+evidence claims.
+
+The parent development authority now contains ten scenes split into disjoint 1/3/6-scene
+partitions. Smoke costs Oracle 6 plus primary 6 and optionally a second promoted router 6 (maximum
+18). Screening costs Oracle 18 plus 18 per smoke-promoted learned router (maximum 54). Full
+development costs Oracle 36 plus exactly one selected router 36 (72). RuleRouter remains a required
+offline comparator. Thus the maximum pre-final physical cost is 144 episodes. The separately
+authorized final authority contains 12 new scenes times six tasks and runs only Oracle 72 plus the
+locked router 72, also 144; development cannot execute it.
+
+The monolithic `verify_m5a.py --target-development` path is retired and fails before work.
+`--verify-stage` independently validates one immutable stage report, and its `passed=true` means
+that stage completed correctly, not that promotion was granted. Source must be committed and
+pushed before target execution. No target stage is authorized by this implementation decision, and
+no classifier training, physical rollout, final access, or SmolVLA result is claimed here.

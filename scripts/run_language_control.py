@@ -1,10 +1,11 @@
-"""Run the M5A development-only language-to-frozen-controller benchmark.
+"""Run one promoted M5A language-to-frozen-controller development stage.
 
-This command deliberately has no final-schedule mode.  It evaluates the oracle,
-RuleRouterV0, FactorizedTextClassifierV0, and StructuredLocalLLMRouterV0 in that
-fixed order on the same 72 ``m5a_control_dev_v0`` scene/task pairs.  Episode
-records are immutable and individually resumable; a completed run is never
-modified.
+This command deliberately has no final-schedule mode.  It always evaluates the
+oracle and only the learned candidates promoted by the preceding immutable
+stage: 1 scene x 6 tasks for smoke, 3 disjoint scenes x 6 tasks for screening,
+or 6 further scenes x 6 tasks for the single selected router.  RuleRouterV0
+remains an offline baseline.  Episode records are immutable and individually
+resumable; a completed stage is never modified.
 """
 
 from __future__ import annotations
@@ -68,10 +69,12 @@ from langmani.language.schedules import (  # noqa: E402
     M5AScheduleBundle,
     ScheduledControlEpisode,
     SeedExclusionSource,
+    StagedControlSchedule,
     build_language_schedule_locks,
     build_m5a_schedule_bundle,
-    materialize_control_schedule,
+    build_staged_control_schedule,
 )
+from langmani.language.stage_protocol import M5A_PHYSICAL_STAGE_BUDGETS, M5AStage  # noqa: E402
 from langmani.language.text_calibration import TemperatureCalibrationV0  # noqa: E402
 from langmani.language.text_classifier import (  # noqa: E402
     FactorizedTextRouterConfig,
@@ -87,6 +90,7 @@ EPISODE_SCHEMA = "langmani-m5a-language-control-episode-v0"
 COMPLETION_SCHEMA = "langmani-m5a-language-control-complete-v0"
 REJECTION_NOOP_PROBE_SCHEMA = "langmani-m5a-rejection-noop-probe-v0"
 ROUTER_ORDER = ("oracle", "rule", "classifier", "llm")
+LEARNED_ROUTER_ORDER = ("classifier", "llm")
 DEFAULT_DATASET_ROOT = (
     PROJECT_ROOT / "outputs" / "datasets" / "m3b" / "langmani-pick-place-lerobot-v1"
 )
@@ -158,7 +162,7 @@ class _CountingEnvironmentProxy:
 class DevelopmentControlInputs:
     """Validated development schedule and command lookup."""
 
-    schedule: ControlScheduleLock
+    schedule: StagedControlSchedule
     episodes: tuple[ScheduledControlEpisode, ...]
     examples_by_id: Mapping[str, LanguageExample]
     corpus_fingerprint: str
@@ -199,6 +203,20 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--runtime-selection", type=Path, default=DEFAULT_RUNTIME_SELECTION)
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
+    parser.add_argument(
+        "--stage",
+        choices=(
+            M5AStage.ONE_SCENE_CONTROL_SMOKE.value,
+            M5AStage.THREE_SCENE_CONTROL_SCREEN.value,
+            M5AStage.FULL_CONTROL_DEVELOPMENT.value,
+        ),
+        required=True,
+    )
+    parser.add_argument(
+        "--prior-stage-report",
+        type=Path,
+        help="Required for the three-scene screen and full-development stages.",
+    )
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args(argv)
 
@@ -632,14 +650,18 @@ def load_authoritative_development_schedule(
 
 
 def prepare_development_inputs(
-    *, schedule: ControlScheduleLock, corpus: GeneratedLanguageCorpus
+    *, schedule: ControlScheduleLock, corpus: GeneratedLanguageCorpus, stage: M5AStage
 ) -> DevelopmentControlInputs:
     language_development, _language_final = build_language_schedule_locks(corpus)
     if schedule.language_schedule_fingerprint != language_development.schedule_fingerprint:
         raise LanguageControlCommandError("control schedule refers to another language corpus")
-    episodes = materialize_control_schedule(schedule)
-    if len(episodes) != 72 or tuple(item.episode_index for item in episodes) != tuple(range(72)):
-        raise LanguageControlCommandError("development control schedule must be ordered 0..71")
+    staged = build_staged_control_schedule(schedule, stage=stage)
+    episodes = staged.episodes
+    expected = M5A_PHYSICAL_STAGE_BUDGETS[stage].oracle_episodes
+    if len(episodes) != expected or tuple(item.episode_index for item in episodes) != tuple(
+        range(expected)
+    ):
+        raise LanguageControlCommandError("staged development schedule indices differ")
     examples = corpus.examples_for_split(LanguageSplit.DEVELOPMENT)
     by_id = {example.example_id: example for example in examples}
     for episode in episodes:
@@ -651,7 +673,7 @@ def prepare_development_inputs(
                 "scheduled development command and oracle TaskSpec disagree"
             )
     return DevelopmentControlInputs(
-        schedule=schedule,
+        schedule=staged,
         episodes=episodes,
         examples_by_id=by_id,
         corpus_fingerprint=corpus.manifest.corpus_fingerprint,
@@ -842,11 +864,25 @@ def _load_frozen_router_evaluation(
         or evaluated_llm.get("prompt_fingerprint") != fingerprint
     ):
         raise LanguageControlCommandError("evaluated LLM prompt content or fingerprint differs")
+    promotions = result.get("candidate_promotions")
+    promoted = result.get("promoted_learned_routers")
+    primary = result.get("primary_learned_router")
+    if (
+        not isinstance(promotions, Mapping)
+        or not isinstance(promoted, list)
+        or any(value not in LEARNED_ROUTER_ORDER for value in promoted)
+        or len(set(promoted)) != len(promoted)
+        or (primary is not None and primary not in promoted)
+    ):
+        raise LanguageControlCommandError("language evaluation candidate promotions are malformed")
     return canonical, {
         "evaluation_fingerprint": owner.get("evaluation_fingerprint"),
         "artifact_fingerprint": artifact_fingerprint,
         "evidence_root": str(root),
         "router_identities": dict(identities),
+        "candidate_promotions": dict(promotions),
+        "promoted_learned_routers": list(promoted),
+        "primary_learned_router": primary,
     }
 
 
@@ -953,7 +989,7 @@ def _episode_identity(
     *,
     run_fingerprint: str,
     router_label: str,
-    schedule: ControlScheduleLock,
+    schedule: StagedControlSchedule,
     episode: ScheduledControlEpisode,
     example: LanguageExample,
 ) -> dict[str, object]:
@@ -1188,6 +1224,98 @@ def _summary(records: Sequence[Mapping[str, object]]) -> dict[str, object]:
     }
 
 
+def _stage_outcome(
+    *,
+    stage: M5AStage,
+    summaries: Mapping[str, object],
+    router_order: tuple[str, ...],
+) -> dict[str, object]:
+    oracle = cast(Mapping[str, object], summaries["oracle"])
+    learned = router_order[1:]
+    candidate_checks: dict[str, dict[str, bool]] = {}
+    for candidate in learned:
+        summary = cast(Mapping[str, object], summaries[candidate])
+        common = {
+            "routing_error": int(summary["routing_wrong_episode_count"]) == 0,
+            "false_rejection": int(summary["routing_false_rejection_count"]) == 0,
+            "dispatch_after_rejection": int(summary["dispatch_after_rejection_count"]) == 0,
+            "invalid_action": int(summary["invalid_action_count"]) == 0,
+            "malformed_action": int(summary["malformed_action_count"]) == 0,
+            "nonfinite_action": int(summary["nonfinite_action_count"]) == 0,
+            "infrastructure": int(summary["infrastructure_failure_count"]) == 0,
+            "m2_expert": int(summary["m2_expert_call_count"]) == 0,
+        }
+        if stage is M5AStage.THREE_SCENE_CONTROL_SCREEN:
+            common.update(
+                {
+                    "routing_wrong_object": int(summary["routing_wrong_object_count"]) <= 1,
+                    "routing_wrong_bin": int(summary["routing_wrong_bin_count"]) <= 1,
+                    "routing_error_bound": int(summary["routing_wrong_episode_count"]) <= 1,
+                    "false_rejection_bound": int(summary["routing_false_rejection_count"]) <= 1,
+                    "target_in_wrong_bin": int(summary["target_in_wrong_bin_count"]) == 0,
+                    "target_off_table": int(summary["target_off_table_count"]) == 0,
+                    "arm_projection": int(summary["arm_projected_component_count"]) == 0,
+                }
+            )
+            common["routing_error"] = common["routing_error_bound"]
+            common["false_rejection"] = common["false_rejection_bound"]
+        elif stage is M5AStage.FULL_CONTROL_DEVELOPMENT:
+            oracle_success = int(oracle["end_to_end_success_count"])
+            predicted_success = int(summary["end_to_end_success_count"])
+            common.update(
+                {
+                    "success_gap": abs(oracle_success - predicted_success) <= 2,
+                    "routing_wrong_object": int(summary["routing_wrong_object_count"]) <= 2,
+                    "routing_wrong_bin": int(summary["routing_wrong_bin_count"]) <= 2,
+                    "false_rejection_bound": int(summary["routing_false_rejection_count"]) <= 3,
+                    "target_in_wrong_bin": int(summary["target_in_wrong_bin_count"]) == 0,
+                    "target_off_table": int(summary["target_off_table_count"]) == 0,
+                    "arm_projection": int(summary["arm_projected_component_count"]) == 0,
+                }
+            )
+            common["routing_error"] = common["routing_wrong_object"] and common["routing_wrong_bin"]
+            common["false_rejection"] = common["false_rejection_bound"]
+        candidate_checks[candidate] = common
+    passed_candidates = tuple(
+        candidate for candidate in learned if all(candidate_checks[candidate].values())
+    )
+    selected: str | None = None
+    if stage is M5AStage.THREE_SCENE_CONTROL_SCREEN and passed_candidates:
+        ranked: list[tuple[tuple[float, ...], str]] = []
+        oracle_success = int(oracle["end_to_end_success_count"])
+        for candidate in passed_candidates:
+            summary = cast(Mapping[str, object], summaries[candidate])
+            latency = cast(Mapping[str, object], summary["router_inference_latency_ms"])
+            ranked.append(
+                (
+                    (
+                        abs(oracle_success - int(summary["end_to_end_success_count"])),
+                        int(summary["routing_wrong_episode_count"]),
+                        int(summary["routing_false_rejection_count"]),
+                        int(summary["wrong_object_interaction_count"]),
+                        float(latency["p95"] or 0.0),
+                    ),
+                    candidate,
+                )
+            )
+        ranked.sort()
+        selected = ranked[0][1]
+    elif stage is M5AStage.FULL_CONTROL_DEVELOPMENT and len(learned) == 1:
+        selected = learned[0]
+    return {
+        "candidate_gate_checks": candidate_checks,
+        "promoted_to_next_stage": list(passed_candidates),
+        "selected_router": selected,
+        "stage_quality_gate_passed": (len(passed_candidates) == len(learned) and bool(learned)),
+        "development_quality_gate_passed": (
+            stage is M5AStage.FULL_CONTROL_DEVELOPMENT and len(passed_candidates) == 1
+        ),
+        "final_benchmark_authorized": (
+            stage is M5AStage.FULL_CONTROL_DEVELOPMENT and len(passed_candidates) == 1
+        ),
+    }
+
+
 def _validate_completed_run(
     *,
     completion_path: Path,
@@ -1196,6 +1324,7 @@ def _validate_completed_run(
     inputs: DevelopmentControlInputs,
     registry: ControllerRegistry,
     rejection_noop_probe: Mapping[str, object] | None,
+    router_order: tuple[str, ...],
 ) -> dict[str, object]:
     completed = _read_object(completion_path, label="M5A control completion")
     declared_fingerprint = completed.pop("completion_fingerprint", None)
@@ -1207,8 +1336,8 @@ def _validate_completed_run(
         completed.get("schema_version") != COMPLETION_SCHEMA
         or completed.get("run_fingerprint") != run_fingerprint
         or completed.get("passed") is not True
-        or completed.get("completed_episode_atoms") != 4 * 72
-        or completed.get("expected_episode_atoms") != 4 * 72
+        or completed.get("completed_episode_atoms") != len(router_order) * len(inputs.episodes)
+        or completed.get("expected_episode_atoms") != len(router_order) * len(inputs.episodes)
     ):
         raise LanguageControlCommandError("completed control run identity or counts differ")
     if (
@@ -1236,7 +1365,7 @@ def _validate_completed_run(
             raise LanguageControlCommandError("completion did not validate rejection no-op")
     summaries: dict[str, object] = {}
     record_fingerprints: list[str] = []
-    for router_label in ROUTER_ORDER:
+    for router_label in router_order:
         records: list[dict[str, object]] = []
         for episode in inputs.episodes:
             example = inputs.examples_by_id[episode.language_example_id]
@@ -1258,6 +1387,13 @@ def _validate_completed_run(
         summaries[router_label] = _summary(records)
     if completed.get("summaries") != summaries:
         raise LanguageControlCommandError("completed control summaries differ from episodes")
+    outcome = _stage_outcome(
+        stage=inputs.schedule.stage,
+        summaries=summaries,
+        router_order=router_order,
+    )
+    if any(completed.get(key) != value for key, value in outcome.items()):
+        raise LanguageControlCommandError("completed stage promotion outcome differs")
     if completed.get("record_set_fingerprint") != (f"sha256:{sha256_hex(record_fingerprints)}"):
         raise LanguageControlCommandError("completed episode-set fingerprint differs")
     return completed
@@ -1275,10 +1411,21 @@ def run_development_control(
     require_active_episode_spec: bool = False,
     rejection_noop_probe: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
-    """Run or resume the four ordered 72-episode development comparisons."""
+    """Run or resume exactly the Oracle and candidates promoted to this stage."""
 
-    if tuple(providers) != ROUTER_ORDER:
-        raise LanguageControlCommandError("providers must preserve oracle/rule/classifier/llm")
+    router_order = tuple(providers)
+    if not router_order or router_order[0] != "oracle":
+        raise LanguageControlCommandError("every physical stage must run Oracle first")
+    learned = router_order[1:]
+    if any(value not in LEARNED_ROUTER_ORDER for value in learned) or len(set(learned)) != len(
+        learned
+    ):
+        raise LanguageControlCommandError("physical stages accept only promoted learned routers")
+    budget = M5A_PHYSICAL_STAGE_BUDGETS[inputs.schedule.stage]
+    if len(learned) > budget.maximum_learned_candidates:
+        raise LanguageControlCommandError("physical stage exceeds its learned-candidate budget")
+    if inputs.schedule.stage is M5AStage.FULL_CONTROL_DEVELOPMENT and len(learned) != 1:
+        raise LanguageControlCommandError("full development requires one selected learned router")
     validated_probe = (
         None
         if rejection_noop_probe is None
@@ -1291,8 +1438,9 @@ def run_development_control(
             "schedule_fingerprint": inputs.schedule.schedule_fingerprint,
             "corpus_fingerprint": inputs.corpus_fingerprint,
             "controller_registry_fingerprint": registry.registry_fingerprint,
-            "router_order": list(ROUTER_ORDER),
-            "episode_count_per_router": 72,
+            "stage": inputs.schedule.stage.value,
+            "router_order": list(router_order),
+            "episode_count_per_router": len(inputs.episodes),
             "active_episode_spec_required": require_active_episode_spec,
             "rejection_noop_probe_fingerprint": (
                 None if validated_probe is None else validated_probe["probe_fingerprint"]
@@ -1328,13 +1476,14 @@ def run_development_control(
             inputs=inputs,
             registry=registry,
             rejection_noop_probe=validated_probe,
+            router_order=router_order,
         )
         return {**completed, "evidence_root": str(run_root), "reused": True}
 
     all_summaries: dict[str, object] = {}
     all_record_fingerprints: list[str] = []
     completed_atoms = 0
-    for router_label in ROUTER_ORDER:
+    for router_label in router_order:
         provider = providers[router_label]
         records: list[dict[str, object]] = []
         for episode in inputs.episodes:
@@ -1411,6 +1560,11 @@ def run_development_control(
     zero_dispatch_validated = dispatch_after_rejection_count == 0 and (
         validated_probe is not None or observed_safe_rejection_count > 0
     )
+    stage_outcome = _stage_outcome(
+        stage=inputs.schedule.stage,
+        summaries=all_summaries,
+        router_order=router_order,
+    )
     completion_base: dict[str, object] = {
         "schema_version": COMPLETION_SCHEMA,
         "run_fingerprint": run_fingerprint,
@@ -1418,9 +1572,10 @@ def run_development_control(
         "schedule_fingerprint": inputs.schedule.schedule_fingerprint,
         "corpus_fingerprint": inputs.corpus_fingerprint,
         "controller_registry_fingerprint": registry.registry_fingerprint,
-        "router_order": list(ROUTER_ORDER),
+        "stage": inputs.schedule.stage.value,
+        "router_order": list(router_order),
         "completed_episode_atoms": completed_atoms,
-        "expected_episode_atoms": 4 * 72,
+        "expected_episode_atoms": len(router_order) * len(inputs.episodes),
         "summaries": all_summaries,
         "record_set_fingerprint": f"sha256:{sha256_hex(all_record_fingerprints)}",
         "wrong_object_interaction_available": True,
@@ -1448,13 +1603,14 @@ def run_development_control(
         "zero_dispatch_after_rejection_validated": zero_dispatch_validated,
         "m2_expert_call_count": 0,
         "m2_expert_free_validated": True,
+        **stage_outcome,
         "language_final_accessed": False,
         "control_final_accessed": False,
         "m42_final_accessed": False,
         "test_split_accessed": False,
         "historical_fresh_accessed": False,
         "smolvla_go": False,
-        "passed": completed_atoms == 4 * 72,
+        "passed": completed_atoms == len(router_order) * len(inputs.episodes),
     }
     completion = {
         **completion_base,
@@ -1496,6 +1652,55 @@ def _load_frozen_controller_registry(
     )
 
 
+def _stage_candidates(
+    *,
+    stage: M5AStage,
+    router_evaluation_identity: Mapping[str, object],
+    prior_stage_report: Path | None,
+) -> tuple[str, ...]:
+    promoted = router_evaluation_identity.get("promoted_learned_routers")
+    primary = router_evaluation_identity.get("primary_learned_router")
+    if not isinstance(promoted, list) or any(
+        value not in LEARNED_ROUTER_ORDER for value in promoted
+    ):
+        raise LanguageControlCommandError("language promotion list is malformed")
+    if stage is M5AStage.ONE_SCENE_CONTROL_SMOKE:
+        if primary is None:
+            return ()
+        if primary not in promoted:
+            raise LanguageControlCommandError("primary router was not language-promoted")
+        return (cast(str, primary), *(value for value in promoted if value != primary))
+    if prior_stage_report is None:
+        raise LanguageControlCommandError("later physical stage requires prior-stage evidence")
+    prior = _read_object(
+        _resolved_unlinked(prior_stage_report, label="prior M5A control stage report"),
+        label="prior M5A control stage report",
+    )
+    if prior.get("passed") is not True or prior.get("control_final_accessed") is not False:
+        raise LanguageControlCommandError("prior physical stage is incomplete or accessed final")
+    if stage is M5AStage.THREE_SCENE_CONTROL_SCREEN:
+        if prior.get("stage") != M5AStage.ONE_SCENE_CONTROL_SMOKE.value:
+            raise LanguageControlCommandError(
+                "three-scene screen requires one-scene smoke evidence"
+            )
+        values = prior.get("promoted_to_next_stage")
+        if not isinstance(values, list) or any(value not in promoted for value in values):
+            raise LanguageControlCommandError("one-scene promotion evidence is malformed")
+        return tuple(cast(list[str], values))
+    if prior.get("stage") != M5AStage.THREE_SCENE_CONTROL_SCREEN.value:
+        raise LanguageControlCommandError("full development requires three-scene screen evidence")
+    selected = prior.get("selected_router")
+    candidates = prior.get("promoted_to_next_stage")
+    if (
+        selected not in LEARNED_ROUTER_ORDER
+        or not isinstance(candidates, list)
+        or selected not in candidates
+        or selected not in promoted
+    ):
+        raise LanguageControlCommandError("three-scene evidence did not lock one selected router")
+    return (cast(str, selected),)
+
+
 def execute(args: argparse.Namespace) -> dict[str, object]:
     output_root, _report_path = _safe_paths(args)
     corpus = build_language_corpus()
@@ -1503,14 +1708,19 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
         args.control_schedule,
         corpus=corpus,
     )
-    inputs = prepare_development_inputs(schedule=schedule, corpus=corpus)
+    stage = M5AStage(args.stage)
+    inputs = prepare_development_inputs(schedule=schedule, corpus=corpus, stage=stage)
+    budget = M5A_PHYSICAL_STAGE_BUDGETS[stage]
     base: dict[str, object] = {
         "schema_version": COMMAND_SCHEMA,
-        "schedule_id": schedule.schedule_id,
-        "schedule_fingerprint": schedule.schedule_fingerprint,
+        "schedule_id": inputs.schedule.schedule_id,
+        "schedule_fingerprint": inputs.schedule.schedule_fingerprint,
         "corpus_fingerprint": inputs.corpus_fingerprint,
         "episode_count_per_router": len(inputs.episodes),
-        "router_order": list(ROUTER_ORDER),
+        "stage": stage.value,
+        "router_order": ["oracle", "promoted_learned_only"],
+        "maximum_learned_candidates": budget.maximum_learned_candidates,
+        "maximum_expected_episode_atoms": budget.maximum_episode_count,
         "language_final_accessed": False,
         "control_final_accessed": False,
         "m42_final_accessed": False,
@@ -1562,6 +1772,13 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
         generator=llm_generator,
         prompt_examples=prompt_examples,
     )
+    candidates = _stage_candidates(
+        stage=stage,
+        router_evaluation_identity=router_evaluation_identity,
+        prior_stage_report=args.prior_stage_report,
+    )
+    if not candidates:
+        raise LanguageControlCommandError("no learned router was promoted to this physical stage")
     environment = _create_environment()
     try:
         loader = StrictPerTaskControllerLoader(
@@ -1576,11 +1793,13 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
             rule_router=rule,
         )
         dispatcher = ControllerDispatcher(registry=registry, loader=loader)
-        providers: dict[str, DecisionProvider] = {
-            "oracle": _oracle_provider,
-            "rule": _provider(rule),
+        available: dict[str, DecisionProvider] = {
             "classifier": _provider(classifier),
             "llm": _provider(llm),
+        }
+        providers: dict[str, DecisionProvider] = {
+            "oracle": _oracle_provider,
+            **{candidate: available[candidate] for candidate in candidates},
         }
         result = run_development_control(
             inputs=inputs,
@@ -1598,6 +1817,16 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
                 "llm_prompt_example_ids": list(llm.prompt_example_ids),
                 "router_evaluation": router_evaluation_identity,
                 "rule_config_fingerprint": rule.config.fingerprint,
+                "candidate_promotion_identity": {
+                    "promoted_learned_routers": router_evaluation_identity[
+                        "promoted_learned_routers"
+                    ],
+                    "primary_learned_router": router_evaluation_identity["primary_learned_router"],
+                    "stage_candidates": list(candidates),
+                    "prior_stage_report": (
+                        None if args.prior_stage_report is None else str(args.prior_stage_report)
+                    ),
+                },
                 "runtime_selection_fingerprint": (
                     registry.entries[0].runtime_selection_fingerprint
                 ),

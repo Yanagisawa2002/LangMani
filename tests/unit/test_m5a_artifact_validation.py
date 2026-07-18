@@ -486,6 +486,7 @@ def test_control_validator_rebuilds_288_records_summaries_and_completion(
     inputs = command.prepare_development_inputs(
         schedule=bundle.control_development,
         corpus=corpus,
+        stage=command.M5AStage.ONE_SCENE_CONTROL_SMOKE,
     )
     registry = build_fixture_controller_registry()
     environment = _FixtureEnvironment()
@@ -519,7 +520,6 @@ def test_control_validator_rebuilds_288_records_summaries_and_completion(
         environment=environment,
         providers={
             "oracle": command._oracle_provider,
-            "rule": correct("RuleRouterV0"),
             "classifier": correct("FactorizedTextClassifierV0"),
             "llm": correct("StructuredLocalLLMRouterV0"),
         },
@@ -535,7 +535,7 @@ def test_control_validator_rebuilds_288_records_summaries_and_completion(
         inputs=inputs,
         registry=registry,
     )
-    assert validated.record_count == 288
+    assert validated.record_count == 18
     assert validated.record_set_fingerprint == result["record_set_fingerprint"]
     assert validated.summaries == result["summaries"]
 
@@ -610,7 +610,7 @@ def test_control_validator_rebuilds_288_records_summaries_and_completion(
 
     oracle_path.write_bytes(original_oracle)
     completion_path.write_bytes(original_completion)
-    episode_path = root / "episodes" / "rule" / "000.json"
+    episode_path = root / "episodes" / "classifier" / "000.json"
     original_episode = episode_path.read_bytes()
     episode = json.loads(original_episode)
     episode["active_episode_spec"]["canonical_instruction"] = "tampered instruction"
@@ -629,7 +629,7 @@ def test_control_validator_rebuilds_288_records_summaries_and_completion(
         status=RouterStatus.REJECT_UNSUPPORTED,
         rejection_reason=RouterRejectionReason.UNSUPPORTED_ACTION,
         confidence=RouterConfidence.unavailable(),
-        router_name="RuleRouterV0",
+        router_name="FactorizedTextClassifierV0",
         router_version="v0",
     )
     rejection_record["active_episode_spec"] = None

@@ -645,135 +645,161 @@ def test_target_development_requires_passed_m43_before_subprocess(tmp_path) -> N
     assert payload["passed"] is False
 
 
-def test_target_development_orchestrates_reuses_and_aggregates_gates(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _install_target_boundary_fixtures(monkeypatch)
-    m43_path = tmp_path / "m43.json"
-    _write_json(m43_path, _m43_report())
-    verifier_root = tmp_path / "verification"
-    runner = _TargetStageRunner(verifier_root=verifier_root)
-    arguments = _target_arguments(tmp_path, m43_path=m43_path)
+def _stage_flags(**updates: object) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "passed": True,
+        "language_final_accessed": False,
+        "control_final_accessed": False,
+        "test_split_accessed": False,
+        "smolvla_go": False,
+    }
+    payload.update(updates)
+    return payload
 
-    assert verify_m5a.main(arguments, command_runner=runner) == 0
-    assert [Path(command[1]).name for command in runner.commands] == [
-        "build_language_corpus.py",
-        "train_text_router.py",
-        "evaluate_language_routers.py",
-        "run_language_control.py",
-    ]
-    payload = json.loads((verifier_root / "verification.json").read_text(encoding="utf-8"))
-    assert payload["verification_mode"] == "target_development"
+
+def test_stage_verifier_separates_pilot_completion_from_promotion(tmp_path: Path) -> None:
+    evidence = tmp_path / "pilot.json"
+    _write_json(
+        evidence,
+        _stage_flags(classifier_pilot_completed=True, classifier_pilot_promoted=False),
+    )
+    output = tmp_path / "verification"
+
+    assert (
+        verify_m5a.main(
+            [
+                "--verify-stage",
+                "classifier_pilot",
+                "--stage-report",
+                str(evidence),
+                "--output-root",
+                str(output),
+            ]
+        )
+        == 0
+    )
+    payload = json.loads((output / "verification.json").read_text(encoding="utf-8"))
     assert payload["passed"] is True
-    assert payload["physical_target_validated"] is True
-    assert payload["development_quality_gate_passed"] is True
-    assert payload["final_benchmark_authorized"] is True
-    assert payload["final_benchmark_completed"] is False
-    assert payload["language_final_accessed"] is False
-    assert payload["control_final_accessed"] is False
-    assert payload["historical_fresh_accessed"] is False
-    assert payload["smolvla_go"] is False
-    assert set(payload["development_gates"]) == {"classifier", "llm"}
-
-    def fail_if_called(command: object) -> int:
-        raise AssertionError(f"passed stage should have been reused: {command}")
-
-    assert verify_m5a.main(arguments, command_runner=fail_if_called) == 0
-    reused = json.loads((verifier_root / "verification.json").read_text(encoding="utf-8"))
-    assert all(reused["stage_reused"][name] is True for name in verify_m5a.TARGET_STAGE_NAMES)
-    assert reused["stage_reused"]["schedules"] is True
+    assert payload["classifier_pilot_completed"] is True
+    assert payload["classifier_pilot_promoted"] is False
 
 
-def test_target_development_propagates_nondefault_llm_runtime_contract(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _install_target_boundary_fixtures(monkeypatch)
-    m43_path = tmp_path / "m43.json"
-    _write_json(m43_path, _m43_report())
-    verifier_root = tmp_path / "verification"
-    runner = _TargetStageRunner(verifier_root=verifier_root)
-    arguments = [
-        *_target_arguments(tmp_path, m43_path=m43_path),
-        "--llm-maximum-new-tokens",
-        "64",
-        "--llm-repeat-count",
-        "3",
-    ]
-
-    assert verify_m5a.main(arguments, command_runner=runner) == 0
-    language = next(
-        command
-        for command in runner.commands
-        if Path(command[1]).name == "evaluate_language_routers.py"
+def test_stage_verifier_requires_real_cuda_tiny_overfit_evidence(tmp_path: Path) -> None:
+    evidence = tmp_path / "tiny.json"
+    _write_json(
+        evidence,
+        _stage_flags(
+            classifier_tiny_overfit_validated=True,
+            artifact_reload_validated=True,
+            cuda_training_validated=False,
+        ),
     )
-    control = next(
-        command for command in runner.commands if Path(command[1]).name == "run_language_control.py"
+    output = tmp_path / "verification"
+    assert (
+        verify_m5a.main(
+            [
+                "--verify-stage",
+                "classifier_tiny_overfit",
+                "--stage-report",
+                str(evidence),
+                "--output-root",
+                str(output),
+            ]
+        )
+        == 1
     )
-    assert _argument(language, "--llm-maximum-new-tokens") == "64"
-    assert _argument(control, "--llm-maximum-new-tokens") == "64"
-    assert _argument(language, "--repeat-count") == "3"
-    assert "--local-files-only" in language
-    assert "--allow-model-download" not in control
-    payload = json.loads((verifier_root / "verification.json").read_text(encoding="utf-8"))
-    assert payload["llm_maximum_new_tokens"] == 64
-    assert payload["llm_repeat_count"] == 3
-    assert payload["llm_local_files_only"] is True
+    payload = json.loads((output / "verification.json").read_text(encoding="utf-8"))
+    assert payload["classifier_tiny_overfit_validated"] is False
+    assert payload["passed"] is False
 
 
-@pytest.mark.parametrize(
-    ("updated_arguments", "expected_error"),
-    [
-        (["--llm-repeat-count", "3"], "language repeat count"),
-        (["drop-local-files-only"], "local-files-only provenance"),
-    ],
-)
-def test_target_development_rejects_stale_language_evidence_for_runtime_provenance(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    updated_arguments: list[str],
-    expected_error: str,
-) -> None:
-    _install_target_boundary_fixtures(monkeypatch)
-    m43_path = tmp_path / "m43.json"
-    _write_json(m43_path, _m43_report())
-    verifier_root = tmp_path / "verification"
-    runner = _TargetStageRunner(verifier_root=verifier_root)
-    original = _target_arguments(tmp_path, m43_path=m43_path)
-    assert verify_m5a.main(original, command_runner=runner) == 0
-    if updated_arguments == ["drop-local-files-only"]:
-        changed = [value for value in original if value != "--local-files-only"]
-    else:
-        changed = [*original, *updated_arguments]
-
-    def fail_if_called(command: object) -> int:
-        raise AssertionError(f"stale passed stage must be rejected before execution: {command}")
-
-    assert verify_m5a.main(changed, command_runner=fail_if_called) == 1
-    payload = json.loads((verifier_root / "verification.json").read_text(encoding="utf-8"))
-    assert expected_error in payload["checks"][-1]["detail"]
+def test_stage_verifier_screen_can_complete_without_selecting_a_router(tmp_path: Path) -> None:
+    evidence = tmp_path / "screen.json"
+    _write_json(
+        evidence,
+        _stage_flags(
+            stage="three_scene_control_screen",
+            physical_execution=True,
+            summaries={"oracle": {}, "classifier": {}},
+            selected_router=None,
+        ),
+    )
+    output = tmp_path / "verification"
+    assert (
+        verify_m5a.main(
+            [
+                "--verify-stage",
+                "three_scene_control_screen",
+                "--stage-report",
+                str(evidence),
+                "--output-root",
+                str(output),
+            ]
+        )
+        == 0
+    )
+    payload = json.loads((output / "verification.json").read_text(encoding="utf-8"))
+    assert payload["three_scene_control_screen_completed"] is True
+    assert payload["selected_router_locked"] is False
+    assert payload["passed"] is True
 
 
-def test_target_development_independently_rejects_unpinned_classifier_identity(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _install_target_boundary_fixtures(monkeypatch)
-    m43_path = tmp_path / "m43.json"
-    _write_json(m43_path, _m43_report())
-    verifier_root = tmp_path / "verification"
-    runner = _TargetStageRunner(verifier_root=verifier_root)
-    arguments = _target_arguments(tmp_path, m43_path=m43_path)
-    assert verify_m5a.main(arguments, command_runner=runner) == 0
-    classifier_report = verifier_root / "stages" / "classifier.json"
-    payload = json.loads(classifier_report.read_text(encoding="utf-8"))
-    payload["run_evidence"]["model_revision"] = "0" * 40
-    _write_json(classifier_report, payload)
+def test_stage_verifier_full_quality_is_separate_from_completion(tmp_path: Path) -> None:
+    evidence = tmp_path / "full.json"
+    _write_json(
+        evidence,
+        _stage_flags(
+            stage="full_control_development",
+            physical_execution=True,
+            summaries={"oracle": {}, "classifier": {}},
+            development_quality_gate_passed=False,
+            final_benchmark_authorized=False,
+        ),
+    )
+    output = tmp_path / "verification"
+    assert (
+        verify_m5a.main(
+            [
+                "--verify-stage",
+                "full_control_development",
+                "--stage-report",
+                str(evidence),
+                "--output-root",
+                str(output),
+            ]
+        )
+        == 0
+    )
+    payload = json.loads((output / "verification.json").read_text(encoding="utf-8"))
+    assert payload["passed"] is True
+    assert payload["development_quality_gate_passed"] is False
+    assert payload["final_benchmark_authorized"] is False
 
-    def fail_if_called(command: object) -> int:
-        raise AssertionError(f"unpinned classifier must be rejected before execution: {command}")
 
-    assert verify_m5a.main(arguments, command_runner=fail_if_called) == 1
-    verification = json.loads((verifier_root / "verification.json").read_text(encoding="utf-8"))
-    assert "classifier pinned model_revision differs" in verification["checks"][-1]["detail"]
+def test_stage_verifier_rejects_any_final_access(tmp_path: Path) -> None:
+    evidence = tmp_path / "language.json"
+    _write_json(
+        evidence,
+        _stage_flags(
+            llm_router_loaded=True,
+            llm_prompt_locked=True,
+            language_development_completed=True,
+            language_final_accessed=True,
+        ),
+    )
+    assert (
+        verify_m5a.main(
+            [
+                "--verify-stage",
+                "language_development",
+                "--stage-report",
+                str(evidence),
+                "--output-root",
+                str(tmp_path / "verification"),
+            ]
+        )
+        == 1
+    )
 
 
 def test_development_gate_quality_is_separate_from_experiment_completion(tmp_path) -> None:

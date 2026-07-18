@@ -65,8 +65,11 @@ def test_target_identity_and_training_schedule_are_single_and_bounded() -> None:
     assert cli.MODEL_ID == "distilbert/distilbert-base-uncased"
     assert cli.MODEL_REVISION == "12040accade4e8a0f71eabdb258fecc2e7e948be"
     assert cli.TOKENIZER_REVISION == cli.MODEL_REVISION
-    assert cli.TARGET_TRAINING_CONFIG.maximum_steps == 600
-    assert cli.TARGET_TRAINING_CONFIG.checkpoint_steps == (100, 200, 300, 400, 500, 600)
+    assert cli.TARGET_TRAINING_CONFIG.maximum_steps == 145
+    assert cli.TARGET_TRAINING_CONFIG.checkpoint_steps == (29, 58, 87, 116, 145)
+    assert cli.TARGET_STAGE_TRAINING_CONFIG.maximum_epochs == 5
+    assert cli.TARGET_STAGE_TRAINING_CONFIG.pilot_step == 29
+    assert cli.TARGET_STAGE_TRAINING_CONFIG.early_stopping_patience == 1
     assert cli.TARGET_TRAINING_CONFIG.encoder_trainable is True
     assert cli.TARGET_BATCH_SIZE == 32
     assert cli.TARGET_MAXIMUM_SEQUENCE_LENGTH == 64
@@ -241,6 +244,9 @@ def test_cli_modes_are_mutually_exclusive() -> None:
     with pytest.raises(SystemExit):
         cli.parse_args(["--dry-run", "--fixture"])
     assert cli.parse_args(["--target-development"]).target_development is True
+    assert cli.parse_args(["--target-pilot"]).target_pilot is True
+    assert cli.parse_args(["--target-resume"]).target_resume is True
+    assert cli.parse_args(["--tiny-overfit"]).tiny_overfit is True
 
 
 def test_run_evidence_rejects_non_serializable_git_contract() -> None:

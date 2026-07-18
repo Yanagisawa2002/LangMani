@@ -1,11 +1,12 @@
-"""Verify portable M5A contracts or orchestrate sealed target-development.
+"""Verify portable M5A contracts or one immutable staged evidence report.
 
 The default mode exercises deterministic CPU fixtures without claiming target
-execution. ``--target-development`` first validates the completed M4.3b gate,
-atomically locks all four M5A schedules, then resumably runs corpus creation,
-one classifier training, three-router language evaluation, and oracle/predicted
-control development. It independently aggregates correctness and quality while
-leaving every final/test/fresh/SmolVLA source sealed and unexecuted.
+execution. ``--verify-stage`` independently validates exactly one requested
+fixture, pilot, training, language, smoke, screen, or full-development report.
+``passed=true`` means that requested stage completed correctly and never means
+that promotion was granted.  The former all-in-one ``--target-development``
+entry point is retained only to fail clearly; expensive stages must be invoked
+and authorized separately.  Final/test/fresh/SmolVLA sources stay sealed.
 """
 
 from __future__ import annotations
@@ -91,6 +92,7 @@ from langmani.language.schedules import (  # noqa: E402
     materialize_control_schedule,
 )
 from langmani.language.schema_validation import parse_strict_router_json  # noqa: E402
+from langmani.language.stage_protocol import M5AStage  # noqa: E402
 from langmani.language.text_calibration import (  # noqa: E402
     RoutingThresholdExample,
     fit_validation_temperature,
@@ -327,6 +329,9 @@ class Report:
     split_isolation_validated: bool = False
     rule_router_validated: bool = False
     classifier_fixture_validated: bool = False
+    classifier_tiny_overfit_validated: bool = False
+    classifier_pilot_completed: bool = False
+    classifier_pilot_promoted: bool = False
     llm_router_fixture_validated: bool = False
     controller_registry_validated: bool = False
     final_schedules_locked: bool = False
@@ -336,6 +341,9 @@ class Report:
     llm_router_loaded: bool = False
     llm_prompt_locked: bool = False
     language_development_completed: bool = False
+    one_scene_control_smoke_completed: bool = False
+    three_scene_control_screen_completed: bool = False
+    selected_router_locked: bool = False
     oracle_control_development_completed: bool = False
     predicted_control_development_completed: bool = False
     control_development_completed: bool = False
@@ -374,11 +382,17 @@ class Report:
         )
         target_or_forbidden_claims = (
             self.classifier_training_completed,
+            self.classifier_tiny_overfit_validated,
+            self.classifier_pilot_completed,
+            self.classifier_pilot_promoted,
             self.classifier_checkpoint_selected,
             self.classifier_calibration_validated,
             self.llm_router_loaded,
             self.llm_prompt_locked,
             self.language_development_completed,
+            self.one_scene_control_smoke_completed,
+            self.three_scene_control_screen_completed,
+            self.selected_router_locked,
             self.oracle_control_development_completed,
             self.predicted_control_development_completed,
             self.control_development_completed,
@@ -452,6 +466,9 @@ class TargetDevelopmentReport:
     split_isolation_validated: bool = False
     rule_router_validated: bool = False
     classifier_fixture_validated: bool = False
+    classifier_tiny_overfit_validated: bool = False
+    classifier_pilot_completed: bool = False
+    classifier_pilot_promoted: bool = False
     llm_router_fixture_validated: bool = False
     controller_registry_validated: bool = False
     experiment_manifest_validated: bool = False
@@ -463,6 +480,9 @@ class TargetDevelopmentReport:
     llm_prompt_locked: bool = False
     language_validation_completed: bool = False
     language_development_completed: bool = False
+    one_scene_control_smoke_completed: bool = False
+    three_scene_control_screen_completed: bool = False
+    selected_router_locked: bool = False
     oracle_control_development_completed: bool = False
     predicted_control_development_completed: bool = False
     control_development_completed: bool = False
@@ -545,6 +565,104 @@ class TargetDevelopmentReport:
         return {
             "schema_version": REPORT_SCHEMA_VERSION,
             "verification_mode": "target_development",
+            **{key: value for key, value in asdict(self).items() if key != "checks"},
+            "checks": self.checks,
+            "passed": self.passed,
+        }
+
+
+@dataclass(slots=True)
+class StageVerificationReport:
+    """Independent truth table for exactly one requested M5A stage."""
+
+    requested_stage: str
+    evidence_path: str | None = None
+    checks: list[dict[str, object]] = field(default_factory=list)
+    implementation_validated: bool = False
+    corpus_validated: bool = False
+    split_isolation_validated: bool = False
+    rule_router_validated: bool = False
+    classifier_fixture_validated: bool = False
+    classifier_tiny_overfit_validated: bool = False
+    classifier_pilot_completed: bool = False
+    classifier_pilot_promoted: bool = False
+    classifier_training_completed: bool = False
+    classifier_checkpoint_selected: bool = False
+    classifier_calibration_validated: bool = False
+    llm_router_loaded: bool = False
+    llm_prompt_locked: bool = False
+    language_development_completed: bool = False
+    one_scene_control_smoke_completed: bool = False
+    three_scene_control_screen_completed: bool = False
+    selected_router_locked: bool = False
+    oracle_control_development_completed: bool = False
+    predicted_control_development_completed: bool = False
+    failure_attribution_validated: bool = False
+    development_quality_gate_passed: bool = False
+    final_benchmark_authorized: bool = False
+    language_final_accessed: bool = False
+    control_final_accessed: bool = False
+    test_split_accessed: bool = False
+    smolvla_go: bool = False
+    physical_target_validated: bool = False
+
+    def check(self, name: str, condition: bool, detail: str) -> None:
+        self.checks.append(
+            {"name": name, "status": "pass" if condition else "fail", "detail": detail}
+        )
+
+    @property
+    def failed(self) -> bool:
+        return any(value["status"] == "fail" for value in self.checks)
+
+    @property
+    def passed(self) -> bool:
+        required_by_stage = {
+            M5AStage.CLASSIFIER_FIXTURE.value: (self.classifier_fixture_validated,),
+            M5AStage.CLASSIFIER_TINY_OVERFIT.value: (self.classifier_tiny_overfit_validated,),
+            M5AStage.CLASSIFIER_PILOT.value: (self.classifier_pilot_completed,),
+            M5AStage.CLASSIFIER_TRAINING.value: (
+                self.classifier_training_completed,
+                self.classifier_checkpoint_selected,
+                self.classifier_calibration_validated,
+            ),
+            M5AStage.LANGUAGE_DEVELOPMENT.value: (
+                self.llm_router_loaded,
+                self.llm_prompt_locked,
+                self.language_development_completed,
+            ),
+            M5AStage.ONE_SCENE_CONTROL_SMOKE.value: (
+                self.one_scene_control_smoke_completed,
+                self.physical_target_validated,
+            ),
+            M5AStage.THREE_SCENE_CONTROL_SCREEN.value: (
+                self.three_scene_control_screen_completed,
+                self.physical_target_validated,
+            ),
+            M5AStage.FULL_CONTROL_DEVELOPMENT.value: (
+                self.oracle_control_development_completed,
+                self.predicted_control_development_completed,
+                self.failure_attribution_validated,
+                self.physical_target_validated,
+            ),
+        }.get(self.requested_stage)
+        forbidden = (
+            self.language_final_accessed,
+            self.control_final_accessed,
+            self.test_split_accessed,
+            self.smolvla_go,
+        )
+        return (
+            required_by_stage is not None
+            and not self.failed
+            and all(required_by_stage)
+            and not any(forbidden)
+        )
+
+    def payload(self) -> dict[str, object]:
+        return {
+            "schema_version": "langmani-m5a-stage-verification-v0",
+            "verification_mode": "stage_evidence",
             **{key: value for key, value in asdict(self).items() if key != "checks"},
             "checks": self.checks,
             "passed": self.passed,
@@ -672,8 +790,11 @@ def _verify_corpus_and_schedules(report: Report) -> None:
         set(locks) == expected_ids
         and bundle.language_final.sealed
         and bundle.control_final.sealed
-        and len(bundle.development_episodes) == 72
-        and bundle.control_final.episode_count == 180
+        and len(bundle.development_episodes) == 60
+        and len(bundle.one_scene_control_smoke.episodes) == 6
+        and len(bundle.three_scene_control_screen.episodes) == 18
+        and len(bundle.full_control_development.episodes) == 36
+        and bundle.control_final.episode_count == 72
         and language_blocked
         and control_blocked
     )
@@ -2501,15 +2622,110 @@ def _execute_target_development(
     )
 
 
-def _write_report(output_root: Path, report: Report | TargetDevelopmentReport) -> None:
+def _write_report(
+    output_root: Path, report: Report | TargetDevelopmentReport | StageVerificationReport
+) -> None:
     output_root.mkdir(parents=True, exist_ok=True)
     atomic_write_json(output_root / "verification.json", report.payload())
+
+
+def _verify_stage_evidence(stage: M5AStage, path: Path) -> StageVerificationReport:
+    source = _resolved_unlinked(path, label="M5A stage evidence")
+    report = StageVerificationReport(requested_stage=stage.value, evidence_path=str(source))
+    if not source.is_file() or source.is_symlink() or source.is_junction():
+        report.check("stage evidence path", False, "evidence must be one real JSON file")
+        return report
+    try:
+        payload = json.loads(source.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        report.check("stage evidence JSON", False, f"{type(error).__name__}: {error}")
+        return report
+    if not isinstance(payload, Mapping):
+        report.check("stage evidence object", False, "stage evidence must be one JSON object")
+        return report
+    report.check("stage command completion", payload.get("passed") is True, stage.value)
+    for forbidden in (
+        "language_final_accessed",
+        "control_final_accessed",
+        "test_split_accessed",
+        "smolvla_go",
+    ):
+        value = payload.get(forbidden)
+        setattr(report, forbidden, value is True)
+        report.check(forbidden, value is False, "sealed/out-of-scope source remains untouched")
+    if stage is M5AStage.CLASSIFIER_FIXTURE:
+        report.classifier_fixture_validated = payload.get("classifier_fixture_validated") is True
+    elif stage is M5AStage.CLASSIFIER_TINY_OVERFIT:
+        report.classifier_tiny_overfit_validated = (
+            payload.get("classifier_tiny_overfit_validated") is True
+            and payload.get("artifact_reload_validated") is True
+            and payload.get("cuda_training_validated") is True
+        )
+    elif stage is M5AStage.CLASSIFIER_PILOT:
+        report.classifier_pilot_completed = payload.get("classifier_pilot_completed") is True
+        report.classifier_pilot_promoted = payload.get("classifier_pilot_promoted") is True
+    elif stage is M5AStage.CLASSIFIER_TRAINING:
+        report.classifier_training_completed = payload.get("classifier_training_completed") is True
+        report.classifier_checkpoint_selected = (
+            payload.get("classifier_checkpoint_selected") is True
+        )
+        report.classifier_calibration_validated = (
+            payload.get("classifier_calibration_validated") is True
+        )
+        report.classifier_pilot_completed = payload.get("resumed_same_authoritative_run") is True
+    elif stage is M5AStage.LANGUAGE_DEVELOPMENT:
+        report.llm_router_loaded = payload.get("llm_router_loaded") is True
+        report.llm_prompt_locked = payload.get("llm_prompt_locked") is True
+        report.language_development_completed = (
+            payload.get("language_development_completed") is True
+        )
+    elif stage in {
+        M5AStage.ONE_SCENE_CONTROL_SMOKE,
+        M5AStage.THREE_SCENE_CONTROL_SCREEN,
+        M5AStage.FULL_CONTROL_DEVELOPMENT,
+    }:
+        report.physical_target_validated = payload.get("physical_execution") is True
+        report.failure_attribution_validated = isinstance(payload.get("summaries"), Mapping)
+        if stage is M5AStage.ONE_SCENE_CONTROL_SMOKE:
+            report.one_scene_control_smoke_completed = payload.get("stage") == stage.value
+        elif stage is M5AStage.THREE_SCENE_CONTROL_SCREEN:
+            report.three_scene_control_screen_completed = payload.get("stage") == stage.value
+            report.selected_router_locked = isinstance(payload.get("selected_router"), str)
+        else:
+            full = payload.get("stage") == stage.value
+            summaries = payload.get("summaries")
+            report.oracle_control_development_completed = (
+                full and isinstance(summaries, Mapping) and "oracle" in summaries
+            )
+            report.predicted_control_development_completed = (
+                full and isinstance(summaries, Mapping) and len(summaries) == 2
+            )
+            report.development_quality_gate_passed = (
+                payload.get("development_quality_gate_passed") is True
+            )
+            report.final_benchmark_authorized = payload.get("final_benchmark_authorized") is True
+    report.check("requested-stage contract", report.passed, stage.value)
+    return report
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
-    parser.add_argument("--target-development", action="store_true")
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument(
+        "--target-development",
+        action="store_true",
+        help="Retired monolithic entry point; invoke and verify one stage at a time.",
+    )
+    modes.add_argument(
+        "--verify-stage",
+        choices=tuple(
+            stage.value
+            for stage in M5AStage
+            if stage not in {M5AStage.IMPLEMENTATION, M5AStage.SEALED_FINAL}
+        ),
+    )
+    parser.add_argument("--stage-report", type=Path)
     parser.add_argument("--m43-independent-verification", type=Path)
     parser.add_argument("--llm-model-id")
     parser.add_argument("--llm-model-revision")
@@ -2578,21 +2794,26 @@ def main(
 ) -> int:
     args = parse_args(argv)
     output_root = _validate_output_root(args.output_root)
+    if args.verify_stage is not None:
+        if args.stage_report is None:
+            stage_report = StageVerificationReport(requested_stage=args.verify_stage)
+            stage_report.check(
+                "stage evidence path",
+                False,
+                "--stage-report is required for independent stage verification",
+            )
+        else:
+            stage_report = _verify_stage_evidence(M5AStage(args.verify_stage), args.stage_report)
+        _write_report(output_root, stage_report)
+        print(json.dumps(stage_report.payload(), sort_keys=True, allow_nan=False))
+        return 0 if stage_report.passed else 1
     if args.target_development:
         target_report = TargetDevelopmentReport()
-        try:
-            _execute_target_development(
-                args,
-                report=target_report,
-                runner=_default_command_runner if command_runner is None else command_runner,
-            )
-        except Exception as error:  # noqa: BLE001 - command boundary preserves diagnostics
-            traceback.print_exc()
-            target_report.check(
-                "target-development verifier exception",
-                False,
-                f"{type(error).__name__}: {error}",
-            )
+        target_report.check(
+            "retired monolithic target command",
+            False,
+            "use stage-specific producer commands followed by --verify-stage; no stage was run",
+        )
         _write_report(output_root, target_report)
         print(json.dumps(target_report.payload(), sort_keys=True, allow_nan=False))
         return 0 if target_report.passed else 1

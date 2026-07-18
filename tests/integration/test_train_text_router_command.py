@@ -12,7 +12,7 @@ from scripts import train_text_router as cli
 
 @pytest.mark.integration
 @pytest.mark.fixture
-def test_fixture_command_trains_promotes_and_reloads_without_development_or_final(
+def test_fixture_command_reloads_without_claiming_training_or_selection(
     tmp_path: Path,
 ) -> None:
     report = tmp_path / "fixture-report.json"
@@ -30,10 +30,10 @@ def test_fixture_command_trains_promotes_and_reloads_without_development_or_fina
     assert return_code == 0
     payload = json.loads(report.read_text(encoding="utf-8"))
     assert payload["passed"] is True
-    assert payload["classifier_fixture_completed"] is True
+    assert payload["classifier_fixture_validated"] is True
     assert payload["classifier_training_completed"] is False
-    assert payload["classifier_checkpoint_selected"] is True
-    assert payload["classifier_calibration_validated"] is True
+    assert payload["classifier_checkpoint_selected"] is False
+    assert payload["classifier_calibration_validated"] is False
     assert payload["artifact_reload_validated"] is True
     assert payload["development_accessed"] is False
     assert payload["language_final_accessed"] is False

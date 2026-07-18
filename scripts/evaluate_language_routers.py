@@ -64,7 +64,7 @@ DEFAULT_REPORT = PROJECT_ROOT / "outputs" / "diagnostics" / "m5a" / "language-ro
 
 COMMAND_SCHEMA = "langmani-m5a-language-router-evaluation-command-v1"
 EVIDENCE_SCHEMA = "langmani-m5a-language-router-evaluation-evidence-v1"
-CLASSIFIER_RUN_EVIDENCE_SCHEMA = "langmani-m5a-text-router-run-evidence-v1"
+CLASSIFIER_RUN_EVIDENCE_SCHEMA = "langmani-m5a-text-router-run-evidence-v2"
 CORPUS_ARCHIVE_SCHEMA = "langmani-m5a-language-corpus-archive-v1"
 DEFAULT_REPEAT_COUNT = 2
 
@@ -87,6 +87,13 @@ _CLASSIFIER_RUN_EVIDENCE_FIELDS = {
     "data_usage",
     "training_runtime",
     "random_seeds",
+}
+_STAGED_CLASSIFIER_RUN_EVIDENCE_FIELDS = _CLASSIFIER_RUN_EVIDENCE_FIELDS | {
+    "authoritative_run_fingerprint",
+    "classifier_training_seeds",
+    "robustness_across_training_seeds_not_evaluated",
+    "classifier_training_promoted",
+    "classifier_training_metrics",
 }
 _PROTECTED_ROOTS = tuple(
     PROJECT_ROOT / name for name in ("src", "scripts", "environment", "tests", "docs", ".git")
@@ -397,16 +404,63 @@ def _validate_classifier_evidence(
     classifier_manifest: Mapping[str, object],
     target_development: bool,
 ) -> tuple[TemperatureCalibrationV0, FactorizedTextRouterConfig]:
-    if set(evidence) != _CLASSIFIER_RUN_EVIDENCE_FIELDS:
+    expected_fields = (
+        _STAGED_CLASSIFIER_RUN_EVIDENCE_FIELDS
+        if target_development
+        else _CLASSIFIER_RUN_EVIDENCE_FIELDS
+    )
+    if set(evidence) != expected_fields:
         raise LanguageRouterEvaluationCommandError(
             "classifier run_evidence fields differ from the exact M5A schema"
         )
     if evidence.get("schema_version") != CLASSIFIER_RUN_EVIDENCE_SCHEMA:
         raise LanguageRouterEvaluationCommandError("classifier run_evidence schema differs")
-    if target_development and evidence.get("mode") != "target_development":
+    if target_development and evidence.get("mode") != "target_training_complete":
         raise LanguageRouterEvaluationCommandError(
-            "target evaluation requires a target-development classifier artifact"
+            "target evaluation requires the promoted staged classifier artifact"
         )
+    if target_development:
+        authoritative = evidence.get("authoritative_run_fingerprint")
+        if (
+            not isinstance(authoritative, str)
+            or not authoritative.startswith("sha256:")
+            or len(authoritative) != 71
+            or evidence.get("classifier_training_seeds") != 1
+            or evidence.get("robustness_across_training_seeds_not_evaluated") is not True
+            or evidence.get("classifier_training_promoted") is not True
+        ):
+            raise LanguageRouterEvaluationCommandError(
+                "classifier evidence does not bind the single authoritative seed-0 run"
+            )
+        training_metrics = _require_mapping(
+            evidence.get("classifier_training_metrics"),
+            label="classifier training-promotion metrics",
+        )
+        required_training_gate = {
+            "full_task_spec_accuracy": (">=", 0.95),
+            "object_accuracy": (">=", 0.97),
+            "bin_accuracy": (">=", 0.97),
+            "false_route_rate": ("<=", 0.03),
+            "ambiguous_rejection_recall": (">=", 0.90),
+            "unsupported_rejection_recall": (">=", 0.95),
+            "malformed_rejection_recall": (">=", 0.95),
+            "schema_valid_rate": ("==", 1.0),
+        }
+        for key, (operator, bound) in required_training_gate.items():
+            value = _require_finite_number(
+                training_metrics.get(key), label=f"classifier training metric {key}"
+            )
+            valid = (
+                value >= bound
+                if operator == ">="
+                else value <= bound
+                if operator == "<="
+                else value == bound
+            )
+            if not valid:
+                raise LanguageRouterEvaluationCommandError(
+                    "classifier artifact did not pass its validation promotion gate"
+                )
     if evidence.get("corpus_manifest") != corpus.manifest.to_dict():
         raise LanguageRouterEvaluationCommandError("classifier corpus identity differs")
     if evidence.get("split_fingerprints") != _split_fingerprints(corpus):
@@ -885,6 +939,85 @@ def _evaluation_payload(
     }
 
 
+def _language_candidate_promotions(
+    comparison: Mapping[str, object],
+) -> tuple[dict[str, dict[str, object]], str | None]:
+    """Apply the fixed language gate and rank only learned routers that passed it."""
+
+    development = comparison.get(LanguageSplit.DEVELOPMENT.value)
+    if not isinstance(development, Mapping):
+        raise LanguageRouterEvaluationCommandError("language development comparison is missing")
+    promotions: dict[str, dict[str, object]] = {}
+    ranking: list[tuple[tuple[float, float, float, float, float], str]] = []
+    for candidate in ("classifier", "llm"):
+        raw = development.get(candidate)
+        if not isinstance(raw, Mapping):
+            raise LanguageRouterEvaluationCommandError(
+                f"language development lacks {candidate} evidence"
+            )
+        summary_raw = raw.get("summary")
+        supplemental_raw = raw.get("supplemental_metrics")
+        if not isinstance(summary_raw, Mapping) or not isinstance(supplemental_raw, Mapping):
+            raise LanguageRouterEvaluationCommandError(
+                f"language development {candidate} metrics are malformed"
+            )
+        metrics = summary_raw
+        rejection_macro = (
+            sum(
+                float(metrics[key])
+                for key in (
+                    "ambiguous_rejection_recall",
+                    "unsupported_rejection_recall",
+                    "malformed_rejection_recall",
+                )
+            )
+            / 3.0
+        )
+        malformed_rate = (
+            float(supplemental_raw.get("structured_output_malformed_rate", 0.0))
+            if candidate == "llm"
+            else 0.0
+        )
+        gate_checks = {
+            "full_task_spec_accuracy": float(metrics["valid_full_task_accuracy"]) >= 0.95,
+            "object_accuracy": float(metrics["object_accuracy"]) >= 0.97,
+            "bin_accuracy": float(metrics["bin_accuracy"]) >= 0.97,
+            "false_route_rate": float(metrics["false_route_rate"]) <= 0.03,
+            "ambiguous_rejection_recall": (float(metrics["ambiguous_rejection_recall"]) >= 0.90),
+            "unsupported_rejection_recall": (
+                float(metrics["unsupported_rejection_recall"]) >= 0.95
+            ),
+            "malformed_rejection_recall": (float(metrics["malformed_rejection_recall"]) >= 0.95),
+            "schema_valid_rate": float(metrics["schema_valid_output_rate"]) >= 0.99,
+            "deterministic_repeatability": (float(metrics["deterministic_repeatability"]) == 1.0),
+            "llm_malformed_output_rate": candidate != "llm" or malformed_rate <= 0.01,
+        }
+        promoted = all(gate_checks.values())
+        p95 = float(metrics["latency_p95_ms"])
+        promotions[candidate] = {
+            "promoted": promoted,
+            "gate_checks": gate_checks,
+            "rejection_macro_recall": rejection_macro,
+            "malformed_output_rate": malformed_rate,
+            "latency_p95_ms": p95,
+        }
+        if promoted:
+            ranking.append(
+                (
+                    (
+                        -float(metrics["valid_full_task_accuracy"]),
+                        float(metrics["false_route_rate"]),
+                        -rejection_macro,
+                        malformed_rate,
+                        p95,
+                    ),
+                    candidate,
+                )
+            )
+    ranking.sort()
+    return promotions, None if not ranking else ranking[0][1]
+
+
 def _json_bytes(value: object) -> bytes:
     return (
         json.dumps(
@@ -1208,6 +1341,7 @@ def execute(
         split.value: {router_name: payload[1] for router_name, payload in results[split].items()}
         for split in (LanguageSplit.VALIDATION, LanguageSplit.DEVELOPMENT)
     }
+    candidate_promotions, primary_learned_router = _language_candidate_promotions(comparison)
     result_payload = {
         "schema_version": EVIDENCE_SCHEMA,
         "passed": True,
@@ -1233,6 +1367,14 @@ def execute(
             "texts_materialized": False,
         },
         "comparison": comparison,
+        "candidate_promotions": candidate_promotions,
+        "promoted_learned_routers": [
+            candidate
+            for candidate in ("classifier", "llm")
+            if candidate_promotions[candidate]["promoted"] is True
+        ],
+        "primary_learned_router": primary_learned_router,
+        "rule_router_offline_baseline_only": True,
         "evaluation_order": ["validation", "development"],
         "validation_completed_before_development": True,
         "classifier_checkpoint_selected": True,

@@ -213,12 +213,16 @@ classifier, and one explicitly pinned structured local instruct-model router. Ev
 one canonical M1 `TaskSpec`; ambiguous, unsupported, or malformed input is rejected before policy
 or environment execution.
 
-M5A owns four locked schedules, strict structured decisions, classifier validation-only selection
-and calibration, one frozen local-LLM prompt whose few-shot examples are train-family only, a
-portable six-controller registry,
-oracle-versus-predicted 72-episode development comparisons, and exact routing/control failure
-attribution. M1, M3A, M3B, frozen controllers, H=10/`project` runtime, and prior evidence remain
-unchanged. Language/control final schedules are fingerprinted but inaccessible during development.
+M5A owns four parent schedule locks, strict structured decisions, classifier validation-only
+selection and calibration, one frozen local-LLM prompt whose few-shot examples are train-family
+only, a portable six-controller registry, and exact routing/control failure attribution. Classifier
+development uses exactly one seed and progresses through fixture, tiny-overfit, a resumable
+step-29 authoritative pilot, and at most 145 total steps/five epochs with patience-one validation
+early stopping and three fixed checkpoint roles. Physical development progressively promotes
+candidates through disjoint 1-scene/3-scene/6-scene schedules, retaining Oracle at every stage and
+spending at most 144 routed episodes before final. M1, M3A, M3B, frozen controllers,
+H=10/`project` runtime, and prior evidence remain unchanged. Language/control final schedules are
+fingerprinted but inaccessible during development.
 M3B test sidecar identity may support seed/provenance validation, but its observations, actions,
 frames, Parquet content, and videos remain inaccessible. Correct experiment completion and the
 learned-router quality gate are separate; authorization never executes final automatically.
@@ -227,7 +231,8 @@ The normative contract is `docs/M5A_LANGUAGE_ROUTING_SPEC.md`.
 ## M5B — Sealed modular final and possible SmolVLA handoff (planned)
 
 Run a separate immutable M5A final benchmark only if at least one learned router passes every
-development gate. A future SmolVLA comparison requires a later explicit decision and must preserve
+development gate. The sealed final uses 12 unseen scenes x 6 tasks and only Oracle plus the single
+locked router (72 + 72 = 144 physical episodes). A future SmolVLA comparison requires a later explicit decision and must preserve
 the M5A schedules, frozen-controller ceiling, and failure attribution. M5A never starts it
 automatically.
 

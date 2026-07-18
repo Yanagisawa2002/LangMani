@@ -24,7 +24,21 @@ def _valid_classifier_evidence() -> tuple[dict[str, object], dict[str, object]]:
     }
     evidence: dict[str, object] = {
         "schema_version": cli.CLASSIFIER_RUN_EVIDENCE_SCHEMA,
-        "mode": "target_development",
+        "mode": "target_training_complete",
+        "authoritative_run_fingerprint": f"sha256:{'c' * 64}",
+        "classifier_training_seeds": 1,
+        "robustness_across_training_seeds_not_evaluated": True,
+        "classifier_training_promoted": True,
+        "classifier_training_metrics": {
+            "full_task_spec_accuracy": 0.95,
+            "object_accuracy": 0.97,
+            "bin_accuracy": 0.97,
+            "false_route_rate": 0.03,
+            "ambiguous_rejection_recall": 0.90,
+            "unsupported_rejection_recall": 0.95,
+            "malformed_rejection_recall": 0.95,
+            "schema_valid_rate": 1.0,
+        },
         "corpus_manifest": corpus.manifest.to_dict(),
         "split_fingerprints": {
             split.value: corpus.manifest.split_manifests[split].content_fingerprint

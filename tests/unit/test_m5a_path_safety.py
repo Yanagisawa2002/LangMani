@@ -120,6 +120,8 @@ def _control_args(tmp_path: Path):  # type: ignore[no-untyped-def]
             str(tmp_path / "control"),
             "--report",
             str(tmp_path / "control-report.json"),
+            "--stage",
+            "one_scene_control_smoke",
             "--dry-run",
         ]
     )
