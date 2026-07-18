@@ -613,6 +613,11 @@ safety-specific zero-false-route checks are unchanged. Correct offline execution
 `passed=true` while the quality gate is false. Physical validation stays false and no control stage
 starts automatically.
 
+If the frozen train-only smoke fails, the command stops there and persists an immutable terminal
+rejection with all 20 raw comparisons. The independent verifier requires historical replay, the
+development lock, and development artifacts to be absent in that case. No semantic policy may be
+changed from the smoke scores.
+
 Evidence is fingerprint-owned under
 `outputs/diagnostics/m5a/neuro-symbolic-router/<runtime-fingerprint>/`. It includes the symbolic,
 schema, decoder, model, prompt, arbiter, runtime, smoke, historical, five-router development,

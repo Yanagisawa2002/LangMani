@@ -1975,3 +1975,8 @@ compare RuleRouter, the frozen classifier, frozen Qwen3-1.7B, frozen direct Qwen
 promotable hybrid. Immutable staging, atomic promotion, raw-record metric recomputation, and an
 independent verifier remain required. This is offline GPU inference only: no optimizer, ACT,
 controller, environment, final split, control schedule, `m42_final_v0`, or SmolVLA is authorized.
+
+A semantic train-smoke failure is itself a terminal, independently verifiable experiment result.
+It persists all 20 raw semantic-frame comparisons and the exact failed checks, marks the candidate
+rejected, and creates neither historical-validation, lock, nor development evidence. This evidence
+lifecycle correction does not change the frozen prompt, schema, parser, arbiter, model, or gate.

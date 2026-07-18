@@ -732,10 +732,7 @@ class StageVerificationReport:
                 self.semantic_frame_schema_validated,
                 self.constrained_decoding_validated,
                 self.arbiter_validated,
-                self.neuro_symbolic_router_locked,
                 self.train_smoke_completed,
-                self.historical_validation_diagnostic_completed,
-                self.language_development_completed,
                 self.real_gpu_inference_validated,
             ),
             M5AStage.ONE_SCENE_CONTROL_SMOKE.value: (

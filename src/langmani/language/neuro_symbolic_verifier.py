@@ -94,13 +94,12 @@ def verify_neuro_symbolic_evidence(evidence_root: str | Path) -> dict[str, objec
     model = _object(root / "model_identity.json")
     decoder = _object(root / "constrained_decoder_identity.json")
     prompt = _object(root / "prompt.json")
-    prompt_lock = _object(root / "prompt_lock.json")
     runtime = _object(root / "runtime_identity.json")
     arbiter = _object(root / "arbiter_contract.json")
     semantic_schema = _object(root / "semantic_schema.json")
     symbolic = _object(root / "symbolic_contract.json")
     smoke = _object(root / "train_smoke.json")
-    historical = _object(root / "historical_validation_diagnostic.json")
+    selection = _object(root / "candidate_selection.json")
     if (
         model.get("model_id") != QWEN3_4B_INSTRUCT_MODEL_ID
         or model.get("model_revision") != QWEN3_4B_INSTRUCT_REVISION
@@ -135,28 +134,8 @@ def verify_neuro_symbolic_evidence(evidence_root: str | Path) -> dict[str, objec
         or decoder.get("grammar_cached_for_session") is not True
     ):
         raise NeuroSymbolicVerificationError("constrained decoder identity differs")
-    if (
-        prompt.get("train_only") is not True
-        or prompt.get("prompt_sweep") is not False
-        or prompt_lock.get("neuro_symbolic_router_locked") is not True
-        or prompt_lock.get("runtime_fingerprint") != owner.get("runtime_fingerprint")
-        or prompt_lock.get("prompt_fingerprint") != prompt.get("prompt_fingerprint")
-    ):
-        raise NeuroSymbolicVerificationError("prompt lock differs")
-    side_lock = root.parent / ".locks" / root.name / "prompt_lock.json"
-    if not side_lock.is_file() or _object(side_lock) != prompt_lock:
-        raise NeuroSymbolicVerificationError("pre-development side lock differs")
-    lock_identity = dict(prompt_lock)
-    observed_lock_fingerprint = lock_identity.pop("lock_fingerprint", None)
-    if observed_lock_fingerprint != f"sha256:{sha256_hex(lock_identity)}":
-        raise NeuroSymbolicVerificationError("development lock fingerprint differs")
-    if (
-        historical.get("post_selection_diagnostic_only") is not True
-        or historical.get("configuration_change_authorized") is not False
-        or historical.get("configuration_fingerprints_before")
-        != historical.get("configuration_fingerprints_after")
-    ):
-        raise NeuroSymbolicVerificationError("historical diagnostic changed configuration")
+    if prompt.get("train_only") is not True or prompt.get("prompt_sweep") is not False:
+        raise NeuroSymbolicVerificationError("train-only prompt contract differs")
     if (
         runtime.get("optimizer_constructed") is not False
         or runtime.get("training_performed") is not False
@@ -166,7 +145,6 @@ def verify_neuro_symbolic_evidence(evidence_root: str | Path) -> dict[str, objec
         or arbiter.get("arbiter_version") is None
         or semantic_schema.get("schema") is None
         or smoke.get("example_count") != 20
-        or smoke.get("gate_passed") is not True
         or runtime.get("visible_gpu_count") != 1
     ):
         raise NeuroSymbolicVerificationError("offline-only runtime contract differs")
@@ -188,7 +166,6 @@ def verify_neuro_symbolic_evidence(evidence_root: str | Path) -> dict[str, objec
         "constrained_decoding_validated",
         "arbiter_validated",
         "train_smoke_completed",
-        "historical_validation_diagnostic_completed",
         "real_gpu_inference_validated",
     )
     if any(flags.get(name) is not True for name in required_true):
@@ -206,12 +183,99 @@ def verify_neuro_symbolic_evidence(evidence_root: str | Path) -> dict[str, objec
         prompt.get("prompt_content") != expected_prompt
         or prompt.get("prompt_fingerprint") != expected_prompt_fingerprint
         or prompt.get("few_shot_example_ids") != list(expected_prompt_ids)
+    ):
+        raise NeuroSymbolicVerificationError("train-only prompt differs")
+    smoke_checks = smoke.get("checks")
+    smoke_records = smoke.get("records")
+    smoke_gate_passed = smoke.get("gate_passed") is True
+    if (
+        not isinstance(smoke_checks, Mapping)
+        or not isinstance(smoke_records, list)
+        or len(smoke_records) != 20
+        or smoke.get("example_ids") != list(expected_prompt_ids)
+        or smoke_gate_passed != all(value is True for value in smoke_checks.values())
+    ):
+        raise NeuroSymbolicVerificationError("train-only smoke evidence is malformed")
+    for record in smoke_records:
+        if not isinstance(record, Mapping):
+            raise NeuroSymbolicVerificationError("train-only smoke record is malformed")
+        semantic = record.get("semantic_frame")
+        expected_semantic = record.get("expected_semantic_frame")
+        if (
+            not isinstance(semantic, Mapping)
+            or not isinstance(expected_semantic, Mapping)
+            or record.get("semantic_fields_exact") != (dict(semantic) == dict(expected_semantic))
+        ):
+            raise NeuroSymbolicVerificationError("train-only semantic comparison differs")
+    if [record.get("example_id") for record in smoke_records] != list(expected_prompt_ids):
+        raise NeuroSymbolicVerificationError("train-only smoke record ordering differs")
+    if not smoke_gate_passed:
+        optional_true = (
+            "neuro_symbolic_router_locked",
+            "historical_validation_diagnostic_completed",
+            "language_development_completed",
+            "neuro_symbolic_language_quality_gate_passed",
+            "learned_router_selected",
+            "one_scene_control_smoke_authorized",
+        )
+        forbidden_artifacts = (
+            root / "prompt_lock.json",
+            root / "historical_validation_diagnostic.json",
+            root / "development",
+            root.parent / ".locks" / root.name,
+        )
+        if (
+            any(flags.get(name) is not False for name in optional_true)
+            or any(path.exists() for path in forbidden_artifacts)
+            or selection.get("stopped_at_train_smoke") is not True
+            or selection.get("rejection_classification") != "train_only_semantic_smoke_failure"
+        ):
+            raise NeuroSymbolicVerificationError("train-smoke rejection boundary differs")
+        return {
+            "schema_version": "langmani-m5a4-independent-verification-v0",
+            "passed": True,
+            "artifact_fingerprint": validated["artifact_fingerprint"],
+            "runtime_fingerprint": owner["runtime_fingerprint"],
+            "exact_model_identity_validated": True,
+            "constrained_decoding_validated": True,
+            "prompt_lock_validated": False,
+            "historical_diagnostic_non_selecting": False,
+            "stopped_at_train_smoke": True,
+            "development_metrics_recomputed": False,
+            "development_gate": None,
+            "forbidden_access_validated": True,
+            "no_training_or_controller_validated": True,
+            "flags": dict(flags),
+        }
+
+    prompt_lock = _object(root / "prompt_lock.json")
+    historical = _object(root / "historical_validation_diagnostic.json")
+    if (
+        prompt_lock.get("neuro_symbolic_router_locked") is not True
+        or prompt_lock.get("runtime_fingerprint") != owner.get("runtime_fingerprint")
+        or prompt_lock.get("prompt_fingerprint") != prompt.get("prompt_fingerprint")
         or prompt_lock.get("symbolic_contract_fingerprint") != parser.contract_fingerprint
         or prompt_lock.get("arbiter_fingerprint")
         != DeterministicSafetyArbiterV0().contract_fingerprint
         or prompt_lock.get("semantic_schema_fingerprint") != semantic_schema_fingerprint()
     ):
-        raise NeuroSymbolicVerificationError("train-only prompt or frozen contracts differ")
+        raise NeuroSymbolicVerificationError("prompt lock differs")
+    side_lock = root.parent / ".locks" / root.name / "prompt_lock.json"
+    if not side_lock.is_file() or _object(side_lock) != prompt_lock:
+        raise NeuroSymbolicVerificationError("pre-development side lock differs")
+    lock_identity = dict(prompt_lock)
+    observed_lock_fingerprint = lock_identity.pop("lock_fingerprint", None)
+    if observed_lock_fingerprint != f"sha256:{sha256_hex(lock_identity)}":
+        raise NeuroSymbolicVerificationError("development lock fingerprint differs")
+    if (
+        historical.get("post_selection_diagnostic_only") is not True
+        or historical.get("configuration_change_authorized") is not False
+        or historical.get("configuration_fingerprints_before")
+        != historical.get("configuration_fingerprints_after")
+        or flags.get("neuro_symbolic_router_locked") is not True
+        or flags.get("historical_validation_diagnostic_completed") is not True
+    ):
+        raise NeuroSymbolicVerificationError("historical diagnostic changed configuration")
     validation_examples = corpus.examples_for_split(LanguageSplit.VALIDATION)
     historical_raw = historical.get("records")
     historical_metrics = historical.get("metrics")

@@ -466,6 +466,118 @@ def _rendered_prompt_fingerprint(loader: TransformersLocalTextGenerator, prompt:
     return f"sha256:{sha256_hex(rendered)}"
 
 
+def _complete_train_smoke_rejection(
+    *,
+    paths: Mapping[str, Path],
+    owner: Mapping[str, object],
+    flags: Mapping[str, bool],
+    smoke: Mapping[str, object],
+    parser: SymbolicLexicalParserV0,
+    arbiter: DeterministicSafetyArbiterV0,
+    extractor: OutlinesQwenSemanticFrameExtractorV0,
+    loader: TransformersLocalTextGenerator,
+    dependencies: Mapping[str, object],
+    runtime_payload: Mapping[str, object],
+    runtime_fingerprint: str,
+    prompt_content: str,
+    prompt_fingerprint: str,
+    rendered_fingerprint: str,
+    prompt_ids: Sequence[str],
+) -> dict[str, object]:
+    """Persist and independently verify a terminal train-smoke rejection."""
+
+    artifacts: dict[str, object] = {
+        "symbolic_contract.json": parser.contract_dict(),
+        "semantic_schema.json": {
+            "schema_version": "langmani-m5a4-semantic-schema-v0",
+            "schema": semantic_frame_schema(),
+            "schema_fingerprint": semantic_schema_fingerprint(),
+            "final_router_status_field": False,
+            "final_task_spec_field": False,
+        },
+        "constrained_decoder_identity.json": {
+            "distribution": "outlines",
+            "version": OUTLINES_VERSION,
+            "license": OUTLINES_LICENSE,
+            "outlines_core_version": dependencies["outlines_core"],
+            "transformers_version": dependencies["transformers"],
+            "grammar_cached_for_session": True,
+            "free_form_fallback": False,
+            "compilation_seconds": extractor.compilation_seconds,
+        },
+        "model_identity.json": {
+            "model_id": QWEN3_4B_INSTRUCT_MODEL_ID,
+            "model_revision": QWEN3_4B_INSTRUCT_REVISION,
+            "tokenizer_revision": QWEN3_4B_INSTRUCT_REVISION,
+            "license": QWEN3_4B_INSTRUCT_LICENSE,
+            "dtype": "bfloat16",
+            "quantization": "none",
+            "device": "cuda:0",
+            "snapshot_path": loader.snapshot_path,
+            "snapshot_size_bytes": loader.snapshot_size_bytes,
+            "file_identities": loader.file_identities,
+            "expected_file_count": len(QWEN3_4B_INSTRUCT_FILE_IDENTITIES),
+            "weights_unchanged": True,
+        },
+        "prompt.json": {
+            "prompt_version": SEMANTIC_PROMPT_VERSION,
+            "prompt_content": prompt_content,
+            "prompt_fingerprint": prompt_fingerprint,
+            "rendered_prompt_fingerprint": rendered_fingerprint,
+            "few_shot_example_ids": list(prompt_ids),
+            "train_only": True,
+            "prompt_sweep": False,
+        },
+        "arbiter_contract.json": arbiter.contract_dict(),
+        "runtime_identity.json": {
+            **dict(runtime_payload),
+            "runtime_fingerprint": runtime_fingerprint,
+            "optimizer_constructed": False,
+            "training_performed": False,
+            "lora_used": False,
+            "robot_environment_created": False,
+            "controller_loaded": False,
+            "development_access_after_lock": False,
+            "language_final_accessed": False,
+            "control_final_accessed": False,
+            "test_split_accessed": False,
+            "m42_final_accessed": False,
+        },
+        "train_smoke.json": dict(smoke),
+        "candidate_selection.json": {
+            "candidate": "NeuroSymbolicRouterV0",
+            "only_promotable_candidate": True,
+            "stopped_at_train_smoke": True,
+            "rejection_classification": "train_only_semantic_smoke_failure",
+            "quality_gate_passed": False,
+            "learned_router_selected": False,
+            "one_scene_control_smoke_authorized": False,
+        },
+        "summary.md": (
+            "# M5A.4 Neuro-Symbolic Router\n\n"
+            "The frozen train-only semantic smoke failed. Historical validation, "
+            "language development, final sources, controllers, and robot environments "
+            "were not accessed. The candidate is rejected without prompt or policy changes.\n"
+        ),
+    }
+    evidence = write_neuro_symbolic_evidence(
+        paths["output"], owner=owner, artifacts=artifacts, flags=flags
+    )
+    independent = verify_neuro_symbolic_evidence(cast(str, evidence["root"]))
+    return {
+        "schema_version": COMMAND_SCHEMA,
+        "mode": "target_development",
+        "passed": independent["passed"] is True,
+        **dict(flags),
+        "stopped_at_train_smoke": True,
+        "runtime_fingerprint": runtime_fingerprint,
+        "artifact_fingerprint": evidence["artifact_fingerprint"],
+        "evidence_root": evidence["root"],
+        "independent_verification": independent,
+        "physical_target_validated": False,
+    }
+
+
 def _dry_run(args: argparse.Namespace, paths: Mapping[str, Path]) -> dict[str, object]:
     corpus = build_language_corpus()
     parser = SymbolicLexicalParserV0()
@@ -581,7 +693,23 @@ def _execute_target(args: argparse.Namespace, paths: Mapping[str, Path]) -> dict
     artifacts["train_smoke.json"] = smoke
     flags["train_smoke_completed"] = True
     if smoke["gate_passed"] is not True:
-        raise NeuroSymbolicCommandError("frozen train-only semantic smoke failed")
+        return _complete_train_smoke_rejection(
+            paths=paths,
+            owner=owner,
+            flags=flags,
+            smoke=smoke,
+            parser=parser,
+            arbiter=arbiter,
+            extractor=extractor,
+            loader=loader4,
+            dependencies=dependencies,
+            runtime_payload=runtime_payload,
+            runtime_fingerprint=runtime_fingerprint,
+            prompt_content=prompt_content,
+            prompt_fingerprint=prompt_fingerprint,
+            rendered_fingerprint=rendered_fingerprint,
+            prompt_ids=prompt_ids,
+        )
     before = {
         "prompt": prompt_fingerprint,
         "schema": semantic_schema_fingerprint(),

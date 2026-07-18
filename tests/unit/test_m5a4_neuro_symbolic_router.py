@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass, field
 from importlib.metadata import version
@@ -8,6 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from langmani.language import neuro_symbolic_verifier
 from langmani.language.corpus import build_language_corpus
 from langmani.language.llm_router import StructuredLLMRouterError
 from langmani.language.neuro_symbolic_evidence import (
@@ -29,8 +31,10 @@ from langmani.language.neuro_symbolic_router import (
     SemanticRequestedAction,
     SymbolicLexicalParserV0,
     build_semantic_frame_prompt,
+    expected_semantic_frame_payload,
     select_semantic_prompt_examples,
     semantic_frame_schema,
+    semantic_schema_fingerprint,
 )
 from langmani.language.router_types import LanguageSplit, RouterRejectionReason, RouterStatus
 
@@ -386,3 +390,113 @@ def test_evidence_output_path_safety(tmp_path: Path) -> None:
             artifacts={"../escape.json": {}},
             flags={},
         )
+
+
+def test_failed_train_smoke_is_a_verified_terminal_result(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    snapshot = tmp_path / "snapshot"
+    snapshot.mkdir()
+    model_file = snapshot / "tiny.bin"
+    model_file.write_bytes(b"tiny")
+    digest = hashlib.sha256(b"tiny").hexdigest()
+    monkeypatch.setattr(
+        neuro_symbolic_verifier,
+        "QWEN3_4B_INSTRUCT_FILE_IDENTITIES",
+        {"tiny.bin": (4, digest)},
+    )
+    corpus = build_language_corpus()
+    parser = SymbolicLexicalParserV0()
+    arbiter = DeterministicSafetyArbiterV0()
+    prompt_examples = select_semantic_prompt_examples(
+        corpus.examples_for_split(LanguageSplit.TRAIN)
+    )
+    prompt, prompt_fingerprint, prompt_ids = build_semantic_frame_prompt(
+        examples=prompt_examples, parser=parser
+    )
+    smoke_records: list[dict[str, object]] = []
+    for index, example in enumerate(prompt_examples):
+        expected = expected_semantic_frame_payload(example, parser.parse(example.raw_text))
+        observed = dict(expected)
+        if index == 0:
+            observed["is_meaningless_or_noise"] = not bool(observed["is_meaningless_or_noise"])
+        smoke_records.append(
+            {
+                "example_id": example.example_id,
+                "semantic_frame": observed,
+                "expected_semantic_frame": expected,
+                "semantic_fields_exact": observed == expected,
+                "deterministic": True,
+            }
+        )
+    flags = initial_m5a4_flags()
+    flags.update(
+        {
+            "neuro_symbolic_implementation_validated": True,
+            "symbolic_frame_validated": True,
+            "semantic_frame_schema_validated": True,
+            "constrained_decoding_validated": True,
+            "arbiter_validated": True,
+            "train_smoke_completed": True,
+            "real_gpu_inference_validated": True,
+        }
+    )
+    runtime_fingerprint = "sha256:" + "c" * 64
+    owner = {"runtime_fingerprint": runtime_fingerprint, "mode": "target_development"}
+    artifacts = {
+        "symbolic_contract.json": parser.contract_dict(),
+        "semantic_schema.json": {
+            "schema": semantic_frame_schema(),
+            "schema_fingerprint": semantic_schema_fingerprint(),
+        },
+        "constrained_decoder_identity.json": {
+            "distribution": "outlines",
+            "version": OUTLINES_VERSION,
+            "license": "Apache-2.0",
+            "free_form_fallback": False,
+            "grammar_cached_for_session": True,
+        },
+        "model_identity.json": {
+            "model_id": neuro_symbolic_verifier.QWEN3_4B_INSTRUCT_MODEL_ID,
+            "model_revision": neuro_symbolic_verifier.QWEN3_4B_INSTRUCT_REVISION,
+            "tokenizer_revision": neuro_symbolic_verifier.QWEN3_4B_INSTRUCT_REVISION,
+            "dtype": "bfloat16",
+            "quantization": "none",
+            "weights_unchanged": True,
+            "snapshot_path": str(snapshot),
+            "file_identities": {"tiny.bin": {"size_bytes": 4, "sha256": f"sha256:{digest}"}},
+        },
+        "prompt.json": {
+            "train_only": True,
+            "prompt_sweep": False,
+            "prompt_content": prompt,
+            "prompt_fingerprint": prompt_fingerprint,
+            "few_shot_example_ids": list(prompt_ids),
+        },
+        "arbiter_contract.json": arbiter.contract_dict(),
+        "runtime_identity.json": {
+            "optimizer_constructed": False,
+            "training_performed": False,
+            "robot_environment_created": False,
+            "controller_loaded": False,
+            "visible_gpu_count": 1,
+        },
+        "train_smoke.json": {
+            "example_count": 20,
+            "example_ids": list(prompt_ids),
+            "checks": {"field_semantics_match_train_labels": False},
+            "gate_passed": False,
+            "records": smoke_records,
+        },
+        "candidate_selection.json": {
+            "stopped_at_train_smoke": True,
+            "rejection_classification": "train_only_semantic_smoke_failure",
+        },
+    }
+    written = write_neuro_symbolic_evidence(
+        tmp_path / "evidence", owner=owner, artifacts=artifacts, flags=flags
+    )
+    verified = neuro_symbolic_verifier.verify_neuro_symbolic_evidence(written["root"])
+    assert verified["passed"] is True
+    assert verified["stopped_at_train_smoke"] is True
+    assert verified["prompt_lock_validated"] is False
