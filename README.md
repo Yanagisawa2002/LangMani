@@ -1077,6 +1077,43 @@ validation gate passes. It stops before controller lookup or environment creatio
 command means the requested offline protocol completed correctly; the separate quality and
 `one_scene_control_smoke_authorized` flags may remain false.
 
+The real M5A.2 target run passed its 20-example smoke but failed the unchanged validation gate:
+85.56% full TaskSpec/object/bin accuracy, 14.17% false-route, 92.67% final schema validity,
+7.33% malformed after repair, and 59.09%/52.78%/50.00%
+ambiguous/unsupported/malformed rejection recall. It is now a frozen negative LLM baseline;
+language development was not accessed.
+
+M5A.3 permits one capacity comparison only, using the exact same semantic prompt, few-shot IDs,
+strict parser, single repair, validation records, metrics, and gates with
+`Qwen/Qwen3-4B-Instruct-2507` revision
+`cdbee75f17c01a7cc42f958dc650907174af0554`. Local fixture and structural verification do not
+download or run the model:
+
+```bash
+python scripts/evaluate_qwen_scale_escalation.py --fixture \
+  --device cpu \
+  --output-root outputs/diagnostics/m5a/qwen4b-escalation-fixture \
+  --report outputs/diagnostics/m5a/stages/qwen4b-escalation-fixture.json
+python environment/verify_m5a3.py
+```
+
+The real command uses one visible GPU, BF16, no quantization, and no fallback. It stops after a
+failed smoke or validation gate; only a passing validation may open language development. The
+independent verifier takes the emitted immutable evidence root. Neither command loads ACT or a
+robot environment, and both leave physical target validation false:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python scripts/evaluate_qwen_scale_escalation.py \
+  --target-development --device cuda \
+  --license-reviewed --model-card-reviewed \
+  --output-root outputs/diagnostics/m5a/qwen4b-escalation \
+  --report outputs/diagnostics/m5a/stages/qwen4b-escalation.json
+
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m5a3.py \
+  --evidence-root outputs/diagnostics/m5a/qwen4b-escalation/<runtime-fingerprint> \
+  --report outputs/diagnostics/m5a/qwen4b-escalation-verification.json
+```
+
 Other later stages still require separate authorization and use ordinary `--target-resume` only
 for an originally promoted pilot, followed by offline language evaluation and
 `run_language_control.py --stage {one_scene_control_smoke,three_scene_control_screen,full_control_development}`.

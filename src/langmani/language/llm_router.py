@@ -84,6 +84,73 @@ QWEN3_1_7B_FILE_IDENTITIES: Mapping[str, tuple[int, str]] = {
     ),
 }
 
+QWEN3_4B_INSTRUCT_MODEL_ID = "Qwen/Qwen3-4B-Instruct-2507"
+QWEN3_4B_INSTRUCT_REVISION = "cdbee75f17c01a7cc42f958dc650907174af0554"
+QWEN3_4B_INSTRUCT_LICENSE = "apache-2.0"
+QWEN3_4B_INSTRUCT_FILE_IDENTITIES: Mapping[str, tuple[int, str]] = {
+    ".gitattributes": (
+        1570,
+        "34448b82c17d60fec9b65b1f093c115ddbaadc04beb1b0140b6bfed2e012a930",
+    ),
+    "LICENSE": (11343, "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e"),
+    "README.md": (
+        8168,
+        "8e3dd0c3b5b11897cc71092ccfe517bb7a9783479baa3665aad73c8d1a2041cd",
+    ),
+    "config.json": (
+        727,
+        "5beea1a4a34c62782bfb2f911c606741a3bab8f92d80a118fa053c28af12e8ba",
+    ),
+    "generation_config.json": (
+        238,
+        "835fffe355c9438e7a25be099b3fccaa98350b83451f9fd2d99512e74f1ade48",
+    ),
+    "merges.txt": (
+        1671839,
+        "599bab54075088774b1733fde865d5bd747cbcc7a547c5bc12610e874e26f5e3",
+    ),
+    "model-00001-of-00003.safetensors": (
+        3957900840,
+        "75311d91bb08cf0b882913da464a1e722a31fb44db35208663487efb7a3d8ed6",
+    ),
+    "model-00002-of-00003.safetensors": (
+        3987450520,
+        "0b48adbb1f60e901153d91907ba11ce63bd4b8b584482e730f48808d055dfba1",
+    ),
+    "model-00003-of-00003.safetensors": (
+        99630640,
+        "7dd39ccca5e4de123c74c14af44c9bf2eb75df33b4614382af0134528e060d5d",
+    ),
+    "model.safetensors.index.json": (
+        32819,
+        "d6c42883a895dfef5b0080ed2116a1bcd764f558406b98923d675978a1abf29c",
+    ),
+    "tokenizer.json": (
+        11422654,
+        "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+    ),
+    "tokenizer_config.json": (
+        9377,
+        "a62ff0a2472a0fa1b8eaabcb57c59b58afa42a22831dc141400b6e0cf2b65ce3",
+    ),
+    "vocab.json": (
+        2776833,
+        "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+    ),
+}
+
+_PINNED_MODEL_FILES: Mapping[tuple[str, str], Mapping[str, tuple[int, str]]] = {
+    (QWEN3_1_7B_MODEL_ID, QWEN3_1_7B_REVISION): QWEN3_1_7B_FILE_IDENTITIES,
+    (
+        QWEN3_4B_INSTRUCT_MODEL_ID,
+        QWEN3_4B_INSTRUCT_REVISION,
+    ): QWEN3_4B_INSTRUCT_FILE_IDENTITIES,
+}
+_CHAT_TEMPLATE_MODES = {
+    "official_qwen_enable_thinking_false",
+    "official_qwen_instruct_non_thinking",
+}
+
 
 class StructuredLLMRouterError(RuntimeError):
     """Raised when the explicitly configured local LLM cannot be used safely."""
@@ -128,6 +195,8 @@ class StructuredLLMRouterConfig:
             raise ValueError("maximum_new_tokens must lie in [1,512]")
         if self.maximum_format_repair_attempts not in (0, 1):
             raise ValueError("at most one format-repair attempt is permitted")
+        if self.chat_template_mode not in _CHAT_TEMPLATE_MODES:
+            raise ValueError("chat_template_mode is not one authorized Qwen transport")
 
     @property
     def fingerprint(self) -> str:
@@ -515,6 +584,7 @@ class TransformersLocalTextGenerator:
     ) -> None:
         if device not in {"cpu", "cuda"}:
             raise ValueError("device must be cpu or cuda")
+        self.config = config
         try:
             from huggingface_hub import snapshot_download
             from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -526,6 +596,7 @@ class TransformersLocalTextGenerator:
             "bfloat16": torch.bfloat16,
         }[config.dtype]
         try:
+            download_started = time.perf_counter()
             snapshot = Path(
                 snapshot_download(
                     config.model_id,
@@ -533,6 +604,7 @@ class TransformersLocalTextGenerator:
                     local_files_only=local_files_only,
                 )
             )
+            self.model_download_seconds = time.perf_counter() - download_started
             self.file_identities = self._validate_snapshot(snapshot, config=config)
             self.tokenizer = AutoTokenizer.from_pretrained(
                 snapshot,
@@ -553,6 +625,9 @@ class TransformersLocalTextGenerator:
         self.model.eval()
         self.device = device
         self.snapshot_path = str(snapshot)
+        self.snapshot_size_bytes = sum(
+            int(value["size_bytes"]) for value in self.file_identities.values()
+        )
         self.generation_metadata: list[dict[str, object]] = []
         self.peak_gpu_memory_bytes = 0
 
@@ -560,12 +635,20 @@ class TransformersLocalTextGenerator:
     def _validate_snapshot(
         snapshot: Path, *, config: StructuredLLMRouterConfig
     ) -> dict[str, dict[str, object]]:
-        if config.model_id != QWEN3_1_7B_MODEL_ID or config.model_revision != QWEN3_1_7B_REVISION:
-            raise StructuredLLMRouterError("M5A.2 requires the one pinned Qwen3-1.7B identity")
-        if config.tokenizer_revision != QWEN3_1_7B_REVISION:
-            raise StructuredLLMRouterError("M5A.2 model and tokenizer revisions must match")
+        expected_files = _PINNED_MODEL_FILES.get((config.model_id, config.model_revision))
+        if expected_files is None:
+            raise StructuredLLMRouterError("configured local model is not an authorized identity")
+        if config.tokenizer_revision != config.model_revision:
+            raise StructuredLLMRouterError("model and tokenizer revisions must match exactly")
+        expected_mode = (
+            "official_qwen_enable_thinking_false"
+            if config.model_id == QWEN3_1_7B_MODEL_ID
+            else "official_qwen_instruct_non_thinking"
+        )
+        if config.chat_template_mode != expected_mode:
+            raise StructuredLLMRouterError("model identity and chat-template transport differ")
         actual: dict[str, dict[str, object]] = {}
-        for name, (expected_size, expected_sha) in QWEN3_1_7B_FILE_IDENTITIES.items():
+        for name, (expected_size, expected_sha) in expected_files.items():
             path = snapshot / name
             if not path.is_file():
                 raise StructuredLLMRouterError(f"pinned model snapshot omitted {name}")
@@ -580,6 +663,31 @@ class TransformersLocalTextGenerator:
             actual[name] = {"size_bytes": size, "sha256": f"sha256:{observed}"}
         return actual
 
+    def _chat_template_kwargs(self) -> dict[str, object]:
+        if self.config.chat_template_mode == "official_qwen_enable_thinking_false":
+            return {"enable_thinking": False}
+        if self.config.chat_template_mode == "official_qwen_instruct_non_thinking":
+            return {}
+        raise StructuredLLMRouterError("chat-template transport is not authorized")
+
+    def rendered_prompt_fingerprint(self, prompt: str) -> str:
+        """Hash the official tokenizer transport without changing prompt semantics."""
+
+        try:
+            rendered = self.tokenizer.apply_chat_template(
+                [{"role": "user", "content": prompt}],
+                add_generation_prompt=True,
+                tokenize=False,
+                **self._chat_template_kwargs(),
+            )
+        except (AttributeError, OSError, RuntimeError, TypeError, ValueError) as error:
+            raise StructuredLLMRouterError(
+                f"configured instruct tokenizer lacks a usable chat template: {error}"
+            ) from error
+        if not isinstance(rendered, str) or not rendered:
+            raise StructuredLLMRouterError("chat template did not render one non-empty prompt")
+        return f"sha256:{sha256_hex(rendered)}"
+
     def generate(self, prompt: str, *, max_new_tokens: int) -> str:
         messages = [{"role": "user", "content": prompt}]
         try:
@@ -589,7 +697,7 @@ class TransformersLocalTextGenerator:
                 tokenize=True,
                 return_tensors="pt",
                 return_dict=True,
-                enable_thinking=False,
+                **self._chat_template_kwargs(),
             )
         except (AttributeError, OSError, RuntimeError, TypeError, ValueError) as error:
             raise StructuredLLMRouterError(
@@ -631,6 +739,7 @@ class TransformersLocalTextGenerator:
                 "peak_gpu_memory_bytes": peak,
                 "do_sample": False,
                 "enable_thinking": False,
+                "chat_template_mode": self.config.chat_template_mode,
             }
         )
         return cast(str, self.tokenizer.decode(output_ids, skip_special_tokens=True))
@@ -644,6 +753,10 @@ __all__ = [
     "QWEN3_1_7B_LICENSE",
     "QWEN3_1_7B_MODEL_ID",
     "QWEN3_1_7B_REVISION",
+    "QWEN3_4B_INSTRUCT_FILE_IDENTITIES",
+    "QWEN3_4B_INSTRUCT_LICENSE",
+    "QWEN3_4B_INSTRUCT_MODEL_ID",
+    "QWEN3_4B_INSTRUCT_REVISION",
     "LocalTextGenerator",
     "StructuredLLMRouterConfig",
     "StructuredLLMRouterError",

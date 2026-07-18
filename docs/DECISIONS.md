@@ -1919,3 +1919,29 @@ controller or robot environment and never opens language final, control schedule
 historical fresh results, `m42_final_v0`, or SmolVLA. A passing offline experiment and a passing
 LLM quality gate remain separate; even a selected LLM only authorizes a later separately executed
 one-scene smoke.
+
+## D-064 — Permit one fixed Qwen3-4B capacity comparison after the 1.7B rejection
+
+The real M5A.2 Qwen3-1.7B run completed its 20-example smoke and 300-example validation correctly,
+but failed the unchanged gate. Full TaskSpec/object/bin accuracy was 85.56%, false-route was
+14.17%, final schema validity was 92.67%, malformed-after-repair was 7.33%, and rejection-class
+recalls remained below threshold. That prompt, parser, output evidence, and result are frozen as a
+negative baseline; no prompt edit, extra repair, additional seed, classifier training, or 1.7B
+rerun is authorized.
+
+M5A.3 authorizes exactly one controlled model-capacity escalation:
+`Qwen/Qwen3-4B-Instruct-2507` at immutable model/tokenizer revision
+`cdbee75f17c01a7cc42f958dc650907174af0554`, Apache-2.0, BF16, no quantization, and one visible
+GPU. The official instruct tokenizer template may differ only as transport formatting; the
+semantic prompt, few-shot IDs/labels, corpus, validation order, strict schema/parser, one-repair
+policy, generation bounds, metrics, and conjunctive validation/development gates remain identical.
+The adapter accepts only the two already recorded exact 1.7B and 4B identities and has no 8B,
+moving-revision, quantization, hosted, or automatic fallback path.
+
+M5A.3 adds a project-owned candidate identity, prompt-equivalence contract, immutable staged
+evidence, scale-delta report, and independent verifier. Smoke gates validation and validation gates
+language development. A failed validation produces no development evidence and cannot trigger a
+prompt change or another model. No optimizer, weight update, ACT/controller load, robot
+environment, language/control final, M3B test, `m42_final_v0`, or SmolVLA access is permitted.
+`passed=true` records correct offline execution; quality and later control authorization remain
+separate, and `physical_target_validated=false` throughout.

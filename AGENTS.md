@@ -16,8 +16,11 @@ completed. Validation selected epoch 4/step 116, but the unchanged full quality 
 rejection generalization. M5A.1 completed the validation-only, no-training post-hoc rejection
 analysis and independently verified its immutable evidence. The best safe decoder still failed the
 unchanged rejection-reason thresholds, so the classifier is frozen as a rejected offline baseline
-and no classifier runtime exists. M5A language development, target control evaluation, its sealed
-final benchmark, and SmolVLA have not started.
+and no classifier runtime exists. M5A.2 completed the one authorized Qwen3-1.7B offline comparison;
+its train smoke passed, its 300-example validation gate failed, and language development stayed
+sealed. M5A.3 is the active bounded capacity comparison and permits only the same frozen prompt,
+parser, repair policy, and records with `Qwen/Qwen3-4B-Instruct-2507`. Target control evaluation,
+the sealed final benchmark, and SmolVLA have not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
@@ -153,8 +156,10 @@ python environment/verify_m43b.py --help
 python scripts/build_language_corpus.py --help
 python scripts/train_text_router.py --help
 python scripts/evaluate_language_routers.py --help
+python scripts/evaluate_qwen_scale_escalation.py --help
 python scripts/run_language_control.py --help
 python environment/verify_m5a.py
+python environment/verify_m5a3.py
 python scripts/analyze_classifier_rejection.py --help
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the

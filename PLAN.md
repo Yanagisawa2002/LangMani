@@ -253,13 +253,22 @@ routeable full TaskSpec accuracy, but only 71.21%/80.56%/94.44% ambiguous/unsupp
 recall. The full conjunctive gate failed, so no runtime was published, the classifier is frozen,
 and additional training or seed authorization remains false. Language development did not start.
 
-M5A.2 adjusts the next stage rather than reopening that result. The classifier is evaluated only
-as a frozen offline negative baseline, RuleRouter remains the deterministic baseline, and the sole
-learned candidate is pinned `Qwen/Qwen3-1.7B` through `StructuredLocalLLMRouterV0`. One train-only
-smoke precedes one complete validation pass; the complete language-development split opens only
-if every validation threshold passes. Immutable evidence and an independent verifier recompute the
-raw metrics and gates. This stage performs no training or robot rollout and can at most authorize,
-never execute, the later one-scene control smoke.
+M5A.2 adjusted the next stage rather than reopening that result. The classifier remained a frozen
+offline negative baseline, RuleRouter remained the deterministic baseline, and the sole learned
+candidate was pinned `Qwen/Qwen3-1.7B` through `StructuredLocalLLMRouterV0`. Its 20-example smoke
+passed, but the complete 300-example validation reached only 85.56% full TaskSpec accuracy,
+14.17% false-route, 92.67% final schema validity, and 59.09%/52.78%/50.00%
+ambiguous/unsupported/malformed rejection recall. The conjunctive gate failed, so Qwen3-1.7B is
+also frozen as an offline negative baseline and language development did not open.
+
+M5A.3 authorizes one controlled capacity escalation only: `Qwen/Qwen3-4B-Instruct-2507` at exact
+revision `cdbee75f17c01a7cc42f958dc650907174af0554`. It keeps the corpus, validation order,
+few-shot IDs and labels, semantic prompt, strict parser, one-repair policy, metrics, and gates
+unchanged. The stage performs BF16 inference on one GPU with no training, quantization, fallback,
+ACT/controller load, or robot environment. Smoke gates validation; validation gates language
+development; neither failure authorizes an 8B model or prompt change. Independent immutable
+evidence distinguishes correct offline execution from quality promotion, and physical target
+validation remains false.
 
 ## M5B — Sealed modular final and possible SmolVLA handoff (planned)
 

@@ -539,3 +539,53 @@ For this language-only stage, `passed=true` means the requested smoke/validation
 development protocol completed and independently verified. It does not imply a quality pass.
 `real_gpu_inference_validated=true` requires real pinned-model inference;
 `physical_target_validated` remains false because M5A.2 performs no robot rollout.
+
+### Observed M5A.2 result
+
+The fixed Qwen3-1.7B candidate passed all 20 train-smoke examples. On the exact 300-example
+validation split it obtained 85.56% full TaskSpec, object, and bin accuracy; 14.17% false-route;
+92.67% final schema validity; 7.33% malformed output after its one repair; and
+59.09%/52.78%/50.00% ambiguous/unsupported/malformed rejection recall. Deterministic
+repeatability was 100%. The validation gate failed, so language development was not accessed and
+Qwen3-1.7B is frozen as a non-dispatchable, non-promotable offline negative baseline.
+
+## M5A.3 one-model capacity escalation
+
+M5A.3 asks only whether a larger fixed instruct checkpoint improves the same routing problem. The
+sole authorized candidate is `Qwen/Qwen3-4B-Instruct-2507`, with model and tokenizer revision
+`cdbee75f17c01a7cc42f958dc650907174af0554`, Apache-2.0, BF16, no quantization, one visible GPU,
+and the public Transformers model/tokenizer APIs. It is an inference-only stage: no optimizer,
+training, fine-tuning, LoRA, model sweep, 8B fallback, hosted API, ACT controller, robot
+environment, or environment step is permitted.
+
+The semantic prompt text, train-only few-shot IDs and labels, 20-example smoke IDs, strict
+four-field schema, reason vocabulary, parser, maximum one repair, generation bounds, validation
+records/order, metric implementation, and all M5A.2 quality thresholds are unchanged. The 4B
+tokenizer's official instruct template is a transport layer only and receives no invented thinking
+switch. `prompt_equivalence.json` separately binds the 1.7B semantic prompt fingerprint, the 4B
+rendered transport fingerprint, semantic-content fingerprint, few-shot IDs, schema, parser, and
+repair-policy fingerprints. Validation cannot begin unless `semantic_prompt_content_equal=true`.
+
+The exact train-only smoke must complete 20 examples, cover all six TaskSpecs and four statuses,
+keep rejections non-executable, reach at least 99% final schema validity, and repeat
+deterministically. Smoke failure stops before validation. A passing smoke opens the same 300
+validation examples exactly once. The unchanged validation gate is conjunctive: TaskSpec >=95%,
+object/bin >=97%, false-route <=3%, ambiguous >=90%, unsupported/malformed >=95%, final schema
+validity >=99%, malformed after repair <=1%, deterministic repeatability 100%, and no prohibited
+source access. Failure creates no development directory and records `stopped_at_validation=true`.
+
+Only a validation pass may open complete `m5a_language_dev_v0`. Development evaluates RuleRouter,
+the frozen classifier, frozen Qwen3-1.7B, and the locked Qwen3-4B runtime. It retains the M5A.2
+gate plus every-TaskSpec >=90%, rejection-family false-route <=10%, and explicit non-routing of
+empty/meaningless, conflicting-object, conflicting-bin, and unsupported-action inputs. A passing
+development gate may set `learned_router_selected=true` and authorize a later separately executed
+one-scene control smoke, but M5A.3 never runs robot control itself.
+
+Evidence lives below
+`outputs/diagnostics/m5a/qwen4b-escalation/<runtime-fingerprint>/`. Staging, fsync, checksum
+validation, atomic promotion, immutable reuse, and an independent raw-record verifier are
+mandatory. The scale report uses identical ordered validation IDs and reports 4B-minus-1.7B deltas
+for semantic accuracy, false routes, rejection recall, schema/repair behavior, latency, generated
+tokens, and GPU memory. `passed=true` means the authorized offline protocol and evidence completed;
+it does not imply either quality gate passed. `physical_target_validated=false`, and language final,
+control development/final, M3B test, `m42_final_v0`, and SmolVLA remain inaccessible.
