@@ -430,3 +430,41 @@ control ceiling. Only after immutable target-development evidence may a separate
 final benchmark compare qualified learned routers. A later SmolVLA study, if authorized, must use
 the same language/control schedules, failure attribution, and frozen-controller modular baseline;
 M5A never starts it automatically.
+
+## M5A.1 frozen-classifier rejection analysis
+
+The completed authoritative seed-0 classifier run selected epoch 4, step 116 from validation only.
+Its routeable TaskSpec, object, and bin accuracies are 100%, but its observed false-route rate is
+7.5% and ambiguous/unsupported/malformed rejection recalls are 63.64%, 72.22%, and 94.44%.
+M5A.1 diagnoses this frozen result; it is not another training stage.
+
+Inputs are limited to the selected checkpoint, train records for class/provenance auditing, and
+the complete validation split. Development/final language, control, M3B test content, historical
+fresh evaluation, `m42_final_v0`, and SmolVLA are inaccessible. The analysis reconstructs the
+pinned encoder from configuration, loads checkpoint weights directly, runs two deterministic CPU
+validation passes, and independently proves unchanged checkpoint bytes, model-state fingerprint,
+and global step. It never constructs an optimizer or scheduler and never creates a seed or run.
+
+Before scoring, `DecoderThresholdGridV0` locks route thresholds 0.40 through 0.95 by 0.05, route
+margins -0.20 through 0.50 by 0.05, object/bin confidence thresholds 0.40 through 0.95 by 0.05,
+and both identity and one validation-fitted status temperature. Exactly four candidates are legal:
+`BaselineFourWayArgmaxV0`, `AggregatedRejectThresholdV0`, `HierarchicalStatusDecoderV0`, and
+`ConservativeRouteDecoderV0`. No lexical rule, family ID, expected label, or post-inspection grid
+refinement may enter decoding.
+
+A configuration is eligible only at false-route <=3%, schema validity 100%, routeable full TaskSpec
+>=95%, object >=97%, and bin >=97%. Eligible configurations are ranked, in order, by ambiguous,
+unsupported, and malformed recall; rejection macro recall; lower false rejection; higher route
+coverage; higher route threshold; then lexicographic configuration fingerprint. Promotion further
+requires ambiguous >=90%, unsupported >=95%, and malformed >=95% with all preceding eligibility
+conditions. These conditions remain conjunctive and unchanged.
+
+Every validation example records its stable ID/text/family, expected labels, logits/probabilities,
+baseline and selected decisions, confidence margins, entropies, and safe TaskSpec-free rejection.
+The immutable artifact contains four-way and binary matrices, separated error categories, the ten
+required error groups, per-family findings, calibration NLL/ECE, candidate summaries, the grid
+lock, checksums, and a no-training audit. If the full gate passes, a separate runtime fingerprint
+binds checkpoint, tokenizer, processor, decoder, temperature, Git, corpus, and validation split.
+Otherwise no runtime is created, the classifier is frozen as an offline negative baseline, and
+both additional-training and additional-seed authorization remain false. Either quality conclusion
+can have `passed=true` when the analysis and independent verification are correct.

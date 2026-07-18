@@ -11,10 +11,11 @@ quality gate, so the shared-ACT architecture search is closed and `m42_final_v0`
 M5A modular language-to-TaskSpec routing over the six frozen PerTask ACT controllers is the active
 milestone. Its implementation now uses separately authorized fixture, tiny-overfit, authoritative
 single-seed pilot/resume, language-development, 1-scene smoke, 3-scene screen, and 6-scene full
-development stages. The original step-29 classifier pilot completed and was rejected. D-061
-authorizes one exact post-pilot recovery continuation, which remains pending target execution.
-M5A language development, target control evaluation, its sealed final benchmark, and SmolVLA have
-not started.
+development stages. The original step-29 classifier pilot and its exact D-061 recovery continuation
+completed. Validation selected epoch 4/step 116, but the unchanged full quality gate failed on
+rejection generalization. M5A.1 is the active validation-only, no-training post-hoc rejection
+analysis. M5A language development, target control evaluation, its sealed final benchmark, and
+SmolVLA have not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
@@ -152,6 +153,7 @@ python scripts/train_text_router.py --help
 python scripts/evaluate_language_routers.py --help
 python scripts/run_language_control.py --help
 python environment/verify_m5a.py
+python scripts/analyze_classifier_rejection.py --help
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,
@@ -296,6 +298,11 @@ The exact environment creation commands are maintained in `README.md`.
 - M5A routeable decisions use exactly the six canonical `canonical_v0` TaskSpecs. Rejected
   decisions contain no TaskSpec and cannot dispatch or step. Oracle reset TaskSpec, predicted
   TaskSpec, selected controller, and active EpisodeSpec remain separately recorded.
+- M5A.1 may read only the frozen selected classifier checkpoint plus train/validation corpus
+  contracts. It evaluates exactly the four locked decoder candidates and finite threshold grid.
+  It cannot construct or step an optimizer, change checkpoint bytes/global step, start another
+  seed/run, open development/final/control sources, or publish a runtime unless every original
+  quality threshold passes conjunctively.
 - M5A uses only the six frozen selected PerTask ACT controllers at H=10 with explicit `project`
   action handling. It cannot reselect/retrain/blend controls, pass confidence into ACT, use a shared
   ACT as the deployed controller, call M2, or collapse raw/binary-transformed/projected/executed
@@ -364,3 +371,7 @@ stage, RuleRouter remains an offline baseline, and only one screen-selected lear
 the 36-pair full stage. Correct stage execution and next-stage promotion remain separate. Every
 development stage must leave language/control final, M3B test content, `m42_final_v0`, and SmolVLA
 unaccessed and must not run final automatically.
+M5A.1 completion additionally requires a checksum-owned per-example validation diagnostic,
+four-way and binary confusion analyses, the predeclared fixed-grid search, a decisive promoted or
+frozen conclusion, unchanged checkpoint/weights/step, zero optimizer activity, and independent
+stage verification. Correct analysis completion remains separate from classifier quality.

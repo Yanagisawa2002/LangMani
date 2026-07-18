@@ -235,6 +235,15 @@ select by a frozen validation-only seven-key ranking, and stop after patience on
 and verify before any language-development work; calibration is conditional on the unchanged full
 quality gate.
 
+The D-061 continuation subsequently completed all 145 steps/five epochs and selected epoch 4,
+step 116 from validation only. Routeable TaskSpec/object/bin accuracy reached 100%, while the
+unchanged rejection gate still failed (7.5% false-route and 63.64%/72.22%/94.44% rejection-class
+recall). M5A.1 is therefore a bounded validation-only analysis of the frozen checkpoint. It records
+per-example logits/errors, compares exactly four predeclared decoders over one fixed finite grid,
+optionally fits one validation status temperature, and either publishes a new decoder runtime
+identity or freezes the classifier as a rejected baseline. It performs no training and cannot open
+language development, final, or control sources.
+
 ## M5B — Sealed modular final and possible SmolVLA handoff (planned)
 
 Run a separate immutable M5A final benchmark only if at least one learned router passes every

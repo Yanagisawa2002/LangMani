@@ -955,6 +955,13 @@ exactly that run and `pilot.pt` fingerprint to use `--target-pilot-recovery-resu
 change ordinary `--target-resume`. The recovery starts at step 30, audits the frozen data/loss
 contract, keeps the five-epoch/patience-one/three-role bounds, selects by the versioned seven-key
 validation ranking, and calibrates only if the unchanged full-quality gate passes.
+That continuation completed 145 steps and selected the immutable epoch-4/step-116 checkpoint.
+Routeable TaskSpec/object/bin accuracy reached 100%, but rejection generalization still missed the
+unchanged quality gate. M5A.1 now performs one CPU validation-only analysis of that checkpoint. It
+evaluates only `BaselineFourWayArgmaxV0`, `AggregatedRejectThresholdV0`,
+`HierarchicalStatusDecoderV0`, and `ConservativeRouteDecoderV0` over the committed finite grid,
+compares identity versus one validation-fitted status temperature, and never constructs an
+optimizer or opens development/final/control inputs.
 The local LLM is one explicitly supplied
 0.5B-3B instruct model with a pinned revision, deterministic greedy generation, strict JSON parsing,
 and at most one format repair. It never calls a hosted API and does not invent confidence. Exactly
@@ -1013,6 +1020,25 @@ CUDA_VISIBLE_DEVICES=0 python scripts/train_text_router.py \
 python environment/verify_m5a.py --verify-stage classifier_recovery_training \
   --stage-report outputs/diagnostics/m5a/stages/classifier-recovery-resume.json
 ```
+
+The bounded no-training M5A.1 sequence is:
+
+```bash
+python scripts/analyze_classifier_rejection.py --dry-run \
+  --report outputs/diagnostics/m5a/stages/classifier-rejection-dry-run.json
+python scripts/analyze_classifier_rejection.py --validation-only --local-files-only \
+  --output-root outputs/diagnostics/m5a/rejection-analysis \
+  --report outputs/diagnostics/m5a/stages/classifier-rejection-analysis.json
+python scripts/analyze_classifier_rejection.py --independent-verify \
+  --output-root outputs/diagnostics/m5a/rejection-analysis \
+  --report outputs/diagnostics/m5a/stages/classifier-rejection-independent-verification.json
+python environment/verify_m5a.py --verify-stage classifier_rejection_analysis \
+  --stage-report outputs/diagnostics/m5a/stages/classifier-rejection-independent-verification.json
+```
+
+A quality rejection is a successful analysis result: it freezes the classifier, authorizes no
+additional training or seed, and produces no promoted runtime. Infrastructure or contract failures
+remain nonzero command exits.
 
 Other later stages still require separate authorization and use ordinary `--target-resume` only
 for an originally promoted pilot, followed by offline language evaluation and

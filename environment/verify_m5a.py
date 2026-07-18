@@ -46,6 +46,7 @@ from langmani.language.artifact_validation import (  # noqa: E402
     validate_language_corpus_archive,
     validate_router_evaluation_evidence,
 )
+from langmani.language.classifier_decoders import fixed_decoder_grid_v0  # noqa: E402
 from langmani.language.controller_registry import (  # noqa: E402
     ControllerRegistry,
     build_fixture_controller_registry,
@@ -69,6 +70,9 @@ from langmani.language.failure_attribution import (  # noqa: E402
 from langmani.language.llm_router import (  # noqa: E402
     StructuredLLMRouterConfig,
     StructuredLocalLLMRouterV0,
+)
+from langmani.language.rejection_report import (  # noqa: E402
+    validate_rejection_analysis_artifact,
 )
 from langmani.language.router_types import (  # noqa: E402
     LanguageSplit,
@@ -607,6 +611,13 @@ class StageVerificationReport:
     classifier_checkpoint_selected: bool = False
     classifier_full_quality_gate_passed: bool = False
     classifier_calibration_validated: bool = False
+    classifier_posthoc_analysis_completed: bool = False
+    decoder_selection_validated: bool = False
+    checkpoint_weights_unchanged: bool = False
+    classifier_runtime_selected: bool = False
+    classifier_candidate_frozen: bool = False
+    additional_training_authorized: bool = False
+    additional_seed_authorized: bool = False
     artifact_reload_validated: bool = False
     cuda_training_validated: bool = False
     pilot_checkpoint_audit: dict[str, object] = field(default_factory=dict)
@@ -622,10 +633,12 @@ class StageVerificationReport:
     development_quality_gate_passed: bool = False
     final_benchmark_authorized: bool = False
     development_accessed: bool = False
+    control_evaluation_started: bool = False
     language_final_accessed: bool = False
     control_final_accessed: bool = False
     m42_final_accessed: bool = False
     test_split_accessed: bool = False
+    m3b_test_accessed: bool = False
     historical_fresh_accessed: bool = False
     smolvla_go: bool = False
     physical_target_validated: bool = False
@@ -668,6 +681,13 @@ class StageVerificationReport:
                 self.cuda_training_validated,
                 self.physical_target_validated,
             ),
+            M5AStage.CLASSIFIER_REJECTION_ANALYSIS.value: (
+                self.implementation_validated,
+                self.classifier_checkpoint_selected,
+                self.classifier_posthoc_analysis_completed,
+                self.decoder_selection_validated,
+                self.checkpoint_weights_unchanged,
+            ),
             M5AStage.LANGUAGE_DEVELOPMENT.value: (
                 self.llm_router_loaded,
                 self.llm_prompt_locked,
@@ -690,12 +710,16 @@ class StageVerificationReport:
         }.get(self.requested_stage)
         forbidden = (
             self.development_accessed,
+            self.control_evaluation_started,
             self.language_final_accessed,
             self.control_final_accessed,
             self.m42_final_accessed,
             self.test_split_accessed,
+            self.m3b_test_accessed,
             self.historical_fresh_accessed,
             self.smolvla_go,
+            self.additional_training_authorized,
+            self.additional_seed_authorized,
         )
         return (
             required_by_stage is not None
@@ -3455,12 +3479,16 @@ def _verify_stage_evidence(stage: M5AStage, path: Path) -> StageVerificationRepo
     report.check("stage command completion", payload.get("passed") is True, stage.value)
     for forbidden in (
         "development_accessed",
+        "control_evaluation_started",
         "language_final_accessed",
         "control_final_accessed",
         "m42_final_accessed",
         "test_split_accessed",
+        "m3b_test_accessed",
         "historical_fresh_accessed",
         "smolvla_go",
+        "additional_training_authorized",
+        "additional_seed_authorized",
     ):
         value = payload.get(forbidden, False)
         setattr(report, forbidden, value is True)
@@ -3486,6 +3514,97 @@ def _verify_stage_evidence(stage: M5AStage, path: Path) -> StageVerificationRepo
         report.classifier_pilot_completed = payload.get("resumed_same_authoritative_run") is True
     elif stage is M5AStage.CLASSIFIER_RECOVERY_TRAINING:
         _verify_classifier_recovery_payload(payload=payload, report=report)
+    elif stage is M5AStage.CLASSIFIER_REJECTION_ANALYSIS:
+        report.classifier_checkpoint_selected = (
+            payload.get("classifier_checkpoint_selected") is True
+        )
+        report.classifier_posthoc_analysis_completed = (
+            payload.get("classifier_posthoc_analysis_completed") is True
+        )
+        report.decoder_selection_validated = payload.get("decoder_selection_validated") is True
+        report.checkpoint_weights_unchanged = payload.get("checkpoint_weights_unchanged") is True
+        report.classifier_full_quality_gate_passed = (
+            payload.get("classifier_full_quality_gate_passed") is True
+        )
+        report.classifier_calibration_validated = (
+            payload.get("classifier_calibration_validated") is True
+        )
+        report.classifier_runtime_selected = payload.get("classifier_runtime_selected") is True
+        report.classifier_candidate_frozen = payload.get("classifier_candidate_frozen") is True
+        analysis_root = payload.get("analysis_root")
+        checkpoint_path = payload.get("checkpoint_path")
+        try:
+            if not isinstance(analysis_root, str) or not isinstance(checkpoint_path, str):
+                raise ValueError("stage report omitted analysis_root or checkpoint_path")
+            artifact = validate_rejection_analysis_artifact(Path(analysis_root))
+            root = Path(cast(str, artifact["root"]))
+            grid = _read_json_object(root / "grid_lock.json", label="M5A.1 grid lock")
+            selection = _read_json_object(
+                root / "candidate_selection.json", label="M5A.1 candidate selection"
+            )
+            no_training = _read_json_object(
+                root / "no_training_audit.json", label="M5A.1 no-training audit"
+            )
+            checkpoint = _resolved_unlinked(Path(checkpoint_path), label="M5A.1 checkpoint")
+            input_identity = artifact.get("input_identity")
+            if not isinstance(input_identity, Mapping):
+                raise ValueError("analysis input identity is malformed")
+            exact_grid = grid == fixed_decoder_grid_v0().to_dict()
+            checkpoint_unchanged = checkpoint.is_file() and _file_sha256(
+                checkpoint
+            ) == input_identity.get("selected_checkpoint_fingerprint") == no_training.get(
+                "checkpoint_fingerprint_before"
+            ) == no_training.get("checkpoint_fingerprint_after")
+            no_training_valid = all(
+                (
+                    no_training.get("model_weights_unchanged") is True,
+                    no_training.get("optimizer_constructed") is False,
+                    no_training.get("optimizer_steps") == 0,
+                    no_training.get("training_seed_count") == 1,
+                    no_training.get("new_training_run_created") is False,
+                    no_training.get("corpus_mutated") is False,
+                )
+            )
+            quality = selection.get("classifier_full_quality_gate_passed") is True
+            artifact_shape = (
+                (root / "classifier_routing_runtime.json").is_file() == quality
+                and (root / "rejected_candidate.json").is_file() == (not quality)
+                and report.classifier_runtime_selected == quality
+                and report.classifier_candidate_frozen == (not quality)
+                and report.classifier_calibration_validated == quality
+            )
+            conclusion = selection.get("conclusion")
+            conclusion_valid = conclusion == (
+                "classifier_promoted_after_posthoc_calibration"
+                if quality
+                else "classifier_rejected_after_posthoc_calibration"
+            )
+            report.check("exact fixed decoder grid", exact_grid, str(root / "grid_lock.json"))
+            report.check("selected checkpoint SHA unchanged", checkpoint_unchanged, str(checkpoint))
+            report.check("no-training guarantee", no_training_valid, "no optimizer or new seed")
+            report.check(
+                "promotion/rejection artifact conditional",
+                artifact_shape and conclusion_valid,
+                cast(str, conclusion),
+            )
+            report.checkpoint_weights_unchanged = (
+                report.checkpoint_weights_unchanged and checkpoint_unchanged
+            )
+            report.decoder_selection_validated = (
+                report.decoder_selection_validated and exact_grid and conclusion_valid
+            )
+            report.implementation_validated = (
+                artifact.get("passed") is True
+                and no_training_valid
+                and artifact_shape
+                and conclusion_valid
+            )
+        except Exception as error:  # noqa: BLE001 - independent verifier preserves evidence
+            report.check(
+                "M5A.1 immutable analysis artifact",
+                False,
+                f"{type(error).__name__}: {error}",
+            )
     elif stage is M5AStage.LANGUAGE_DEVELOPMENT:
         report.llm_router_loaded = payload.get("llm_router_loaded") is True
         report.llm_prompt_locked = payload.get("llm_prompt_locked") is True

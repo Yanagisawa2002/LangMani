@@ -474,6 +474,11 @@ corpus path keeps only opaque final IDs/counts/digests and never imports
   ID remains train-family only and the same immutable prompt artifact is reused in language and
   control evaluation. Language/control development measure generalization only, and all final
   texts/episodes, M3B test frames, historical fresh evaluation, and `m42_final_v0` remain sealed.
+- M5A.1 is a read-only decision layer over the immutable selected classifier. Train is used only
+  to verify label/class provenance; validation alone supplies logits, temperature fitting, fixed
+  decoder-grid selection, confusion matrices, and diagnostics. The classifier checkpoint identity
+  is never rewritten. A passing decoder receives a separate runtime fingerprint; otherwise the
+  candidate is frozen with no executable runtime and no authorization for another seed or update.
 - M5A rejection has no executable TaskSpec and must return before policy or environment execution.
   Expected TaskSpec, router decision, selected controller, and active EpisodeSpec remain separate
   evidence so routing and control failures cannot be collapsed.

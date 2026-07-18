@@ -30,6 +30,7 @@ class M5AStage(StrEnum):
     CLASSIFIER_PILOT = "classifier_pilot"
     CLASSIFIER_TRAINING = "classifier_training"
     CLASSIFIER_RECOVERY_TRAINING = "classifier_recovery_training"
+    CLASSIFIER_REJECTION_ANALYSIS = "classifier_rejection_analysis"
     LANGUAGE_DEVELOPMENT = "language_development"
     ONE_SCENE_CONTROL_SMOKE = "one_scene_control_smoke"
     THREE_SCENE_CONTROL_SCREEN = "three_scene_control_screen"

@@ -1864,3 +1864,24 @@ runtime artifact are permitted only after a fresh selected-checkpoint reload pas
 condition. The independent verifier must accept the bounded evidence while retaining
 `classifier_pilot_promoted=false` and all language/control/final/SmolVLA access flags false. This
 decision authorizes execution only and does not claim the recovery result.
+
+## D-062 — Diagnose the completed classifier with one fixed validation-only decoder search
+
+The D-061 continuation completed its original seed-0, five-epoch/145-step budget and selected the
+epoch-4/step-116 `validation_best` checkpoint. Routeable full TaskSpec, target-object, and bin
+accuracy reached 100%, but the original quality gate still failed: false-route was 7.5% and
+ambiguous/unsupported/malformed recall was 63.64%/72.22%/94.44%. Near-zero train loss plus the
+completed bound does not authorize another seed or more optimizer work.
+
+M5A.1 therefore adds a project-owned, read-only post-hoc decision layer. It predeclares exactly four
+decoder candidates, the 0.40-0.95 route/object/bin grids, the -0.20-0.50 route-margin grid, and an
+identity-versus-single-validation-temperature comparison before scoring. Train content is opened
+only for class, masking, and provenance audits; validation alone fits temperature and selects. No
+development/final/control source, lexical rule, LLM, controller, environment, or simulator is used.
+
+The original quality gate and lexicographic safety objective remain unchanged. A passing decoder
+gets a new runtime fingerprint without changing the classifier checkpoint identity. If none passes,
+the classifier is frozen as an offline rejected baseline, no runtime is published, and additional
+training/seed authorization stays false. Immutable checksummed evidence, per-example diagnostics,
+and an independent verifier distinguish correct analysis execution from model quality. This is a
+public analysis/runtime interface change, not a dependency change.
