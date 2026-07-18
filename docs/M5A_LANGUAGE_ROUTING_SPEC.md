@@ -589,3 +589,32 @@ for semantic accuracy, false routes, rejection recall, schema/repair behavior, l
 tokens, and GPU memory. `passed=true` means the authorized offline protocol and evidence completed;
 it does not imply either quality gate passed. `physical_target_validated=false`, and language final,
 control development/final, M3B test, `m42_final_v0`, and SmolVLA remain inaccessible.
+
+## M5A.4 neuro-symbolic safety arbitration
+
+The repeatedly observed validation split is quarantined as historical architecture-selection
+evidence. `NeuroSymbolicRouterV0` is frozen from train-only examples plus already recorded
+diagnostics, then promoted or rejected exactly once on untouched `m5a_language_dev_v0` after an
+immutable access lock. Historical validation replay is explicitly
+`post_selection_diagnostic_only=true` and cannot alter behavior.
+
+`SymbolicLexicalFrameV0` records normalized lexical facts and every matched span without labels,
+split identity, or dispatch. `QwenSemanticFrameV0` is a strict fact-only Pydantic object produced by
+the fixed Qwen3-4B model under one cached Outlines 1.3.1 JSON grammar. It has no RouterStatus,
+TaskSpec, final reason, confidence, or reasoning field. `DeterministicSafetyArbiterV0` is the sole
+decision authority and applies malformed, unsupported, ambiguous, then route precedence. A route
+requires one supported object and bin, exact symbolic/semantic slot agreement, supported action,
+and no blocker. Any material disagreement rejects; no threshold or architecture sweep exists.
+
+The target sequence is train smoke, non-selecting historical replay, immutable prompt/runtime lock,
+one complete 420-example development pass, and independent verification. Development compares five
+fixed routers, but only the hybrid is promotable. The original conjunctive quality thresholds and
+safety-specific zero-false-route checks are unchanged. Correct offline execution may report
+`passed=true` while the quality gate is false. Physical validation stays false and no control stage
+starts automatically.
+
+Evidence is fingerprint-owned under
+`outputs/diagnostics/m5a/neuro-symbolic-router/<runtime-fingerprint>/`. It includes the symbolic,
+schema, decoder, model, prompt, arbiter, runtime, smoke, historical, five-router development,
+selection, manifest, and completion records. Completion is written last after fsync/checksum
+validation and same-filesystem atomic promotion.

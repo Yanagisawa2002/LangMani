@@ -74,6 +74,9 @@ from langmani.language.llm_router import (  # noqa: E402
     StructuredLLMRouterConfig,
     StructuredLocalLLMRouterV0,
 )
+from langmani.language.neuro_symbolic_verifier import (  # noqa: E402
+    verify_neuro_symbolic_evidence,
+)
 from langmani.language.rejection_report import (  # noqa: E402
     validate_rejection_analysis_artifact,
 )
@@ -638,6 +641,17 @@ class StageVerificationReport:
     learned_router_selected: bool = False
     one_scene_control_smoke_authorized: bool = False
     real_gpu_inference_validated: bool = False
+    language_validation_quarantined_for_architecture_selection: bool = False
+    qwen4b_direct_candidate_frozen: bool = False
+    neuro_symbolic_implementation_validated: bool = False
+    symbolic_frame_validated: bool = False
+    semantic_frame_schema_validated: bool = False
+    constrained_decoding_validated: bool = False
+    arbiter_validated: bool = False
+    neuro_symbolic_router_locked: bool = False
+    train_smoke_completed: bool = False
+    historical_validation_diagnostic_completed: bool = False
+    neuro_symbolic_language_quality_gate_passed: bool = False
     one_scene_control_smoke_completed: bool = False
     three_scene_control_screen_completed: bool = False
     selected_router_locked: bool = False
@@ -708,6 +722,20 @@ class StageVerificationReport:
                 self.classifier_dispatch_prohibited,
                 self.llm_model_identity_validated,
                 self.llm_train_smoke_completed,
+                self.real_gpu_inference_validated,
+            ),
+            M5AStage.NEURO_SYMBOLIC_LANGUAGE_DEVELOPMENT.value: (
+                self.language_validation_quarantined_for_architecture_selection,
+                self.qwen4b_direct_candidate_frozen,
+                self.neuro_symbolic_implementation_validated,
+                self.symbolic_frame_validated,
+                self.semantic_frame_schema_validated,
+                self.constrained_decoding_validated,
+                self.arbiter_validated,
+                self.neuro_symbolic_router_locked,
+                self.train_smoke_completed,
+                self.historical_validation_diagnostic_completed,
+                self.language_development_completed,
                 self.real_gpu_inference_validated,
             ),
             M5AStage.ONE_SCENE_CONTROL_SMOKE.value: (
@@ -3619,6 +3647,47 @@ def _verify_stage_evidence(stage: M5AStage, path: Path) -> StageVerificationRepo
         except Exception as error:  # noqa: BLE001 - independent verifier preserves evidence
             report.check(
                 "M5A.1 immutable analysis artifact",
+                False,
+                f"{type(error).__name__}: {error}",
+            )
+    elif stage is M5AStage.NEURO_SYMBOLIC_LANGUAGE_DEVELOPMENT:
+        evidence_root = payload.get("evidence_root")
+        try:
+            if not isinstance(evidence_root, str):
+                raise ValueError("neuro-symbolic stage report omitted evidence_root")
+            independent = verify_neuro_symbolic_evidence(evidence_root)
+            independent_flags = independent.get("flags")
+            if not isinstance(independent_flags, Mapping):
+                raise ValueError("neuro-symbolic independent flags are missing")
+            for name in (
+                "language_validation_quarantined_for_architecture_selection",
+                "qwen4b_direct_candidate_frozen",
+                "neuro_symbolic_implementation_validated",
+                "symbolic_frame_validated",
+                "semantic_frame_schema_validated",
+                "constrained_decoding_validated",
+                "arbiter_validated",
+                "neuro_symbolic_router_locked",
+                "train_smoke_completed",
+                "historical_validation_diagnostic_completed",
+                "language_development_completed",
+                "neuro_symbolic_language_quality_gate_passed",
+                "learned_router_selected",
+                "one_scene_control_smoke_authorized",
+                "real_gpu_inference_validated",
+                "physical_target_validated",
+            ):
+                setattr(report, name, independent_flags.get(name) is True)
+            report.implementation_validated = report.neuro_symbolic_implementation_validated
+            report.llm_router_loaded = report.real_gpu_inference_validated
+            report.check(
+                "independent M5A.4 neuro-symbolic verification",
+                independent.get("passed") is True,
+                cast(str, independent.get("artifact_fingerprint")),
+            )
+        except Exception as error:  # noqa: BLE001 - preserve exact independent failure
+            report.check(
+                "independent M5A.4 neuro-symbolic verification",
                 False,
                 f"{type(error).__name__}: {error}",
             )

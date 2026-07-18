@@ -32,6 +32,7 @@ class M5AStage(StrEnum):
     CLASSIFIER_RECOVERY_TRAINING = "classifier_recovery_training"
     CLASSIFIER_REJECTION_ANALYSIS = "classifier_rejection_analysis"
     LANGUAGE_DEVELOPMENT = "language_development"
+    NEURO_SYMBOLIC_LANGUAGE_DEVELOPMENT = "neuro_symbolic_language_development"
     ONE_SCENE_CONTROL_SMOKE = "one_scene_control_smoke"
     THREE_SCENE_CONTROL_SCREEN = "three_scene_control_screen"
     FULL_CONTROL_DEVELOPMENT = "full_control_development"

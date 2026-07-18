@@ -1114,6 +1114,32 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m5a3.py \
   --report outputs/diagnostics/m5a/qwen4b-escalation-verification.json
 ```
 
+M5A.4 freezes one neuro-symbolic candidate after the direct Qwen3-4B rejection. It combines a
+deterministic lexical fact frame with a grammar-constrained Qwen semantic frame; only the fixed
+safety arbiter may emit `RouterDecision`. The already observed validation split is diagnostic only.
+An immutable prompt/runtime lock must exist before the command opens `m5a_language_dev_v0` once.
+Local structural work and target execution are:
+
+```bash
+python scripts/evaluate_neuro_symbolic_router.py --dry-run \
+  --report outputs/diagnostics/m5a/stages/neuro-symbolic-router-dry-run.json
+
+CUDA_VISIBLE_DEVICES=0 python scripts/evaluate_neuro_symbolic_router.py \
+  --target-development --local-files-only \
+  --output-root outputs/diagnostics/m5a/neuro-symbolic-router \
+  --report outputs/diagnostics/m5a/stages/neuro-symbolic-router.json
+
+python environment/verify_m5a4.py \
+  --evidence-root outputs/diagnostics/m5a/neuro-symbolic-router/<runtime-fingerprint>
+python environment/verify_m5a.py \
+  --verify-stage neuro_symbolic_language_development \
+  --stage-report outputs/diagnostics/m5a/stages/neuro-symbolic-router.json
+```
+
+The target command uses the cached exact Qwen3-4B revision, BF16 on one GPU, and the exact
+Apache-2.0 `outlines[transformers]==1.3.1` decoder. It has no free-form fallback, optimizer,
+controller, environment, final access, or automatic control continuation.
+
 Other later stages still require separate authorization and use ordinary `--target-resume` only
 for an originally promoted pilot, followed by offline language evaluation and
 `run_language_control.py --stage {one_scene_control_smoke,three_scene_control_screen,full_control_development}`.
@@ -1156,8 +1182,9 @@ PyArrow 25.0.0, PyAV 15.1.0, TorchCodec 0.11.1, and jsonlines 4.0.0. M3B explici
 writing and reading because the installed Windows TorchCodec DLL chain is not loadable. Exact
 LeRobot/PyAV/libavcodec values are checked and stored in every export fingerprint and manifest.
 
-M5A directly pins `transformers==5.4.0`, `tokenizers==0.22.2`, and the directly imported
-`safetensors==0.8.0`, matching the inspected local classifier/checkpoint stack and LeRobot 0.6.0's
+M5A directly pins `transformers==5.4.0`, `tokenizers==0.22.2`,
+`outlines[transformers]==1.3.1`, and the directly imported `safetensors==0.8.0`, matching the
+inspected local classifier/checkpoint stack and LeRobot 0.6.0's
 declared Transformers 5 compatibility. The unrelated system Python's older Transformers
 installation is not part of the project runtime. Real classifier and local-LLM commands require
 explicit model and tokenizer revisions and fail instead of selecting or downloading a different

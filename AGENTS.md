@@ -18,9 +18,12 @@ analysis and independently verified its immutable evidence. The best safe decode
 unchanged rejection-reason thresholds, so the classifier is frozen as a rejected offline baseline
 and no classifier runtime exists. M5A.2 completed the one authorized Qwen3-1.7B offline comparison;
 its train smoke passed, its 300-example validation gate failed, and language development stayed
-sealed. M5A.3 is the active bounded capacity comparison and permits only the same frozen prompt,
-parser, repair policy, and records with `Qwen/Qwen3-4B-Instruct-2507`. Target control evaluation,
-the sealed final benchmark, and SmolVLA have not started.
+sealed. M5A.3 completed the bounded direct Qwen3-4B comparison and rejected it as a dispatch
+candidate. M5A.4 is the active bounded offline stage: exactly one grammar-constrained
+neuro-symbolic router may reuse that frozen Qwen3-4B checkpoint as a semantic-frame extractor
+behind a deterministic safety arbiter. The observed validation split is diagnostic only, and
+development stays sealed until the prompt/schema/arbiter/runtime lock is written. Target control
+evaluation, the sealed final benchmark, and SmolVLA have not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level

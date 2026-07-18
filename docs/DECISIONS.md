@@ -1945,3 +1945,33 @@ prompt change or another model. No optimizer, weight update, ACT/controller load
 environment, language/control final, M3B test, `m42_final_v0`, or SmolVLA access is permitted.
 `passed=true` records correct offline execution; quality and later control authorization remain
 separate, and `physical_target_validated=false` throughout.
+
+## D-065 — Quarantine validation and authorize one grammar-constrained neuro-symbolic router
+
+Repeated classifier and Qwen capacity decisions have made the original language validation split
+architecture-selection evidence rather than an untouched promotion set. M5A.4 records
+`language_validation_quarantined_for_architecture_selection=true`: validation may be replayed only
+as a non-selecting diagnostic, while the first promotion decision for the frozen hybrid occurs on
+the still-sealed `m5a_language_dev_v0` split. No validation score may change the prompt, lexical
+tables, semantic schema, arbiter precedence, agreement rule, or thresholds.
+
+M5A.4 authorizes exactly `NeuroSymbolicRouterV0`. A deterministic project-owned lexical parser and
+the exact frozen Qwen3-4B revision produce separate fact frames; only
+`DeterministicSafetyArbiterV0` may emit a `RouterDecision`. Routing requires exact object/bin
+agreement and a supported pick-and-place action. Malformed, unsupported, ambiguous, conflicting,
+or materially disagreeing frames reject without an executable TaskSpec. Direct Qwen3-4B remains a
+frozen negative baseline and cannot dispatch.
+
+This decision adds the exact dependency `outlines[transformers]==1.3.1` (Apache-2.0) without
+changing Transformers 5.4.0 or Torch. The reviewed public integration wraps the already loaded
+Transformers model/tokenizer and compiles one cached Pydantic JSON grammar. The schema permits only
+declared keys, enums, finite list lengths, and booleans; downstream Pydantic validation remains
+mandatory. If grammar compilation or Qwen generation is incompatible, the experiment stops—there
+is no free-form or custom-decoder fallback.
+
+The prompt uses only the frozen 20 train examples. Train smoke and historical validation precede
+an fsynced immutable development-access lock; only then may the command open development once and
+compare RuleRouter, the frozen classifier, frozen Qwen3-1.7B, frozen direct Qwen3-4B, and the sole
+promotable hybrid. Immutable staging, atomic promotion, raw-record metric recomputation, and an
+independent verifier remain required. This is offline GPU inference only: no optimizer, ACT,
+controller, environment, final split, control schedule, `m42_final_v0`, or SmolVLA is authorized.

@@ -480,6 +480,12 @@ corpus path keeps only opaque final IDs/counts/digests and never imports
   is never rewritten. A passing decoder receives a separate runtime fingerprint; otherwise the
   candidate is frozen with no executable runtime and no authorization for another seed or update.
 - M5A rejection has no executable TaskSpec and must return before policy or environment execution.
+- M5A.4 separates lexical and Qwen semantic facts from the only decision authority. The Qwen frame
+  is generated under one cached strict Outlines JSON grammar and contains no status, TaskSpec, or
+  reason. `DeterministicSafetyArbiterV0` routes only on exact object/bin agreement and a supported
+  action; every disagreement is a non-executable rejection. Historical validation is quarantined,
+  and the complete development partition cannot be opened until the prompt/schema/arbiter/runtime
+  lock is durably written.
   Expected TaskSpec, router decision, selected controller, and active EpisodeSpec remain separate
   evidence so routing and control failures cannot be collapsed.
 - M5A physical development uses disjoint 1/3/6-scene partitions. Oracle runs at every stage,
