@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import cast
 
-from langmani.datasets.identity import sha256_hex
+from langmani.datasets.identity import canonical_json, sha256_hex
 from langmani.language.corpus import build_language_corpus
 from langmani.language.llm_router import (
     QWEN3_4B_INSTRUCT_FILE_IDENTITIES,
@@ -204,7 +204,8 @@ def verify_neuro_symbolic_evidence(evidence_root: str | Path) -> dict[str, objec
         if (
             not isinstance(semantic, Mapping)
             or not isinstance(expected_semantic, Mapping)
-            or record.get("semantic_fields_exact") != (dict(semantic) == dict(expected_semantic))
+            or record.get("semantic_fields_exact")
+            != (canonical_json(dict(semantic)) == canonical_json(dict(expected_semantic)))
         ):
             raise NeuroSymbolicVerificationError("train-only semantic comparison differs")
     if [record.get("example_id") for record in smoke_records] != list(expected_prompt_ids):

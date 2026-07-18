@@ -37,6 +37,7 @@ from langmani.language.neuro_symbolic_router import (
     semantic_schema_fingerprint,
 )
 from langmani.language.router_types import LanguageSplit, RouterRejectionReason, RouterStatus
+from scripts.evaluate_neuro_symbolic_router import _run_train_smoke
 
 
 def semantic(
@@ -82,6 +83,17 @@ class InvalidFrameExtractor:
 
     def extract(self, command: str) -> QwenSemanticFrameV0:
         raise StructuredLLMRouterError("mandatory semantic validation failed")
+
+
+@dataclass
+class MappingExtractor:
+    frames: dict[str, QwenSemanticFrameV0]
+    compilation_seconds: float = 0.1
+    generation_metadata: list[dict[str, object]] = field(default_factory=list)
+
+    def extract(self, command: str) -> QwenSemanticFrameV0:
+        self.generation_metadata.append({"command_length": len(command)})
+        return self.frames[command]
 
 
 def decision(command: str, frame: QwenSemanticFrameV0):
@@ -275,6 +287,29 @@ def test_train_only_prompt_and_stable_ids() -> None:
     )
     assert len(ids) == 20 and all(value.example_id in prompt for value in selected)
     assert fingerprint.startswith("sha256:")
+
+
+def test_train_smoke_compares_json_normalized_semantic_frames() -> None:
+    corpus = build_language_corpus()
+    parser = SymbolicLexicalParserV0()
+    selected = select_semantic_prompt_examples(corpus.examples_for_split(LanguageSplit.TRAIN))
+    extractor = MappingExtractor(
+        {
+            example.raw_text: QwenSemanticFrameV0.model_validate(
+                expected_semantic_frame_payload(example, parser.parse(example.raw_text))
+            )
+            for example in selected
+        }
+    )
+    router = NeuroSymbolicRouterV0(
+        parser=parser,
+        semantic_extractor=extractor,
+        arbiter=DeterministicSafetyArbiterV0(),
+    )
+    result = _run_train_smoke(router, parser, selected)
+    checks = result["checks"]
+    assert isinstance(checks, dict)
+    assert checks["field_semantics_match_train_labels"] is True
 
 
 def test_historical_diagnostic_cannot_change_configuration() -> None:

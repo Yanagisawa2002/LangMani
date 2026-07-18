@@ -15,7 +15,7 @@ from typing import cast
 
 import torch
 
-from langmani.datasets.identity import sha256_hex
+from langmani.datasets.identity import canonical_json, sha256_hex
 from langmani.language.corpus import GeneratedLanguageCorpus, build_language_corpus
 from langmani.language.llm_router import (
     QWEN3_1_7B_MODEL_ID,
@@ -302,7 +302,12 @@ def _run_train_smoke(
         first = router.route(example.raw_text)
         second = router.route(example.raw_text)
         semantic_payload = cast(Mapping[str, object], first.evidence["semantic_frame"])
-        expected_semantic = expected_semantic_frame_payload(example, parser.parse(example.raw_text))
+        expected_semantic = QwenSemanticFrameV0.model_validate(
+            expected_semantic_frame_payload(example, parser.parse(example.raw_text))
+        ).to_dict()
+        semantic_fields_exact = canonical_json(dict(semantic_payload)) == canonical_json(
+            expected_semantic
+        )
         records.append(
             {
                 "example_id": example.example_id,
@@ -311,7 +316,7 @@ def _run_train_smoke(
                 "decision": first.to_dict(),
                 "semantic_frame": dict(semantic_payload),
                 "expected_semantic_frame": expected_semantic,
-                "semantic_fields_exact": dict(semantic_payload) == expected_semantic,
+                "semantic_fields_exact": semantic_fields_exact,
                 "deterministic": _semantic_fingerprint(first) == _semantic_fingerprint(second),
             }
         )
