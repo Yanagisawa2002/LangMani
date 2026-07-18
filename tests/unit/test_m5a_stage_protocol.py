@@ -11,8 +11,10 @@ from langmani.language.stage_protocol import (
     CandidatePromotionRecord,
     CandidatePromotionState,
     CheckpointRetentionPolicy,
+    ClassifierRecoveryAmendment,
     ClassifierStageMetrics,
     ClassifierStageTrainingConfig,
+    ClassifierValidationRanking,
     M5AStage,
     M5AStageProtocolError,
     maximum_pre_final_physical_episodes,
@@ -98,6 +100,56 @@ def test_classifier_gates_are_distinct_and_do_not_imply_each_other() -> None:
     assert tiny.tiny_overfit_gate_passed
     assert tiny.pilot_gate_passed
     assert tiny.training_gate_passed
+
+
+def test_recovery_amendment_and_seven_key_ranking_are_immutable() -> None:
+    config = ClassifierStageTrainingConfig(train_example_count=900)
+    amendment = ClassifierRecoveryAmendment(
+        pilot_run_fingerprint=f"sha256:{'a' * 64}",
+        pilot_checkpoint_fingerprint=f"sha256:{'b' * 64}",
+        implementation_git_commit="c" * 40,
+        unchanged_training_config=config.to_dict(),
+        maximum_total_epochs=5,
+        early_stopping_patience=1,
+        validation_schedule=config.validation_steps,
+        checkpoint_retention_policy=CheckpointRetentionPolicy().to_dict(),
+    )
+    assert amendment.to_dict()["new_run_identity"] is False
+    assert amendment.to_dict()["original_pilot_decision"] == "rejected_after_one_epoch"
+    assert amendment.amendment_fingerprint.startswith("sha256:")
+
+    baseline = ClassifierValidationRanking(
+        step=29,
+        epoch=1,
+        metrics=ClassifierStageMetrics(
+            full_task_spec_accuracy=0.85,
+            object_accuracy=0.85,
+            bin_accuracy=1.0,
+            false_route_rate=0.25,
+            schema_valid_rate=1.0,
+            ambiguous_rejection_recall=0.74,
+            unsupported_rejection_recall=0.03,
+            malformed_rejection_recall=0.0,
+        ),
+        total_validation_loss=2.5,
+    )
+    higher_task_accuracy = ClassifierValidationRanking(
+        step=58,
+        epoch=2,
+        metrics=ClassifierStageMetrics(
+            full_task_spec_accuracy=0.86,
+            object_accuracy=0.80,
+            bin_accuracy=0.80,
+            false_route_rate=0.50,
+            schema_valid_rate=1.0,
+            ambiguous_rejection_recall=0.0,
+            unsupported_rejection_recall=0.0,
+            malformed_rejection_recall=0.0,
+        ),
+        total_validation_loss=3.0,
+    )
+    assert higher_task_accuracy.better_than(baseline)
+    assert not baseline.better_than(higher_task_accuracy)
 
 
 def test_failed_promotion_is_terminal_and_cannot_reach_physical_stage() -> None:
@@ -314,3 +366,54 @@ def test_authoritative_pilot_checkpoint_resumes_optimizer_scheduler_and_rng(tmp_
             stop_after_pilot=True,
             resume=False,
         )
+
+
+def test_rejected_pilot_can_use_only_explicit_recovery_ranking(tmp_path) -> None:
+    config = ClassifierStageTrainingConfig(
+        train_example_count=8,
+        batch_size=4,
+        maximum_epochs=2,
+        original_maximum_steps=4,
+    )
+    fingerprint = f"sha256:{'2' * 64}"
+    amendment = f"sha256:{'3' * 64}"
+    root = tmp_path / "recovery"
+    processor = {"tokenizer_revision": "fixture-v0", "maximum_sequence_length": 8}
+    pilot = run_staged_factorized_text_training(
+        model=FactorizedTextClassifierV0(_Encoder(), dropout=0.0),
+        train_batches=(_batch("train"),),
+        validation_batches=(_batch("validation"),),
+        config=config,
+        run_fingerprint=fingerprint,
+        checkpoint_root=root,
+        processor_state=processor,
+        stop_after_pilot=True,
+        resume=False,
+    )
+    assert pilot.pilot_metrics is not None
+    recovered = run_staged_factorized_text_training(
+        model=FactorizedTextClassifierV0(_Encoder(), dropout=0.0),
+        train_batches=(_batch("train"),),
+        validation_batches=(_batch("validation"),),
+        config=config,
+        run_fingerprint=fingerprint,
+        checkpoint_root=root,
+        processor_state=processor,
+        stop_after_pilot=False,
+        resume=True,
+        recovery_ranking=True,
+        recovery_amendment_fingerprint=amendment,
+        resume_checkpoint_role="pilot",
+        recovery_baseline_metrics=pilot.pilot_metrics,
+    )
+    assert recovered.resumed_from_step == config.pilot_step
+    assert recovered.validation_rankings[0].step == config.pilot_step
+    assert (
+        recovered.selected_step
+        == min(recovered.validation_rankings, key=lambda value: value.key).step
+    )
+    assert {path.name for path in root.glob("*.pt")} == {
+        "pilot.pt",
+        "latest.pt",
+        "validation_best.pt",
+    }

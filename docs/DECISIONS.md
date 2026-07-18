@@ -1835,3 +1835,32 @@ checks optimizer/scheduler/RNG/data progression and next-step identity, compares
 300-example validation contract and conjunctive promotion gate. A correctly executed rejected pilot
 still reports `passed=true` and `classifier_pilot_promoted=false`; it never authorizes a new seed,
 restart, automatic resume, development/final access, control rollout, LLM evaluation, or SmolVLA.
+
+## D-061 — Authorize one bounded post-pilot recovery continuation
+
+The authoritative seed-0 `FactorizedTextClassifierV0` pilot at Git
+`689918fc3e8736f9d9981591d5904df0afad7031` completed step 29 correctly but failed its original
+promotion gate. Its run fingerprint is
+`sha256:9e3ac659fa2b695c843650df35e3779741d94b3dd70b2aec52a429bc4b2edf49` and its immutable
+`pilot.pt` fingerprint is
+`sha256:a892c2b73c87884b2b2acf843d22ed9318e6b661640eea6a4964ff8d739b5758`. Validation showed 85%
+full TaskSpec, 85% object, 100% bin, 25% false-route, and 74.24%/2.78%/0% ambiguous,
+unsupported, and malformed recall. The candidate remains rejected under the original protocol.
+
+After observing only this validation evidence, and before language development, final sources,
+control schedules, LLM evaluation, or controller dispatch, this decision authorizes one explicit
+recovery continuation. It is not a new run and is not retroactively part of D-059/D-060. The
+versioned amendment binds the exact run/checkpoint, current clean implementation commit, unchanged
+training config, five-total-epoch bound, patience one, epoch-end validation schedule, and
+`pilot`/`latest`/`validation_best` retention. A 15-item read-only data/loss audit and exact
+model/optimizer/scheduler/RNG/data-progression reload must pass before step 30.
+
+Recovery checkpoint ranking is lexicographic: higher full TaskSpec, lower false-route, higher
+rejection macro recall, higher object, higher bin, lower validation loss, then earlier epoch. One
+subsequent complete non-improving interval stops training, with no extension past step 145. The
+original full quality thresholds remain conjunctive and unchanged. Training completion and
+checkpoint selection are valid even if quality fails; calibration, threshold selection, and a
+runtime artifact are permitted only after a fresh selected-checkpoint reload passes every quality
+condition. The independent verifier must accept the bounded evidence while retaining
+`classifier_pilot_promoted=false` and all language/control/final/SmolVLA access flags false. This
+decision authorizes execution only and does not claim the recovery result.

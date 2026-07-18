@@ -7,11 +7,12 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
 from langmani.datasets.identity import sha256_hex
 
 M5A_STAGE_PROTOCOL_SCHEMA = "langmani-m5a-stage-protocol-v0"
+M5A_CLASSIFIER_RECOVERY_AMENDMENT_SCHEMA = "langmani-m5a-classifier-pilot-recovery-amendment-v0"
 M5A_CLASSIFIER_TRAINING_SEED = 0
 M5A_CLASSIFIER_TRAINING_SEEDS = 1
 M5A_MAXIMUM_EPOCHS = 5
@@ -28,6 +29,7 @@ class M5AStage(StrEnum):
     CLASSIFIER_TINY_OVERFIT = "classifier_tiny_overfit"
     CLASSIFIER_PILOT = "classifier_pilot"
     CLASSIFIER_TRAINING = "classifier_training"
+    CLASSIFIER_RECOVERY_TRAINING = "classifier_recovery_training"
     LANGUAGE_DEVELOPMENT = "language_development"
     ONE_SCENE_CONTROL_SMOKE = "one_scene_control_smoke"
     THREE_SCENE_CONTROL_SCREEN = "three_scene_control_screen"
@@ -180,6 +182,149 @@ class ClassifierStageMetrics:
             "pilot_gate_passed": self.pilot_gate_passed,
             "training_gate_passed": self.training_gate_passed,
         }
+
+    @property
+    def rejection_macro_recall(self) -> float:
+        return (
+            self.ambiguous_rejection_recall
+            + self.unsupported_rejection_recall
+            + self.malformed_rejection_recall
+        ) / 3.0
+
+
+@dataclass(frozen=True, slots=True)
+class ClassifierValidationRanking:
+    """Validation-only, lexicographic recovery checkpoint ranking."""
+
+    step: int
+    epoch: int
+    metrics: ClassifierStageMetrics
+    total_validation_loss: float
+    evidence_split: str = "validation"
+
+    def __post_init__(self) -> None:
+        for name in ("step", "epoch"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+                raise M5AStageProtocolError(f"{name} must be a positive integer")
+        if not isinstance(self.metrics, ClassifierStageMetrics):
+            raise M5AStageProtocolError("ranking metrics must be ClassifierStageMetrics")
+        if (
+            isinstance(self.total_validation_loss, bool)
+            or not isinstance(self.total_validation_loss, int | float)
+            or not math.isfinite(float(self.total_validation_loss))
+            or float(self.total_validation_loss) < 0.0
+        ):
+            raise M5AStageProtocolError("total validation loss must be finite and non-negative")
+        if self.evidence_split != "validation":
+            raise M5AStageProtocolError("recovery ranking may use validation only")
+        object.__setattr__(self, "total_validation_loss", float(self.total_validation_loss))
+
+    @property
+    def key(self) -> tuple[float, float, float, float, float, float, int]:
+        """Smaller tuple is better; the ordering is the approved seven-key objective."""
+
+        return (
+            -self.metrics.full_task_spec_accuracy,
+            self.metrics.false_route_rate,
+            -self.metrics.rejection_macro_recall,
+            -self.metrics.object_accuracy,
+            -self.metrics.bin_accuracy,
+            self.total_validation_loss,
+            self.epoch,
+        )
+
+    def better_than(self, other: ClassifierValidationRanking) -> bool:
+        return self.key < other.key
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "step": self.step,
+            "epoch": self.epoch,
+            "metrics": self.metrics.to_dict(),
+            "rejection_macro_recall": self.metrics.rejection_macro_recall,
+            "total_validation_loss": self.total_validation_loss,
+            "ranking_key": list(self.key),
+            "evidence_split": self.evidence_split,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ClassifierRecoveryAmendment:
+    """Post-pilot authorization for one exact rejected classifier continuation."""
+
+    pilot_run_fingerprint: str
+    pilot_checkpoint_fingerprint: str
+    implementation_git_commit: str
+    unchanged_training_config: Mapping[str, object]
+    maximum_total_epochs: int
+    early_stopping_patience: int
+    validation_schedule: tuple[int, ...]
+    checkpoint_retention_policy: Mapping[str, object]
+    original_pilot_promoted: bool = False
+    validation_evidence_only: bool = True
+    development_or_final_accessed: bool = False
+    schema_version: str = M5A_CLASSIFIER_RECOVERY_AMENDMENT_SCHEMA
+    amendment_fingerprint: str = ""
+
+    def __post_init__(self) -> None:
+        for name in ("pilot_run_fingerprint", "pilot_checkpoint_fingerprint"):
+            digest = cast(str, getattr(self, name)).removeprefix("sha256:")
+            if len(digest) != 64 or any(value not in "0123456789abcdef" for value in digest):
+                raise M5AStageProtocolError(f"{name} must be a full SHA-256")
+        if len(self.implementation_git_commit) != 40 or any(
+            value not in "0123456789abcdef" for value in self.implementation_git_commit
+        ):
+            raise M5AStageProtocolError("recovery implementation requires a full Git commit")
+        if not isinstance(self.unchanged_training_config, Mapping):
+            raise M5AStageProtocolError("recovery training config must be a mapping")
+        if self.maximum_total_epochs != M5A_MAXIMUM_EPOCHS:
+            raise M5AStageProtocolError("recovery maximum total epochs must remain five")
+        if self.early_stopping_patience != M5A_EARLY_STOPPING_PATIENCE:
+            raise M5AStageProtocolError("recovery validation patience must remain one")
+        if self.validation_schedule != (29, 58, 87, 116, 145):
+            raise M5AStageProtocolError("recovery validation schedule differs")
+        if dict(self.checkpoint_retention_policy) != CheckpointRetentionPolicy().to_dict():
+            raise M5AStageProtocolError("recovery checkpoint retention policy differs")
+        if self.original_pilot_promoted is not False:
+            raise M5AStageProtocolError("recovery applies only to the exact rejected pilot")
+        if (
+            self.validation_evidence_only is not True
+            or self.development_or_final_accessed is not False
+        ):
+            raise M5AStageProtocolError("recovery authorization may use validation evidence only")
+        if self.schema_version != M5A_CLASSIFIER_RECOVERY_AMENDMENT_SCHEMA:
+            raise M5AStageProtocolError("unknown classifier recovery amendment schema")
+        expected = _fingerprint(self.identity_dict())
+        if self.amendment_fingerprint and self.amendment_fingerprint != expected:
+            raise M5AStageProtocolError("classifier recovery amendment fingerprint differs")
+        object.__setattr__(self, "amendment_fingerprint", expected)
+
+    def identity_dict(self) -> dict[str, object]:
+        return {
+            "schema_version": self.schema_version,
+            "protocol_timing": "post_pilot_validation_pre_development",
+            "original_pilot_decision": "rejected_after_one_epoch",
+            "authorization_reason": "one_epoch_pilot_remained_visibly_undertrained",
+            "pilot_run_fingerprint": self.pilot_run_fingerprint,
+            "pilot_checkpoint_fingerprint": self.pilot_checkpoint_fingerprint,
+            "implementation_git_commit": self.implementation_git_commit,
+            "unchanged_training_config": dict(self.unchanged_training_config),
+            "maximum_total_epochs": self.maximum_total_epochs,
+            "maximum_additional_epochs": self.maximum_total_epochs - 1,
+            "early_stopping_patience": self.early_stopping_patience,
+            "validation_schedule": list(self.validation_schedule),
+            "checkpoint_retention_policy": dict(self.checkpoint_retention_policy),
+            "original_pilot_promoted": self.original_pilot_promoted,
+            "validation_evidence_only": self.validation_evidence_only,
+            "development_or_final_accessed": self.development_or_final_accessed,
+            "new_run_identity": False,
+            "model_seed_data_optimization_unchanged": True,
+            "full_quality_thresholds_unchanged": True,
+        }
+
+    def to_dict(self) -> dict[str, object]:
+        return {**self.identity_dict(), "amendment_fingerprint": self.amendment_fingerprint}
 
 
 @dataclass(frozen=True, slots=True)
@@ -509,8 +654,11 @@ __all__ = [
     "CandidatePromotionRecord",
     "CandidatePromotionState",
     "CheckpointRetentionPolicy",
+    "ClassifierRecoveryAmendment",
     "ClassifierStageMetrics",
     "ClassifierStageTrainingConfig",
+    "ClassifierValidationRanking",
+    "M5A_CLASSIFIER_RECOVERY_AMENDMENT_SCHEMA",
     "M5A_CLASSIFIER_TRAINING_SEED",
     "M5A_CLASSIFIER_TRAINING_SEEDS",
     "M5A_EARLY_STOPPING_PATIENCE",

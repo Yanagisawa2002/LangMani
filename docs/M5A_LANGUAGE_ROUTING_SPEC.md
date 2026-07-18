@@ -181,6 +181,44 @@ validation evidence (routeable, rejected, per-task, per-family, confusion, and l
 and recomputes the conjunctive promotion decision. The pilot command and verifier never resume a
 training step.
 
+### Post-pilot recovery amendment
+
+The original predeclared pilot protocol rejected the seed-0 candidate after step 29: full TaskSpec
+accuracy was 85%, object accuracy 85%, bin accuracy 100%, false-route rate 25%, and ambiguous,
+unsupported, and malformed rejection recall were 74.24%, 2.78%, and 0%. This result is not
+retroactively described as a promoted pilot. After observing validation-only evidence, and before
+opening any language-development, final, control, or LLM source, D-061 authorizes one bounded
+continuation because the loss remained high and decreasing while the fixture/tiny-overfit and
+complete-state reload contracts had passed.
+
+`--target-pilot-recovery-resume` is a versioned exception for exactly the rejected authoritative
+run and original `pilot.pt` SHA-256 recorded by D-061. It requires those identities plus explicit
+five-total-epoch and patience-one arguments. The amendment binds the current clean implementation
+commit, unchanged training configuration, validation schedule, and three-role retention policy.
+It is attached to the old run fingerprint and does not create a new seed or run identity. Ordinary
+`--target-resume` still requires original pilot promotion and cannot accept a rejected pilot.
+
+Before step 30, the command performs a read-only 15-item audit covering train/validation status and
+rejection distributions, object/bin/TaskSpec counts, rejected-loss masking, class indices and
+label mapping, template-family isolation, unsupported/malformed labels, pilot status-head
+gradient, sampler coverage, and all 900 first-epoch examples. Any defect stops without repairing
+the corpus. The exact pilot checkpoint must restore model, optimizer, constant scheduler, RNG,
+processor, and data progression with next step 30.
+
+Recovery validates only after complete epochs and ranks checkpoints lexicographically by: higher
+full TaskSpec accuracy, lower false-route rate, higher rejection macro recall, higher object
+accuracy, higher bin accuracy, lower validation loss, then earlier epoch. One subsequent completed
+validation interval without improvement stops training; the total remains at most five epochs.
+The original pilot, atomic latest, and atomic validation-best are the only model files. Every epoch
+persists the complete routeable/rejected/all validation report and deterministic repeatability.
+
+Bounded completion, checkpoint selection, and full quality are separate flags. The unchanged full
+quality gate below is recomputed on a freshly reloaded selected checkpoint. Temperature and
+threshold calibration plus a promoted runtime artifact are created only if every quality condition
+passes. A valid below-threshold continuation reports `passed=true`,
+`classifier_full_quality_gate_passed=false`, and `classifier_calibration_validated=false`, then
+stops before language development.
+
 After promotion, validation runs at steps 29, 58, 87, 116, and 145 with patience one completed
 interval after the best. Only the fixed `pilot`, `latest`, and `validation_best` checkpoint roles
 are retained; role updates are atomic and no periodic checkpoint sweep is created. The final
@@ -345,6 +383,7 @@ requested stage completed correctly; it does not imply promotion to the next sta
 | `implementation_validated`, `corpus_validated`, `split_isolation_validated`, `rule_router_validated` | Portable implementation, exact counts/isolation, and deterministic RuleRouter contracts passed. |
 | `classifier_fixture_validated`, `classifier_tiny_overfit_validated` | The two bounded pre-training gates independently passed. Neither claims full training. |
 | `classifier_pilot_completed`, `classifier_pilot_promoted` | The authoritative run reached and saved step 29; the second flag alone records whether validation authorized same-run resume. |
+| `classifier_recovery_resume_authorized`, `classifier_recovery_resume_completed`, `classifier_full_quality_gate_passed` | D-061 authorized the exact rejected pilot continuation; bounded execution completed; and, separately, the unchanged full validation gate passed or failed. |
 | `classifier_training_completed`, `classifier_checkpoint_selected`, `classifier_calibration_validated` | The promoted single-seed run completed or early-stopped; validation only selected and calibrated it. |
 | `llm_router_loaded`, `llm_prompt_locked`, `language_development_completed` | One pinned inference-only LLM and immutable train-example prompt were evaluated with the offline routers. |
 | `one_scene_control_smoke_completed`, `three_scene_control_screen_completed`, `selected_router_locked` | The staged physical gates completed and, separately, screening selected one router. |

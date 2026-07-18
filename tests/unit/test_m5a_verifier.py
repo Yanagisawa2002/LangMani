@@ -742,6 +742,42 @@ def test_stage_verifier_rejects_boolean_only_pilot_claim(tmp_path: Path) -> None
     assert payload["passed"] is False
 
 
+def test_stage_verifier_rejects_boolean_only_recovery_claim(tmp_path: Path) -> None:
+    evidence = tmp_path / "recovery.json"
+    _write_json(
+        evidence,
+        _stage_flags(
+            classifier_tiny_overfit_validated=True,
+            classifier_pilot_completed=True,
+            classifier_pilot_promoted=False,
+            classifier_recovery_resume_authorized=True,
+            classifier_recovery_resume_completed=True,
+            classifier_training_completed=True,
+            classifier_checkpoint_selected=True,
+            cuda_training_validated=True,
+            physical_target_validated=True,
+        ),
+    )
+    output = tmp_path / "verification"
+    assert (
+        verify_m5a.main(
+            [
+                "--verify-stage",
+                "classifier_recovery_training",
+                "--stage-report",
+                str(evidence),
+                "--output-root",
+                str(output),
+            ]
+        )
+        == 1
+    )
+    payload = json.loads((output / "verification.json").read_text(encoding="utf-8"))
+    assert payload["classifier_recovery_resume_completed"] is True
+    assert payload["implementation_validated"] is False
+    assert payload["passed"] is False
+
+
 def test_stage_verifier_requires_real_cuda_tiny_overfit_evidence(tmp_path: Path) -> None:
     evidence = tmp_path / "tiny.json"
     _write_json(

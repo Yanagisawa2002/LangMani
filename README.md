@@ -950,6 +950,11 @@ sweep is allowed. The pilot persists per-step loss/gradient/throughput/CUDA tele
 checkpoint contract for corpus, split, labels, Git, and dependencies. A fresh-process stage
 verifier reloads that checkpoint and recomputes its validation-only promotion gate before any
 later resume can be authorized.
+The observed step-29 pilot was correctly rejected. A documented post-pilot exception now permits
+exactly that run and `pilot.pt` fingerprint to use `--target-pilot-recovery-resume`; this does not
+change ordinary `--target-resume`. The recovery starts at step 30, audits the frozen data/loss
+contract, keeps the five-epoch/patience-one/three-role bounds, selects by the versioned seven-key
+validation ranking, and calibrates only if the unchanged full-quality gate passes.
 The local LLM is one explicitly supplied
 0.5B-3B instruct model with a pinned revision, deterministic greedy generation, strict JSON parsing,
 and at most one format repair. It never calls a hosted API and does not invent confidence. Exactly
@@ -994,8 +999,23 @@ python environment/verify_m5a.py --verify-stage classifier_fixture \
   --stage-report outputs/diagnostics/m5a/stages/classifier-fixture.json
 ```
 
-Later stages require separate authorization and use `--tiny-overfit`, `--target-pilot`, and
-`--target-resume`, followed by offline language evaluation and
+The one authorized rejected-pilot continuation is:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python scripts/train_text_router.py \
+  --target-pilot-recovery-resume \
+  --recovery-run-fingerprint sha256:9e3ac659fa2b695c843650df35e3779741d94b3dd70b2aec52a429bc4b2edf49 \
+  --recovery-pilot-checkpoint-sha256 sha256:a892c2b73c87884b2b2acf843d22ed9318e6b661640eea6a4964ff8d739b5758 \
+  --recovery-maximum-total-epochs 5 \
+  --recovery-early-stopping-patience 1 \
+  --output-root outputs/models/text-router \
+  --report outputs/diagnostics/m5a/stages/classifier-recovery-resume.json
+python environment/verify_m5a.py --verify-stage classifier_recovery_training \
+  --stage-report outputs/diagnostics/m5a/stages/classifier-recovery-resume.json
+```
+
+Other later stages still require separate authorization and use ordinary `--target-resume` only
+for an originally promoted pilot, followed by offline language evaluation and
 `run_language_control.py --stage {one_scene_control_smoke,three_scene_control_screen,full_control_development}`.
 The retired monolithic `verify_m5a.py --target-development` entry point fails without starting
 work. No stage starts final or SmolVLA. The complete contract and gates are in

@@ -138,6 +138,39 @@ def test_factorized_batches_only_materialize_train_or_validation() -> None:
         )
 
 
+def test_recovery_pre_resume_data_and_loss_audit_covers_all_fifteen_checks() -> None:
+    corpus = build_language_corpus()
+    train = corpus.examples_for_split(LanguageSplit.TRAIN)
+    validation = corpus.examples_for_split(LanguageSplit.VALIDATION)
+    batches = cli._factorized_batches(
+        tokenizer=_Tokenizer(),
+        examples=train,
+        split=LanguageSplit.TRAIN,
+        batch_size=32,
+        maximum_sequence_length=16,
+        seed=0,
+    )
+    audit = cli._recovery_pre_resume_audit(
+        train=train,
+        validation=validation,
+        train_batches=batches,
+        pilot={
+            "training_integrity": {
+                "head_maximum_gradient_norms": {"status_head": 1.0},
+                "examples_processed": 900,
+                "no_silently_skipped_examples": True,
+            }
+        },
+    )
+
+    assert audit["passed"] is True
+    assert audit["read_only"] is True
+    assert len(audit["checks"]) == 15
+    assert all(audit["checks"].values())
+    assert audit["train_counts"]["examples"] == 900
+    assert audit["validation_counts"]["examples"] == 300
+
+
 def test_run_evidence_has_exact_reload_schema_and_device_independent_router() -> None:
     corpus = build_language_corpus()
     config = TextTrainingConfig(
@@ -282,7 +315,41 @@ def test_cli_modes_are_mutually_exclusive() -> None:
     assert cli.parse_args(["--target-development"]).target_development is True
     assert cli.parse_args(["--target-pilot"]).target_pilot is True
     assert cli.parse_args(["--target-resume"]).target_resume is True
+    recovery = cli.parse_args(
+        [
+            "--target-pilot-recovery-resume",
+            "--recovery-run-fingerprint",
+            cli.AUTHORIZED_RECOVERY_RUN_FINGERPRINT,
+            "--recovery-pilot-checkpoint-sha256",
+            cli.AUTHORIZED_RECOVERY_PILOT_CHECKPOINT_SHA256,
+            "--recovery-maximum-total-epochs",
+            "5",
+            "--recovery-early-stopping-patience",
+            "1",
+        ]
+    )
+    assert recovery.target_pilot_recovery_resume is True
     assert cli.parse_args(["--tiny-overfit"]).tiny_overfit is True
+
+
+def test_recovery_arguments_authorize_only_the_exact_rejected_pilot() -> None:
+    args = cli.parse_args(
+        [
+            "--target-pilot-recovery-resume",
+            "--recovery-run-fingerprint",
+            cli.AUTHORIZED_RECOVERY_RUN_FINGERPRINT,
+            "--recovery-pilot-checkpoint-sha256",
+            cli.AUTHORIZED_RECOVERY_PILOT_CHECKPOINT_SHA256,
+            "--recovery-maximum-total-epochs",
+            "5",
+            "--recovery-early-stopping-patience",
+            "1",
+        ]
+    )
+    cli._validate_recovery_arguments(args)
+    args.recovery_run_fingerprint = f"sha256:{'0' * 64}"
+    with pytest.raises(cli.TextRouterCommandError, match="approved amendment"):
+        cli._validate_recovery_arguments(args)
 
 
 def test_run_evidence_rejects_non_serializable_git_contract() -> None:

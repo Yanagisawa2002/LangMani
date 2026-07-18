@@ -25,6 +25,9 @@ from langmani.language.corpus import build_language_corpus
 from langmani.language.router_types import LanguageExample, LanguageSplit, RouterStatus
 from langmani.language.stage_protocol import (
     M5A_CLASSIFIER_TRAINING_SEEDS,
+    CheckpointRetentionPolicy,
+    ClassifierRecoveryAmendment,
+    ClassifierStageMetrics,
     ClassifierStageTrainingConfig,
     stage_protocol_manifest,
 )
@@ -54,6 +57,7 @@ from langmani.language.text_training import (
     stage_and_promote_text_classifier,
     text_classifier_run_fingerprint,
     train_factorized_text_step,
+    validate_completed_text_classifier_artifact,
 )
 from langmani.policies.act_runtime import atomic_write_json, inspect_git_state
 
@@ -85,6 +89,13 @@ MAXIMUM_FALSE_ROUTE_RATE = 0.03
 TEMPERATURE_ITERATIONS = 64
 COMMAND_SCHEMA = "langmani-m5a-train-text-router-command-v2"
 RUN_EVIDENCE_SCHEMA = "langmani-m5a-text-router-run-evidence-v2"
+AUTHORIZED_RECOVERY_RUN_FINGERPRINT = (
+    "sha256:9e3ac659fa2b695c843650df35e3779741d94b3dd70b2aec52a429bc4b2edf49"
+)
+AUTHORIZED_RECOVERY_PILOT_CHECKPOINT_SHA256 = (
+    "sha256:a892c2b73c87884b2b2acf843d22ed9318e6b661640eea6a4964ff8d739b5758"
+)
+AUTHORIZED_RECOVERY_PILOT_GIT_COMMIT = "689918fc3e8736f9d9981591d5904df0afad7031"
 
 _PROTECTED_SOURCE_ROOTS = tuple(
     PROJECT_ROOT / name for name in ("src", "scripts", "environment", "tests", "docs", ".git")
@@ -133,6 +144,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     modes.add_argument("--tiny-overfit", action="store_true")
     modes.add_argument("--target-pilot", action="store_true")
     modes.add_argument("--target-resume", action="store_true")
+    modes.add_argument("--target-pilot-recovery-resume", action="store_true")
     modes.add_argument(
         "--target-development",
         action="store_true",
@@ -143,6 +155,10 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Clean only a matching incomplete classifier staging directory.",
     )
+    parser.add_argument("--recovery-run-fingerprint")
+    parser.add_argument("--recovery-pilot-checkpoint-sha256")
+    parser.add_argument("--recovery-maximum-total-epochs", type=int)
+    parser.add_argument("--recovery-early-stopping-patience", type=int)
     return parser.parse_args(argv)
 
 
@@ -1142,6 +1158,24 @@ def _detailed_validation_metrics(
                     status_labels == STATUS_LABELS.index("reject_malformed")
                 ]
             ),
+            "rejection_macro_recall": (
+                _mean(
+                    (status == STATUS_LABELS.index("reject_ambiguous"))[
+                        status_labels == STATUS_LABELS.index("reject_ambiguous")
+                    ]
+                )
+                + _mean(
+                    (status == STATUS_LABELS.index("reject_unsupported"))[
+                        status_labels == STATUS_LABELS.index("reject_unsupported")
+                    ]
+                )
+                + _mean(
+                    (status == STATUS_LABELS.index("reject_malformed"))[
+                        status_labels == STATUS_LABELS.index("reject_malformed")
+                    ]
+                )
+            )
+            / 3.0,
             "rejection_reason_confusion_matrix": rejection_reason_confusion,
         },
         "all": {
@@ -1157,6 +1191,209 @@ def _detailed_validation_metrics(
             "latency_p99": _percentile(latency_ms, 0.99),
         },
     }
+
+
+def _classifier_stage_metrics_from_mapping(
+    value: Mapping[str, object],
+) -> ClassifierStageMetrics:
+    try:
+        return ClassifierStageMetrics(
+            full_task_spec_accuracy=float(value["full_task_spec_accuracy"]),
+            object_accuracy=float(value["object_accuracy"]),
+            bin_accuracy=float(value["bin_accuracy"]),
+            false_route_rate=float(value["false_route_rate"]),
+            schema_valid_rate=float(value["schema_valid_rate"]),
+            ambiguous_rejection_recall=float(value["ambiguous_rejection_recall"]),
+            unsupported_rejection_recall=float(value["unsupported_rejection_recall"]),
+            malformed_rejection_recall=float(value["malformed_rejection_recall"]),
+            status_accuracy=float(value.get("status_accuracy", 0.0)),
+            finite=cast(bool, value.get("finite", True)),
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise TextRouterCommandError("classifier validation metrics are malformed") from error
+
+
+def _recovery_amendment(*, git_state: object) -> ClassifierRecoveryAmendment:
+    git_to_dict = getattr(git_state, "to_dict", None)
+    if not callable(git_to_dict):
+        raise TextRouterCommandError("Git state does not support recovery authorization")
+    commit = git_to_dict().get("commit")
+    if not isinstance(commit, str):
+        raise TextRouterCommandError("recovery implementation Git commit is missing")
+    return ClassifierRecoveryAmendment(
+        pilot_run_fingerprint=AUTHORIZED_RECOVERY_RUN_FINGERPRINT,
+        pilot_checkpoint_fingerprint=AUTHORIZED_RECOVERY_PILOT_CHECKPOINT_SHA256,
+        implementation_git_commit=commit,
+        unchanged_training_config=TARGET_STAGE_TRAINING_CONFIG.to_dict(),
+        maximum_total_epochs=TARGET_STAGE_TRAINING_CONFIG.maximum_epochs,
+        early_stopping_patience=TARGET_STAGE_TRAINING_CONFIG.early_stopping_patience,
+        validation_schedule=TARGET_STAGE_TRAINING_CONFIG.validation_steps,
+        checkpoint_retention_policy=CheckpointRetentionPolicy().to_dict(),
+    )
+
+
+def _validate_recovery_arguments(args: argparse.Namespace) -> None:
+    required = {
+        "--recovery-run-fingerprint": (
+            args.recovery_run_fingerprint,
+            AUTHORIZED_RECOVERY_RUN_FINGERPRINT,
+        ),
+        "--recovery-pilot-checkpoint-sha256": (
+            args.recovery_pilot_checkpoint_sha256,
+            AUTHORIZED_RECOVERY_PILOT_CHECKPOINT_SHA256,
+        ),
+        "--recovery-maximum-total-epochs": (
+            args.recovery_maximum_total_epochs,
+            TARGET_STAGE_TRAINING_CONFIG.maximum_epochs,
+        ),
+        "--recovery-early-stopping-patience": (
+            args.recovery_early_stopping_patience,
+            TARGET_STAGE_TRAINING_CONFIG.early_stopping_patience,
+        ),
+    }
+    for name, (actual, expected) in required.items():
+        if actual is None:
+            raise TextRouterCommandError(f"{name} is required for recovery continuation")
+        if actual != expected:
+            raise TextRouterCommandError(f"{name} does not match the approved amendment")
+
+
+def _read_json_mapping(path: Path, *, label: str) -> dict[str, object]:
+    if not path.is_file() or path.is_symlink() or path.is_junction():
+        raise TextRouterCommandError(f"{label} is missing, linked, or not a real file")
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise TextRouterCommandError(f"{label} cannot be parsed") from error
+    if not isinstance(value, dict):
+        raise TextRouterCommandError(f"{label} must contain one JSON object")
+    return cast(dict[str, object], value)
+
+
+def _recovery_pre_resume_audit(
+    *,
+    train: Sequence[LanguageExample],
+    validation: Sequence[LanguageExample],
+    train_batches: Sequence[FactorizedTextBatch],
+    pilot: Mapping[str, object],
+) -> dict[str, object]:
+    train_values = tuple(train)
+    validation_values = tuple(validation)
+    status_counts = Counter(value.expected_status.value for value in train_values)
+    validation_status_counts = Counter(value.expected_status.value for value in validation_values)
+    rejection_counts = Counter(
+        "none" if value.expected_rejection_reason is None else value.expected_rejection_reason.value
+        for value in train_values
+    )
+    validation_rejection_counts = Counter(
+        "none" if value.expected_rejection_reason is None else value.expected_rejection_reason.value
+        for value in validation_values
+    )
+    object_counts = Counter(
+        "none" if value.expected_task_spec is None else value.expected_task_spec.target_object_id
+        for value in train_values
+    )
+    bin_counts = Counter(
+        "none" if value.expected_task_spec is None else value.expected_task_spec.target_bin_id
+        for value in train_values
+    )
+    task_counts = Counter(value.task_id or "none" for value in train_values)
+    labels = tuple(_label_indices(value) for value in train_values)
+    rejected_masked = all(
+        object_index == -1 and bin_index == -1
+        for value, (_status, object_index, bin_index) in zip(train_values, labels, strict=True)
+        if value.expected_status is not RouterStatus.ROUTE
+    )
+    label_mapping_valid = all(
+        status_index == STATUS_LABELS.index(value.expected_status.value)
+        and (
+            (object_index, bin_index) == (-1, -1)
+            if value.expected_task_spec is None
+            else (
+                object_index == OBJECT_LABELS.index(value.expected_task_spec.target_object_id)
+                and bin_index == BIN_LABELS.index(value.expected_task_spec.target_bin_id)
+            )
+        )
+        for value, (status_index, object_index, bin_index) in zip(train_values, labels, strict=True)
+    )
+    train_families = {value.template_family_id for value in train_values}
+    validation_families = {value.template_family_id for value in validation_values}
+    unsupported = tuple(
+        value for value in train_values if value.expected_status is RouterStatus.REJECT_UNSUPPORTED
+    )
+    malformed = tuple(
+        value for value in train_values if value.expected_status is RouterStatus.REJECT_MALFORMED
+    )
+    rejected_labels_correct = all(
+        value.expected_task_spec is None and value.expected_rejection_reason is not None
+        for value in (*unsupported, *malformed)
+    )
+    flattened_status = torch.cat(tuple(batch.status_labels for batch in train_batches)).tolist()
+    sampler_status_counts = Counter(STATUS_LABELS[index] for index in flattened_status)
+    training_integrity = pilot.get("training_integrity")
+    if not isinstance(training_integrity, Mapping):
+        raise TextRouterCommandError("pilot training integrity evidence is missing")
+    head_gradients = training_integrity.get("head_maximum_gradient_norms")
+    status_head_nonzero = (
+        isinstance(head_gradients, Mapping)
+        and isinstance(head_gradients.get("status_head"), int | float)
+        and float(cast(float, head_gradients["status_head"])) > 0.0
+    )
+    checks = {
+        "train_validation_status_counts_reported": set(status_counts) == set(STATUS_LABELS)
+        and set(validation_status_counts) == set(STATUS_LABELS),
+        "rejection_reason_counts_reported": "none" in rejection_counts
+        and "none" in validation_rejection_counts,
+        "target_object_counts_reported": set(object_counts) == {*OBJECT_LABELS[:3], "none"},
+        "destination_bin_counts_reported": set(bin_counts) == {*BIN_LABELS[:2], "none"},
+        "complete_task_spec_counts_reported": len(task_counts) == 7 and task_counts["none"] > 0,
+        "rejected_object_bin_loss_masking": rejected_masked,
+        "routing_status_class_indices": STATUS_LABELS
+        == ("route", "reject_ambiguous", "reject_unsupported", "reject_malformed"),
+        "object_bin_none_class_indices": OBJECT_LABELS.index("none") == 3
+        and BIN_LABELS.index("none") == 2,
+        "no_label_remapping_mismatch": label_mapping_valid,
+        "no_template_family_leakage": train_families.isdisjoint(validation_families),
+        "unsupported_and_malformed_train_examples_present": bool(unsupported) and bool(malformed),
+        "unsupported_and_malformed_train_labels_correct": rejected_labels_correct,
+        "pilot_status_head_gradient_nonzero": status_head_nonzero,
+        "no_sampler_class_exclusion": sampler_status_counts == status_counts,
+        "all_900_examples_seen_in_first_epoch": len(train_values) == 900
+        and len(flattened_status) == 900
+        and training_integrity.get("examples_processed") == 900
+        and training_integrity.get("no_silently_skipped_examples") is True,
+    }
+    payload: dict[str, object] = {
+        "schema_version": "langmani-m5a-classifier-recovery-data-loss-audit-v0",
+        "read_only": True,
+        "gradient_split": "train",
+        "selection_split": "validation",
+        "train_counts": {
+            "examples": len(train_values),
+            "by_router_status": dict(sorted(status_counts.items())),
+            "by_rejection_reason": dict(sorted(rejection_counts.items())),
+            "by_target_object": dict(sorted(object_counts.items())),
+            "by_destination_bin": dict(sorted(bin_counts.items())),
+            "by_complete_task_spec": dict(sorted(task_counts.items())),
+        },
+        "validation_counts": {
+            "examples": len(validation_values),
+            "by_router_status": dict(sorted(validation_status_counts.items())),
+            "by_rejection_reason": dict(sorted(validation_rejection_counts.items())),
+        },
+        "label_contract": {
+            "status_indices": {name: index for index, name in enumerate(STATUS_LABELS)},
+            "object_indices": {name: index for index, name in enumerate(OBJECT_LABELS)},
+            "bin_indices": {name: index for index, name in enumerate(BIN_LABELS)},
+            "rejected_object_bin_loss_mask": -1,
+        },
+        "checks": checks,
+        "passed": all(checks.values()),
+    }
+    if payload["passed"] is not True:
+        failed = [name for name, passed in checks.items() if not passed]
+        raise TextRouterCommandError(f"pre-resume data/loss audit failed: {failed}")
+    return payload
 
 
 def _run_tiny_overfit(
@@ -1269,6 +1506,612 @@ def _run_tiny_overfit(
         "artifact_reload_validated": True,
         "cuda_training_validated": True,
     }
+
+
+def _run_authorized_recovery_stage(
+    *,
+    args: argparse.Namespace,
+    output_root: Path,
+    git_state: object,
+) -> dict[str, object]:
+    stage_started = time.perf_counter()
+    _validate_target_prerequisites(git_state)
+    _validate_recovery_arguments(args)
+    corpus = build_language_corpus()
+    train = corpus.examples_for_split(LanguageSplit.TRAIN)
+    validation = corpus.examples_for_split(LanguageSplit.VALIDATION)
+    run_fingerprint = AUTHORIZED_RECOVERY_RUN_FINGERPRINT
+    run_root = output_root / "authoritative-runs" / run_fingerprint.removeprefix("sha256:")
+    owner = _read_json_mapping(run_root / "owner.json", label="recovery run owner")
+    preflight = _read_json_mapping(run_root / "preflight.json", label="pilot preflight")
+    pilot = _read_json_mapping(run_root / "pilot.json", label="rejected pilot evidence")
+    pilot_checkpoint = run_root / "checkpoints" / "pilot.pt"
+    pilot_checkpoint_sha256 = _sha256_file(pilot_checkpoint)
+    owner_git = owner.get("git_state")
+    authorized_identity = (
+        f"sha256:{sha256_hex(owner)}" == run_fingerprint
+        and owner.get("schema_version") == "langmani-m5a-authoritative-classifier-run-v0"
+        and isinstance(owner_git, Mapping)
+        and owner_git.get("commit") == AUTHORIZED_RECOVERY_PILOT_GIT_COMMIT
+        and owner_git.get("dirty") is False
+        and owner.get("model_id") == MODEL_ID
+        and owner.get("model_revision") == MODEL_REVISION
+        and owner.get("tokenizer_revision") == TOKENIZER_REVISION
+        and owner.get("training_config") == TARGET_STAGE_TRAINING_CONFIG.to_dict()
+        and owner.get("corpus_fingerprint") == corpus.manifest.corpus_fingerprint
+        and owner.get("split_fingerprints") == _split_fingerprints(corpus.manifest.to_dict())
+    )
+    if not authorized_identity:
+        raise TextRouterCommandError("existing rejected pilot run identity is not authorized")
+    pilot_metrics_value = pilot.get("metrics")
+    if not isinstance(pilot_metrics_value, Mapping):
+        raise TextRouterCommandError("rejected pilot metrics are missing")
+    pilot_metrics = _classifier_stage_metrics_from_mapping(pilot_metrics_value)
+    pilot_forbidden_sealed = all(
+        pilot.get(name) is False
+        for name in (
+            "development_accessed",
+            "language_final_accessed",
+            "control_final_accessed",
+            "m42_final_accessed",
+            "test_split_accessed",
+            "historical_fresh_accessed",
+            "smolvla_go",
+        )
+    )
+    if not (
+        pilot.get("run_fingerprint") == run_fingerprint
+        and pilot.get("classifier_pilot_completed") is True
+        and pilot.get("classifier_pilot_promoted") is False
+        and pilot.get("classifier_training_completed") is False
+        and pilot_forbidden_sealed
+        and not pilot_metrics.pilot_gate_passed
+        and pilot_checkpoint_sha256 == AUTHORIZED_RECOVERY_PILOT_CHECKPOINT_SHA256
+    ):
+        raise TextRouterCommandError("recovery applies only to the exact verified rejected pilot")
+    checkpoint_processor_state = preflight.get("checkpoint_processor_state")
+    if not isinstance(checkpoint_processor_state, Mapping):
+        raise TextRouterCommandError("pilot checkpoint processor contract is missing")
+    if (
+        preflight.get("run_fingerprint") != run_fingerprint
+        or preflight.get("model_revision") != MODEL_REVISION
+        or preflight.get("tokenizer_revision") != TOKENIZER_REVISION
+        or preflight.get("training_seed") != 0
+        or preflight.get("gradient_split") != "train"
+        or preflight.get("selection_split") != "validation"
+        or preflight.get("development_examples_materialized") is not False
+        or preflight.get("final_examples_materialized") is not False
+    ):
+        raise TextRouterCommandError("pilot preflight contract differs from the recovery amendment")
+    amendment = _recovery_amendment(git_state=git_state)
+    amendment_path = run_root / "recovery_amendment.json"
+    _write_or_validate_stage(amendment_path, amendment.to_dict())
+    persisted_amendment = _read_json_mapping(amendment_path, label="classifier recovery amendment")
+    if persisted_amendment != amendment.to_dict():
+        raise TextRouterCommandError("persisted recovery amendment fingerprint differs")
+    completion_path = run_root / "recovery_completion.json"
+    if completion_path.exists():
+        completion = _read_json_mapping(completion_path, label="recovery completion")
+        if (
+            completion.get("run_fingerprint") != run_fingerprint
+            or completion.get("amendment_fingerprint") != amendment.amendment_fingerprint
+            or completion.get("passed") is not True
+        ):
+            raise TextRouterCommandError("existing recovery completion belongs to another contract")
+        return {**completion, "stage_reused": True}
+
+    torch.manual_seed(0)
+    torch.cuda.manual_seed_all(0)
+    model, tokenizer = _target_model_and_tokenizer(local_files_only=True)
+    model.to("cuda")
+    training_model = model
+    train_batches = _factorized_batches(
+        tokenizer=tokenizer,
+        examples=train,
+        split=LanguageSplit.TRAIN,
+        batch_size=TARGET_BATCH_SIZE,
+        maximum_sequence_length=TARGET_MAXIMUM_SEQUENCE_LENGTH,
+        seed=0,
+    )
+    validation_batches = _factorized_batches(
+        tokenizer=tokenizer,
+        examples=validation,
+        split=LanguageSplit.VALIDATION,
+        batch_size=TARGET_BATCH_SIZE,
+        maximum_sequence_length=TARGET_MAXIMUM_SEQUENCE_LENGTH,
+        seed=0,
+    )
+    audit_payload = _recovery_pre_resume_audit(
+        train=train,
+        validation=validation,
+        train_batches=train_batches,
+        pilot=pilot,
+    )
+    audit_payload.update(
+        {
+            "run_fingerprint": run_fingerprint,
+            "pilot_checkpoint_fingerprint": pilot_checkpoint_sha256,
+            "amendment_fingerprint": amendment.amendment_fingerprint,
+        }
+    )
+    audit_path = run_root / "recovery_pre_resume_audit.json"
+    _write_or_validate_stage(audit_path, audit_payload)
+
+    reload_fixture = pilot.get("reload_fixture")
+    if not isinstance(reload_fixture, Mapping):
+        raise TextRouterCommandError("pilot reload fixture is missing")
+    pre_resume_checkpoint_audit = audit_staged_factorized_text_checkpoint(
+        model=model,
+        validation_batches=validation_batches,
+        config=TARGET_STAGE_TRAINING_CONFIG,
+        run_fingerprint=run_fingerprint,
+        checkpoint_path=pilot_checkpoint,
+        processor_state=checkpoint_processor_state,
+        expected_fixture=reload_fixture,
+        expected_step=TARGET_STAGE_TRAINING_CONFIG.pilot_step,
+    )
+    if not all(
+        (
+            pre_resume_checkpoint_audit.optimizer_state_restored,
+            pre_resume_checkpoint_audit.scheduler_state_restored,
+            pre_resume_checkpoint_audit.processor_state_restored,
+            pre_resume_checkpoint_audit.rng_state_restored,
+            pre_resume_checkpoint_audit.data_progress_restored,
+            pre_resume_checkpoint_audit.deterministic_logits_match,
+            pre_resume_checkpoint_audit.restored_step == 29,
+            pre_resume_checkpoint_audit.next_global_step == 30,
+        )
+    ):
+        raise TextRouterCommandError("exact pilot training state did not pass pre-resume audit")
+
+    pilot_training_result = pilot.get("training_result")
+    if not isinstance(pilot_training_result, Mapping):
+        raise TextRouterCommandError("pilot training result is missing")
+    pilot_validation_records = pilot_training_result.get("validation_records")
+    if not isinstance(pilot_validation_records, list) or len(pilot_validation_records) != 1:
+        raise TextRouterCommandError("pilot validation-loss record is missing")
+    pilot_validation_record = pilot_validation_records[0]
+    if not isinstance(pilot_validation_record, Mapping):
+        raise TextRouterCommandError("pilot validation-loss record is malformed")
+    pilot_validation_loss = float(cast(float, pilot_validation_record["total_loss"]))
+    epoch_metrics_path = run_root / "recovery_epoch_metrics.json"
+    if epoch_metrics_path.exists():
+        epoch_metrics_payload = _read_json_mapping(
+            epoch_metrics_path, label="recovery epoch metrics"
+        )
+        entries_value = epoch_metrics_payload.get("epochs")
+        if epoch_metrics_payload.get(
+            "amendment_fingerprint"
+        ) != amendment.amendment_fingerprint or not isinstance(entries_value, list):
+            raise TextRouterCommandError("recovery epoch evidence belongs to another amendment")
+        epoch_entries: list[dict[str, object]] = [
+            cast(dict[str, object], value) for value in entries_value if isinstance(value, dict)
+        ]
+        if len(epoch_entries) != len(entries_value):
+            raise TextRouterCommandError("recovery epoch evidence is malformed")
+    else:
+        detailed_pilot = pilot.get("detailed_validation_metrics")
+        if not isinstance(detailed_pilot, Mapping):
+            raise TextRouterCommandError("pilot detailed validation evidence is missing")
+        epoch_entries = [
+            {
+                "epoch": 1,
+                "step": 29,
+                "metrics": pilot_metrics.to_dict(),
+                "rejection_macro_recall": pilot_metrics.rejection_macro_recall,
+                "total_validation_loss": pilot_validation_loss,
+                "detailed_validation_metrics": dict(detailed_pilot),
+                "deterministic_repeatability": pilot.get("deterministic_repeatability") is True,
+                "selected_after_interval": True,
+                "source": "original_rejected_pilot",
+            }
+        ]
+        atomic_write_json(
+            epoch_metrics_path,
+            {
+                "schema_version": "langmani-m5a-classifier-recovery-epoch-metrics-v0",
+                "run_fingerprint": run_fingerprint,
+                "amendment_fingerprint": amendment.amendment_fingerprint,
+                "selection_split": "validation",
+                "epochs": epoch_entries,
+            },
+        )
+
+    def observe_validation(outputs: object, record: object, ranking: object) -> None:
+        if not hasattr(record, "step") or not hasattr(ranking, "to_dict"):
+            raise TextRouterCommandError("recovery validation observer received malformed state")
+        repeated = collect_factorized_validation_outputs(
+            model=training_model, batches=validation_batches
+        )
+        deterministic = all(
+            torch.equal(left, right)
+            for left, right in (
+                (outputs.status_logits, repeated.status_logits),
+                (outputs.object_logits, repeated.object_logits),
+                (outputs.bin_logits, repeated.bin_logits),
+            )
+        )
+        if not deterministic:
+            raise TextRouterCommandError("epoch validation was not deterministically repeatable")
+        ranking_payload = ranking.to_dict()
+        entry = {
+            "epoch": ranking_payload["epoch"],
+            "step": ranking_payload["step"],
+            "metrics": ranking_payload["metrics"],
+            "rejection_macro_recall": ranking_payload["rejection_macro_recall"],
+            "total_validation_loss": ranking_payload["total_validation_loss"],
+            "ranking_key": ranking_payload["ranking_key"],
+            "detailed_validation_metrics": _detailed_validation_metrics(
+                outputs=outputs, examples=validation
+            ),
+            "deterministic_repeatability": True,
+            "source": "authorized_recovery_continuation",
+        }
+        existing = next(
+            (value for value in epoch_entries if value.get("step") == ranking_payload["step"]),
+            None,
+        )
+        if existing is None:
+            epoch_entries.append(entry)
+        elif (
+            existing.get("metrics") != entry["metrics"]
+            or existing.get("total_validation_loss") != entry["total_validation_loss"]
+        ):
+            raise TextRouterCommandError("persisted epoch validation evidence differs")
+        atomic_write_json(
+            epoch_metrics_path,
+            {
+                "schema_version": "langmani-m5a-classifier-recovery-epoch-metrics-v0",
+                "run_fingerprint": run_fingerprint,
+                "amendment_fingerprint": amendment.amendment_fingerprint,
+                "selection_split": "validation",
+                "epochs": sorted(epoch_entries, key=lambda value: cast(int, value["step"])),
+            },
+        )
+
+    latest_checkpoint = run_root / "checkpoints" / "latest.pt"
+    resume_role = "pilot"
+    if latest_checkpoint.is_file():
+        latest_header = torch.load(latest_checkpoint, map_location="cpu", weights_only=False)
+        if not isinstance(latest_header, Mapping):
+            raise TextRouterCommandError("latest checkpoint payload is malformed")
+        latest_step = latest_header.get("step")
+        if isinstance(latest_step, int) and latest_step > TARGET_STAGE_TRAINING_CONFIG.pilot_step:
+            if (
+                latest_header.get("run_fingerprint") != run_fingerprint
+                or latest_header.get("selection_policy")
+                != "classifier_recovery_lexicographic_validation_v0"
+                or latest_header.get("recovery_amendment_fingerprint")
+                != amendment.amendment_fingerprint
+            ):
+                raise TextRouterCommandError("partial latest checkpoint is not this recovery run")
+            resume_role = "latest"
+        del latest_header
+    result = run_staged_factorized_text_training(
+        model=model,
+        train_batches=train_batches,
+        validation_batches=validation_batches,
+        config=TARGET_STAGE_TRAINING_CONFIG,
+        run_fingerprint=run_fingerprint,
+        checkpoint_root=run_root / "checkpoints",
+        processor_state=checkpoint_processor_state,
+        stop_after_pilot=False,
+        resume=True,
+        recovery_ranking=True,
+        recovery_amendment_fingerprint=amendment.amendment_fingerprint,
+        resume_checkpoint_role=resume_role,
+        recovery_baseline_metrics=pilot_metrics,
+        validation_observer=observe_validation,
+    )
+    metrics = result.final_metrics
+    selected_step = result.selected_step
+    if metrics is None or selected_step is None:
+        raise TextRouterCommandError("recovery training did not select a validation checkpoint")
+    selected_checkpoint = (
+        pilot_checkpoint
+        if selected_step == TARGET_STAGE_TRAINING_CONFIG.pilot_step
+        else Path(result.best_checkpoint)
+    )
+    selected_checkpoint_sha256 = _sha256_file(selected_checkpoint)
+    selected_outputs = collect_factorized_validation_outputs(
+        model=model, batches=validation_batches
+    )
+    selected_metrics = classifier_stage_metrics(selected_outputs)
+    if selected_metrics.to_dict() != metrics.to_dict():
+        raise TextRouterCommandError("selected in-memory validation metrics differ")
+    selected_details = _detailed_validation_metrics(outputs=selected_outputs, examples=validation)
+    selected_fixture = factorized_validation_fixture_payload(
+        collect_factorized_validation_outputs(model=model, batches=(validation_batches[0],))
+    )
+    del model
+    torch.cuda.empty_cache()
+    fresh_model, _fresh_tokenizer = _target_model_and_tokenizer(local_files_only=True)
+    fresh_model.to("cuda")
+    selected_audit = audit_staged_factorized_text_checkpoint(
+        model=fresh_model,
+        validation_batches=validation_batches,
+        config=TARGET_STAGE_TRAINING_CONFIG,
+        run_fingerprint=run_fingerprint,
+        checkpoint_path=selected_checkpoint,
+        processor_state=checkpoint_processor_state,
+        expected_fixture=selected_fixture,
+        expected_step=selected_step,
+        selection_policy=(
+            "validation_loss_v0"
+            if selected_step == TARGET_STAGE_TRAINING_CONFIG.pilot_step
+            else "classifier_recovery_lexicographic_validation_v0"
+        ),
+        recovery_amendment_fingerprint=(
+            None
+            if selected_step == TARGET_STAGE_TRAINING_CONFIG.pilot_step
+            else amendment.amendment_fingerprint
+        ),
+    )
+    recomputed_outputs = collect_factorized_validation_outputs(
+        model=fresh_model, batches=validation_batches
+    )
+    recomputed_metrics = classifier_stage_metrics(recomputed_outputs)
+    reload_validated = (
+        selected_audit.deterministic_logits_match
+        and selected_audit.restored_step == selected_step
+        and selected_audit.maximum_absolute_logit_error == 0.0
+        and recomputed_metrics.to_dict() == metrics.to_dict()
+    )
+    if not reload_validated:
+        raise TextRouterCommandError(
+            "selected checkpoint reload or full validation recompute failed"
+        )
+    continuation_records = tuple(
+        value
+        for value in result.training_records
+        if value.step > TARGET_STAGE_TRAINING_CONFIG.pilot_step
+    )
+    finite_training = all(
+        math.isfinite(value)
+        for record in continuation_records
+        for value in (
+            record.total_loss,
+            record.status_loss,
+            record.object_loss,
+            record.bin_loss,
+            record.learning_rate,
+            record.gradient_norm,
+            record.encoder_gradient_norm,
+            record.status_head_gradient_norm,
+            record.object_head_gradient_norm,
+            record.bin_head_gradient_norm,
+            record.throughput_examples_per_second,
+            record.data_loader_latency_seconds,
+            record.step_latency_seconds,
+        )
+    )
+    all_heads_received_gradients = bool(continuation_records) and all(
+        max(getattr(record, name) for record in continuation_records) > 0.0
+        for name in (
+            "status_head_gradient_norm",
+            "object_head_gradient_norm",
+            "bin_head_gradient_norm",
+        )
+    )
+    training_integrity = {
+        "finite_losses_and_gradients": finite_training,
+        "all_three_heads_received_gradients": all_heads_received_gradients,
+        "continuous_global_steps": [record.step for record in result.training_records]
+        == list(range(1, result.completed_steps + 1)),
+        "completed_steps": result.completed_steps,
+        "completed_epochs": result.completed_epochs,
+        "maximum_total_epochs": TARGET_STAGE_TRAINING_CONFIG.maximum_epochs,
+        "examples_processed": result.training_records[-1].examples_processed,
+        "expected_examples_processed": result.completed_epochs * len(train),
+        "no_skipped_completed_epoch_examples": result.training_records[-1].examples_processed
+        == result.completed_epochs * len(train),
+        "resume_checkpoint_role": resume_role,
+        "resumed_from_step": result.resumed_from_step,
+        "next_step_at_initial_authorization": 30,
+    }
+    if not all(
+        (
+            finite_training,
+            all_heads_received_gradients,
+            training_integrity["continuous_global_steps"],
+            training_integrity["no_skipped_completed_epoch_examples"],
+            result.completed_epochs <= TARGET_STAGE_TRAINING_CONFIG.maximum_epochs,
+        )
+    ):
+        raise TextRouterCommandError("recovery training integrity gate failed")
+    quality_items = {
+        "full_task_spec_accuracy_at_least_0_95": metrics.full_task_spec_accuracy >= 0.95,
+        "target_object_accuracy_at_least_0_97": metrics.object_accuracy >= 0.97,
+        "destination_bin_accuracy_at_least_0_97": metrics.bin_accuracy >= 0.97,
+        "false_route_rate_at_most_0_03": metrics.false_route_rate <= 0.03,
+        "ambiguous_rejection_recall_at_least_0_90": metrics.ambiguous_rejection_recall >= 0.90,
+        "unsupported_rejection_recall_at_least_0_95": metrics.unsupported_rejection_recall >= 0.95,
+        "malformed_rejection_recall_at_least_0_95": metrics.malformed_rejection_recall >= 0.95,
+        "schema_valid_rate_exactly_1": metrics.schema_valid_rate == 1.0,
+        "finite": metrics.finite and finite_training,
+        "selected_checkpoint_reload": reload_validated,
+        "development_and_final_unaccessed": pilot_forbidden_sealed,
+    }
+    full_quality_gate_passed = all(quality_items.values())
+    selection: TextRouterCalibrationSelection | None = None
+    artifact: Path | None = None
+    artifact_fingerprint: str | None = None
+    artifact_reload_validated = False
+    artifact_reload_maximum_error: float | None = None
+    if full_quality_gate_passed:
+        selection = calibrate_and_select_text_router(
+            outputs=recomputed_outputs,
+            threshold_candidates=THRESHOLD_CANDIDATES,
+            maximum_false_route_rate=MAXIMUM_FALSE_ROUTE_RATE,
+            temperature_iterations=TEMPERATURE_ITERATIONS,
+        )
+        manifest = classifier_manifest(
+            model_id=MODEL_ID,
+            model_revision=MODEL_REVISION,
+            tokenizer_revision=TOKENIZER_REVISION,
+            hidden_size=fresh_model.hidden_size,
+            dropout=fresh_model.dropout_probability,
+        )
+        legacy_result = {
+            "completed_steps": result.completed_steps,
+            "completed_epochs": result.completed_epochs,
+            "stopped_early": result.stopped_early,
+            "selected_checkpoint_id": f"step_{selected_step:08d}",
+            "selected_step": selected_step,
+            "checkpoint_validations": result.to_dict()["validation_records"],
+            "validation_rankings": result.to_dict()["validation_rankings"],
+            "config_fingerprint": TARGET_STAGE_TRAINING_CONFIG.fingerprint,
+            "resumed_from_step": result.resumed_from_step,
+        }
+        evidence = _run_evidence(
+            mode="target_pilot_recovery_complete",
+            corpus_manifest=corpus.manifest.to_dict(),
+            git_state=git_state,
+            dependencies=_dependency_versions(),
+            training_config=TARGET_TRAINING_CONFIG,
+            batch_size=TARGET_BATCH_SIZE,
+            maximum_sequence_length=TARGET_MAXIMUM_SEQUENCE_LENGTH,
+            training_result=legacy_result,
+            selection=selection,
+            model_id=MODEL_ID,
+            model_revision=MODEL_REVISION,
+            tokenizer_revision=TOKENIZER_REVISION,
+            training_device="cuda",
+            train_examples=len(train),
+            validation_examples=len(validation),
+        )
+        evidence.update(
+            {
+                "authoritative_run_fingerprint": run_fingerprint,
+                "recovery_amendment": amendment.to_dict(),
+                "classifier_training_metrics": metrics.to_dict(),
+                "classifier_full_quality_gate_passed": True,
+            }
+        )
+        artifact_fingerprint = text_classifier_run_fingerprint(
+            classifier_manifest=manifest, run_evidence=evidence
+        )
+        artifact = stage_and_promote_text_classifier(
+            output_root=output_root / "promoted",
+            run_fingerprint=artifact_fingerprint,
+            model=fresh_model,
+            tokenizer=tokenizer,
+            classifier_manifest=manifest,
+            run_evidence=evidence,
+            clean_matching_staging=bool(args.clean_staging),
+        )
+        validate_completed_text_classifier_artifact(artifact)
+        reloaded_model, reloaded_tokenizer, _manifest = load_factorized_text_classifier(artifact)
+        reloaded_model.to("cuda")
+        reload_batches = _factorized_batches(
+            tokenizer=reloaded_tokenizer,
+            examples=validation[:TARGET_BATCH_SIZE],
+            split=LanguageSplit.VALIDATION,
+            batch_size=TARGET_BATCH_SIZE,
+            maximum_sequence_length=TARGET_MAXIMUM_SEQUENCE_LENGTH,
+            seed=0,
+        )
+        runtime_outputs = collect_factorized_validation_outputs(
+            model=reloaded_model, batches=reload_batches
+        )
+        reference_outputs = collect_factorized_validation_outputs(
+            model=fresh_model, batches=(validation_batches[0],)
+        )
+        artifact_reload_maximum_error = max(
+            float((left - right).abs().max())
+            for left, right in (
+                (runtime_outputs.status_logits, reference_outputs.status_logits),
+                (runtime_outputs.object_logits, reference_outputs.object_logits),
+                (runtime_outputs.bin_logits, reference_outputs.bin_logits),
+            )
+        )
+        artifact_reload_validated = artifact_reload_maximum_error <= 1e-6
+        if not artifact_reload_validated:
+            raise TextRouterCommandError("promoted runtime artifact reload logits differ")
+        del reloaded_model
+    del fresh_model
+    torch.cuda.empty_cache()
+    checkpoint_inventory = {
+        role: {
+            "path": str(run_root / "checkpoints" / f"{role}.pt"),
+            "sha256": _sha256_file(run_root / "checkpoints" / f"{role}.pt"),
+            "size_bytes": (run_root / "checkpoints" / f"{role}.pt").stat().st_size,
+        }
+        for role in CheckpointRetentionPolicy().retained_roles
+    }
+    if (
+        checkpoint_inventory["pilot"]["sha256"] != AUTHORIZED_RECOVERY_PILOT_CHECKPOINT_SHA256
+        or any((run_root / "checkpoints").glob(".*.tmp"))
+        or len(tuple((run_root / "checkpoints").glob("*.pt"))) != 3
+    ):
+        raise TextRouterCommandError("bounded checkpoint retention or pilot immutability failed")
+    epoch_metrics = _read_json_mapping(epoch_metrics_path, label="recovery epoch metrics")
+    payload: dict[str, object] = {
+        "schema_version": "langmani-m5a-classifier-pilot-recovery-complete-v0",
+        "run_fingerprint": run_fingerprint,
+        "run_root": str(run_root),
+        "amendment_path": str(amendment_path),
+        "amendment_fingerprint": amendment.amendment_fingerprint,
+        "protocol_amendment": amendment.to_dict(),
+        "pre_resume_audit_path": str(audit_path),
+        "pre_resume_audit": audit_payload,
+        "pre_resume_checkpoint_audit": pre_resume_checkpoint_audit.to_dict(),
+        "classifier_tiny_overfit_validated": True,
+        "classifier_pilot_completed": True,
+        "classifier_pilot_promoted": False,
+        "classifier_recovery_resume_authorized": True,
+        "classifier_recovery_resume_completed": True,
+        "classifier_training_completed": True,
+        "classifier_checkpoint_selected": True,
+        "classifier_full_quality_gate_passed": full_quality_gate_passed,
+        "classifier_calibration_validated": selection is not None and artifact_reload_validated,
+        "artifact_reload_validated": artifact_reload_validated,
+        "cuda_training_validated": True,
+        "physical_target_validated": True,
+        "training_seed": 0,
+        "classifier_training_seeds": 1,
+        "robustness_across_training_seeds_not_evaluated": True,
+        "resume_checkpoint_fingerprint": AUTHORIZED_RECOVERY_PILOT_CHECKPOINT_SHA256,
+        "initial_resume_step": 29,
+        "initial_next_global_step": 30,
+        "training_result": result.to_dict(),
+        "training_integrity": training_integrity,
+        "epoch_validation_evidence_path": str(epoch_metrics_path),
+        "epoch_validation_evidence": epoch_metrics,
+        "selected_epoch": selected_step // TARGET_STAGE_TRAINING_CONFIG.steps_per_epoch,
+        "selected_step": selected_step,
+        "selected_checkpoint_path": str(selected_checkpoint),
+        "selected_checkpoint_fingerprint": selected_checkpoint_sha256,
+        "selected_checkpoint_reload_audit": selected_audit.to_dict(),
+        "selected_checkpoint_reload_maximum_absolute_error": (
+            selected_audit.maximum_absolute_logit_error
+        ),
+        "selected_validation_metrics": metrics.to_dict(),
+        "selected_detailed_validation_metrics": selected_details,
+        "quality_gate_items": quality_items,
+        "calibration_selection": None if selection is None else selection.to_dict(),
+        "artifact_run_fingerprint": artifact_fingerprint,
+        "artifact_root": None if artifact is None else str(artifact),
+        "artifact_reload_maximum_absolute_error": artifact_reload_maximum_error,
+        "checkpoint_inventory": checkpoint_inventory,
+        "checkpoint_retention_validated": True,
+        "elapsed_seconds": time.perf_counter() - stage_started,
+        "language_development_completed": False,
+        "one_scene_control_smoke_completed": False,
+        "three_scene_control_screen_completed": False,
+        "predicted_control_development_completed": False,
+        "final_benchmark_authorized": False,
+        "development_accessed": False,
+        "language_final_accessed": False,
+        "control_final_accessed": False,
+        "m42_final_accessed": False,
+        "test_split_accessed": False,
+        "historical_fresh_accessed": False,
+        "smolvla_go": False,
+        "passed": True,
+    }
+    _write_or_validate_stage(completion_path, payload)
+    return payload
 
 
 def _run_authoritative_stage(
@@ -1642,6 +2485,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     mode = (
         "target_development_retired"
         if args.target_development
+        else "target_pilot_recovery_resume"
+        if args.target_pilot_recovery_resume
         else "target_resume"
         if args.target_resume
         else "target_pilot"
@@ -1661,6 +2506,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "classifier_tiny_overfit_validated": False,
         "classifier_pilot_completed": False,
         "classifier_pilot_promoted": False,
+        "classifier_recovery_resume_authorized": False,
+        "classifier_recovery_resume_completed": False,
+        "classifier_full_quality_gate_passed": False,
         "classifier_checkpoint_selected": False,
         "classifier_calibration_validated": False,
         "artifact_reload_validated": False,
@@ -1678,6 +2526,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         output_root, report_path = _safe_paths(args.output_root, args.report)
         git_state = inspect_git_state(PROJECT_ROOT)
+        recovery_arguments_present = any(
+            value is not None
+            for value in (
+                args.recovery_run_fingerprint,
+                args.recovery_pilot_checkpoint_sha256,
+                args.recovery_maximum_total_epochs,
+                args.recovery_early_stopping_patience,
+            )
+        )
+        if recovery_arguments_present and not args.target_pilot_recovery_resume:
+            raise TextRouterCommandError(
+                "recovery continuation arguments require --target-pilot-recovery-resume"
+            )
         if args.target_development:
             raise TextRouterCommandError(
                 "--target-development was retired by the staged M5A protocol; "
@@ -1699,6 +2560,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
             )
             payload["cuda_training_validated"] = True
+        elif args.target_pilot_recovery_resume:
+            payload.update(
+                _run_authorized_recovery_stage(
+                    args=args,
+                    output_root=output_root,
+                    git_state=git_state,
+                )
+            )
         elif args.target_resume:
             payload.update(
                 _run_authoritative_stage(
@@ -1754,6 +2623,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             "classifier_tiny_overfit_validated",
             "classifier_pilot_completed",
             "classifier_pilot_promoted",
+            "classifier_recovery_resume_authorized",
+            "classifier_recovery_resume_completed",
+            "classifier_full_quality_gate_passed",
             "classifier_checkpoint_selected",
             "classifier_calibration_validated",
             "artifact_reload_validated",

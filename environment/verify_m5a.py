@@ -97,7 +97,9 @@ from langmani.language.schedules import (  # noqa: E402
 )
 from langmani.language.schema_validation import parse_strict_router_json  # noqa: E402
 from langmani.language.stage_protocol import (  # noqa: E402
+    ClassifierStageMetrics,
     ClassifierStageTrainingConfig,
+    ClassifierValidationRanking,
     M5AStage,
 )
 from langmani.language.text_calibration import (  # noqa: E402
@@ -111,11 +113,13 @@ from langmani.language.text_classifier import (  # noqa: E402
     TEXT_CLASSIFIER_TOKENIZER_REVISION,
     FactorizedTextClassifierV0,
     compute_factorized_text_loss,
+    load_factorized_text_classifier,
 )
 from langmani.language.text_training import (  # noqa: E402
     audit_staged_factorized_text_checkpoint,
     classifier_stage_metrics,
     collect_factorized_validation_outputs,
+    factorized_validation_fixture_payload,
     validate_completed_text_classifier_artifact,
 )
 from langmani.policies.act_runtime import atomic_write_json, inspect_git_state  # noqa: E402
@@ -597,8 +601,11 @@ class StageVerificationReport:
     classifier_tiny_overfit_validated: bool = False
     classifier_pilot_completed: bool = False
     classifier_pilot_promoted: bool = False
+    classifier_recovery_resume_authorized: bool = False
+    classifier_recovery_resume_completed: bool = False
     classifier_training_completed: bool = False
     classifier_checkpoint_selected: bool = False
+    classifier_full_quality_gate_passed: bool = False
     classifier_calibration_validated: bool = False
     artifact_reload_validated: bool = False
     cuda_training_validated: bool = False
@@ -614,9 +621,12 @@ class StageVerificationReport:
     failure_attribution_validated: bool = False
     development_quality_gate_passed: bool = False
     final_benchmark_authorized: bool = False
+    development_accessed: bool = False
     language_final_accessed: bool = False
     control_final_accessed: bool = False
+    m42_final_accessed: bool = False
     test_split_accessed: bool = False
+    historical_fresh_accessed: bool = False
     smolvla_go: bool = False
     physical_target_validated: bool = False
 
@@ -647,6 +657,17 @@ class StageVerificationReport:
                 self.classifier_checkpoint_selected,
                 self.classifier_calibration_validated,
             ),
+            M5AStage.CLASSIFIER_RECOVERY_TRAINING.value: (
+                self.implementation_validated,
+                self.classifier_tiny_overfit_validated,
+                self.classifier_pilot_completed,
+                self.classifier_recovery_resume_authorized,
+                self.classifier_recovery_resume_completed,
+                self.classifier_training_completed,
+                self.classifier_checkpoint_selected,
+                self.cuda_training_validated,
+                self.physical_target_validated,
+            ),
             M5AStage.LANGUAGE_DEVELOPMENT.value: (
                 self.llm_router_loaded,
                 self.llm_prompt_locked,
@@ -668,9 +689,12 @@ class StageVerificationReport:
             ),
         }.get(self.requested_stage)
         forbidden = (
+            self.development_accessed,
             self.language_final_accessed,
             self.control_final_accessed,
+            self.m42_final_accessed,
             self.test_split_accessed,
+            self.historical_fresh_accessed,
             self.smolvla_go,
         )
         return (
@@ -3042,6 +3066,378 @@ def _verify_classifier_pilot_payload(
     )
 
 
+def _classifier_metrics_from_evidence(value: Mapping[str, object]) -> ClassifierStageMetrics:
+    try:
+        return ClassifierStageMetrics(
+            full_task_spec_accuracy=float(value["full_task_spec_accuracy"]),
+            object_accuracy=float(value["object_accuracy"]),
+            bin_accuracy=float(value["bin_accuracy"]),
+            false_route_rate=float(value["false_route_rate"]),
+            schema_valid_rate=float(value["schema_valid_rate"]),
+            ambiguous_rejection_recall=float(value["ambiguous_rejection_recall"]),
+            unsupported_rejection_recall=float(value["unsupported_rejection_recall"]),
+            malformed_rejection_recall=float(value["malformed_rejection_recall"]),
+            status_accuracy=float(value.get("status_accuracy", 0.0)),
+            finite=cast(bool, value.get("finite", True)),
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise M5ATargetVerificationError("recovery classifier metrics are malformed") from error
+
+
+def _without_validation_latency(value: Mapping[str, object]) -> dict[str, object]:
+    result = json.loads(json.dumps(dict(value)))
+    all_metrics = result.get("all")
+    if isinstance(all_metrics, dict):
+        for name in ("latency_p50", "latency_p95", "latency_p99"):
+            all_metrics.pop(name, None)
+    return cast(dict[str, object], result)
+
+
+def _verify_classifier_recovery_payload(
+    *, payload: Mapping[str, object], report: StageVerificationReport
+) -> None:
+    report.classifier_tiny_overfit_validated = (
+        payload.get("classifier_tiny_overfit_validated") is True
+    )
+    report.classifier_pilot_completed = payload.get("classifier_pilot_completed") is True
+    report.classifier_pilot_promoted = payload.get("classifier_pilot_promoted") is True
+    report.classifier_recovery_resume_authorized = (
+        payload.get("classifier_recovery_resume_authorized") is True
+    )
+    report.classifier_recovery_resume_completed = (
+        payload.get("classifier_recovery_resume_completed") is True
+    )
+    report.classifier_training_completed = payload.get("classifier_training_completed") is True
+    report.classifier_checkpoint_selected = payload.get("classifier_checkpoint_selected") is True
+    report.classifier_full_quality_gate_passed = (
+        payload.get("classifier_full_quality_gate_passed") is True
+    )
+    report.classifier_calibration_validated = (
+        payload.get("classifier_calibration_validated") is True
+    )
+    report.cuda_training_validated = payload.get("cuda_training_validated") is True
+    report.physical_target_validated = payload.get("physical_target_validated") is True
+    structural = {
+        "recovery completion schema": payload.get("schema_version")
+        == "langmani-m5a-classifier-pilot-recovery-complete-v0",
+        "exact rejected pilot remains rejected": report.classifier_pilot_completed
+        and not report.classifier_pilot_promoted,
+        "recovery authorization and completion": report.classifier_recovery_resume_authorized
+        and report.classifier_recovery_resume_completed,
+        "bounded training and selection completed": report.classifier_training_completed
+        and report.classifier_checkpoint_selected,
+        "single CUDA seed": payload.get("training_seed") == 0
+        and payload.get("classifier_training_seeds") == 1
+        and payload.get("robustness_across_training_seeds_not_evaluated") is True
+        and report.cuda_training_validated
+        and report.physical_target_validated
+        and torch.cuda.is_available(),
+        "resume starts at step 30": payload.get("initial_resume_step") == 29
+        and payload.get("initial_next_global_step") == 30,
+        "later stages remain incomplete": all(
+            payload.get(name) is False
+            for name in (
+                "language_development_completed",
+                "one_scene_control_smoke_completed",
+                "three_scene_control_screen_completed",
+                "predicted_control_development_completed",
+                "final_benchmark_authorized",
+            )
+        ),
+    }
+    for name, condition in structural.items():
+        report.check(name, condition, "bounded rejected-pilot recovery")
+    if not all(structural.values()):
+        return
+    try:
+        run_fingerprint = _require_sha256(
+            payload.get("run_fingerprint"), label="recovery run fingerprint"
+        )
+        amendment = _require_mapping(
+            payload.get("protocol_amendment"), label="recovery protocol amendment"
+        )
+        audit = _require_mapping(payload.get("pre_resume_audit"), label="recovery pre-resume audit")
+        training_result = _require_mapping(
+            payload.get("training_result"), label="recovery training result"
+        )
+        selected_metrics_payload = _require_mapping(
+            payload.get("selected_validation_metrics"), label="selected validation metrics"
+        )
+        selected_details = _require_mapping(
+            payload.get("selected_detailed_validation_metrics"),
+            label="selected detailed validation metrics",
+        )
+        quality_items = _require_mapping(
+            payload.get("quality_gate_items"), label="recovery quality-gate items"
+        )
+    except M5ATargetVerificationError as error:
+        report.check("recovery evidence mappings", False, str(error))
+        return
+    current_git = inspect_git_state(PROJECT_ROOT)
+    expected_amendment = text_router_cli._recovery_amendment(git_state=current_git).to_dict()
+    amendment_valid = (
+        amendment == expected_amendment
+        and payload.get("amendment_fingerprint") == expected_amendment.get("amendment_fingerprint")
+        and run_fingerprint == text_router_cli.AUTHORIZED_RECOVERY_RUN_FINGERPRINT
+        and amendment.get("pilot_checkpoint_fingerprint")
+        == text_router_cli.AUTHORIZED_RECOVERY_PILOT_CHECKPOINT_SHA256
+        and amendment.get("new_run_identity") is False
+        and amendment.get("original_pilot_promoted") is False
+        and amendment.get("validation_evidence_only") is True
+        and amendment.get("development_or_final_accessed") is False
+    )
+    report.check(
+        "post-pilot amendment fingerprint",
+        amendment_valid,
+        str(payload.get("amendment_fingerprint")),
+    )
+    audit_checks = audit.get("checks")
+    audit_valid = (
+        audit.get("passed") is True
+        and audit.get("read_only") is True
+        and audit.get("gradient_split") == "train"
+        and audit.get("selection_split") == "validation"
+        and isinstance(audit_checks, Mapping)
+        and len(audit_checks) == 15
+        and all(value is True for value in audit_checks.values())
+    )
+    report.corpus_validated = audit_valid
+    report.split_isolation_validated = audit_valid
+    report.check("independent 15-item data/loss audit", audit_valid, "read-only")
+    validation_rankings = training_result.get("validation_rankings")
+    ranking_objects: list[ClassifierValidationRanking] = []
+    ranking_valid = isinstance(validation_rankings, list) and bool(validation_rankings)
+    if ranking_valid:
+        try:
+            for value in validation_rankings:
+                if not isinstance(value, Mapping):
+                    raise TypeError("ranking is not a mapping")
+                metrics_value = value.get("metrics")
+                if not isinstance(metrics_value, Mapping):
+                    raise TypeError("ranking metrics are not a mapping")
+                ranking_objects.append(
+                    ClassifierValidationRanking(
+                        step=int(cast(int, value["step"])),
+                        epoch=int(cast(int, value["epoch"])),
+                        metrics=_classifier_metrics_from_evidence(metrics_value),
+                        total_validation_loss=float(cast(float, value["total_validation_loss"])),
+                        evidence_split=cast(str, value["evidence_split"]),
+                    )
+                )
+        except (KeyError, TypeError, ValueError, M5ATargetVerificationError):
+            ranking_valid = False
+    selected_step = payload.get("selected_step")
+    completed_steps = training_result.get("completed_steps")
+    completed_epochs = training_result.get("completed_epochs")
+    stopped_early = training_result.get("stopped_early")
+    if ranking_valid:
+        steps = [value.step for value in ranking_objects]
+        best = min(ranking_objects, key=lambda value: value.key)
+        ranking_valid = (
+            steps[0] == 29
+            and steps == sorted(set(steps))
+            and all(step in (29, 58, 87, 116, 145) for step in steps)
+            and selected_step == best.step
+            and isinstance(completed_steps, int)
+            and completed_steps == steps[-1]
+            and isinstance(completed_epochs, int)
+            and completed_epochs <= 5
+            and isinstance(training_result.get("resumed_from_step"), int)
+            and 29 <= cast(int, training_result["resumed_from_step"]) < completed_steps
+        )
+        if stopped_early is True:
+            prior_best = min(ranking_objects[:-1], key=lambda value: value.key)
+            ranking_valid = ranking_valid and not ranking_objects[-1].better_than(prior_best)
+        else:
+            ranking_valid = ranking_valid and completed_steps == 145
+    report.check(
+        "validation-only seven-key ranking and patience-one stop",
+        ranking_valid,
+        f"steps={completed_steps} selected={selected_step}",
+    )
+    run_root_value = payload.get("run_root")
+    selected_checkpoint_value = payload.get("selected_checkpoint_path")
+    if not isinstance(run_root_value, str) or not isinstance(selected_checkpoint_value, str):
+        report.check("recovery checkpoint paths", False, "missing")
+        return
+    run_root = _resolved_unlinked(Path(run_root_value), label="recovery run root")
+    selected_checkpoint = _resolved_unlinked(
+        Path(selected_checkpoint_value), label="selected recovery checkpoint"
+    )
+    checkpoints = tuple(sorted((run_root / "checkpoints").glob("*.pt")))
+    retention_valid = (
+        {value.name for value in checkpoints} == {"pilot.pt", "latest.pt", "validation_best.pt"}
+        and _file_sha256(run_root / "checkpoints" / "pilot.pt")
+        == text_router_cli.AUTHORIZED_RECOVERY_PILOT_CHECKPOINT_SHA256
+        and payload.get("selected_checkpoint_fingerprint") == _file_sha256(selected_checkpoint)
+        and not any((run_root / "checkpoints").glob(".*.tmp"))
+    )
+    report.check("bounded three-role checkpoint retention", retention_valid, str(run_root))
+    preflight = _read_json_object(run_root / "preflight.json", label="recovery preflight")
+    processor_state = preflight.get("checkpoint_processor_state")
+    if not isinstance(processor_state, Mapping):
+        report.check("checkpoint processor contract", False, "missing")
+        return
+    corpus = build_language_corpus()
+    validation = corpus.examples_for_split(LanguageSplit.VALIDATION)
+    try:
+        model, tokenizer = text_router_cli._target_model_and_tokenizer(local_files_only=True)
+        model.to("cuda")
+        checkpoint_payload = torch.load(selected_checkpoint, map_location="cpu", weights_only=False)
+        if not isinstance(checkpoint_payload, Mapping):
+            raise M5ATargetVerificationError("selected checkpoint payload is not a mapping")
+        model.load_state_dict(
+            cast(Mapping[str, torch.Tensor], checkpoint_payload["model_state"]), strict=True
+        )
+        validation_batches = text_router_cli._factorized_batches(
+            tokenizer=tokenizer,
+            examples=validation,
+            split=LanguageSplit.VALIDATION,
+            batch_size=text_router_cli.TARGET_BATCH_SIZE,
+            maximum_sequence_length=text_router_cli.TARGET_MAXIMUM_SEQUENCE_LENGTH,
+            seed=0,
+        )
+        fixture = factorized_validation_fixture_payload(
+            collect_factorized_validation_outputs(model=model, batches=(validation_batches[0],))
+        )
+        selected_step_int = int(cast(int, selected_step))
+        selected_audit = audit_staged_factorized_text_checkpoint(
+            model=model,
+            validation_batches=validation_batches,
+            config=ClassifierStageTrainingConfig(train_example_count=900),
+            run_fingerprint=run_fingerprint,
+            checkpoint_path=selected_checkpoint,
+            processor_state=processor_state,
+            expected_fixture=fixture,
+            expected_step=selected_step_int,
+            selection_policy=(
+                "validation_loss_v0"
+                if selected_step_int == 29
+                else "classifier_recovery_lexicographic_validation_v0"
+            ),
+            recovery_amendment_fingerprint=(
+                None if selected_step_int == 29 else cast(str, payload["amendment_fingerprint"])
+            ),
+        )
+        outputs = collect_factorized_validation_outputs(model=model, batches=validation_batches)
+        recomputed_metrics = classifier_stage_metrics(outputs)
+        recomputed_details = text_router_cli._detailed_validation_metrics(
+            outputs=outputs, examples=validation
+        )
+        checkpoint_reload_valid = (
+            selected_audit.deterministic_logits_match
+            and selected_audit.restored_step == selected_step_int
+            and selected_audit.maximum_absolute_logit_error == 0.0
+            and recomputed_metrics.to_dict() == dict(selected_metrics_payload)
+            and _without_validation_latency(recomputed_details)
+            == _without_validation_latency(selected_details)
+        )
+    except Exception as error:  # noqa: BLE001 - independent verifier preserves diagnostics
+        report.check("selected checkpoint reload and validation recompute", False, str(error))
+        return
+    finally:
+        if "model" in locals():
+            del model
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    report.artifact_reload_validated = checkpoint_reload_valid
+    report.check(
+        "selected checkpoint reload and full validation recompute",
+        checkpoint_reload_valid,
+        f"examples={len(validation)} max_error={selected_audit.maximum_absolute_logit_error}",
+    )
+    sealed = all(
+        payload.get(name) is False
+        for name in (
+            "development_accessed",
+            "language_development_completed",
+            "one_scene_control_smoke_completed",
+            "three_scene_control_screen_completed",
+            "predicted_control_development_completed",
+            "final_benchmark_authorized",
+            "language_final_accessed",
+            "control_final_accessed",
+            "m42_final_accessed",
+            "test_split_accessed",
+            "historical_fresh_accessed",
+            "smolvla_go",
+        )
+    )
+    exact_quality_items = {
+        "full_task_spec_accuracy_at_least_0_95": recomputed_metrics.full_task_spec_accuracy >= 0.95,
+        "target_object_accuracy_at_least_0_97": recomputed_metrics.object_accuracy >= 0.97,
+        "destination_bin_accuracy_at_least_0_97": recomputed_metrics.bin_accuracy >= 0.97,
+        "false_route_rate_at_most_0_03": recomputed_metrics.false_route_rate <= 0.03,
+        "ambiguous_rejection_recall_at_least_0_90": (
+            recomputed_metrics.ambiguous_rejection_recall >= 0.90
+        ),
+        "unsupported_rejection_recall_at_least_0_95": (
+            recomputed_metrics.unsupported_rejection_recall >= 0.95
+        ),
+        "malformed_rejection_recall_at_least_0_95": (
+            recomputed_metrics.malformed_rejection_recall >= 0.95
+        ),
+        "schema_valid_rate_exactly_1": recomputed_metrics.schema_valid_rate == 1.0,
+        "finite": recomputed_metrics.finite
+        and _require_mapping(
+            payload.get("training_integrity"), label="recovery training integrity"
+        ).get("finite_losses_and_gradients")
+        is True,
+        "selected_checkpoint_reload": checkpoint_reload_valid,
+        "development_and_final_unaccessed": sealed,
+    }
+    exact_quality = all(exact_quality_items.values())
+    quality_valid = dict(quality_items) == exact_quality_items and (
+        report.classifier_full_quality_gate_passed is exact_quality
+    )
+    report.check(
+        "exact unchanged full classifier quality gate",
+        quality_valid,
+        f"passed={exact_quality}",
+    )
+    calibration = payload.get("calibration_selection")
+    artifact_root = payload.get("artifact_root")
+    calibration_conditional = (
+        exact_quality
+        and report.classifier_calibration_validated
+        and isinstance(calibration, Mapping)
+        and isinstance(artifact_root, str)
+    ) or (
+        not exact_quality
+        and not report.classifier_calibration_validated
+        and calibration is None
+        and artifact_root is None
+        and payload.get("artifact_run_fingerprint") is None
+    )
+    if exact_quality and isinstance(artifact_root, str):
+        try:
+            artifact = validate_completed_text_classifier_artifact(Path(artifact_root))
+            _reloaded_model, _reloaded_tokenizer, _manifest = load_factorized_text_classifier(
+                artifact
+            )
+            del _reloaded_model
+        except Exception:  # noqa: BLE001 - exact failure is captured by the check below
+            calibration_conditional = False
+    report.check(
+        "calibration and runtime artifact only after quality authorization",
+        calibration_conditional,
+        f"quality={exact_quality} calibrated={report.classifier_calibration_validated}",
+    )
+    report.check("all development/final/control sources sealed", sealed, "no later stage access")
+    report.implementation_validated = all(
+        (
+            amendment_valid,
+            audit_valid,
+            ranking_valid,
+            retention_valid,
+            checkpoint_reload_valid,
+            quality_valid,
+            calibration_conditional,
+            sealed,
+        )
+    )
+
+
 def _verify_stage_evidence(stage: M5AStage, path: Path) -> StageVerificationReport:
     source = _resolved_unlinked(path, label="M5A stage evidence")
     report = StageVerificationReport(requested_stage=stage.value, evidence_path=str(source))
@@ -3058,12 +3454,15 @@ def _verify_stage_evidence(stage: M5AStage, path: Path) -> StageVerificationRepo
         return report
     report.check("stage command completion", payload.get("passed") is True, stage.value)
     for forbidden in (
+        "development_accessed",
         "language_final_accessed",
         "control_final_accessed",
+        "m42_final_accessed",
         "test_split_accessed",
+        "historical_fresh_accessed",
         "smolvla_go",
     ):
-        value = payload.get(forbidden)
+        value = payload.get(forbidden, False)
         setattr(report, forbidden, value is True)
         report.check(forbidden, value is False, "sealed/out-of-scope source remains untouched")
     if stage is M5AStage.CLASSIFIER_FIXTURE:
@@ -3085,6 +3484,8 @@ def _verify_stage_evidence(stage: M5AStage, path: Path) -> StageVerificationRepo
             payload.get("classifier_calibration_validated") is True
         )
         report.classifier_pilot_completed = payload.get("resumed_same_authoritative_run") is True
+    elif stage is M5AStage.CLASSIFIER_RECOVERY_TRAINING:
+        _verify_classifier_recovery_payload(payload=payload, report=report)
     elif stage is M5AStage.LANGUAGE_DEVELOPMENT:
         report.llm_router_loaded = payload.get("llm_router_loaded") is True
         report.llm_prompt_locked = payload.get("llm_prompt_locked") is True

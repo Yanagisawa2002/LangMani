@@ -11,7 +11,9 @@ quality gate, so the shared-ACT architecture search is closed and `m42_final_v0`
 M5A modular language-to-TaskSpec routing over the six frozen PerTask ACT controllers is the active
 milestone. Its implementation now uses separately authorized fixture, tiny-overfit, authoritative
 single-seed pilot/resume, language-development, 1-scene smoke, 3-scene screen, and 6-scene full
-development stages. M5A target training/evaluation, its sealed final benchmark, and SmolVLA have
+development stages. The original step-29 classifier pilot completed and was rejected. D-061
+authorizes one exact post-pilot recovery continuation, which remains pending target execution.
+M5A language development, target control evaluation, its sealed final benchmark, and SmolVLA have
 not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
@@ -43,7 +45,10 @@ SmolVLA remain inaccessible during M5A target-development.
 M5A classifier development uses exactly seed 0, at most five epochs/145 optimization steps, a
 step-29 pilot checkpoint, validation-only patience 1, and only `pilot`, `latest`, and
 `validation_best` checkpoint roles. A promoted pilot resumes the same run fingerprint and complete
-optimizer/scheduler/processor/RNG state; it never restarts from step zero. Physical candidates are
+optimizer/scheduler/processor/RNG state; it never restarts from step zero. The sole exception is
+the D-061 recovery mode for the exact rejected pilot/run/checkpoint fingerprints. It starts at step
+30, preserves the same five-epoch and patience-one bounds, uses the frozen validation-only
+seven-key ranking, and does not change ordinary `--target-resume` semantics. Physical candidates are
 progressively filtered. The disjoint 1/3/6-scene stages cost at most 18/54/72 episodes and at most
 144 before final. The separately authorized 12-scene final costs 144 episodes and is never started
 automatically.
@@ -225,6 +230,16 @@ python environment/verify_m5a.py --verify-stage classifier_fixture \
 # uses run_language_control.py --stage one_scene_control_smoke, then
 # three_scene_control_screen, then full_control_development; later stages consume the preceding
 # report. The retired verify_m5a.py --target-development interface must fail and start no work.
+
+# One post-pilot amendment authorizes only the exact rejected run documented by D-061.
+CUDA_VISIBLE_DEVICES=0 python scripts/train_text_router.py \
+  --target-pilot-recovery-resume \
+  --recovery-run-fingerprint sha256:9e3ac659fa2b695c843650df35e3779741d94b3dd70b2aec52a429bc4b2edf49 \
+  --recovery-pilot-checkpoint-sha256 sha256:a892c2b73c87884b2b2acf843d22ed9318e6b661640eea6a4964ff8d739b5758 \
+  --recovery-maximum-total-epochs 5 \
+  --recovery-early-stopping-patience 1
+python environment/verify_m5a.py --verify-stage classifier_recovery_training \
+  --stage-report outputs/diagnostics/m5a/stages/classifier-recovery-resume.json
 ```
 
 The exact environment creation commands are maintained in `README.md`.
@@ -293,6 +308,11 @@ The exact environment creation commands are maintained in `README.md`.
   revisions, deterministic generation, strict structured validation, and at most one repair. Cloud
   APIs, model/encoder sweeps, prompt edits after development starts, and fabricated confidence are
   prohibited.
+- D-061 is a post-pilot amendment and must never be presented as part of the original promotion
+  protocol. Recovery is allowlisted to its exact run and pilot SHA-256, performs the 15-item
+  read-only audit, resumes at step 30, retains three checkpoint roles, and calibrates only after
+  the unchanged full-quality gate passes. A valid quality rejection still has completed/selected
+  flags true, calibration false, and no authorization for language development.
 - Do not describe a skipped, metadata-only, structural-only, or CPU-only check as physical GPU or
   rendering validation.
 

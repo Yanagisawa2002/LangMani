@@ -228,6 +228,13 @@ frames, Parquet content, and videos remain inaccessible. Correct experiment comp
 learned-router quality gate are separate; authorization never executes final automatically.
 The normative contract is `docs/M5A_LANGUAGE_ROUTING_SPEC.md`.
 
+The observed step-29 classifier pilot was valid but failed its original promotion gate. D-061 is
+an explicit post-pilot protocol amendment, not part of that predeclared gate: one exact-checkpoint
+continuation may resume the same run at step 30, remain within the existing five-epoch budget,
+select by a frozen validation-only seven-key ranking, and stop after patience one. It must finish
+and verify before any language-development work; calibration is conditional on the unchanged full
+quality gate.
+
 ## M5B — Sealed modular final and possible SmolVLA handoff (planned)
 
 Run a separate immutable M5A final benchmark only if at least one learned router passes every
