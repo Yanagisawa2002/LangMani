@@ -8,6 +8,7 @@ import math
 import os
 import random
 import shutil
+import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -67,6 +68,112 @@ class TextTrainingStepResult:
     bin_loss: float
     routed_examples: int
     gradient_norm: float
+    encoder_gradient_norm: float
+    status_head_gradient_norm: float
+    object_head_gradient_norm: float
+    bin_head_gradient_norm: float
+
+
+@dataclass(frozen=True, slots=True)
+class TextTrainingTelemetry:
+    """One finite optimizer-step record from the authoritative staged run."""
+
+    step: int
+    total_loss: float
+    status_loss: float
+    object_loss: float
+    bin_loss: float
+    learning_rate: float
+    gradient_norm: float
+    encoder_gradient_norm: float
+    status_head_gradient_norm: float
+    object_head_gradient_norm: float
+    bin_head_gradient_norm: float
+    routed_examples: int
+    batch_examples: int
+    examples_processed: int
+    epoch_progress: float
+    throughput_examples_per_second: float
+    data_loader_latency_seconds: float
+    step_latency_seconds: float
+    gpu_allocated_bytes: int
+    gpu_reserved_bytes: int
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "step": self.step,
+            "total_loss": self.total_loss,
+            "status_loss": self.status_loss,
+            "object_loss": self.object_loss,
+            "bin_loss": self.bin_loss,
+            "learning_rate": self.learning_rate,
+            "gradient_norm": self.gradient_norm,
+            "encoder_gradient_norm": self.encoder_gradient_norm,
+            "status_head_gradient_norm": self.status_head_gradient_norm,
+            "object_head_gradient_norm": self.object_head_gradient_norm,
+            "bin_head_gradient_norm": self.bin_head_gradient_norm,
+            "routed_examples": self.routed_examples,
+            "batch_examples": self.batch_examples,
+            "examples_processed": self.examples_processed,
+            "epoch_progress": self.epoch_progress,
+            "throughput_examples_per_second": self.throughput_examples_per_second,
+            "data_loader_latency_seconds": self.data_loader_latency_seconds,
+            "step_latency_seconds": self.step_latency_seconds,
+            "gpu_allocated_bytes": self.gpu_allocated_bytes,
+            "gpu_reserved_bytes": self.gpu_reserved_bytes,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class StagedTextCheckpointAudit:
+    """Read-only proof that a staged checkpoint can continue without restarting."""
+
+    checkpoint_path: str
+    checkpoint_sha256: str
+    checkpoint_size_bytes: int
+    restored_step: int
+    next_global_step: int
+    next_learning_rate: float
+    optimizer_state_restored: bool
+    scheduler_state_restored: bool
+    processor_state_restored: bool
+    rng_state_restored: bool
+    data_progress_restored: bool
+    deterministic_logits_match: bool
+    maximum_absolute_logit_error: float
+    absolute_tolerance: float
+    relative_tolerance: float
+    validation_fixture_examples: int
+    validation_records_restored: int
+    training_records_restored: int
+    pilot_complete: bool
+    full_training_complete: bool
+    resumable: bool
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "checkpoint_path": self.checkpoint_path,
+            "checkpoint_sha256": self.checkpoint_sha256,
+            "checkpoint_size_bytes": self.checkpoint_size_bytes,
+            "restored_step": self.restored_step,
+            "next_global_step": self.next_global_step,
+            "next_learning_rate": self.next_learning_rate,
+            "optimizer_state_restored": self.optimizer_state_restored,
+            "scheduler_state_restored": self.scheduler_state_restored,
+            "processor_state_restored": self.processor_state_restored,
+            "rng_state_restored": self.rng_state_restored,
+            "data_progress_restored": self.data_progress_restored,
+            "deterministic_logits_match": self.deterministic_logits_match,
+            "maximum_absolute_logit_error": self.maximum_absolute_logit_error,
+            "absolute_tolerance": self.absolute_tolerance,
+            "relative_tolerance": self.relative_tolerance,
+            "validation_fixture_examples": self.validation_fixture_examples,
+            "validation_records_restored": self.validation_records_restored,
+            "training_records_restored": self.training_records_restored,
+            "pilot_complete": self.pilot_complete,
+            "full_training_complete": self.full_training_complete,
+            "resumable": self.resumable,
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -204,6 +311,7 @@ class FactorizedValidationOutputs:
     object_labels: torch.Tensor
     bin_labels: torch.Tensor
     evidence_split: str = "validation"
+    batch_latency_seconds: tuple[float, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -248,6 +356,8 @@ class StagedTextTrainingResult:
     pilot_metrics: ClassifierStageMetrics | None
     final_metrics: ClassifierStageMetrics | None
     validation_records: tuple[TextCheckpointValidation, ...]
+    training_records: tuple[TextTrainingTelemetry, ...]
+    pilot_outputs: FactorizedValidationOutputs | None
     classifier_training_seeds: int = 1
     robustness_across_training_seeds_not_evaluated: bool = True
 
@@ -278,11 +388,22 @@ class StagedTextTrainingResult:
                 }
                 for value in self.validation_records
             ],
+            "training_records": [value.to_dict() for value in self.training_records],
             "classifier_training_seeds": self.classifier_training_seeds,
             "robustness_across_training_seeds_not_evaluated": (
                 self.robustness_across_training_seeds_not_evaluated
             ),
         }
+
+
+def _module_gradient_norm(module: nn.Module) -> torch.Tensor:
+    squares: list[torch.Tensor] = []
+    for parameter in module.parameters():
+        if parameter.grad is not None:
+            squares.append(parameter.grad.detach().float().pow(2).sum())
+    if not squares:
+        return torch.zeros((), dtype=torch.float32)
+    return torch.sqrt(torch.stack(squares).sum())
 
 
 def train_factorized_text_step(
@@ -307,7 +428,18 @@ def train_factorized_text_step(
         object_labels=batch.object_labels,
         bin_labels=batch.bin_labels,
     )
+    losses = (loss.total, loss.status, loss.target_object, loss.target_bin)
+    if not all(bool(torch.isfinite(value)) for value in losses):
+        raise TextTrainingError("classifier loss is non-finite")
     loss.total.backward()
+    component_norms = {
+        "encoder": _module_gradient_norm(model.encoder),
+        "status": _module_gradient_norm(model.status_head),
+        "object": _module_gradient_norm(model.object_head),
+        "bin": _module_gradient_norm(model.bin_head),
+    }
+    if not all(bool(torch.isfinite(value)) for value in component_norms.values()):
+        raise TextTrainingError("classifier component gradient norm is non-finite")
     gradient_norm = nn.utils.clip_grad_norm_(model.parameters(), maximum_gradient_norm)
     if not bool(torch.isfinite(gradient_norm)):
         raise TextTrainingError("classifier gradient norm is non-finite")
@@ -319,6 +451,10 @@ def train_factorized_text_step(
         bin_loss=float(loss.target_bin.detach()),
         routed_examples=loss.routed_examples,
         gradient_norm=float(gradient_norm.detach()),
+        encoder_gradient_norm=float(component_norms["encoder"]),
+        status_head_gradient_norm=float(component_norms["status"]),
+        object_head_gradient_norm=float(component_norms["object"]),
+        bin_head_gradient_norm=float(component_norms["bin"]),
     )
 
 
@@ -354,13 +490,20 @@ def collect_factorized_validation_outputs(
     status_labels: list[torch.Tensor] = []
     object_labels: list[torch.Tensor] = []
     bin_labels: list[torch.Tensor] = []
+    latency_seconds: list[float] = []
     with torch.inference_mode():
         for original in values:
             batch = _batch_on_device(original, device)
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+            started = time.perf_counter()
             output = model(
                 input_ids=batch.input_ids,
                 attention_mask=batch.attention_mask,
             )
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+            latency_seconds.append(time.perf_counter() - started)
             status_logits.append(output.status_logits.detach().cpu())
             object_logits.append(output.object_logits.detach().cpu())
             bin_logits.append(output.bin_logits.detach().cpu())
@@ -374,6 +517,7 @@ def collect_factorized_validation_outputs(
         status_labels=torch.cat(status_labels),
         object_labels=torch.cat(object_labels),
         bin_labels=torch.cat(bin_labels),
+        batch_latency_seconds=tuple(latency_seconds),
     )
 
 
@@ -625,6 +769,36 @@ def _checkpoint_validation_from_dict(payload: Mapping[str, object]) -> TextCheck
         raise TextTrainingError("resumable checkpoint validation record is malformed") from error
 
 
+def _training_telemetry_from_dict(payload: Mapping[str, object]) -> TextTrainingTelemetry:
+    try:
+        return TextTrainingTelemetry(
+            step=cast(int, payload["step"]),
+            total_loss=float(cast(float, payload["total_loss"])),
+            status_loss=float(cast(float, payload["status_loss"])),
+            object_loss=float(cast(float, payload["object_loss"])),
+            bin_loss=float(cast(float, payload["bin_loss"])),
+            learning_rate=float(cast(float, payload["learning_rate"])),
+            gradient_norm=float(cast(float, payload["gradient_norm"])),
+            encoder_gradient_norm=float(cast(float, payload["encoder_gradient_norm"])),
+            status_head_gradient_norm=float(cast(float, payload["status_head_gradient_norm"])),
+            object_head_gradient_norm=float(cast(float, payload["object_head_gradient_norm"])),
+            bin_head_gradient_norm=float(cast(float, payload["bin_head_gradient_norm"])),
+            routed_examples=cast(int, payload["routed_examples"]),
+            batch_examples=cast(int, payload["batch_examples"]),
+            examples_processed=cast(int, payload["examples_processed"]),
+            epoch_progress=float(cast(float, payload["epoch_progress"])),
+            throughput_examples_per_second=float(
+                cast(float, payload["throughput_examples_per_second"])
+            ),
+            data_loader_latency_seconds=float(cast(float, payload["data_loader_latency_seconds"])),
+            step_latency_seconds=float(cast(float, payload["step_latency_seconds"])),
+            gpu_allocated_bytes=cast(int, payload["gpu_allocated_bytes"]),
+            gpu_reserved_bytes=cast(int, payload["gpu_reserved_bytes"]),
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise TextTrainingError("resumable checkpoint training telemetry is malformed") from error
+
+
 def _rng_state() -> dict[str, object]:
     return {
         "python": random.getstate(),
@@ -671,6 +845,7 @@ def _save_staged_checkpoint(
     processor_state: Mapping[str, object],
     step: int,
     records: Sequence[TextCheckpointValidation],
+    training_records: Sequence[TextTrainingTelemetry],
     best_loss: float,
     best_step: int | None,
     best_state: Mapping[str, torch.Tensor] | None,
@@ -686,6 +861,17 @@ def _save_staged_checkpoint(
         "training_config_fingerprint": config.fingerprint,
         "processor_state": dict(processor_state),
         "step": step,
+        "next_global_step": step + 1,
+        "pilot_complete": step >= config.pilot_step,
+        "full_training_complete": False,
+        "resumable": True,
+        "data_progress": {
+            "completed_optimizer_steps": step,
+            "completed_epochs": step // config.steps_per_epoch,
+            "next_batch_index": step % config.steps_per_epoch,
+            "steps_per_epoch": config.steps_per_epoch,
+            "reconstruction": "seeded-permutation-v0-modulo-step",
+        },
         "model_state": model.state_dict(),
         "optimizer_state": optimizer.state_dict(),
         "scheduler_state": scheduler.state_dict(),
@@ -703,6 +889,7 @@ def _save_staged_checkpoint(
             }
             for value in records
         ],
+        "training_records": [value.to_dict() for value in training_records],
         "best_loss": best_loss,
         "best_step": best_step,
         "best_state": None if best_state is None else dict(best_state),
@@ -723,6 +910,7 @@ def _load_staged_checkpoint(
 ) -> tuple[
     int,
     list[TextCheckpointValidation],
+    list[TextTrainingTelemetry],
     float,
     int | None,
     dict[str, torch.Tensor] | None,
@@ -738,10 +926,13 @@ def _load_staged_checkpoint(
         raise TextTrainingError("resumable classifier checkpoint must contain one mapping")
     if (
         payload.get("schema_version") != "langmani-m5a-resumable-text-checkpoint-v0"
+        or payload.get("role") not in CheckpointRetentionPolicy().retained_roles
         or payload.get("run_fingerprint") != run_fingerprint
         or payload.get("training_config_fingerprint") != config.fingerprint
         or payload.get("training_config") != config.to_dict()
         or payload.get("processor_state") != dict(processor_state)
+        or payload.get("resumable") is not True
+        or payload.get("full_training_complete") is not False
     ):
         raise TextTrainingError("resumable classifier checkpoint identity differs")
     try:
@@ -752,6 +943,8 @@ def _load_staged_checkpoint(
         step = int(cast(int, payload["step"]))
         raw_records = cast(Sequence[Mapping[str, object]], payload["validation_records"])
         records = [_checkpoint_validation_from_dict(value) for value in raw_records]
+        raw_training_records = cast(Sequence[Mapping[str, object]], payload["training_records"])
+        training_records = [_training_telemetry_from_dict(value) for value in raw_training_records]
         best_loss = float(cast(float, payload["best_loss"]))
         best_step_raw = payload["best_step"]
         best_step = None if best_step_raw is None else int(cast(int, best_step_raw))
@@ -768,7 +961,192 @@ def _load_staged_checkpoint(
         raise TextTrainingError("resumable classifier checkpoint state is malformed") from error
     if not 0 <= step <= config.maximum_steps:
         raise TextTrainingError("resumable classifier step lies outside the declared budget")
-    return step, records, best_loss, best_step, best_state, non_improving
+    progress = payload.get("data_progress")
+    if (
+        payload.get("next_global_step") != step + 1
+        or payload.get("pilot_complete") != (step >= config.pilot_step)
+        or not isinstance(progress, Mapping)
+        or progress.get("completed_optimizer_steps") != step
+        or progress.get("completed_epochs") != step // config.steps_per_epoch
+        or progress.get("next_batch_index") != step % config.steps_per_epoch
+        or progress.get("steps_per_epoch") != config.steps_per_epoch
+        or progress.get("reconstruction") != "seeded-permutation-v0-modulo-step"
+    ):
+        raise TextTrainingError("resumable classifier data progression differs")
+    if len(training_records) != step or any(
+        record.step != expected for expected, record in enumerate(training_records, start=1)
+    ):
+        raise TextTrainingError("resumable classifier training telemetry is incomplete")
+    return (
+        step,
+        records,
+        training_records,
+        best_loss,
+        best_step,
+        best_state,
+        non_improving,
+    )
+
+
+def factorized_validation_fixture_payload(
+    outputs: FactorizedValidationOutputs,
+) -> dict[str, object]:
+    """Serialize one small validation fixture for cross-process reload comparison."""
+
+    if outputs.evidence_split != "validation" or outputs.status_labels.numel() <= 0:
+        raise TextTrainingError("reload fixture must contain validation examples")
+    payload: dict[str, object] = {
+        "schema_version": "langmani-m5a-validation-logit-fixture-v0",
+        "validation_examples": int(outputs.status_labels.shape[0]),
+        "status_logits": outputs.status_logits.detach().cpu().tolist(),
+        "object_logits": outputs.object_logits.detach().cpu().tolist(),
+        "bin_logits": outputs.bin_logits.detach().cpu().tolist(),
+        "absolute_tolerance": 1e-6,
+        "relative_tolerance": 1e-6,
+    }
+    payload["fixture_fingerprint"] = f"sha256:{sha256_hex(payload)}"
+    return payload
+
+
+def _fixture_tensor(
+    payload: Mapping[str, object],
+    *,
+    key: str,
+    expected_shape: tuple[int, int],
+) -> torch.Tensor:
+    try:
+        value = torch.tensor(payload[key], dtype=torch.float32)
+    except (KeyError, TypeError, ValueError) as error:
+        raise TextTrainingError(f"reload fixture {key} is malformed") from error
+    if tuple(value.shape) != expected_shape or not bool(torch.isfinite(value).all()):
+        raise TextTrainingError(f"reload fixture {key} shape or values differ")
+    return value
+
+
+def audit_staged_factorized_text_checkpoint(
+    *,
+    model: FactorizedTextClassifierV0,
+    validation_batches: Sequence[FactorizedTextBatch],
+    config: ClassifierStageTrainingConfig,
+    run_fingerprint: str,
+    checkpoint_path: Path,
+    processor_state: Mapping[str, object],
+    expected_fixture: Mapping[str, object],
+    expected_step: int,
+) -> StagedTextCheckpointAudit:
+    """Restore model/optimizer/scheduler/RNG and compare held-out logits without stepping."""
+
+    validation = tuple(validation_batches)
+    if not validation or any(batch.split != "validation" for batch in validation):
+        raise TextTrainingError("checkpoint audit requires validation-only batches")
+    if expected_step != config.pilot_step:
+        raise TextTrainingError("checkpoint audit step differs from the declared pilot boundary")
+    for parameter in model.encoder.parameters():
+        parameter.requires_grad_(True)
+    optimizer = torch.optim.AdamW(
+        (parameter for parameter in model.parameters() if parameter.requires_grad),
+        lr=float(config.learning_rate),
+        weight_decay=float(config.weight_decay),
+    )
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lambda _step: 1.0)
+    (
+        step,
+        validation_records,
+        training_records,
+        _best_loss,
+        _best_step,
+        _best_state,
+        _non_improving,
+    ) = _load_staged_checkpoint(
+        path=checkpoint_path,
+        run_fingerprint=run_fingerprint,
+        config=config,
+        processor_state=processor_state,
+        model=model,
+        optimizer=optimizer,
+        scheduler=scheduler,
+    )
+    if step != expected_step:
+        raise TextTrainingError("fresh checkpoint reload restored the wrong optimizer step")
+    if scheduler.last_epoch != step:
+        raise TextTrainingError("fresh checkpoint reload restored the wrong scheduler step")
+    actual = collect_factorized_validation_outputs(model=model, batches=(validation[0],))
+    example_count = int(actual.status_labels.shape[0])
+    expected_count = expected_fixture.get("validation_examples")
+    if expected_count != example_count:
+        raise TextTrainingError("reload validation fixture example count differs")
+    expected_fingerprint = expected_fixture.get("fixture_fingerprint")
+    content = {
+        key: value for key, value in expected_fixture.items() if key != "fixture_fingerprint"
+    }
+    if expected_fingerprint != f"sha256:{sha256_hex(content)}":
+        raise TextTrainingError("reload validation fixture fingerprint differs")
+    absolute_tolerance = float(cast(float, expected_fixture.get("absolute_tolerance")))
+    relative_tolerance = float(cast(float, expected_fixture.get("relative_tolerance")))
+    pairs = (
+        (
+            actual.status_logits.detach().cpu(),
+            _fixture_tensor(
+                expected_fixture,
+                key="status_logits",
+                expected_shape=tuple(actual.status_logits.shape),
+            ),
+        ),
+        (
+            actual.object_logits.detach().cpu(),
+            _fixture_tensor(
+                expected_fixture,
+                key="object_logits",
+                expected_shape=tuple(actual.object_logits.shape),
+            ),
+        ),
+        (
+            actual.bin_logits.detach().cpu(),
+            _fixture_tensor(
+                expected_fixture,
+                key="bin_logits",
+                expected_shape=tuple(actual.bin_logits.shape),
+            ),
+        ),
+    )
+    maximum_error = max(float(torch.max(torch.abs(left - right))) for left, right in pairs)
+    logits_match = all(
+        torch.allclose(left, right, atol=absolute_tolerance, rtol=relative_tolerance)
+        for left, right in pairs
+    )
+    if not logits_match:
+        raise TextTrainingError("fresh checkpoint reload changed deterministic validation logits")
+    digest = hashlib.sha256()
+    with checkpoint_path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    payload = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    if not isinstance(payload, Mapping):
+        raise TextTrainingError("checkpoint audit payload must be a mapping")
+    optimizer_state = optimizer.state_dict()
+    return StagedTextCheckpointAudit(
+        checkpoint_path=str(checkpoint_path),
+        checkpoint_sha256=f"sha256:{digest.hexdigest()}",
+        checkpoint_size_bytes=checkpoint_path.stat().st_size,
+        restored_step=step,
+        next_global_step=step + 1,
+        next_learning_rate=float(optimizer.param_groups[0]["lr"]),
+        optimizer_state_restored=bool(optimizer_state.get("state")),
+        scheduler_state_restored=scheduler.last_epoch == step,
+        processor_state_restored=payload.get("processor_state") == dict(processor_state),
+        rng_state_restored=isinstance(payload.get("rng_state"), Mapping),
+        data_progress_restored=isinstance(payload.get("data_progress"), Mapping),
+        deterministic_logits_match=logits_match,
+        maximum_absolute_logit_error=maximum_error,
+        absolute_tolerance=absolute_tolerance,
+        relative_tolerance=relative_tolerance,
+        validation_fixture_examples=example_count,
+        validation_records_restored=len(validation_records),
+        training_records_restored=len(training_records),
+        pilot_complete=payload.get("pilot_complete") is True,
+        full_training_complete=payload.get("full_training_complete") is True,
+        resumable=payload.get("resumable") is True,
+    )
 
 
 def run_staged_factorized_text_training(
@@ -814,6 +1192,7 @@ def run_staged_factorized_text_training(
     except StopIteration as error:
         raise TextTrainingError("classifier has no parameters") from error
     records: list[TextCheckpointValidation] = []
+    training_records: list[TextTrainingTelemetry] = []
     best_loss = math.inf
     best_step: int | None = None
     best_state: dict[str, torch.Tensor] | None = None
@@ -823,6 +1202,7 @@ def run_staged_factorized_text_training(
         (
             resumed_from_step,
             records,
+            training_records,
             best_loss,
             best_step,
             best_state,
@@ -849,14 +1229,75 @@ def run_staged_factorized_text_training(
     completed_step = resumed_from_step
     pilot_metrics: ClassifierStageMetrics | None = None
     final_metrics: ClassifierStageMetrics | None = None
+    examples_processed = sum(value.batch_examples for value in training_records)
     for step in range(resumed_from_step + 1, config.maximum_steps + 1):
-        train_factorized_text_step(
+        original_batch = training[(step - 1) % len(training)]
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
+        step_started = time.perf_counter()
+        loader_started = step_started
+        batch = _batch_on_device(original_batch, device)
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
+        loader_finished = time.perf_counter()
+        train_result = train_factorized_text_step(
             model=model,
             optimizer=optimizer,
-            batch=_batch_on_device(training[(step - 1) % len(training)], device),
+            batch=batch,
             maximum_gradient_norm=float(config.maximum_gradient_norm),
         )
         scheduler.step()
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
+        step_finished = time.perf_counter()
+        batch_examples = int(original_batch.status_labels.shape[0])
+        examples_processed += batch_examples
+        step_latency = step_finished - step_started
+        telemetry = TextTrainingTelemetry(
+            step=step,
+            total_loss=train_result.total_loss,
+            status_loss=train_result.status_loss,
+            object_loss=train_result.object_loss,
+            bin_loss=train_result.bin_loss,
+            learning_rate=float(optimizer.param_groups[0]["lr"]),
+            gradient_norm=train_result.gradient_norm,
+            encoder_gradient_norm=train_result.encoder_gradient_norm,
+            status_head_gradient_norm=train_result.status_head_gradient_norm,
+            object_head_gradient_norm=train_result.object_head_gradient_norm,
+            bin_head_gradient_norm=train_result.bin_head_gradient_norm,
+            routed_examples=train_result.routed_examples,
+            batch_examples=batch_examples,
+            examples_processed=examples_processed,
+            epoch_progress=step / config.steps_per_epoch,
+            throughput_examples_per_second=batch_examples / max(step_latency, 1e-12),
+            data_loader_latency_seconds=loader_finished - loader_started,
+            step_latency_seconds=step_latency,
+            gpu_allocated_bytes=(
+                int(torch.cuda.memory_allocated(device)) if device.type == "cuda" else 0
+            ),
+            gpu_reserved_bytes=(
+                int(torch.cuda.memory_reserved(device)) if device.type == "cuda" else 0
+            ),
+        )
+        finite_values = (
+            telemetry.total_loss,
+            telemetry.status_loss,
+            telemetry.object_loss,
+            telemetry.bin_loss,
+            telemetry.learning_rate,
+            telemetry.gradient_norm,
+            telemetry.encoder_gradient_norm,
+            telemetry.status_head_gradient_norm,
+            telemetry.object_head_gradient_norm,
+            telemetry.bin_head_gradient_norm,
+            telemetry.epoch_progress,
+            telemetry.throughput_examples_per_second,
+            telemetry.data_loader_latency_seconds,
+            telemetry.step_latency_seconds,
+        )
+        if not all(math.isfinite(value) for value in finite_values):
+            raise TextTrainingError("staged classifier telemetry is non-finite")
+        training_records.append(telemetry)
         completed_step = step
         if step not in validation_steps:
             continue
@@ -885,6 +1326,7 @@ def run_staged_factorized_text_training(
             processor_state=processor_state,
             step=step,
             records=records,
+            training_records=training_records,
             best_loss=best_loss,
             best_step=best_step,
             best_state=best_state,
@@ -902,6 +1344,7 @@ def run_staged_factorized_text_training(
                 processor_state=processor_state,
                 step=step,
                 records=records,
+                training_records=training_records,
                 best_loss=best_loss,
                 best_step=best_step,
                 best_state=best_state,
@@ -920,6 +1363,7 @@ def run_staged_factorized_text_training(
                 processor_state=processor_state,
                 step=step,
                 records=records,
+                training_records=training_records,
                 best_loss=best_loss,
                 best_step=best_step,
                 best_state=best_state,
@@ -940,6 +1384,8 @@ def run_staged_factorized_text_training(
                     pilot_metrics=pilot_metrics,
                     final_metrics=None,
                     validation_records=tuple(records),
+                    training_records=tuple(training_records),
+                    pilot_outputs=outputs,
                 )
         final_metrics = metrics
         if non_improving >= config.early_stopping_patience:
@@ -966,6 +1412,8 @@ def run_staged_factorized_text_training(
         pilot_metrics=None,
         final_metrics=final_metrics,
         validation_records=tuple(records),
+        training_records=tuple(training_records),
+        pilot_outputs=None,
     )
 
 
@@ -1349,10 +1797,14 @@ __all__ = [
     "TextTrainingError",
     "TextTrainingStepResult",
     "StagedTextTrainingResult",
+    "StagedTextCheckpointAudit",
+    "TextTrainingTelemetry",
+    "audit_staged_factorized_text_checkpoint",
     "calibrate_and_select_text_router",
     "classifier_stage_metrics",
     "collect_factorized_validation_outputs",
     "collect_factorized_tiny_train_outputs",
+    "factorized_validation_fixture_payload",
     "read_text_classifier_run_evidence",
     "run_bounded_factorized_text_training",
     "run_staged_factorized_text_training",

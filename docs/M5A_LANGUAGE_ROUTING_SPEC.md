@@ -153,8 +153,12 @@ at most 145 optimization steps. The authoritative run pauses after the first com
 (step 29, which is earlier than 20% of the maximum only when those points differ), writes a
 resumable checkpoint, and resumes the same immutable run fingerprint. That checkpoint includes
 model, optimizer, constant scheduler, processor, Python/NumPy/Torch CPU and CUDA RNG state, best
-validation state, and validation history. Restarting from step zero or changing seed/encoder is a
-different run and is rejected.
+validation state, validation history, deterministic data-progression metadata, the pinned label
+mappings, corpus/split fingerprints, Git/dependency identity, and the preflight/owner references.
+The pilot records one finite telemetry row per optimizer step, including component losses,
+component/head gradient norms, learning rate, examples processed, epoch progress, throughput,
+loader/step latency, and allocated/reserved CUDA memory. Restarting from step zero or changing
+seed/encoder is a different run and is rejected.
 
 Before the authoritative run, a fixture must prove gradients, finite masked losses, one optimizer
 step, and deterministic reload. A deterministic 48-example tiny-overfit set covers all six
@@ -167,6 +171,15 @@ accuracy at least 90%, rejected-command false-route rate at most 10%, 100% schem
 values, and nonzero recall for every rejection class. Pilot completion and pilot promotion are
 separate facts. Failure preserves the checkpoint and stops the classifier path; it never triggers
 another seed or encoder.
+
+At the boundary the command writes exactly three atomic real files: `pilot`, `latest`, and
+`validation_best`. It disposes the training instance, reconstructs the pinned model/tokenizer from
+local cache, restores model/optimizer/scheduler/RNG/processor/data-progression state, and compares
+a fixed validation logit fixture at absolute and relative tolerance `1e-6`. A separately launched
+independent verifier repeats that reload in a fresh process, recomputes the complete 300-example
+validation evidence (routeable, rejected, per-task, per-family, confusion, and latency fields),
+and recomputes the conjunctive promotion decision. The pilot command and verifier never resume a
+training step.
 
 After promotion, validation runs at steps 29, 58, 87, 116, and 145 with patience one completed
 interval after the best. Only the fixed `pilot`, `latest`, and `validation_best` checkpoint roles

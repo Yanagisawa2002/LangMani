@@ -23,6 +23,8 @@ from langmani.language.text_classifier import FactorizedTextClassifierV0
 from langmani.language.text_training import (
     FactorizedTextBatch,
     TextTrainingError,
+    audit_staged_factorized_text_checkpoint,
+    factorized_validation_fixture_payload,
     run_staged_factorized_text_training,
 )
 
@@ -242,11 +244,46 @@ def test_authoritative_pilot_checkpoint_resumes_optimizer_scheduler_and_rng(tmp_
 
     assert pilot.phase == "pilot_paused"
     assert pilot.completed_steps == config.pilot_step
+    assert len(pilot.training_records) == config.pilot_step
+    assert [record.step for record in pilot.training_records] == list(
+        range(1, config.pilot_step + 1)
+    )
+    assert all(record.total_loss > 0.0 for record in pilot.training_records)
+    assert all(record.gradient_norm > 0.0 for record in pilot.training_records)
+    assert all(record.status_head_gradient_norm > 0.0 for record in pilot.training_records)
+    assert all(record.object_head_gradient_norm > 0.0 for record in pilot.training_records)
+    assert all(record.bin_head_gradient_norm > 0.0 for record in pilot.training_records)
     assert {path.name for path in root.glob("*.pt")} == {
         "pilot.pt",
         "latest.pt",
         "validation_best.pt",
     }
+
+    assert pilot.pilot_outputs is not None
+    fixture = factorized_validation_fixture_payload(pilot.pilot_outputs)
+    audited = audit_staged_factorized_text_checkpoint(
+        model=FactorizedTextClassifierV0(_Encoder(), dropout=0.0),
+        validation_batches=(_batch("validation"),),
+        config=config,
+        run_fingerprint=fingerprint,
+        checkpoint_path=root / "latest.pt",
+        processor_state=processor,
+        expected_fixture=fixture,
+        expected_step=config.pilot_step,
+    )
+    assert audited.restored_step == config.pilot_step
+    assert audited.next_global_step == config.pilot_step + 1
+    assert audited.optimizer_state_restored
+    assert audited.scheduler_state_restored
+    assert audited.processor_state_restored
+    assert audited.rng_state_restored
+    assert audited.data_progress_restored
+    assert audited.deterministic_logits_match
+    assert audited.maximum_absolute_logit_error == 0.0
+    assert audited.training_records_restored == config.pilot_step
+    assert audited.pilot_complete
+    assert not audited.full_training_complete
+    assert audited.resumable
 
     reloaded = FactorizedTextClassifierV0(_Encoder(), dropout=0.0)
     completed = run_staged_factorized_text_training(

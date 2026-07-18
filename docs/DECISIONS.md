@@ -1817,3 +1817,21 @@ The monolithic `verify_m5a.py --target-development` path is retired and fails be
 that stage completed correctly, not that promotion was granted. Source must be committed and
 pushed before target execution. No target stage is authorized by this implementation decision, and
 no classifier training, physical rollout, final access, or SmolVLA result is claimed here.
+
+## D-060 — Make the M5A step-29 pilot independently resumable and auditable
+
+The authoritative classifier pilot is not accepted from top-level completion booleans. Its three
+atomic checkpoint roles now carry the complete model/optimizer/constant-scheduler state, RNG state,
+deterministic data-progression metadata, per-step training telemetry, and a processor contract that
+binds model/tokenizer revisions, factorized label mappings, seed, corpus/split fingerprints, Git,
+dependencies, boundary definition, and owner/preflight references. The training command disposes
+the training instance and performs one local-cache reconstruction and deterministic validation-logit
+reload without taking another optimizer step.
+
+The independent `classifier_pilot` verifier is correspondingly deep rather than declarative. In a
+fresh command process it reconstructs the pinned model/tokenizer, restores the `latest` checkpoint,
+checks optimizer/scheduler/RNG/data progression and next-step identity, compares the fixed logits at
+`atol=rtol=1e-6`, validates the exact three-role inventory and telemetry, and recomputes the complete
+300-example validation contract and conjunctive promotion gate. A correctly executed rejected pilot
+still reports `passed=true` and `classifier_pilot_promoted=false`; it never authorizes a new seed,
+restart, automatic resume, development/final access, control rollout, LLM evaluation, or SmolVLA.

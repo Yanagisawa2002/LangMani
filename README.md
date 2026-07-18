@@ -945,7 +945,11 @@ Only train supplies gradients; validation alone selects a checkpoint, calibrates
 temperature, and chooses the selective-routing threshold. Development uses exactly seed 0, at most
 five epochs/145 optimizer steps, a step-29 authoritative pilot, patience-one validation early
 stopping, and only `pilot`, `latest`, and `validation_best` checkpoint roles. Promotion resumes the
-same run with model/optimizer/scheduler/processor/RNG state; no seed or encoder sweep is allowed.
+same run with model/optimizer/scheduler/processor/RNG/data-progression state; no seed or encoder
+sweep is allowed. The pilot persists per-step loss/gradient/throughput/CUDA telemetry and a pinned
+checkpoint contract for corpus, split, labels, Git, and dependencies. A fresh-process stage
+verifier reloads that checkpoint and recomputes its validation-only promotion gate before any
+later resume can be authorized.
 The local LLM is one explicitly supplied
 0.5B-3B instruct model with a pinned revision, deterministic greedy generation, strict JSON parsing,
 and at most one format repair. It never calls a hosted API and does not invent confidence. Exactly

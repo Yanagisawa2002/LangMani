@@ -75,6 +75,42 @@ def test_target_identity_and_training_schedule_are_single_and_bounded() -> None:
     assert cli.TARGET_MAXIMUM_SEQUENCE_LENGTH == 64
 
 
+def test_authoritative_checkpoint_contract_binds_resume_semantics(tmp_path: Path) -> None:
+    corpus = build_language_corpus()
+    git_state = GitState(
+        commit="a" * 40,
+        dirty=False,
+        changed_paths=(),
+        baseline_tracked=True,
+    )
+    run_fingerprint = f"sha256:{'b' * 64}"
+
+    contract = cli._authoritative_checkpoint_processor_state(
+        corpus_manifest=corpus.manifest.to_dict(),
+        git_state=git_state,
+        run_fingerprint=run_fingerprint,
+        run_root=tmp_path / "run",
+    )
+
+    assert contract["run_fingerprint"] == run_fingerprint
+    assert contract["corpus_fingerprint"] == corpus.manifest.corpus_fingerprint
+    assert contract["split_fingerprints"] == cli._split_fingerprints(corpus.manifest.to_dict())
+    assert contract["training_seed"] == 0
+    assert contract["label_mappings"] == {
+        "status": list(cli.STATUS_LABELS),
+        "object": list(cli.OBJECT_LABELS),
+        "bin": list(cli.BIN_LABELS),
+        "rejected_object_bin_loss_mask": -1,
+    }
+    assert contract["pilot_boundary"] == {
+        "definition": "min(one_complete_train_pass,ceil(0.20*maximum_steps))",
+        "steps_per_epoch": 29,
+        "maximum_steps": 145,
+        "pilot_step": 29,
+    }
+    assert contract["git_state"] == git_state.to_dict()
+
+
 def test_factorized_batches_only_materialize_train_or_validation() -> None:
     corpus = build_language_corpus()
     train = corpus.examples_for_split(LanguageSplit.TRAIN)[:5]

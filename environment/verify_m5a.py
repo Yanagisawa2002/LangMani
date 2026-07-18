@@ -12,7 +12,9 @@ and authorized separately.  Final/test/fresh/SmolVLA sources stay sealed.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import math
 import os
 import subprocess
 import sys
@@ -29,6 +31,8 @@ from torch import nn
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = PROJECT_ROOT / "src"
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
@@ -92,7 +96,10 @@ from langmani.language.schedules import (  # noqa: E402
     materialize_control_schedule,
 )
 from langmani.language.schema_validation import parse_strict_router_json  # noqa: E402
-from langmani.language.stage_protocol import M5AStage  # noqa: E402
+from langmani.language.stage_protocol import (  # noqa: E402
+    ClassifierStageTrainingConfig,
+    M5AStage,
+)
 from langmani.language.text_calibration import (  # noqa: E402
     RoutingThresholdExample,
     fit_validation_temperature,
@@ -106,10 +113,14 @@ from langmani.language.text_classifier import (  # noqa: E402
     compute_factorized_text_loss,
 )
 from langmani.language.text_training import (  # noqa: E402
+    audit_staged_factorized_text_checkpoint,
+    classifier_stage_metrics,
+    collect_factorized_validation_outputs,
     validate_completed_text_classifier_artifact,
 )
-from langmani.policies.act_runtime import atomic_write_json  # noqa: E402
+from langmani.policies.act_runtime import atomic_write_json, inspect_git_state  # noqa: E402
 from langmani.policies.m42_schedule import validate_locked_schedules  # noqa: E402
+from scripts import train_text_router as text_router_cli  # noqa: E402
 
 REPORT_SCHEMA_VERSION = "langmani-m5a-verification-v1"
 DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs" / "diagnostics" / "m5a"
@@ -589,6 +600,9 @@ class StageVerificationReport:
     classifier_training_completed: bool = False
     classifier_checkpoint_selected: bool = False
     classifier_calibration_validated: bool = False
+    artifact_reload_validated: bool = False
+    cuda_training_validated: bool = False
+    pilot_checkpoint_audit: dict[str, object] = field(default_factory=dict)
     llm_router_loaded: bool = False
     llm_prompt_locked: bool = False
     language_development_completed: bool = False
@@ -620,7 +634,14 @@ class StageVerificationReport:
         required_by_stage = {
             M5AStage.CLASSIFIER_FIXTURE.value: (self.classifier_fixture_validated,),
             M5AStage.CLASSIFIER_TINY_OVERFIT.value: (self.classifier_tiny_overfit_validated,),
-            M5AStage.CLASSIFIER_PILOT.value: (self.classifier_pilot_completed,),
+            M5AStage.CLASSIFIER_PILOT.value: (
+                self.classifier_fixture_validated,
+                self.classifier_tiny_overfit_validated,
+                self.classifier_pilot_completed,
+                self.artifact_reload_validated,
+                self.cuda_training_validated,
+                self.physical_target_validated,
+            ),
             M5AStage.CLASSIFIER_TRAINING.value: (
                 self.classifier_training_completed,
                 self.classifier_checkpoint_selected,
@@ -2629,6 +2650,398 @@ def _write_report(
     atomic_write_json(output_root / "verification.json", report.payload())
 
 
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return f"sha256:{digest.hexdigest()}"
+
+
+def _pilot_metric_gate(metrics: Mapping[str, object]) -> bool:
+    try:
+        return (
+            metrics.get("finite") is True
+            and float(cast(float, metrics["full_task_spec_accuracy"])) >= 0.85
+            and float(cast(float, metrics["object_accuracy"])) >= 0.90
+            and float(cast(float, metrics["bin_accuracy"])) >= 0.90
+            and float(cast(float, metrics["false_route_rate"])) <= 0.10
+            and float(cast(float, metrics["schema_valid_rate"])) == 1.0
+            and all(
+                float(cast(float, metrics[name])) > 0.0
+                for name in (
+                    "ambiguous_rejection_recall",
+                    "unsupported_rejection_recall",
+                    "malformed_rejection_recall",
+                )
+            )
+        )
+    except (KeyError, TypeError, ValueError):
+        return False
+
+
+def _verify_classifier_pilot_payload(
+    *, payload: Mapping[str, object], report: StageVerificationReport
+) -> None:
+    report.classifier_fixture_validated = payload.get("classifier_fixture_validated") is True
+    report.classifier_tiny_overfit_validated = (
+        payload.get("classifier_tiny_overfit_validated") is True
+    )
+    report.classifier_pilot_completed = payload.get("classifier_pilot_completed") is True
+    report.classifier_pilot_promoted = payload.get("classifier_pilot_promoted") is True
+    report.classifier_training_completed = payload.get("classifier_training_completed") is True
+    report.classifier_checkpoint_selected = payload.get("classifier_checkpoint_selected") is True
+    report.classifier_calibration_validated = (
+        payload.get("classifier_calibration_validated") is True
+    )
+    report.artifact_reload_validated = payload.get("artifact_reload_validated") is True
+    report.cuda_training_validated = payload.get("cuda_training_validated") is True
+    report.physical_target_validated = payload.get("physical_target_validated") is True
+    structural_checks = {
+        "pilot evidence schema": payload.get("schema_version")
+        == "langmani-m5a-classifier-pilot-v0",
+        "prior fixture gate": report.classifier_fixture_validated,
+        "prior tiny-overfit gate": report.classifier_tiny_overfit_validated,
+        "pilot completed": report.classifier_pilot_completed,
+        "full training remains incomplete": not report.classifier_training_completed
+        and payload.get("full_training_complete") is False,
+        "checkpoint not selected": not report.classifier_checkpoint_selected,
+        "calibration not selected": not report.classifier_calibration_validated,
+        "CUDA pilot execution": report.cuda_training_validated
+        and report.physical_target_validated
+        and torch.cuda.is_available(),
+        "pilot is resumable": payload.get("pilot_complete") is True
+        and payload.get("resumable") is True,
+        "pilot boundary is step 29": payload.get("pilot_step") == 29,
+        "checkpoint atomicity": payload.get("checkpoint_atomicity_validated") is True,
+        "fresh-instance reload": report.artifact_reload_validated,
+        "deterministic fixture repeatability": payload.get("deterministic_repeatability") is True,
+        "single training seed": payload.get("classifier_training_seeds") == 1
+        and payload.get("robustness_across_training_seeds_not_evaluated") is True,
+        "development and final sources sealed": all(
+            payload.get(name) is False
+            for name in (
+                "development_accessed",
+                "language_final_accessed",
+                "control_final_accessed",
+                "m42_final_accessed",
+                "test_split_accessed",
+                "historical_fresh_accessed",
+                "smolvla_go",
+            )
+        ),
+    }
+    for name, condition in structural_checks.items():
+        report.check(name, condition, "authoritative classifier pilot")
+    if not all(structural_checks.values()):
+        return
+
+    try:
+        run_fingerprint = _require_sha256(
+            payload.get("run_fingerprint"), label="pilot run fingerprint"
+        )
+        preflight = _require_mapping(payload.get("preflight"), label="pilot preflight")
+        training_result = _require_mapping(
+            payload.get("training_result"), label="pilot training result"
+        )
+        training_integrity = _require_mapping(
+            payload.get("training_integrity"), label="pilot training integrity"
+        )
+        metrics = _require_mapping(payload.get("metrics"), label="pilot validation metrics")
+        detailed_metrics = _require_mapping(
+            payload.get("detailed_validation_metrics"),
+            label="detailed pilot validation metrics",
+        )
+        reported_audit = _require_mapping(
+            payload.get("checkpoint_reload_audit"), label="pilot checkpoint reload audit"
+        )
+        reload_fixture = _require_mapping(
+            payload.get("reload_fixture"), label="pilot reload fixture"
+        )
+        checkpoint_inventory = _require_mapping(
+            payload.get("checkpoint_inventory"), label="pilot checkpoint inventory"
+        )
+    except M5ATargetVerificationError as error:
+        report.check("pilot evidence mappings", False, str(error))
+        return
+
+    config = ClassifierStageTrainingConfig(train_example_count=900)
+    training_records = training_result.get("training_records")
+    telemetry_valid = (
+        training_result.get("phase") == "pilot_paused"
+        and training_result.get("completed_steps") == config.pilot_step
+        and training_result.get("resumed_from_step") == 0
+        and isinstance(training_records, list)
+        and len(training_records) == config.pilot_step
+        and training_integrity.get("finite_losses_and_gradients") is True
+        and training_integrity.get("all_heads_received_gradients") is True
+        and training_integrity.get("no_silently_skipped_examples") is True
+        and training_integrity.get("examples_processed") == 900
+    )
+    report.check(
+        "train-only finite step telemetry",
+        telemetry_valid,
+        f"steps={training_result.get('completed_steps')}",
+    )
+
+    corpus = build_language_corpus()
+    current_git = inspect_git_state(PROJECT_ROOT)
+    identity, expected_run_fingerprint = text_router_cli._authoritative_run_identity(
+        corpus_manifest=corpus.manifest.to_dict(), git_state=current_git
+    )
+    preflight_valid = (
+        preflight.get("corpus_fingerprint") == corpus.manifest.corpus_fingerprint
+        and preflight.get("split_fingerprints")
+        == text_router_cli._split_fingerprints(corpus.manifest.to_dict())
+        and preflight.get("run_fingerprint") == expected_run_fingerprint == run_fingerprint
+        and preflight.get("model_id") == TEXT_CLASSIFIER_MODEL_ID
+        and preflight.get("model_revision") == TEXT_CLASSIFIER_MODEL_REVISION
+        and preflight.get("tokenizer_revision") == TEXT_CLASSIFIER_TOKENIZER_REVISION
+        and preflight.get("training_seed") == 0
+        and preflight.get("gradient_split") == "train"
+        and preflight.get("selection_split") == "validation"
+        and preflight.get("development_examples_materialized") is False
+        and preflight.get("final_examples_materialized") is False
+    )
+    report.corpus_validated = preflight_valid
+    report.split_isolation_validated = preflight_valid
+    report.check(
+        "corpus, split, Git, and run identity",
+        preflight_valid,
+        f"run={run_fingerprint}",
+    )
+    processor_state = preflight.get("checkpoint_processor_state")
+    processor_contract_valid = isinstance(processor_state, Mapping) and (
+        processor_state.get("schema_version") == "langmani-m5a-classifier-checkpoint-contract-v0"
+        and processor_state.get("run_fingerprint") == run_fingerprint
+        and processor_state.get("corpus_fingerprint") == corpus.manifest.corpus_fingerprint
+        and processor_state.get("split_fingerprints")
+        == text_router_cli._split_fingerprints(corpus.manifest.to_dict())
+        and processor_state.get("training_seed") == 0
+        and isinstance(processor_state.get("model"), Mapping)
+        and isinstance(processor_state.get("tokenizer"), Mapping)
+        and processor_state.get("label_mappings")
+        == {
+            "status": list(text_router_cli.STATUS_LABELS),
+            "object": list(text_router_cli.OBJECT_LABELS),
+            "bin": list(text_router_cli.BIN_LABELS),
+            "rejected_object_bin_loss_mask": -1,
+        }
+    )
+    report.check(
+        "checkpoint processor and label contract",
+        processor_contract_valid,
+        "pinned model, tokenizer, labels, corpus, Git, and reconstruction metadata",
+    )
+    try:
+        routeable_metrics = _require_mapping(
+            detailed_metrics.get("routeable"), label="routeable pilot metrics"
+        )
+        rejected_metrics = _require_mapping(
+            detailed_metrics.get("rejected"), label="rejected pilot metrics"
+        )
+        all_metrics = _require_mapping(detailed_metrics.get("all"), label="all pilot metrics")
+        detailed_metrics_valid = (
+            routeable_metrics.get("examples") == 180
+            and rejected_metrics.get("examples") == 120
+            and all_metrics.get("examples") == 300
+            and routeable_metrics.get("full_task_spec_accuracy")
+            == metrics.get("full_task_spec_accuracy")
+            and routeable_metrics.get("target_object_accuracy") == metrics.get("object_accuracy")
+            and routeable_metrics.get("destination_bin_accuracy") == metrics.get("bin_accuracy")
+            and rejected_metrics.get("false_route_rate") == metrics.get("false_route_rate")
+            and all_metrics.get("schema_valid_decision_rate") == 1.0
+            and all_metrics.get("malformed_decision_count") == 0
+            and all_metrics.get("coverage") == 1.0
+            and isinstance(routeable_metrics.get("by_task_spec"), Mapping)
+            and len(cast(Mapping[str, object], routeable_metrics["by_task_spec"])) == 6
+            and isinstance(routeable_metrics.get("by_template_family"), Mapping)
+            and isinstance(routeable_metrics.get("object_confusion_matrix"), Mapping)
+            and isinstance(routeable_metrics.get("bin_confusion_matrix"), Mapping)
+            and isinstance(rejected_metrics.get("rejection_reason_confusion_matrix"), Mapping)
+            and all(
+                isinstance(all_metrics.get(name), int | float)
+                and math.isfinite(float(cast(float, all_metrics[name])))
+                and float(cast(float, all_metrics[name])) >= 0.0
+                for name in ("latency_p50", "latency_p95", "latency_p99")
+            )
+        )
+    except (KeyError, M5ATargetVerificationError):
+        detailed_metrics_valid = False
+    report.check(
+        "complete validation-only metric contract",
+        detailed_metrics_valid,
+        "300 validation examples with task, family, rejection, confusion, and latency evidence",
+    )
+    if not (
+        telemetry_valid and preflight_valid and processor_contract_valid and detailed_metrics_valid
+    ):
+        return
+
+    run_root_value = payload.get("run_root")
+    if not isinstance(run_root_value, str):
+        report.check("pilot run root", False, "run_root is missing")
+        return
+    run_root = _resolved_unlinked(Path(run_root_value), label="pilot run root")
+    owner_path = run_root / "owner.json"
+    preflight_path = run_root / "preflight.json"
+    owner_valid = False
+    persisted_preflight_valid = False
+    try:
+        owner_valid = json.loads(owner_path.read_text(encoding="utf-8")) == identity
+        persisted_preflight_valid = (
+            json.loads(preflight_path.read_text(encoding="utf-8")) == preflight
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        pass
+    report.check("immutable run owner", owner_valid, str(owner_path))
+    report.check("persisted preflight", persisted_preflight_valid, str(preflight_path))
+
+    inventory_valid = set(checkpoint_inventory) == {"pilot", "latest", "validation_best"}
+    for role in ("pilot", "latest", "validation_best"):
+        item = checkpoint_inventory.get(role)
+        if not isinstance(item, Mapping):
+            inventory_valid = False
+            continue
+        path_value = item.get("path")
+        if not isinstance(path_value, str):
+            inventory_valid = False
+            continue
+        checkpoint = _resolved_unlinked(Path(path_value), label=f"{role} checkpoint")
+        inventory_valid = inventory_valid and (
+            checkpoint.is_file()
+            and not checkpoint.is_symlink()
+            and item.get("real_file") is True
+            and item.get("size_bytes") == checkpoint.stat().st_size
+        )
+        if role == "pilot":
+            inventory_valid = inventory_valid and item.get("sha256") == _file_sha256(checkpoint)
+    inventory_valid = inventory_valid and not any((run_root / "checkpoints").glob(".*.tmp"))
+    report.check("atomic three-role checkpoint inventory", inventory_valid, str(run_root))
+    if not (owner_valid and persisted_preflight_valid and inventory_valid):
+        return
+
+    latest_item = cast(Mapping[str, object], checkpoint_inventory["latest"])
+    latest_path_value = latest_item.get("path")
+    if not isinstance(latest_path_value, str):
+        report.check("latest checkpoint path", False, "missing")
+        return
+    validation = corpus.examples_for_split(LanguageSplit.VALIDATION)
+    try:
+        model, tokenizer = text_router_cli._target_model_and_tokenizer(local_files_only=True)
+        model.to("cuda")
+        validation_batches = text_router_cli._factorized_batches(
+            tokenizer=tokenizer,
+            examples=validation,
+            split=LanguageSplit.VALIDATION,
+            batch_size=text_router_cli.TARGET_BATCH_SIZE,
+            maximum_sequence_length=text_router_cli.TARGET_MAXIMUM_SEQUENCE_LENGTH,
+            seed=0,
+        )
+        actual_audit = audit_staged_factorized_text_checkpoint(
+            model=model,
+            validation_batches=validation_batches,
+            config=config,
+            run_fingerprint=run_fingerprint,
+            checkpoint_path=Path(latest_path_value),
+            processor_state=cast(Mapping[str, object], processor_state),
+            expected_fixture=reload_fixture,
+            expected_step=config.pilot_step,
+        )
+        actual_audit_payload = actual_audit.to_dict()
+        actual_validation_outputs = collect_factorized_validation_outputs(
+            model=model,
+            batches=validation_batches,
+        )
+        actual_metrics = classifier_stage_metrics(actual_validation_outputs).to_dict()
+        actual_detailed_metrics = text_router_cli._detailed_validation_metrics(
+            outputs=actual_validation_outputs,
+            examples=validation,
+        )
+    except Exception as error:  # noqa: BLE001 - verifier preserves exact target failure
+        report.check(
+            "fresh-process checkpoint reload",
+            False,
+            f"{type(error).__name__}: {error}",
+        )
+        return
+    finally:
+        if "model" in locals():
+            del model
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    audit_keys = (
+        "checkpoint_sha256",
+        "checkpoint_size_bytes",
+        "restored_step",
+        "next_global_step",
+        "next_learning_rate",
+        "optimizer_state_restored",
+        "scheduler_state_restored",
+        "processor_state_restored",
+        "rng_state_restored",
+        "data_progress_restored",
+        "deterministic_logits_match",
+        "absolute_tolerance",
+        "relative_tolerance",
+        "validation_fixture_examples",
+        "validation_records_restored",
+        "training_records_restored",
+        "pilot_complete",
+        "full_training_complete",
+        "resumable",
+    )
+    audit_matches = all(
+        actual_audit_payload.get(key) == reported_audit.get(key) for key in audit_keys
+    )
+    report.pilot_checkpoint_audit = actual_audit_payload
+    report.artifact_reload_validated = audit_matches
+    report.check(
+        "fresh-process checkpoint reload",
+        audit_matches,
+        f"max_error={actual_audit.maximum_absolute_logit_error}",
+    )
+    reported_details_without_latency = json.loads(json.dumps(detailed_metrics))
+    actual_details_without_latency = json.loads(json.dumps(actual_detailed_metrics))
+    for value in (reported_details_without_latency, actual_details_without_latency):
+        all_values = value.get("all")
+        if isinstance(all_values, dict):
+            for key in ("latency_p50", "latency_p95", "latency_p99"):
+                all_values.pop(key, None)
+    validation_recomputed = (
+        actual_metrics == dict(metrics)
+        and actual_details_without_latency == reported_details_without_latency
+    )
+    report.check(
+        "fresh-process complete validation recomputation",
+        validation_recomputed,
+        "all 300 validation decisions, task/family metrics, and confusion matrices",
+    )
+
+    metric_gate = _pilot_metric_gate(metrics)
+    reported_metric_gate = metrics.get("pilot_gate_passed") == metric_gate
+    non_metric_gate = (
+        audit_matches
+        and validation_recomputed
+        and telemetry_valid
+        and inventory_valid
+        and preflight_valid
+        and processor_contract_valid
+        and detailed_metrics_valid
+        and all(structural_checks.values())
+        and payload.get("deterministic_repeatability") is True
+    )
+    expected_promotion = metric_gate and non_metric_gate
+    promotion_exact = (
+        reported_metric_gate and report.classifier_pilot_promoted is expected_promotion
+    )
+    report.check(
+        "exact conjunctive promotion gate",
+        promotion_exact,
+        f"metric={metric_gate} promoted={report.classifier_pilot_promoted}",
+    )
+
+
 def _verify_stage_evidence(stage: M5AStage, path: Path) -> StageVerificationReport:
     source = _resolved_unlinked(path, label="M5A stage evidence")
     report = StageVerificationReport(requested_stage=stage.value, evidence_path=str(source))
@@ -2662,8 +3075,7 @@ def _verify_stage_evidence(stage: M5AStage, path: Path) -> StageVerificationRepo
             and payload.get("cuda_training_validated") is True
         )
     elif stage is M5AStage.CLASSIFIER_PILOT:
-        report.classifier_pilot_completed = payload.get("classifier_pilot_completed") is True
-        report.classifier_pilot_promoted = payload.get("classifier_pilot_promoted") is True
+        _verify_classifier_pilot_payload(payload=payload, report=report)
     elif stage is M5AStage.CLASSIFIER_TRAINING:
         report.classifier_training_completed = payload.get("classifier_training_completed") is True
         report.classifier_checkpoint_selected = (

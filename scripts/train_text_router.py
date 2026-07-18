@@ -5,10 +5,13 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import sys
 import tempfile
+import time
 import traceback
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from importlib.metadata import PackageNotFoundError, version
@@ -40,10 +43,12 @@ from langmani.language.text_training import (
     FactorizedTextBatch,
     TextRouterCalibrationSelection,
     TextTrainingConfig,
+    audit_staged_factorized_text_checkpoint,
     calibrate_and_select_text_router,
     classifier_stage_metrics,
     collect_factorized_tiny_train_outputs,
     collect_factorized_validation_outputs,
+    factorized_validation_fixture_payload,
     run_bounded_factorized_text_training,
     run_staged_factorized_text_training,
     stage_and_promote_text_classifier,
@@ -105,6 +110,12 @@ _FORBIDDEN_PATH_IDENTITIES = (
     "m5a_language_final",
     "m5a_control_final",
     "smolvla",
+)
+_FIXTURE_STAGE_REPORT = (
+    PROJECT_ROOT / "outputs" / "diagnostics" / "m5a" / "stages" / "classifier-fixture.json"
+)
+_TINY_STAGE_REPORT = (
+    PROJECT_ROOT / "outputs" / "diagnostics" / "m5a" / "stages" / "classifier-tiny-overfit.json"
 )
 
 
@@ -338,7 +349,9 @@ def _model_state_fingerprint(model: FactorizedTextClassifierV0) -> str:
     return f"sha256:{digest.hexdigest()}"
 
 
-def _target_model_and_tokenizer() -> tuple[FactorizedTextClassifierV0, object]:
+def _target_model_and_tokenizer(
+    *, local_files_only: bool = False
+) -> tuple[FactorizedTextClassifierV0, object]:
     try:
         from transformers import AutoTokenizer
     except ImportError as error:
@@ -348,11 +361,13 @@ def _target_model_and_tokenizer() -> tuple[FactorizedTextClassifierV0, object]:
         revision=TOKENIZER_REVISION,
         trust_remote_code=False,
         use_fast=True,
+        local_files_only=local_files_only,
     )
     model = FactorizedTextClassifierV0.from_pretrained_encoder(
         model_id=MODEL_ID,
         revision=MODEL_REVISION,
         dropout=TARGET_DROPOUT,
+        local_files_only=local_files_only,
     )
     return model, tokenizer
 
@@ -789,6 +804,361 @@ def _write_or_validate_stage(path: Path, payload: Mapping[str, object]) -> None:
     atomic_write_json(path, dict(payload))
 
 
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return f"sha256:{digest.hexdigest()}"
+
+
+def _prior_classifier_stage_evidence() -> dict[str, object]:
+    results: dict[str, object] = {}
+    for name, path, requirements in (
+        (
+            "fixture",
+            _FIXTURE_STAGE_REPORT,
+            ("classifier_fixture_validated", "artifact_reload_validated"),
+        ),
+        (
+            "tiny_overfit",
+            _TINY_STAGE_REPORT,
+            (
+                "classifier_tiny_overfit_validated",
+                "artifact_reload_validated",
+                "cuda_training_validated",
+            ),
+        ),
+    ):
+        if not path.is_file() or path.is_symlink():
+            raise TextRouterCommandError(f"required {name} stage report is missing or linked")
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as error:
+            raise TextRouterCommandError(f"required {name} stage report is invalid") from error
+        if not isinstance(payload, Mapping) or payload.get("passed") is not True:
+            raise TextRouterCommandError(f"required {name} stage did not pass")
+        if any(payload.get(key) is not True for key in requirements):
+            raise TextRouterCommandError(f"required {name} stage lacks its validation flags")
+        for forbidden in (
+            "development_accessed",
+            "language_final_accessed",
+            "control_final_accessed",
+            "m42_final_accessed",
+            "test_split_accessed",
+            "historical_fresh_accessed",
+            "smolvla_go",
+        ):
+            if payload.get(forbidden) is not False:
+                raise TextRouterCommandError(
+                    f"required {name} stage does not prove {forbidden}=false"
+                )
+        results[name] = {
+            "path": str(path),
+            "sha256": _sha256_file(path),
+            "requirements": list(requirements),
+        }
+    return results
+
+
+def _example_counts(examples: Sequence[LanguageExample]) -> dict[str, object]:
+    task_counts = Counter(example.task_id or "none" for example in examples)
+    status_counts = Counter(example.expected_status.value for example in examples)
+    reason_counts = Counter(
+        (
+            "none"
+            if example.expected_rejection_reason is None
+            else example.expected_rejection_reason.value
+        )
+        for example in examples
+    )
+    return {
+        "examples": len(examples),
+        "by_task_id": dict(sorted(task_counts.items())),
+        "by_router_status": dict(sorted(status_counts.items())),
+        "by_rejection_reason": dict(sorted(reason_counts.items())),
+    }
+
+
+def _preflight_payload(
+    *,
+    corpus_manifest: Mapping[str, object],
+    train: Sequence[LanguageExample],
+    validation: Sequence[LanguageExample],
+    git_state: object,
+    run_fingerprint: str,
+    run_root: Path,
+    prior_evidence: Mapping[str, object],
+    checkpoint_processor_state: Mapping[str, object],
+) -> dict[str, object]:
+    git_to_dict = getattr(git_state, "to_dict", None)
+    if not callable(git_to_dict):
+        raise TextRouterCommandError("Git state does not support serialization")
+    device_name = torch.cuda.get_device_name(0)
+    return {
+        "schema_version": "langmani-m5a-classifier-pilot-preflight-v0",
+        "git_state": git_to_dict(),
+        "runtime": {
+            "gpu": device_name,
+            "visible_cuda_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
+            "torch": torch.__version__,
+            "cuda_runtime": torch.version.cuda,
+            "transformers": _package_version("transformers"),
+            "tokenizers": _package_version("tokenizers"),
+        },
+        "model_id": MODEL_ID,
+        "model_revision": MODEL_REVISION,
+        "tokenizer_revision": TOKENIZER_REVISION,
+        "corpus_fingerprint": corpus_manifest["corpus_fingerprint"],
+        "split_fingerprints": _split_fingerprints(corpus_manifest),
+        "train_counts": _example_counts(train),
+        "validation_counts": _example_counts(validation),
+        "training_seed": TARGET_STAGE_TRAINING_CONFIG.seed,
+        "classifier_training_seeds": M5A_CLASSIFIER_TRAINING_SEEDS,
+        "robustness_across_training_seeds_not_evaluated": True,
+        "optimization": TARGET_STAGE_TRAINING_CONFIG.to_dict(),
+        "batch_size": TARGET_BATCH_SIZE,
+        "maximum_sequence_length": TARGET_MAXIMUM_SEQUENCE_LENGTH,
+        "pilot_boundary": {
+            "definition": "min(one_complete_train_pass,ceil(0.20*maximum_steps))",
+            "steps_per_epoch": TARGET_STAGE_TRAINING_CONFIG.steps_per_epoch,
+            "maximum_steps": TARGET_STAGE_TRAINING_CONFIG.maximum_steps,
+            "pilot_step": TARGET_STAGE_TRAINING_CONFIG.pilot_step,
+        },
+        "run_fingerprint": run_fingerprint,
+        "run_root": str(run_root),
+        "expected_pilot_checkpoint": str(run_root / "checkpoints" / "pilot.pt"),
+        "checkpoint_processor_state": dict(checkpoint_processor_state),
+        "gradient_split": "train",
+        "selection_split": "validation",
+        "prior_stage_evidence": dict(prior_evidence),
+        "development_examples_materialized": False,
+        "final_examples_materialized": False,
+        "control_development_accessed": False,
+        "control_final_accessed": False,
+    }
+
+
+def _authoritative_checkpoint_processor_state(
+    *,
+    corpus_manifest: Mapping[str, object],
+    git_state: object,
+    run_fingerprint: str,
+    run_root: Path,
+) -> dict[str, object]:
+    git_to_dict = getattr(git_state, "to_dict", None)
+    if not callable(git_to_dict):
+        raise TextRouterCommandError("Git state does not support serialization")
+    return {
+        "schema_version": "langmani-m5a-classifier-checkpoint-contract-v0",
+        "model": {
+            "model_id": MODEL_ID,
+            "model_revision": MODEL_REVISION,
+            "dropout": TARGET_DROPOUT,
+            "architecture": "FactorizedTextClassifierV0",
+        },
+        "tokenizer": {
+            "model_id": MODEL_ID,
+            "tokenizer_revision": TOKENIZER_REVISION,
+            "maximum_sequence_length": TARGET_MAXIMUM_SEQUENCE_LENGTH,
+        },
+        "label_mappings": {
+            "status": list(STATUS_LABELS),
+            "object": list(OBJECT_LABELS),
+            "bin": list(BIN_LABELS),
+            "rejected_object_bin_loss_mask": -1,
+        },
+        "training_seed": TARGET_STAGE_TRAINING_CONFIG.seed,
+        "corpus_fingerprint": corpus_manifest["corpus_fingerprint"],
+        "split_fingerprints": _split_fingerprints(corpus_manifest),
+        "run_fingerprint": run_fingerprint,
+        "git_state": git_to_dict(),
+        "dependencies": _dependency_versions(),
+        "pilot_boundary": {
+            "definition": "min(one_complete_train_pass,ceil(0.20*maximum_steps))",
+            "steps_per_epoch": TARGET_STAGE_TRAINING_CONFIG.steps_per_epoch,
+            "maximum_steps": TARGET_STAGE_TRAINING_CONFIG.maximum_steps,
+            "pilot_step": TARGET_STAGE_TRAINING_CONFIG.pilot_step,
+        },
+        "run_owner_path": str(run_root / "owner.json"),
+        "preflight_path": str(run_root / "preflight.json"),
+    }
+
+
+def _mean(values: torch.Tensor) -> float:
+    return 0.0 if values.numel() == 0 else float(values.float().mean())
+
+
+def _confusion_matrix(
+    *, labels: torch.Tensor, predictions: torch.Tensor, names: Sequence[str]
+) -> dict[str, dict[str, int]]:
+    return {
+        expected: {
+            predicted: int(((labels == row) & (predictions == column)).sum())
+            for column, predicted in enumerate(names)
+        }
+        for row, expected in enumerate(names)
+    }
+
+
+def _percentile(values: Sequence[float], quantile: float) -> float:
+    ordered = sorted(float(value) for value in values)
+    if not ordered:
+        return 0.0
+    index = int(round((len(ordered) - 1) * quantile))
+    return ordered[index]
+
+
+def _detailed_validation_metrics(
+    *,
+    outputs: object,
+    examples: Sequence[LanguageExample],
+) -> dict[str, object]:
+    if not hasattr(outputs, "status_logits"):
+        raise TextRouterCommandError("validation outputs are malformed")
+    status_logits = cast(torch.Tensor, outputs.status_logits)
+    object_logits = cast(torch.Tensor, outputs.object_logits)
+    bin_logits = cast(torch.Tensor, outputs.bin_logits)
+    status_labels = cast(torch.Tensor, outputs.status_labels)
+    object_labels = cast(torch.Tensor, outputs.object_labels)
+    bin_labels = cast(torch.Tensor, outputs.bin_labels)
+    values = tuple(examples)
+    if len(values) != int(status_labels.shape[0]):
+        raise TextRouterCommandError("validation examples and outputs are misaligned")
+    status = status_logits.argmax(dim=-1)
+    objects = object_logits.argmax(dim=-1)
+    bins = bin_logits.argmax(dim=-1)
+    route_index = STATUS_LABELS.index("route")
+    routeable = status_labels == route_index
+    rejected = ~routeable
+    full_route = (status == route_index) & (objects == object_labels) & (bins == bin_labels)
+    decision_correct = torch.where(routeable, full_route, status == status_labels)
+    predicted_reject = status != route_index
+    true_reject = rejected
+    rejection_true_positive = int((predicted_reject & true_reject).sum())
+    rejection_predicted_positive = int(predicted_reject.sum())
+    rejection_actual_positive = int(true_reject.sum())
+
+    by_task: dict[str, object] = {}
+    for task_id in sorted({example.task_id for example in values if example.task_id is not None}):
+        indices = torch.tensor(
+            [index for index, example in enumerate(values) if example.task_id == task_id],
+            dtype=torch.long,
+        )
+        by_task[cast(str, task_id)] = {
+            "examples": int(indices.numel()),
+            "full_task_spec_accuracy": _mean(full_route[indices]),
+        }
+
+    by_family: dict[str, object] = {}
+    routeable_by_family: dict[str, object] = {}
+    for family in sorted({example.template_family_id for example in values}):
+        indices = torch.tensor(
+            [index for index, example in enumerate(values) if example.template_family_id == family],
+            dtype=torch.long,
+        )
+        by_family[family] = {
+            "examples": int(indices.numel()),
+            "decision_accuracy": _mean(decision_correct[indices]),
+        }
+        routeable_indices = torch.tensor(
+            [index for index in indices.tolist() if bool(routeable[index])],
+            dtype=torch.long,
+        )
+        if int(routeable_indices.numel()) > 0:
+            routeable_by_family[family] = {
+                "examples": int(routeable_indices.numel()),
+                "full_task_spec_accuracy": _mean(full_route[routeable_indices]),
+            }
+
+    rejection_reason_confusion: dict[str, dict[str, int]] = {}
+    for reason in sorted(
+        {
+            example.expected_rejection_reason.value
+            for example in values
+            if example.expected_rejection_reason is not None
+        }
+    ):
+        indices = [
+            index
+            for index, example in enumerate(values)
+            if example.expected_rejection_reason is not None
+            and example.expected_rejection_reason.value == reason
+        ]
+        rejection_reason_confusion[reason] = {
+            predicted: sum(int(status[index]) == column for index in indices)
+            for column, predicted in enumerate(STATUS_LABELS)
+        }
+
+    latency_seconds = cast(tuple[float, ...], outputs.batch_latency_seconds)
+    latency_ms = [value * 1000.0 for value in latency_seconds]
+    return {
+        "evidence_split": "validation",
+        "routeable": {
+            "examples": int(routeable.sum()),
+            "full_task_spec_accuracy": _mean(full_route[routeable]),
+            "target_object_accuracy": _mean((objects == object_labels)[routeable]),
+            "destination_bin_accuracy": _mean((bins == bin_labels)[routeable]),
+            "routing_status_accuracy": _mean((status == status_labels)[routeable]),
+            "route_recall": _mean((status == route_index)[routeable]),
+            "false_rejection_rate": _mean((status != route_index)[routeable]),
+            "by_task_spec": by_task,
+            "by_template_family": routeable_by_family,
+            "object_confusion_matrix": _confusion_matrix(
+                labels=object_labels[routeable],
+                predictions=objects[routeable],
+                names=OBJECT_LABELS[:3],
+            ),
+            "bin_confusion_matrix": _confusion_matrix(
+                labels=bin_labels[routeable], predictions=bins[routeable], names=BIN_LABELS[:2]
+            ),
+        },
+        "rejected": {
+            "examples": int(rejected.sum()),
+            "overall_rejection_accuracy": _mean((status == status_labels)[rejected]),
+            "false_route_rate": _mean((status == route_index)[rejected]),
+            "rejection_precision": (
+                0.0
+                if rejection_predicted_positive == 0
+                else rejection_true_positive / rejection_predicted_positive
+            ),
+            "rejection_recall": (
+                0.0
+                if rejection_actual_positive == 0
+                else rejection_true_positive / rejection_actual_positive
+            ),
+            "ambiguous_recall": _mean(
+                (status == STATUS_LABELS.index("reject_ambiguous"))[
+                    status_labels == STATUS_LABELS.index("reject_ambiguous")
+                ]
+            ),
+            "unsupported_recall": _mean(
+                (status == STATUS_LABELS.index("reject_unsupported"))[
+                    status_labels == STATUS_LABELS.index("reject_unsupported")
+                ]
+            ),
+            "malformed_recall": _mean(
+                (status == STATUS_LABELS.index("reject_malformed"))[
+                    status_labels == STATUS_LABELS.index("reject_malformed")
+                ]
+            ),
+            "rejection_reason_confusion_matrix": rejection_reason_confusion,
+        },
+        "all": {
+            "examples": len(values),
+            "schema_valid_decision_rate": 1.0,
+            "malformed_decision_count": 0,
+            "coverage": 1.0,
+            "routing_status_accuracy": _mean(status == status_labels),
+            "by_template_family": by_family,
+            "latency_unit": "milliseconds_per_validation_batch",
+            "latency_p50": _percentile(latency_ms, 0.50),
+            "latency_p95": _percentile(latency_ms, 0.95),
+            "latency_p99": _percentile(latency_ms, 0.99),
+        },
+    }
+
+
 def _run_tiny_overfit(
     *, args: argparse.Namespace, output_root: Path, git_state: object
 ) -> dict[str, object]:
@@ -908,7 +1278,9 @@ def _run_authoritative_stage(
     git_state: object,
     resume: bool,
 ) -> dict[str, object]:
+    stage_started = time.perf_counter()
     _validate_target_prerequisites(git_state)
+    prior_evidence = _prior_classifier_stage_evidence()
     corpus = build_language_corpus()
     train = corpus.examples_for_split(LanguageSplit.TRAIN)
     validation = corpus.examples_for_split(LanguageSplit.VALIDATION)
@@ -918,8 +1290,25 @@ def _run_authoritative_stage(
         corpus_manifest=corpus.manifest.to_dict(), git_state=git_state
     )
     run_root = output_root / "authoritative-runs" / run_fingerprint.removeprefix("sha256:")
+    checkpoint_processor_state = _authoritative_checkpoint_processor_state(
+        corpus_manifest=corpus.manifest.to_dict(),
+        git_state=git_state,
+        run_fingerprint=run_fingerprint,
+        run_root=run_root,
+    )
+    preflight = _preflight_payload(
+        corpus_manifest=corpus.manifest.to_dict(),
+        train=train,
+        validation=validation,
+        git_state=git_state,
+        run_fingerprint=run_fingerprint,
+        run_root=run_root,
+        prior_evidence=prior_evidence,
+        checkpoint_processor_state=checkpoint_processor_state,
+    )
     run_root.mkdir(parents=True, exist_ok=True)
     _write_or_validate_stage(run_root / "owner.json", identity)
+    _write_or_validate_stage(run_root / "preflight.json", preflight)
     pilot_path = run_root / "pilot.json"
     training_path = run_root / "training_complete.json"
     if not resume and pilot_path.exists():
@@ -970,30 +1359,193 @@ def _run_authoritative_stage(
         config=TARGET_STAGE_TRAINING_CONFIG,
         run_fingerprint=run_fingerprint,
         checkpoint_root=run_root / "checkpoints",
-        processor_state={
-            "model_id": MODEL_ID,
-            "model_revision": MODEL_REVISION,
-            "tokenizer_revision": TOKENIZER_REVISION,
-            "maximum_sequence_length": TARGET_MAXIMUM_SEQUENCE_LENGTH,
-        },
+        processor_state=checkpoint_processor_state,
         stop_after_pilot=not resume,
         resume=resume,
     )
     if not resume:
         metrics = result.pilot_metrics
-        if metrics is None:
+        pilot_outputs = result.pilot_outputs
+        if metrics is None or pilot_outputs is None:
             raise TextRouterCommandError("pilot stage did not produce validation metrics")
+        detailed_validation = _detailed_validation_metrics(
+            outputs=pilot_outputs,
+            examples=validation,
+        )
+        first_fixture = collect_factorized_validation_outputs(
+            model=model, batches=(validation_batches[0],)
+        )
+        repeated_fixture = collect_factorized_validation_outputs(
+            model=model, batches=(validation_batches[0],)
+        )
+        deterministic_repeatability = all(
+            torch.equal(left, right)
+            for left, right in (
+                (first_fixture.status_logits, repeated_fixture.status_logits),
+                (first_fixture.object_logits, repeated_fixture.object_logits),
+                (first_fixture.bin_logits, repeated_fixture.bin_logits),
+            )
+        )
+        if not deterministic_repeatability:
+            raise TextRouterCommandError(
+                "pilot validation fixture is not deterministically repeatable"
+            )
+        reload_fixture = factorized_validation_fixture_payload(first_fixture)
+        training_records = result.training_records
+        finite_training = all(
+            math.isfinite(value)
+            for record in training_records
+            for value in (
+                record.total_loss,
+                record.status_loss,
+                record.object_loss,
+                record.bin_loss,
+                record.gradient_norm,
+                record.encoder_gradient_norm,
+                record.status_head_gradient_norm,
+                record.object_head_gradient_norm,
+                record.bin_head_gradient_norm,
+                record.learning_rate,
+                record.step_latency_seconds,
+            )
+        )
+        head_gradient_evidence = {
+            "encoder": max(record.encoder_gradient_norm for record in training_records),
+            "status_head": max(record.status_head_gradient_norm for record in training_records),
+            "object_head": max(record.object_head_gradient_norm for record in training_records),
+            "bin_head": max(record.bin_head_gradient_norm for record in training_records),
+        }
+        all_heads_received_gradients = all(value > 0.0 for value in head_gradient_evidence.values())
+        examples_processed = training_records[-1].examples_processed
+        no_silently_skipped_examples = len(
+            training_records
+        ) == TARGET_STAGE_TRAINING_CONFIG.pilot_step and examples_processed == len(train)
+        training_integrity = {
+            "finite_losses_and_gradients": finite_training,
+            "all_heads_received_gradients": all_heads_received_gradients,
+            "head_maximum_gradient_norms": head_gradient_evidence,
+            "optimizer_steps": len(training_records),
+            "examples_processed": examples_processed,
+            "expected_examples_processed": len(train),
+            "no_silently_skipped_examples": no_silently_skipped_examples,
+            "peak_gpu_allocated_bytes": max(
+                record.gpu_allocated_bytes for record in training_records
+            ),
+            "peak_gpu_reserved_bytes": max(
+                record.gpu_reserved_bytes for record in training_records
+            ),
+            "total_step_seconds": sum(record.step_latency_seconds for record in training_records),
+        }
+        if not (finite_training and all_heads_received_gradients and no_silently_skipped_examples):
+            raise TextRouterCommandError("pilot training integrity gate failed")
+        del model
+        torch.cuda.empty_cache()
+        fresh_model, fresh_tokenizer = _target_model_and_tokenizer(local_files_only=True)
+        fresh_model.to("cuda")
+        fresh_validation_batches = _factorized_batches(
+            tokenizer=fresh_tokenizer,
+            examples=validation,
+            split=LanguageSplit.VALIDATION,
+            batch_size=TARGET_BATCH_SIZE,
+            maximum_sequence_length=TARGET_MAXIMUM_SEQUENCE_LENGTH,
+            seed=0,
+        )
+        checkpoint_audit = audit_staged_factorized_text_checkpoint(
+            model=fresh_model,
+            validation_batches=fresh_validation_batches,
+            config=TARGET_STAGE_TRAINING_CONFIG,
+            run_fingerprint=run_fingerprint,
+            checkpoint_path=Path(result.latest_checkpoint),
+            processor_state=checkpoint_processor_state,
+            expected_fixture=reload_fixture,
+            expected_step=TARGET_STAGE_TRAINING_CONFIG.pilot_step,
+        )
+        del fresh_model
+        torch.cuda.empty_cache()
+        checkpoint_audit_passed = all(
+            (
+                checkpoint_audit.optimizer_state_restored,
+                checkpoint_audit.scheduler_state_restored,
+                checkpoint_audit.processor_state_restored,
+                checkpoint_audit.rng_state_restored,
+                checkpoint_audit.data_progress_restored,
+                checkpoint_audit.deterministic_logits_match,
+                checkpoint_audit.pilot_complete,
+                not checkpoint_audit.full_training_complete,
+                checkpoint_audit.resumable,
+                checkpoint_audit.restored_step == TARGET_STAGE_TRAINING_CONFIG.pilot_step,
+                checkpoint_audit.next_global_step == TARGET_STAGE_TRAINING_CONFIG.pilot_step + 1,
+            )
+        )
+        if not checkpoint_audit_passed:
+            raise TextRouterCommandError("pilot checkpoint did not pass the resumability audit")
+        checkpoint_paths = {
+            "pilot": Path(result.pilot_checkpoint),
+            "latest": Path(result.latest_checkpoint),
+            "validation_best": Path(result.best_checkpoint),
+        }
+        checkpoint_inventory = {
+            role: {
+                "path": str(path),
+                "size_bytes": path.stat().st_size,
+                "real_file": path.is_file() and not path.is_symlink(),
+                "sha256": _sha256_file(path) if role == "pilot" else None,
+            }
+            for role, path in checkpoint_paths.items()
+        }
+        checkpoint_atomicity_validated = all(
+            cast(Mapping[str, object], value)["real_file"] is True
+            for value in checkpoint_inventory.values()
+        ) and not any((run_root / "checkpoints").glob(".*.tmp"))
+        promoted = (
+            metrics.pilot_gate_passed
+            and checkpoint_audit_passed
+            and deterministic_repeatability
+            and finite_training
+            and all_heads_received_gradients
+            and no_silently_skipped_examples
+            and checkpoint_atomicity_validated
+        )
         payload = {
             "schema_version": "langmani-m5a-classifier-pilot-v0",
             "run_fingerprint": run_fingerprint,
+            "run_root": str(run_root),
+            "preflight_path": str(run_root / "preflight.json"),
+            "preflight": preflight,
             "classifier_pilot_completed": True,
-            "classifier_pilot_promoted": metrics.pilot_gate_passed,
+            "classifier_pilot_promoted": promoted,
+            "classifier_fixture_validated": True,
+            "classifier_tiny_overfit_validated": True,
+            "classifier_training_completed": False,
+            "classifier_checkpoint_selected": False,
+            "classifier_calibration_validated": False,
+            "artifact_reload_validated": checkpoint_audit_passed,
+            "cuda_training_validated": True,
+            "physical_target_validated": True,
             "pilot_step": TARGET_STAGE_TRAINING_CONFIG.pilot_step,
+            "pilot_complete": True,
+            "full_training_complete": False,
+            "resumable": checkpoint_audit.resumable,
             "same_authoritative_run_required_for_resume": True,
             "metrics": metrics.to_dict(),
+            "detailed_validation_metrics": detailed_validation,
             "training_result": result.to_dict(),
+            "training_integrity": training_integrity,
+            "checkpoint_inventory": checkpoint_inventory,
+            "checkpoint_atomicity_validated": checkpoint_atomicity_validated,
+            "reload_fixture": reload_fixture,
+            "checkpoint_reload_audit": checkpoint_audit.to_dict(),
+            "deterministic_repeatability": deterministic_repeatability,
+            "elapsed_seconds": time.perf_counter() - stage_started,
             "classifier_training_seeds": 1,
             "robustness_across_training_seeds_not_evaluated": True,
+            "development_accessed": False,
+            "language_final_accessed": False,
+            "control_final_accessed": False,
+            "m42_final_accessed": False,
+            "test_split_accessed": False,
+            "historical_fresh_accessed": False,
+            "smolvla_go": False,
             "passed": True,
         }
         _write_or_validate_stage(pilot_path, payload)

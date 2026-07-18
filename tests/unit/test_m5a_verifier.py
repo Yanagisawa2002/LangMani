@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 from typing import cast
@@ -362,6 +364,20 @@ def test_non_target_verifier_reports_truthful_fixture_flags(tmp_path) -> None:
     assert all(check["status"] == "pass" for check in payload["checks"])
 
 
+def test_verifier_script_imports_project_commands_from_direct_entrypoint() -> None:
+    completed = subprocess.run(
+        [sys.executable, str(Path(verify_m5a.__file__)), "--help"],
+        cwd=verify_m5a.PROJECT_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert "--verify-stage" in completed.stdout
+
+
 def test_non_target_report_cannot_claim_target_completion() -> None:
     report = verify_m5a.Report(
         implementation_validated=True,
@@ -657,13 +673,27 @@ def _stage_flags(**updates: object) -> dict[str, object]:
     return payload
 
 
-def test_stage_verifier_separates_pilot_completion_from_promotion(tmp_path: Path) -> None:
+def test_stage_verifier_separates_pilot_completion_from_promotion(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     evidence = tmp_path / "pilot.json"
     _write_json(
         evidence,
         _stage_flags(classifier_pilot_completed=True, classifier_pilot_promoted=False),
     )
     output = tmp_path / "verification"
+
+    def verify_pilot(*, payload: object, report: verify_m5a.StageVerificationReport) -> None:
+        assert isinstance(payload, dict)
+        report.classifier_fixture_validated = True
+        report.classifier_tiny_overfit_validated = True
+        report.classifier_pilot_completed = payload["classifier_pilot_completed"] is True
+        report.classifier_pilot_promoted = payload["classifier_pilot_promoted"] is True
+        report.artifact_reload_validated = True
+        report.cuda_training_validated = True
+        report.physical_target_validated = True
+
+    monkeypatch.setattr(verify_m5a, "_verify_classifier_pilot_payload", verify_pilot)
 
     assert (
         verify_m5a.main(
@@ -682,6 +712,34 @@ def test_stage_verifier_separates_pilot_completion_from_promotion(tmp_path: Path
     assert payload["passed"] is True
     assert payload["classifier_pilot_completed"] is True
     assert payload["classifier_pilot_promoted"] is False
+
+
+def test_stage_verifier_rejects_boolean_only_pilot_claim(tmp_path: Path) -> None:
+    evidence = tmp_path / "pilot.json"
+    _write_json(
+        evidence,
+        _stage_flags(classifier_pilot_completed=True, classifier_pilot_promoted=True),
+    )
+    output = tmp_path / "verification"
+
+    assert (
+        verify_m5a.main(
+            [
+                "--verify-stage",
+                "classifier_pilot",
+                "--stage-report",
+                str(evidence),
+                "--output-root",
+                str(output),
+            ]
+        )
+        == 1
+    )
+    payload = json.loads((output / "verification.json").read_text(encoding="utf-8"))
+    assert payload["classifier_pilot_completed"] is True
+    assert payload["classifier_pilot_promoted"] is True
+    assert payload["artifact_reload_validated"] is False
+    assert payload["passed"] is False
 
 
 def test_stage_verifier_requires_real_cuda_tiny_overfit_evidence(tmp_path: Path) -> None:
