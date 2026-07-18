@@ -244,6 +244,15 @@ optionally fits one validation status temperature, and either publishes a new de
 identity or freezes the classifier as a rejected baseline. It performs no training and cannot open
 language development, final, or control sources.
 
+The real CPU analysis completed at implementation commit `f45115b1d070001e9e82567eed34bb3dcd99149a`
+with evidence fingerprint
+`sha256:f2401fcb5b054c79c3b7e9674321eefcf9576dc4dcc5407bd96151db9e9b518d`.
+The selected conservative decoder used identity temperature, route threshold 0.90, margin 0.00,
+object confidence 0.75, and bin confidence 0.85. It achieved zero false routes and 99.44%
+routeable full TaskSpec accuracy, but only 71.21%/80.56%/94.44% ambiguous/unsupported/malformed
+recall. The full conjunctive gate failed, so no runtime was published, the classifier is frozen,
+and additional training or seed authorization remains false. Language development did not start.
+
 ## M5B — Sealed modular final and possible SmolVLA handoff (planned)
 
 Run a separate immutable M5A final benchmark only if at least one learned router passes every

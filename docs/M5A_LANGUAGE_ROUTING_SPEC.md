@@ -468,3 +468,18 @@ binds checkpoint, tokenizer, processor, decoder, temperature, Git, corpus, and v
 Otherwise no runtime is created, the classifier is frozen as an offline negative baseline, and
 both additional-training and additional-seed authorization remain false. Either quality conclusion
 can have `passed=true` when the analysis and independent verification are correct.
+
+### Observed M5A.1 result
+
+The real CPU execution at Git `f45115b1d070001e9e82567eed34bb3dcd99149a` produced immutable
+analysis fingerprint
+`sha256:f2401fcb5b054c79c3b7e9674321eefcf9576dc4dcc5407bd96151db9e9b518d`.
+Status temperature fitting changed temperature from 1.0 to 1.4514016224, reduced NLL from
+0.4119188027 to 0.3612778088, and reduced ECE from 0.0738781275 to 0.0421380654; nevertheless the
+selection objective chose identity temperature. The selected `ConservativeRouteDecoderV0` used
+route threshold 0.90, margin 0.00, object confidence 0.75, and bin confidence 0.85. It achieved
+zero false routes, 179/180 route coverage, and 99.44% full TaskSpec accuracy, while rejection recall
+was 71.21% ambiguous, 80.56% unsupported, and 94.44% malformed. Those three thresholds failed.
+Both independent verifiers passed the no-training/checksum/access contracts. The authoritative
+conclusion is `classifier_rejected_after_posthoc_calibration`; no runtime exists and additional
+training/seed authorization is false.

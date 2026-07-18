@@ -13,9 +13,11 @@ milestone. Its implementation now uses separately authorized fixture, tiny-overf
 single-seed pilot/resume, language-development, 1-scene smoke, 3-scene screen, and 6-scene full
 development stages. The original step-29 classifier pilot and its exact D-061 recovery continuation
 completed. Validation selected epoch 4/step 116, but the unchanged full quality gate failed on
-rejection generalization. M5A.1 is the active validation-only, no-training post-hoc rejection
-analysis. M5A language development, target control evaluation, its sealed final benchmark, and
-SmolVLA have not started.
+rejection generalization. M5A.1 completed the validation-only, no-training post-hoc rejection
+analysis and independently verified its immutable evidence. The best safe decoder still failed the
+unchanged rejection-reason thresholds, so the classifier is frozen as a rejected offline baseline
+and no classifier runtime exists. M5A language development, target control evaluation, its sealed
+final benchmark, and SmolVLA have not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level

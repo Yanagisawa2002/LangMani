@@ -1040,6 +1040,14 @@ A quality rejection is a successful analysis result: it freezes the classifier, 
 additional training or seed, and produces no promoted runtime. Infrastructure or contract failures
 remain nonzero command exits.
 
+The real CPU run selected `ConservativeRouteDecoderV0` with identity temperature, route threshold
+0.90, route margin 0.00, object confidence 0.75, and bin confidence 0.85. It eliminated false routes
+and retained 179/180 routeable commands, but its 71.21%/80.56%/94.44%
+ambiguous/unsupported/malformed recalls still failed the original conjunctive gate. Immutable
+evidence `sha256:f2401fcb5b054c79c3b7e9674321eefcf9576dc4dcc5407bd96151db9e9b518d`
+passed both independent verifiers. The classifier is frozen, no runtime was created, and no later
+M5A stage was opened.
+
 Other later stages still require separate authorization and use ordinary `--target-resume` only
 for an originally promoted pilot, followed by offline language evaluation and
 `run_language_control.py --stage {one_scene_control_smoke,three_scene_control_screen,full_control_development}`.

@@ -1885,3 +1885,13 @@ the classifier is frozen as an offline rejected baseline, no runtime is publishe
 training/seed authorization stays false. Immutable checksummed evidence, per-example diagnostics,
 and an independent verifier distinguish correct analysis execution from model quality. This is a
 public analysis/runtime interface change, not a dependency change.
+
+The authorized CPU execution at implementation Git
+`f45115b1d070001e9e82567eed34bb3dcd99149a` produced immutable evidence fingerprint
+`sha256:f2401fcb5b054c79c3b7e9674321eefcf9576dc4dcc5407bd96151db9e9b518d`.
+The selected conservative decoder used identity temperature and thresholds 0.90 route, 0.00 margin,
+0.75 object, and 0.85 bin. It reduced false-route to zero and retained 179/180 routeable commands,
+but reached only 71.21%/80.56%/94.44% rejection-class recall. The original conjunctive quality gate
+therefore failed. Independent artifact and stage verification passed; the classifier is frozen, no
+runtime was published, and no additional training, seed, language development, control, final, or
+SmolVLA work was started.
