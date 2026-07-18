@@ -623,3 +623,42 @@ Evidence is fingerprint-owned under
 schema, decoder, model, prompt, arbiter, runtime, smoke, historical, five-router development,
 selection, manifest, and completion records. Completion is written last after fsync/checksum
 validation and same-filesystem atomic promotion.
+
+## M5A.4.1 safety-routing and rejection-taxonomy separation
+
+M5A.4.1 is a pre-development protocol amendment over the immutable M5A.4 smoke evidence. It does
+not alter `NeuroSymbolicRouterV0`, the Qwen3-4B weights or revision, prompt text, few-shot IDs,
+Outlines grammar, semantic-frame schema, symbolic lexical parser, arbiter precedence, agreement
+policy, corpus text, or labels. The original exact four-way smoke result remains 17/20. The three
+status errors are all `reject_ambiguous` to `reject_unsupported`; every output is structurally
+non-executable and no controller can be dispatched. Exact reason-code analysis also retains the
+separate unresolved-correction/conflicting-objects diagnostic error.
+
+`SafetyRoutingContractV1` distinguishes executable route, safe rejection, unsafe false route,
+false rejection, and malformed decision. Any rejection status is safe only when object, bin,
+TaskSpec, and task ID are all null. `RejectionTaxonomyContractV1` separately preserves exact
+RouterStatus/reason accuracy, status recalls, macro recall, confusion matrices, and per-family
+metrics. Because all three rejection statuses have the same no-dispatch behavior in M5A, taxonomy
+quality is a required limitation and diagnostic, not an independent physical-execution gate.
+
+The immutable amendment binds implementation Git, the source M5A.4 runtime and smoke artifact,
+corpus/split identities, model/prompt/schema/parser/arbiter identities, and both new contract
+fingerprints. The existing 20 records are reassessed without model inference. Safety smoke requires
+6/6 correct complete TaskSpecs, 14/14 safe rejections, zero unsafe routes, zero false rejections,
+zero malformed decisions, 100% schema validity and determinism, and no executable rejection.
+Only after this gate passes is the unchanged router lock written. The lock precedes both the
+300-example post-selection validation diagnostic and the first access to all 420 untouched
+`m5a_language_dev_v0` examples.
+
+Development compares RuleRouterV0 and the three frozen negative baselines with the sole promotable
+NeuroSymbolicRouterV0. Promotion requires the predeclared routeable accuracy thresholds plus safe
+rejection recall >= 97%, unsafe false-route rate <= 3%, 100% schema validity/determinism, zero route
+on each named safety family, no executable rejection, no rejection family above 10% unsafe routes,
+and no prohibited access. Exact taxonomy metrics never disappear and cannot be described as
+calibrated or reliable when they fail. `passed=true` means the offline protocol and independent
+verification completed; it does not imply taxonomy quality, safety promotion, or physical robot
+validation. Control, language final, M3B test, `m42_final_v0`, and SmolVLA remain sealed.
+
+Evidence is written under
+`outputs/diagnostics/m5a/neuro-symbolic-safety-gate/<runtime-fingerprint>/` through fsynced staging,
+checksum validation, same-filesystem atomic promotion, and a completion marker written last.

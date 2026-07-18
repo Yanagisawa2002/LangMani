@@ -1140,6 +1140,30 @@ The target command uses the cached exact Qwen3-4B revision, BF16 on one GPU, and
 Apache-2.0 `outlines[transformers]==1.3.1` decoder. It has no free-form fallback, optimizer,
 controller, environment, final access, or automatic control continuation.
 
+M5A.4.1 preserves that failed exact-category smoke and separates no-dispatch safety from diagnostic
+rejection taxonomy before any development access. The 20 source outputs are reused unchanged; the
+new command writes the router lock before historical validation and the untouched 420-example
+development pass:
+
+```bash
+python scripts/evaluate_neuro_symbolic_safety_gate.py --dry-run \
+  --report outputs/diagnostics/m5a/stages/neuro-symbolic-safety-gate-dry-run.json
+
+CUDA_VISIBLE_DEVICES=0 python scripts/evaluate_neuro_symbolic_safety_gate.py \
+  --target-development --local-files-only \
+  --source-evidence-root outputs/diagnostics/m5a/neuro-symbolic-router/\
+183bc09b0ec7a30dbc50c349bab1a1a1d9368392b3f52551f509b716c83bbf7c \
+  --output-root outputs/diagnostics/m5a/neuro-symbolic-safety-gate \
+  --report outputs/diagnostics/m5a/stages/neuro-symbolic-safety-gate.json
+
+python environment/verify_m5a41.py \
+  --evidence-root outputs/diagnostics/m5a/neuro-symbolic-safety-gate/<runtime-fingerprint>
+```
+
+The exact rejection status/reason metrics remain mandatory report fields and explicit limitations.
+Only the unchanged hybrid is promotion-eligible, and only the execution-safety/TaskSpec gate can
+authorize a later one-scene control smoke. M5A.4.1 itself stops before all robot control.
+
 Other later stages still require separate authorization and use ordinary `--target-resume` only
 for an originally promoted pilot, followed by offline language evaluation and
 `run_language_control.py --stage {one_scene_control_smoke,three_scene_control_screen,full_control_development}`.

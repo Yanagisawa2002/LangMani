@@ -19,11 +19,12 @@ unchanged rejection-reason thresholds, so the classifier is frozen as a rejected
 and no classifier runtime exists. M5A.2 completed the one authorized Qwen3-1.7B offline comparison;
 its train smoke passed, its 300-example validation gate failed, and language development stayed
 sealed. M5A.3 completed the bounded direct Qwen3-4B comparison and rejected it as a dispatch
-candidate. M5A.4 is the active bounded offline stage: exactly one grammar-constrained
-neuro-symbolic router may reuse that frozen Qwen3-4B checkpoint as a semantic-frame extractor
-behind a deterministic safety arbiter. The observed validation split is diagnostic only, and
-development stays sealed until the prompt/schema/arbiter/runtime lock is written. Target control
-evaluation, the sealed final benchmark, and SmolVLA have not started.
+candidate. M5A.4 completed its immutable 20-example smoke with 17/20 exact RouterStatus decisions
+and zero unsafe false routes. M5A.4.1 is the active bounded offline stage: it audits the unchanged
+rejection taxonomy, separates execution safety from exact rejection-category diagnostics, writes
+an amended router lock, then runs diagnostic validation and untouched language development without
+changing the Qwen3-4B checkpoint, prompt, schema, parser, or arbiter. Target control evaluation, the
+sealed final benchmark, and SmolVLA have not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
@@ -160,9 +161,11 @@ python scripts/build_language_corpus.py --help
 python scripts/train_text_router.py --help
 python scripts/evaluate_language_routers.py --help
 python scripts/evaluate_qwen_scale_escalation.py --help
+python scripts/evaluate_neuro_symbolic_safety_gate.py --help
 python scripts/run_language_control.py --help
 python environment/verify_m5a.py
 python environment/verify_m5a3.py
+python environment/verify_m5a41.py
 python scripts/analyze_classifier_rejection.py --help
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
@@ -308,6 +311,10 @@ The exact environment creation commands are maintained in `README.md`.
 - M5A routeable decisions use exactly the six canonical `canonical_v0` TaskSpecs. Rejected
   decisions contain no TaskSpec and cannot dispatch or step. Oracle reset TaskSpec, predicted
   TaskSpec, selected controller, and active EpisodeSpec remain separately recorded.
+- M5A.4.1 keeps all three rejection statuses physically equivalent no-dispatch outcomes while
+  preserving exact status/reason metrics as a separate diagnostic contract. Unsafe false routes,
+  false rejections, malformed decisions, or executable rejection fields remain hard failures. It
+  cannot relabel corpus examples or modify the frozen M5A.4 model/prompt/schema/parser/arbiter.
 - M5A.1 may read only the frozen selected classifier checkpoint plus train/validation corpus
   contracts. It evaluates exactly the four locked decoder candidates and finite threshold grid.
   It cannot construct or step an optimizer, change checkpoint bytes/global step, start another

@@ -1980,3 +1980,28 @@ A semantic train-smoke failure is itself a terminal, independently verifiable ex
 It persists all 20 raw semantic-frame comparisons and the exact failed checks, marks the candidate
 rejected, and creates neither historical-validation, lock, nor development evidence. This evidence
 lifecycle correction does not change the frozen prompt, schema, parser, arbiter, model, or gate.
+
+## D-066 — Separate execution safety from exact rejection taxonomy before development
+
+The immutable M5A.4 smoke produced all six routeable TaskSpecs correctly and rejected every one of
+the fourteen non-routeable commands without a TaskSpec, but its exact four-way status score was
+17/20. The three status errors were conservative `reject_ambiguous` to `reject_unsupported`
+substitutions caused by Qwen semantic-frame errors. They were not routes and could not dispatch a
+controller. Treating those three no-dispatch outcomes as execution failures conflated two distinct
+contracts; changing labels, prompt, model, parser, or arbiter after seeing them would be a more
+serious protocol violation.
+
+M5A.4.1 therefore versions `SafetyRoutingContractV1` and `RejectionTaxonomyContractV1` separately.
+The former alone answers whether a valid TaskSpec may execute; the latter retains exact status,
+reason, recall, confusion, and per-family diagnostics. The corpus taxonomy is audited read-only and
+remains internally consistent. The observed errors remain model semantic errors, and the separate
+exact reason analysis also records the unresolved-correction/conflicting-objects mismatch. No
+historical label or score is rewritten.
+
+The amendment is content-bound to the prior smoke and every frozen router input. Its safety gate is
+created before the router lock and before validation/development access. Historical validation is
+diagnostic only. The untouched development split supplies the first promotion decision under a
+strict execution-safety gate that adds explicit zero-route checks for contradictory negation and
+unsupported spatial reference. Exact taxonomy failure remains a limitation but does not control a
+different physical action: every rejection returns before lookup, reset, or step. This decision
+authorizes no training, controller load, environment construction, final source, or robot rollout.
