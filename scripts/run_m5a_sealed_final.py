@@ -289,20 +289,39 @@ def _validate_recovery_parent(value: Path | None) -> dict[str, object] | None:
     opened = read_object(root / "opened.json", label="invalid final attempt owner")
     invalid = read_object(root / "invalid.json", label="invalid final attempt marker")
     error = invalid.get("error")
+    allowed_errors = {
+        (
+            "RejectionReportError",
+            "M5A.1 analysis artifact is missing",
+        ): "missing_required_input",
+        (
+            "RouterEvaluationError",
+            "language router evaluation allows validation/development only",
+        ): "final_evaluation_authorization_contract",
+    }
+    error_identity = (
+        (
+            error.get("error_type"),
+            error.get("error_message"),
+        )
+        if isinstance(error, Mapping)
+        else None
+    )
     if not isinstance(error, Mapping) or not (
         invalid.get("completed") is False
         and invalid.get("attempt_fingerprint") == opened.get("attempt_fingerprint")
         and invalid.get("evidence_fingerprint") is None
-        and error.get("error_type") == "RejectionReportError"
-        and error.get("error_message") == "M5A.1 analysis artifact is missing"
+        and error_identity in allowed_errors
         and not (root / "completed.json").exists()
     ):
-        raise SealedFinalCommandError("recovery parent is not the documented missing-input attempt")
+        raise SealedFinalCommandError(
+            "recovery parent is not one documented infrastructure attempt"
+        )
     return {
         "attempt_fingerprint": opened["attempt_fingerprint"],
         "terminal_fingerprint": invalid["terminal_fingerprint"],
         "error": dict(error),
-        "infrastructure_defect": "missing_required_input",
+        "infrastructure_defect": allowed_errors[cast(tuple[str, str], error_identity)],
     }
 
 
@@ -534,6 +553,7 @@ def _evaluate_final_language(
             split=LanguageSplit.FINAL,
             repeat_count=repeat_count,
             eligibility=eligibility,
+            authorize_final=True,
         )
         payloads[name] = payload
         if name == "neuro_symbolic_final":

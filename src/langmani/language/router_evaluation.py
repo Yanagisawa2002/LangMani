@@ -39,8 +39,12 @@ class RouterEvaluationRecord:
     repeat_decision_fingerprints: tuple[str, ...]
 
     def __post_init__(self) -> None:
-        if self.split not in {LanguageSplit.VALIDATION, LanguageSplit.DEVELOPMENT}:
-            raise RouterEvaluationError("router records may use validation/development only")
+        if self.split not in {
+            LanguageSplit.VALIDATION,
+            LanguageSplit.DEVELOPMENT,
+            LanguageSplit.FINAL,
+        }:
+            raise RouterEvaluationError("router records may not use the training split")
         if not math.isfinite(self.latency_ms) or self.latency_ms < 0.0:
             raise RouterEvaluationError("router latency must be finite and non-negative")
         if not self.repeat_decision_fingerprints:
@@ -241,10 +245,14 @@ def evaluate_language_router(
     ece_bins: int = 10,
     clock: Callable[[], float] = time.perf_counter,
     repeat_fingerprint: Callable[[RouterDecision], str] | None = None,
+    authorize_final: bool = False,
 ) -> tuple[tuple[RouterEvaluationRecord, ...], RouterEvaluationSummary]:
-    """Evaluate one router without opening train/final or any controller schedule."""
+    """Evaluate one router; final requires the separately authorized sealed caller."""
 
-    if split not in {LanguageSplit.VALIDATION, LanguageSplit.DEVELOPMENT}:
+    allowed = {LanguageSplit.VALIDATION, LanguageSplit.DEVELOPMENT}
+    if authorize_final:
+        allowed.add(LanguageSplit.FINAL)
+    if split not in allowed:
         raise RouterEvaluationError("language router evaluation allows validation/development only")
     values = tuple(examples)
     if not values or any(example.split is not split for example in values):

@@ -279,6 +279,7 @@ def _router_result_with_contracts(
     split: LanguageSplit,
     repeat_count: int,
     eligibility: Mapping[str, object],
+    authorize_final: bool = False,
 ) -> tuple[tuple, dict[str, object]]:
     records, payload = _router_payload(
         router=router,
@@ -286,6 +287,7 @@ def _router_result_with_contracts(
         split=split,
         repeat_count=repeat_count,
         eligibility=eligibility,
+        authorize_final=authorize_final,
     )
     safety, taxonomy = evaluate_router_contracts(records=records, examples=examples)
     payload.update(

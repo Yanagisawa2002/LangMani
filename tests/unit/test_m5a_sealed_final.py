@@ -21,6 +21,7 @@ from langmani.language.neuro_symbolic_safety import (
     SafeRejectionRecord,
     SafetyRoutingEvaluation,
 )
+from langmani.language.router_evaluation import RouterEvaluationError, evaluate_language_router
 from langmani.language.router_types import (
     LanguageExample,
     LanguageSplit,
@@ -450,10 +451,50 @@ def test_quality_failure_cannot_be_relabelled_as_infrastructure_recovery(tmp_pat
         command._validate_recovery_parent(Path(str(opened["attempt_root"])))
 
 
+def test_final_evaluation_contract_attempt_is_explicit_recovery_only(tmp_path: Path) -> None:
+    command = _command()
+    opened = open_final_attempt(tmp_path, run_identity=_identity().to_dict())
+    close_final_attempt(
+        str(opened["attempt_root"]),
+        completed=False,
+        error={
+            "error_type": "RouterEvaluationError",
+            "error_message": "language router evaluation allows validation/development only",
+        },
+    )
+    recovery = command._validate_recovery_parent(Path(str(opened["attempt_root"])))
+    assert recovery["infrastructure_defect"] == "final_evaluation_authorization_contract"
+
+
 def test_language_source_preflight_precedes_final_access_in_target_command() -> None:
     source = (PROJECT_ROOT / "scripts" / "run_m5a_sealed_final.py").read_text(encoding="utf-8")
     target = source[source.index("def _execute_target") : source.index("def main")]
     assert target.index("_preflight_language_sources(paths)") < target.index("open_final_attempt(")
+
+
+def test_router_evaluation_final_requires_explicit_authorization() -> None:
+    example = next(iter(_examples().values()))
+
+    class _Router:
+        def route(self, _command: str) -> RouterDecision:
+            assert example.expected_task_spec is not None
+            return RouterDecision.route(
+                task_spec=example.expected_task_spec,
+                confidence=RouterConfidence.unavailable(),
+                router_name="FinalFixtureRouterV0",
+                router_version="final-fixture-v0",
+            )
+
+    with pytest.raises(RouterEvaluationError):
+        evaluate_language_router(router=_Router(), examples=(example,), split=LanguageSplit.FINAL)
+    records, summary = evaluate_language_router(
+        router=_Router(),
+        examples=(example,),
+        split=LanguageSplit.FINAL,
+        authorize_final=True,
+    )
+    assert len(records) == 1
+    assert summary.example_count == 1
 
 
 def test_sealed_evidence_is_atomic_checksummed_and_immutable(tmp_path: Path) -> None:

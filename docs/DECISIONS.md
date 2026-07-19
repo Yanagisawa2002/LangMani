@@ -2238,3 +2238,19 @@ frozen direct-LLM evidence validation before `open_final_attempt`; it also requi
 recovery uses the same router, prompt, parser, models, controllers, schedules, metric gates, and
 final examples. Other failures, including routing, model-quality, policy timeout, or controller
 quality, cannot be relabelled as recovery authority.
+
+## D-077 — Require an explicit final capability at the shared language evaluator boundary
+
+The first D-076 recovery completed source validation and loaded the frozen Qwen weights, then
+stopped before producing its first router record because the reused evaluation helper retained its
+historical validation/development-only guard. The invalid marker records
+`RouterEvaluationError: language router evaluation allows validation/development only`. No language
+decision was scored and no robot environment, controller, reset, or step was reached. The partial
+attempt remains immutable.
+
+This is a pre-result orchestration-interface defect, not a model or policy failure. The minimal
+repair adds a default-false `authorize_final` capability to `evaluate_language_router` and threads
+it only through the sealed-final caller. Every existing validation/development caller is unchanged;
+ordinary final calls still fail. A focused regression test proves both the default rejection and
+the explicit sealed-final path. A fresh-root recovery must name the exact D-077 invalid marker and
+keeps every frozen semantic and physical input unchanged.

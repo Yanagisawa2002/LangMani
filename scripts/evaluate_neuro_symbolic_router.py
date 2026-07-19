@@ -269,6 +269,7 @@ def _router_payload(
     split: LanguageSplit,
     repeat_count: int,
     eligibility: Mapping[str, object],
+    authorize_final: bool = False,
 ) -> tuple[tuple[RouterEvaluationRecord, ...], dict[str, object]]:
     records, _ = evaluate_language_router(
         router=cast(object, router),
@@ -276,6 +277,7 @@ def _router_payload(
         split=split,
         repeat_count=repeat_count,
         repeat_fingerprint=_semantic_fingerprint,
+        authorize_final=authorize_final,
     )
     metrics = recompute_router_metrics(records=records, examples=examples)
     return records, {
