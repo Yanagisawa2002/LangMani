@@ -2050,3 +2050,16 @@ digest, both schedule fingerprints, and the sealed-final summary. Only the two d
 accepted. Staged development reads the first disjoint 1/3/6-scene views from the validated parent;
 it neither rewrites that parent nor materializes final text or episodes. No dependency or physical
 success criterion changed.
+
+## D-069 — Reuse the semantic extractor's system/user chat transport fingerprint
+
+The second pre-episode attempt verified all 13 pinned Qwen/tokenizer files and the 8.06 GB snapshot,
+then stopped because the new dispatch adapter compared the frozen transport fingerprint against the
+generic single-user-message helper. The selected M5A.4 and M5A.4.1 router instead used the exact
+Outlines transport: the semantic prompt is the system message and `{COMMAND}` is the user message.
+
+The transport renderer is now project-owned alongside `OutlinesQwenSemanticFrameExtractorV0`, and
+dispatch compares its hash against the immutable selected evidence before compiling the grammar.
+This restores the original prompt transport; it does not change the prompt, tokenizer, model,
+generation settings, parser, arbiter, or evidence. File hashes, snapshot size, semantic prompt hash,
+and transport hash remain separate hard gates.

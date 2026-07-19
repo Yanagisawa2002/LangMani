@@ -25,6 +25,7 @@ from langmani.language.neuro_symbolic_router import (
     build_qwen4b_loader_config,
     build_semantic_frame_prompt,
     select_semantic_prompt_examples,
+    semantic_frame_transport_fingerprint,
     semantic_schema_fingerprint,
 )
 from langmani.language.neuro_symbolic_safety_evidence import (
@@ -351,12 +352,17 @@ def load_selected_neuro_symbolic_router(
         device=device,
         local_files_only=True,
     )
+    if loader.file_identities != dict(source.model_file_identities):
+        raise NeuroSymbolicDispatchError("local model file hashes differ from selected evidence")
+    if loader.snapshot_size_bytes != source.snapshot_size_bytes:
+        raise NeuroSymbolicDispatchError("local model snapshot size differs from selected evidence")
     if (
-        loader.file_identities != dict(source.model_file_identities)
-        or loader.snapshot_size_bytes != source.snapshot_size_bytes
-        or loader.rendered_prompt_fingerprint(prompt_content) != source.rendered_prompt_fingerprint
+        semantic_frame_transport_fingerprint(loader, prompt_content)
+        != source.rendered_prompt_fingerprint
     ):
-        raise NeuroSymbolicDispatchError("local model files or chat-template rendering differ")
+        raise NeuroSymbolicDispatchError(
+            "semantic-frame chat transport differs from selected evidence"
+        )
     extractor = OutlinesQwenSemanticFrameExtractorV0(
         loader=loader,
         prompt_content=prompt_content,

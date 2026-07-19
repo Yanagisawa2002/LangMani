@@ -15,6 +15,7 @@ from langmani.language.neuro_symbolic_router import (
     build_qwen4b_loader_config,
     build_semantic_frame_prompt,
     select_semantic_prompt_examples,
+    semantic_frame_transport_fingerprint,
     semantic_schema_fingerprint,
 )
 from langmani.language.router_types import LanguageSplit
@@ -175,9 +176,6 @@ def test_selected_router_loader_rehashes_files_and_has_no_download_fallback(
             self.file_identities = dict(source.model_file_identities)
             self.snapshot_size_bytes = source.snapshot_size_bytes
 
-        def rendered_prompt_fingerprint(self, _prompt: str) -> str:
-            return source.rendered_prompt_fingerprint
-
     class FakeExtractor:
         def __init__(self, *, loader, prompt_content, maximum_new_tokens):  # type: ignore[no-untyped-def]
             del loader, prompt_content
@@ -190,6 +188,11 @@ def test_selected_router_loader_rehashes_files_and_has_no_download_fallback(
 
     monkeypatch.setattr(dispatch, "TransformersLocalTextGenerator", FakeLoader)
     monkeypatch.setattr(dispatch, "OutlinesQwenSemanticFrameExtractorV0", FakeExtractor)
+    monkeypatch.setattr(
+        dispatch,
+        "semantic_frame_transport_fingerprint",
+        lambda _loader, _prompt: source.rendered_prompt_fingerprint,
+    )
 
     router = dispatch.load_selected_neuro_symbolic_router(
         source,
@@ -205,3 +208,26 @@ def test_selected_router_loader_rehashes_files_and_has_no_download_fallback(
             device="cpu",
             local_files_only=False,
         )
+
+
+def test_semantic_frame_transport_uses_system_prompt_and_command_placeholder() -> None:
+    captured: dict[str, object] = {}
+
+    class Tokenizer:
+        def apply_chat_template(self, messages, **kwargs):  # type: ignore[no-untyped-def]
+            captured["messages"] = messages
+            captured["kwargs"] = kwargs
+            return "rendered-system-and-command-transport"
+
+    class Loader:
+        tokenizer = Tokenizer()
+
+    first = semantic_frame_transport_fingerprint(Loader(), "frozen semantic prompt")  # type: ignore[arg-type]
+    second = semantic_frame_transport_fingerprint(Loader(), "frozen semantic prompt")  # type: ignore[arg-type]
+
+    assert first == second
+    assert captured["messages"] == [
+        {"role": "system", "content": "frozen semantic prompt"},
+        {"role": "user", "content": "{COMMAND}"},
+    ]
+    assert captured["kwargs"] == {"tokenize": False, "add_generation_prompt": True}

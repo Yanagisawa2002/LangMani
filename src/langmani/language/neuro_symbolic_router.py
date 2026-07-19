@@ -838,6 +838,30 @@ def semantic_schema_fingerprint() -> str:
     return f"sha256:{sha256_hex(semantic_frame_schema())}"
 
 
+def semantic_frame_transport_fingerprint(
+    loader: TransformersLocalTextGenerator,
+    prompt_content: str,
+) -> str:
+    """Hash the exact system-prompt/user-command transport used by Outlines."""
+
+    try:
+        rendered = loader.tokenizer.apply_chat_template(
+            [
+                {"role": "system", "content": prompt_content},
+                {"role": "user", "content": "{COMMAND}"},
+            ],
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+    except (AttributeError, OSError, RuntimeError, TypeError, ValueError) as error:
+        raise StructuredLLMRouterError(
+            f"semantic-frame chat transport could not be rendered: {error}"
+        ) from error
+    if not isinstance(rendered, str) or not rendered:
+        raise StructuredLLMRouterError("semantic-frame chat transport rendered no text")
+    return f"sha256:{sha256_hex(rendered)}"
+
+
 def build_qwen4b_loader_config(*, maximum_new_tokens: int = 256) -> StructuredLLMRouterConfig:
     return StructuredLLMRouterConfig(
         model_id=QWEN3_4B_INSTRUCT_MODEL_ID,
@@ -874,6 +898,7 @@ __all__ = [
     "build_semantic_frame_prompt",
     "expected_semantic_frame_payload",
     "select_semantic_prompt_examples",
+    "semantic_frame_transport_fingerprint",
     "semantic_frame_schema",
     "semantic_schema_fingerprint",
 ]
