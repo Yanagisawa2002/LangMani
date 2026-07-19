@@ -38,3 +38,18 @@ python scripts/export_latentguard_initial_proposal.py ...
 python scripts/project_latentguard_candidates.py ...
 python environment/audit_latentguard_bridge.py --strict ...
 ```
+
+## M6A.1 preflight result
+
+The implementation and CPU fixture gates passed. The real single-seed probe did not run because the
+current execution server does not contain the accepted controller registry, runtime-selection
+record, ACT checkpoint, or processor artifacts required by `export_policy_binding`. The bridge
+failed closed before creating an environment: reset, policy-query, `env.step`, candidate-projection,
+and outcome counts are all zero.
+
+The local frozen registry declares
+`langmani-pick-place-task-v0:blue_cube:left_bin:canonical_v0` as the lexical selection, with
+checkpoint digest
+`sha256:0aa8add02a8675a802fde163a32e0c3a48dd97113a141d6faede28cc6167f6e4`, but
+this is not claimed as an artifact-validated binding on the current server. M6B remains blocked and
+was not started.

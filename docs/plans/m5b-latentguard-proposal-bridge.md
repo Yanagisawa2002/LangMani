@@ -33,3 +33,17 @@ ruff, the complete pytest suite, build, and installation diagnostics remain mand
 
 No training, rollout, action execution, task outcome, model selection, threshold fitting, VLM/LLM,
 multi-GPU work, policy-state restoration, or automatic M6B execution is authorized.
+
+## Final readiness disposition
+
+Implementation commit `9713f7503dae6612309d0ef8a499d93f6c3899a3` was pushed and validated in a
+clean isolated Linux worktree. The bridge unit subset passed, but the current server has no accepted
+LangMani controller registry, runtime-selection record, ACT checkpoint, or processor artifacts.
+The required artifact rebuild and digest comparison could not begin, so the real proposal probe
+stopped before environment construction.
+
+Observed bridge counts are reset `0`, policy query `0`, `env.step` `0`, candidate projection `0`,
+and outcome `0`. No canonical real proposal was exported and no M6B action was executed. The
+deterministic registry declaration remains useful for the exact expected identity, but is not
+reported as a current-server artifact-validated binding. Bounded M6B readiness remains `blocked`.
+The server remains online and GPU-idle.
