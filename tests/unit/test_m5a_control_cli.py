@@ -864,14 +864,22 @@ def test_neuro_symbolic_cli_requires_verified_parent_for_three_scene(tmp_path: P
         str(tmp_path / "one-scene-verification.json"),
     ]
     assert command._router_source_mode(command.parse_args(three)) == "neuro_symbolic"
-    with pytest.raises(command.LanguageControlCommandError, match="not authorized for full"):
+    full = command.parse_args(
+        [
+            *three[:4],
+            "--stage",
+            "full_control_development",
+            *three[6:],
+        ]
+    )
+    assert command._router_source_mode(full) == "neuro_symbolic"
+    with pytest.raises(command.LanguageControlCommandError, match="three-scene report"):
         command._router_source_mode(
             command.parse_args(
                 [
                     *three[:4],
                     "--stage",
                     "full_control_development",
-                    *three[6:],
                 ]
             )
         )

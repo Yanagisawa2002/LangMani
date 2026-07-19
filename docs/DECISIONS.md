@@ -2146,3 +2146,26 @@ Fresh-process independent verification recomputed all gates and returned `passed
 stage was not run. Language/control final, M3B test, historical fresh, `m42_final_v0`, shared ACT,
 M2 actions, and SmolVLA remain unaccessed. This decision accepts the bounded paired screen and its
 promotion result; it does not claim 18/18 controller success or authorize any final benchmark.
+
+## D-073 — Keep full control development paired, bounded, and final-sealed
+
+The separately authorized six-scene stage extends the proven three-scene orchestration rather than
+introducing another controller or runner. Before model/environment construction it independently
+rehashes the parent three-scene compact archive and all 36 parent atoms. The active stage then runs
+Oracle immediately before NeuroSymbolic for each of 36 new development scene-task pairs, captures
+the same three-cube/two-bin/Panda reset state, resets policy state for all 72 episodes, and preserves
+the existing frozen PerTask H=10/`pd_joint_pos`/`project` runtime.
+
+The exact routing gate remains 35/36, representing the previously declared conceptual 95% target at
+this discrete sample size. Controller identity must agree on every correct route; it does not
+silently change that routing threshold into 36/36. A fixed nine-category rejection set adds
+unsupported destination, contradictory negation, and unsupported spatial reference to the earlier
+screen cases, while retaining zero lookup/policy-reset/environment-reset/step as hard requirements.
+
+The stage writes one fingerprint-owned compact through fsynced staging, completion-last validation,
+and atomic promotion. A fresh-process reader rehashes the underlying 72 atoms and recomputes routing,
+paired outcomes, failure attribution, raw/projected/executed action statistics, latency, and every
+quality predicate. A positive `M5AFinalAuthorizationV0` is derived only after all predicates pass;
+it contains sealed final-lock fingerprints but no final command or seed and never executes final.
+This is an orchestration/evidence interface change only: no router, prompt, controller, dependency,
+M1 success geometry, action bound, dataset, or model weight changes.

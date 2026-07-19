@@ -1251,6 +1251,32 @@ infrastructure, and M2 counts were zero. Fresh-process independent verification 
 `passed=true`, `physical_target_validated=true`, and
 `full_control_development_authorized=true`. Full development was not started.
 
+The full-development command consumes that exact three-scene report and verifier, then runs 36 new
+Oracle/NeuroSymbolic pairs and the immutable nine-category rejection set. It creates a positive
+final authorization only when the locked 35/36 routing, paired-control, and safety gates all pass:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python scripts/run_language_control.py \
+  --stage full_control_development \
+  --control-schedule outputs/diagnostics/m5a/target-development-schedules.json \
+  --neuro-symbolic-evidence-root outputs/diagnostics/m5a/neuro-symbolic-safety-gate/<fingerprint> \
+  --prior-stage-report outputs/diagnostics/m5a/stages/neuro-symbolic-three-scene-control.json \
+  --prior-stage-verification outputs/diagnostics/m5a/stages/neuro-symbolic-three-scene-independent-verification.json \
+  --output-root outputs/diagnostics/m5a/control \
+  --report outputs/diagnostics/m5a/stages/neuro-symbolic-full-control.json
+
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m5a_full_control.py \
+  --target-evidence \
+  --evidence-root outputs/diagnostics/m5a/control/full-control-development/<fingerprint> \
+  --prior-stage-report outputs/diagnostics/m5a/stages/neuro-symbolic-three-scene-control.json \
+  --prior-stage-verification outputs/diagnostics/m5a/stages/neuro-symbolic-three-scene-independent-verification.json \
+  --control-schedule outputs/diagnostics/m5a/target-development-schedules.json \
+  --neuro-symbolic-evidence-root outputs/diagnostics/m5a/neuro-symbolic-safety-gate/<fingerprint>
+```
+
+The verifier rehashes all 72 raw atoms and compact evidence in a fresh process. Neither command
+materializes final commands/seeds or starts the sealed final benchmark.
+
 Other later stages still require separate authorization and use ordinary `--target-resume` only
 for an originally promoted pilot, followed by offline language evaluation and
 `run_language_control.py --stage {one_scene_control_smoke,three_scene_control_screen,full_control_development}`.
@@ -1485,6 +1511,7 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 | `python environment/verify_m43b.py` with completed target roots | Yes | No new training | No new rollout; independently audits completed physical evidence |
 | `python environment/verify_m5a.py` | No | No | No; deterministic corpus/router/dispatch CPU fixtures only |
 | `python environment/verify_m5a.py --verify-stage <stage>` | Stage-dependent | Stage-dependent | Independently validates exactly one immutable M5A stage report; final stays sealed |
+| `python environment/verify_m5a_full_control.py --target-evidence ...` | Yes | No new training; reuses one local LLM and six frozen controls | Yes; independently audits 72 completed paired rollouts without opening final |
 | `scripts/export_lerobot_dataset.py` | Real export: yes | According to source/render backend | Yes |
 | `scripts/validate_lerobot_dataset.py` | Full source alignment: yes | According to source/render backend | Yes |
 | `scripts/inspect_lerobot_episode.py` | No | No | No |

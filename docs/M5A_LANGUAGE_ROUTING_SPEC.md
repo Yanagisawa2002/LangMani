@@ -738,3 +738,32 @@ malformed/non-finite action, infrastructure, and M2 counts. Gripper-only project
 explicitly reported at 647 Oracle and 646 NeuroSymbolic components. The independent verifier
 accepted both compact and underlying atom evidence with `physical_target_validated=true`; the
 screen quality gate authorized but did not execute full control development.
+
+## Full six-scene paired control development
+
+The separately authorized full stage first rehashes both the compact three-scene archive and all
+36 underlying parent atoms. It then materializes only the six remaining development seeds and their
+canonical 36 commands. Each pair runs Oracle immediately before the locked NeuroSymbolic router,
+captures the three cube poses, two bin poses, and Panda qpos after both resets, and requires exact
+state equality. Both branches reset the matching frozen PerTask policy and retain H=10,
+`pd_joint_pos`, and explicit `project` handling.
+
+The immutable rejection set contains nine predeclared categories: conflicting objects, conflicting
+bins, unsupported action, unsupported object, unsupported destination, empty/noise, unresolved
+correction, contradictory negation, and unsupported spatial reference. Each must terminate with no
+TaskSpec, controller lookup, policy reset, environment reset, or `env.step`. Probe outcomes do not
+consume the 72-rollout budget.
+
+The exact conjunctive gate requires at least 35/36 correct TaskSpecs, at most two wrong-object and
+two wrong-bin routes, at most three false rejections, no malformed executable decision, and
+controller identity agreement for every correct route. NeuroSymbolic success may differ from Oracle
+by at most two. All 36 initial states must match; arm projection, wrong-bin placement, off-table,
+malformed/non-finite action, environment/infrastructure failure, and M2 counts must be zero. Raw,
+projected, and executed action statistics, per-task/per-family results, paired outcomes, failure
+attribution, grasp/release timing, and router/policy/environment latencies remain separate.
+
+The fingerprint-owned archive is written through fsynced staging, completion-last validation, and
+same-filesystem atomic promotion. A fresh process rehashes the archive and all 72 raw atoms and
+recomputes every gate. `passed=true` means the authorized experiment and evidence completed
+correctly. Only a true quality gate creates a positive `M5AFinalAuthorizationV0`; that record
+contains final lock fingerprints but no command text or scene seed and never executes final.

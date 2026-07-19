@@ -289,6 +289,14 @@ independent verifier accepted the immutable compact and raw evidence, so the con
 the selected router and authorizes a separately invoked six-scene development stage. That later
 stage has not run.
 
+The full six-scene orchestration is now implemented for the separately authorized target run. It
+rehashes the three-scene parent before loading the router, runs Oracle immediately before
+NeuroSymbolic for each of 36 new development pairs, requires exact reset-state equality, and uses a
+fixed nine-category rejection no-op set. A compact immutable archive and fresh-process verifier
+recompute all 72 atoms, the locked 35/36 routing gate, controller/safety/action/latency metrics, and
+the bounded `M5AFinalAuthorizationV0`. Implementation completion is not physical evidence; the
+target benchmark remains pending until the dedicated command completes.
+
 ## M5B — Sealed modular final and possible SmolVLA handoff (planned)
 
 Run a separate immutable M5A final benchmark only if at least one learned router passes every

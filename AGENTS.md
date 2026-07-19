@@ -175,6 +175,7 @@ python environment/verify_m5a3.py
 python environment/verify_m5a41.py
 python environment/verify_m5a_dispatch.py
 python environment/verify_m5a_three_scene.py
+python environment/verify_m5a_full_control.py
 python scripts/analyze_classifier_rejection.py --help
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
@@ -417,3 +418,8 @@ resets, the fixed six-category rejection no-op set, paired Oracle/NeuroSymbolic 
 raw action-metric recomputation, atomic compact evidence, and a fresh-process verifier. Its
 `passed` flag validates execution/evidence; `three_scene_control_screen_passed` alone controls the
 separate full-development authorization, which the screen never executes automatically.
+The full six-scene stage additionally requires 36 exact Oracle/NeuroSymbolic pairs, 72 fresh policy
+resets, the immutable nine-category rejection set, 35/36 correct routes, 100% controller identity
+agreement over every correct route, success gap at most two, full action/latency/failure
+recomputation, and a fresh-process verifier. It may create `M5AFinalAuthorizationV0` only when every
+quality item passes, and must never materialize or execute the sealed final schedules.
