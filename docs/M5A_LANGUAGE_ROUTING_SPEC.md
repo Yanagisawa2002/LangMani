@@ -695,3 +695,35 @@ timeout, with zero wrong-object, wrong-bin, off-table, invalid-action, infrastru
 failures. Independent verifier Git `cf6fbc07971cc2c507675763f04e6740adce40a4` accepted the immutable
 evidence with `physical_target_validated=true`. The timeout counts remain observed controller-quality
 evidence and do not weaken or redefine the dispatch gate.
+
+## Three-scene paired control screen
+
+This separately authorized stage consumes the completed one-scene report and its independent
+verification as immutable parent authority. It materializes only the next three predeclared
+development seeds and their canonical six-task order. For each of the 18 scene-task atoms it runs
+Oracle first, then the unchanged `NeuroSymbolicRouterV0`, without using the Oracle outcome to alter
+the learned rollout. Both paths reset policy state and use the same frozen PerTask controller,
+H=10, `pd_joint_pos`, and explicit `project` action runtime.
+
+Immediately after each reset and before any action, the stage captures the privileged diagnostic
+state of all three cube poses, both bin poses, and the nine-dimensional Panda qpos. The independent
+reader requires exact equality inside every Oracle/learned pair. The reset snapshot is evidence
+only; it is not added to a visual observation, task input, or per-step info. A fixed six-command
+rejection set covers conflicting objects, conflicting bins, unsupported action, unsupported
+object, empty/noise, and unresolved correction. Every probe must return before controller lookup,
+policy reset, environment reset, and `env.step`.
+
+The compact screen archive is run-fingerprint-owned and contains the parent authority, exact
+three-scene schedule and commands, frozen router/registry/runtime identities, 18 Oracle and 18
+NeuroSymbolic records, pair analysis, rejection probes, failure attribution, gate result, manifest,
+and completion marker. It is written through same-filesystem staging, fsync, checksum validation,
+completion-last ordering, and atomic promotion. A fresh-process verifier rehashes both the compact
+archive and the underlying 36 raw control atoms, reconstructs action streams and failure
+attribution, recomputes the paired analysis and conjunctive gate, and checks all prohibited-access
+flags.
+
+Correct stage execution has `passed=true` and `physical_target_validated=true` even when controller
+quality makes the screen gate false. Only a true `three_scene_control_screen_passed` may set
+`selected_router_locked=true` and `full_control_development_authorized=true`. The full stage is
+never executed automatically, and language/control final, M3B test, historical fresh,
+`m42_final_v0`, M2 expert actions, and SmolVLA remain unaccessed.

@@ -1211,6 +1211,35 @@ invalid-action, infrastructure, or M2-expert failure. The fresh-process verifier
 `physical_target_validated=true`. This is one-scene wiring/safety acceptance, not authorization for
 the three-scene screen or a claim of 6/6 controller quality.
 
+The separately authorized three-scene paired screen reuses the same frozen router and six
+controllers. It additionally requires both the one-scene stage report and its independent
+verification, runs each of the 18 Oracle/NeuroSymbolic pairs consecutively, and records the exact
+three-cube/two-bin/Panda initial state before each rollout. The command also executes the fixed six
+rejection categories with zero runtime work and atomically promotes a compact evidence directory:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python scripts/run_language_control.py \
+  --stage three_scene_control_screen \
+  --control-schedule outputs/diagnostics/m5a/target-development-schedules.json \
+  --neuro-symbolic-evidence-root outputs/diagnostics/m5a/neuro-symbolic-safety-gate/<fingerprint> \
+  --prior-stage-report outputs/diagnostics/m5a/stages/neuro-symbolic-one-scene-control.json \
+  --prior-stage-verification outputs/diagnostics/m5a/stages/neuro-symbolic-one-scene-verification.json \
+  --output-root outputs/diagnostics/m5a/control \
+  --report outputs/diagnostics/m5a/stages/neuro-symbolic-three-scene-control.json
+
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m5a_three_scene.py \
+  --target-evidence \
+  --evidence-root outputs/diagnostics/m5a/control/three-scene-control-screen/<fingerprint> \
+  --prior-stage-report outputs/diagnostics/m5a/stages/neuro-symbolic-one-scene-control.json \
+  --prior-stage-verification outputs/diagnostics/m5a/stages/neuro-symbolic-one-scene-verification.json \
+  --control-schedule outputs/diagnostics/m5a/target-development-schedules.json \
+  --neuro-symbolic-evidence-root outputs/diagnostics/m5a/neuro-symbolic-safety-gate/<fingerprint>
+```
+
+`passed=true` means the 36 atoms and immutable evidence verified. The separate conjunctive
+`three_scene_control_screen_passed` flag controls whether full development is authorized; this
+command never starts full development or opens final/test/fresh schedules.
+
 Other later stages still require separate authorization and use ordinary `--target-resume` only
 for an originally promoted pilot, followed by offline language evaluation and
 `run_language_control.py --stage {one_scene_control_smoke,three_scene_control_screen,full_control_development}`.

@@ -2093,3 +2093,26 @@ re-audit rehashed existing evidence without rerunning episodes and returned `pas
 Language/control final, M3B test, historical fresh, `m42_final_v0`, M2, and SmolVLA remained
 unaccessed. This accepts only one-scene dispatch wiring and safety; it does not authorize the
 three-scene screen or reinterpret the two timeouts as success.
+
+## D-071 — Pair every three-scene router rollout with an exact Oracle reset audit
+
+The separately authorized M5A three-scene screen must distinguish language-routing preservation
+from the stochastic-looking limitations of the already frozen PerTask controls. The stage therefore
+executes Oracle immediately before NeuroSymbolic for each of 18 predeclared scene-task pairs and
+captures the three object poses, two bin poses, and Panda qpos immediately after each reset. Exact
+snapshot equality, controller checkpoint equality, and a fresh policy reset for all 36 episodes are
+hard gate items. Oracle outcome cannot alter, skip, or replace the learned episode.
+
+This is a project-owned orchestration/evidence interface change, not a model, dependency, policy,
+prompt, task, success-geometry, or action-runtime change. The existing generic controller dispatcher
+retains one optional non-policy audit sidecar so target rollouts can preserve timing, projection,
+and reset proof without modifying `EndToEndEpisodeResult` or visual observations. A fixed six-case
+selected-router rejection set separately proves zero lookup/reset/step work.
+
+The stage writes a compact fingerprint-owned archive through same-filesystem staging, fsync,
+completion-last checks, and atomic promotion. Its independent reader rehashes the underlying 36
+generic control atoms before recomputing pairing, action metrics, failure attribution, and the exact
+conjunctive gate. `passed=true` means the bounded stage and evidence are valid;
+`three_scene_control_screen_passed` alone authorizes, but never starts, full control development.
+All final/test/fresh schedules, shared ACT, M2 actions, and SmolVLA remain prohibited. Target
+physical results are pending and must not be inferred from fixture validation.

@@ -54,8 +54,12 @@ from langmani.language.llm_router import (  # noqa: E402
     build_structured_routing_prompt,
     select_structured_routing_prompt_examples,
 )
+from langmani.language.neuro_symbolic_control_verifier import (  # noqa: E402
+    verify_neuro_symbolic_control_evidence,
+)
 from langmani.language.neuro_symbolic_dispatch import (  # noqa: E402
     NEURO_SYMBOLIC_DISPATCH_ROUTER_LABEL,
+    SelectedNeuroSymbolicDispatchSource,
     bind_selected_router_to_controller_registry,
     load_selected_neuro_symbolic_router,
     validate_selected_neuro_symbolic_dispatch_source,
@@ -94,6 +98,16 @@ from langmani.language.text_classifier import (  # noqa: E402
     load_factorized_text_classifier,
 )
 from langmani.language.text_training import read_text_classifier_run_evidence  # noqa: E402
+from langmani.language.three_scene_control import (  # noqa: E402
+    THREE_SCENE_REJECTION_CASES,
+    analyze_three_scene_records,
+    build_rejection_probe_set,
+    initial_scene_state_fingerprint,
+    normalize_initial_scene_state,
+)
+from langmani.language.three_scene_control_evidence import (  # noqa: E402
+    write_three_scene_evidence,
+)
 from langmani.policies.act_runtime import inspect_git_state  # noqa: E402
 
 COMMAND_SCHEMA = "langmani-m5a-language-control-command-v0"
@@ -170,6 +184,51 @@ class _CountingEnvironmentProxy:
         return getattr(self.environment, name)
 
 
+class _PairedInitialStateEnvironment:
+    """Capture the privileged reset snapshot before each paired rollout begins."""
+
+    def __init__(self, environment: object) -> None:
+        self.environment = environment
+        self._capture: dict[str, object] | None = None
+        self._reset_count = 0
+
+    def begin_episode(self) -> None:
+        self._capture = None
+        self._reset_count = 0
+
+    def reset(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        result = cast(Any, self.environment).reset(*args, **kwargs)
+        base = getattr(self.environment, "unwrapped", self.environment)
+        accessor = getattr(base, "get_expert_initial_scene_state", None)
+        if not callable(accessor):
+            raise LanguageControlCommandError(
+                "three-scene pairing requires get_expert_initial_scene_state()"
+            )
+        state = normalize_initial_scene_state(accessor())
+        self._capture = {
+            "initial_physical_state": state,
+            "initial_physical_state_fingerprint": initial_scene_state_fingerprint(state),
+        }
+        self._reset_count += 1
+        return result
+
+    def consume(self, *, dispatched: bool) -> dict[str, object] | None:
+        if not dispatched:
+            if self._reset_count != 0 or self._capture is not None:
+                raise LanguageControlCommandError(
+                    "a rejected decision reset the paired environment"
+                )
+            return None
+        if self._reset_count != 1 or self._capture is None:
+            raise LanguageControlCommandError(
+                "each dispatched paired episode must perform exactly one captured reset"
+            )
+        return dict(self._capture)
+
+    def __getattr__(self, name: str) -> object:
+        return getattr(self.environment, name)
+
+
 @dataclass(frozen=True, slots=True)
 class DevelopmentControlInputs:
     """Validated development schedule and command lookup."""
@@ -236,6 +295,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         type=Path,
         help="Required for the three-scene screen and full-development stages.",
     )
+    parser.add_argument(
+        "--prior-stage-verification",
+        type=Path,
+        help="Required independent one-scene verification for the three-scene screen.",
+    )
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args(argv)
 
@@ -260,12 +324,23 @@ def _router_source_mode(args: argparse.Namespace) -> str:
             raise LanguageControlCommandError(
                 "neuro-symbolic dispatch requires the immutable local model cache"
             )
-        if (
-            args.stage != M5AStage.ONE_SCENE_CONTROL_SMOKE.value
-            or args.prior_stage_report is not None
+        one_scene = args.stage == M5AStage.ONE_SCENE_CONTROL_SMOKE.value
+        three_scene = args.stage == M5AStage.THREE_SCENE_CONTROL_SCREEN.value
+        if one_scene and (
+            args.prior_stage_report is not None or args.prior_stage_verification is not None
         ):
             raise LanguageControlCommandError(
-                "the selected M5A.4.1 router is authorized only for one-scene control smoke"
+                "one-scene control does not accept prior-stage evidence"
+            )
+        if three_scene and (
+            args.prior_stage_report is None or args.prior_stage_verification is None
+        ):
+            raise LanguageControlCommandError(
+                "three-scene control requires the one-scene report and independent verification"
+            )
+        if not one_scene and not three_scene:
+            raise LanguageControlCommandError(
+                "the selected M5A.4.1 router is not authorized for full control development"
             )
         return NEURO_SYMBOLIC_DISPATCH_ROUTER_LABEL
     if any(value is None for value in legacy_values):
@@ -356,6 +431,10 @@ def _safe_paths(args: argparse.Namespace) -> tuple[Path, Path]:
         immutable_inputs["router evaluation evidence"] = args.router_evaluation_evidence_root
     if args.neuro_symbolic_evidence_root is not None:
         immutable_inputs["neuro-symbolic evidence"] = args.neuro_symbolic_evidence_root
+    if args.prior_stage_report is not None:
+        immutable_inputs["prior-stage report"] = args.prior_stage_report
+    if args.prior_stage_verification is not None:
+        immutable_inputs["prior-stage verification"] = args.prior_stage_verification
     if args.m4_diagnostics_root is not None:
         immutable_inputs["legacy M4 diagnostics"] = args.m4_diagnostics_root
     return _safe_output_paths(
@@ -1122,9 +1201,11 @@ def run_rejection_noop_probe(
     loader: StrictPerTaskControllerLoader,
     environment: object,
     router: RouterLike,
+    command: str = "Open the drawer.",
+    evaluation_id: str = "m5a-target-development-rejection-noop-probe",
 ) -> dict[str, object]:
     """Prove on the active target environment that rejection performs zero work."""
-    decision = router.route("Open the drawer.")
+    decision = router.route(command)
     if decision.status is RouterStatus.ROUTE:
         raise LanguageControlCommandError("the rejection probe unexpectedly produced a route")
     counting_loader = _CountingControllerLoader(loader)
@@ -1132,14 +1213,14 @@ def run_rejection_noop_probe(
     result = ControllerDispatcher(registry=registry, loader=counting_loader).dispatch(
         decision,
         environment=counting_environment,
-        evaluation_id="m5a-target-development-rejection-noop-probe",
+        evaluation_id=evaluation_id,
         oracle_task_spec=None,
         scene_seed=None,
     )
     dispatch = result.dispatch
     base: dict[str, object] = {
         "schema_version": REJECTION_NOOP_PROBE_SCHEMA,
-        "command_fingerprint": f"sha256:{sha256_hex('Open the drawer.')}",
+        "command_fingerprint": f"sha256:{sha256_hex(command)}",
         "decision_fingerprint": decision.decision_fingerprint,
         "controller_registry_fingerprint": registry.registry_fingerprint,
         "physical_m1_environment": True,
@@ -1162,6 +1243,29 @@ def run_rejection_noop_probe(
     return _validate_rejection_noop_probe(
         {**base, "probe_fingerprint": f"sha256:{sha256_hex(base)}"}
     )
+
+
+def run_three_scene_rejection_probes(
+    *,
+    registry: ControllerRegistry,
+    loader: StrictPerTaskControllerLoader,
+    environment: object,
+    router: RouterLike,
+) -> dict[str, object]:
+    """Execute the fixed six-command safety set without entering control runtime."""
+
+    items: list[dict[str, object]] = []
+    for case in THREE_SCENE_REJECTION_CASES:
+        probe = run_rejection_noop_probe(
+            registry=registry,
+            loader=loader,
+            environment=environment,
+            router=router,
+            command=case.command,
+            evaluation_id=f"m5a-three-scene-rejection:{case.probe_id}",
+        )
+        items.append({**case.to_dict(), "policy_reset_count": 0, "probe": probe})
+    return build_rejection_probe_set(items)
 
 
 def _episode_identity(
@@ -1662,59 +1766,93 @@ def run_development_control(
     all_summaries: dict[str, object] = {}
     all_record_fingerprints: list[str] = []
     completed_atoms = 0
-    for router_label in router_order:
+    records_by_router: dict[str, dict[int, dict[str, object]]] = {
+        label: {} for label in router_order
+    }
+    paired_environment = (
+        _PairedInitialStateEnvironment(environment)
+        if inputs.schedule.stage is M5AStage.THREE_SCENE_CONTROL_SCREEN
+        else None
+    )
+    runtime_environment = environment if paired_environment is None else paired_environment
+    atom_order = (
+        ((router_label, episode) for episode in inputs.episodes for router_label in router_order)
+        if paired_environment is not None
+        else (
+            (router_label, episode) for router_label in router_order for episode in inputs.episodes
+        )
+    )
+    for router_label, episode in atom_order:
         provider = providers[router_label]
-        records: list[dict[str, object]] = []
-        for episode in inputs.episodes:
-            example = inputs.examples_by_id[episode.language_example_id]
-            expected_identity = _episode_identity(
-                run_fingerprint=run_fingerprint,
-                router_label=router_label,
-                schedule=inputs.schedule,
-                episode=episode,
-                example=example,
+        example = inputs.examples_by_id[episode.language_example_id]
+        expected_identity = _episode_identity(
+            run_fingerprint=run_fingerprint,
+            router_label=router_label,
+            schedule=inputs.schedule,
+            episode=episode,
+            example=example,
+        )
+        path = run_root / "episodes" / router_label / f"{episode.episode_index:03d}.json"
+        if path.exists():
+            record = _validated_episode_record(path, expected_identity=expected_identity)
+        else:
+            if paired_environment is not None:
+                paired_environment.begin_episode()
+            started_at = time.perf_counter()
+            decision = provider(episode, example)
+            router_latency_ms = (time.perf_counter() - started_at) * 1_000.0
+            result = dispatcher.dispatch(
+                decision,
+                environment=runtime_environment,
+                evaluation_id=(
+                    f"{inputs.schedule.schedule_id}:{router_label}:{episode.episode_index:03d}"
+                ),
+                oracle_task_spec=episode.task_spec,
+                scene_seed=episode.scene_seed,
             )
-            path = run_root / "episodes" / router_label / f"{episode.episode_index:03d}.json"
-            if path.exists():
-                record = _validated_episode_record(path, expected_identity=expected_identity)
-            else:
-                started_at = time.perf_counter()
-                decision = provider(episode, example)
-                router_latency_ms = (time.perf_counter() - started_at) * 1_000.0
-                result = dispatcher.dispatch(
-                    decision,
-                    environment=environment,
-                    evaluation_id=(
-                        f"{inputs.schedule.schedule_id}:{router_label}:{episode.episode_index:03d}"
-                    ),
-                    oracle_task_spec=episode.task_spec,
-                    scene_seed=episode.scene_seed,
+            active_episode_spec = _active_episode_metadata(
+                runtime_environment,
+                episode=episode,
+                dispatched=result.dispatch.dispatched,
+                required=require_active_episode_spec,
+            )
+            base_record: dict[str, object] = {
+                "schema_version": EPISODE_SCHEMA,
+                "identity": expected_identity,
+                "router_inference_latency_ms": router_latency_ms,
+                "active_episode_spec": active_episode_spec,
+                "result": result.to_dict(),
+            }
+            if paired_environment is not None:
+                initial_audit = paired_environment.consume(dispatched=result.dispatch.dispatched)
+                episode_audit = dispatcher.last_episode_audit
+                if result.dispatch.dispatched and episode_audit is None:
+                    raise LanguageControlCommandError(
+                        "paired control execution omitted the policy reset and rollout audit"
+                    )
+                base_record["paired_execution_audit"] = (
+                    None
+                    if initial_audit is None
+                    else {**initial_audit, **dict(episode_audit or {})}
                 )
-                active_episode_spec = _active_episode_metadata(
-                    environment,
-                    episode=episode,
-                    dispatched=result.dispatch.dispatched,
-                    required=require_active_episode_spec,
-                )
-                base_record: dict[str, object] = {
-                    "schema_version": EPISODE_SCHEMA,
-                    "identity": expected_identity,
-                    "router_inference_latency_ms": router_latency_ms,
-                    "active_episode_spec": active_episode_spec,
-                    "result": result.to_dict(),
-                }
-                record = {
-                    **base_record,
-                    "record_fingerprint": f"sha256:{sha256_hex(base_record)}",
-                }
-                _write_immutable_json(path, record)
-                record = _validated_episode_record(path, expected_identity=expected_identity)
-            records.append(record)
-            completed_atoms += 1
+            record = {
+                **base_record,
+                "record_fingerprint": f"sha256:{sha256_hex(base_record)}",
+            }
+            _write_immutable_json(path, record)
+            record = _validated_episode_record(path, expected_identity=expected_identity)
+        records_by_router[router_label][episode.episode_index] = record
+        completed_atoms += 1
+
+    for router_label in router_order:
+        records = [
+            records_by_router[router_label][episode.episode_index] for episode in inputs.episodes
+        ]
+        all_summaries[router_label] = _summary(records)
+        for record in records:
             fingerprint = record.get("record_fingerprint")
             assert isinstance(fingerprint, str)
             all_record_fingerprints.append(fingerprint)
-        all_summaries[router_label] = _summary(records)
 
     integrity_failures = sum(
         int(cast(Mapping[str, object], value)["infrastructure_failure_count"])
@@ -1799,6 +1937,176 @@ def run_development_control(
     return {**completion, "evidence_root": str(run_root), "reused": False}
 
 
+def _finalize_three_scene_screen(
+    *,
+    output_root: Path,
+    inputs: DevelopmentControlInputs,
+    registry: ControllerRegistry,
+    control_result: Mapping[str, object],
+    rejection_probe_set: Mapping[str, object],
+    prior_authority: Mapping[str, object],
+    dispatch_source: Mapping[str, object],
+    controller_binding: Mapping[str, object],
+    git_commit: str,
+) -> dict[str, object]:
+    """Build the compact paired screen archive after all 36 atoms are closed."""
+
+    evidence_value = control_result.get("evidence_root")
+    if not isinstance(evidence_value, str):
+        raise LanguageControlCommandError("paired control result omitted its atom evidence root")
+    atom_root = _resolved_unlinked(Path(evidence_value), label="paired control atom evidence")
+    oracle_records = [
+        _read_object(atom_root / "episodes" / "oracle" / f"{index:03d}.json", label="Oracle atom")
+        for index in range(18)
+    ]
+    learned_records = [
+        _read_object(
+            atom_root / "episodes" / NEURO_SYMBOLIC_DISPATCH_ROUTER_LABEL / f"{index:03d}.json",
+            label="NeuroSymbolic atom",
+        )
+        for index in range(18)
+    ]
+    analysis = analyze_three_scene_records(
+        oracle_records=oracle_records,
+        neuro_symbolic_records=learned_records,
+        rejection_probe_set=rejection_probe_set,
+    )
+    identity = {
+        "schema_version": "langmani-m5a-three-scene-owner-v0",
+        "implementation_git_commit": git_commit,
+        "schedule_fingerprint": inputs.schedule.schedule_fingerprint,
+        "corpus_fingerprint": inputs.corpus_fingerprint,
+        "controller_registry_fingerprint": registry.registry_fingerprint,
+        "dispatch_source_fingerprint": dispatch_source.get("dispatch_source_fingerprint"),
+        "controller_binding_fingerprint": controller_binding.get("binding_fingerprint"),
+        "prior_one_scene_completion_fingerprint": prior_authority.get("completion_fingerprint"),
+        "control_run_fingerprint": control_result.get("run_fingerprint"),
+        "control_completion_fingerprint": control_result.get("completion_fingerprint"),
+        "analysis_fingerprint": analysis["analysis_fingerprint"],
+    }
+    run_fingerprint = f"sha256:{sha256_hex(identity)}"
+    owner = {**identity, "run_fingerprint": run_fingerprint}
+    schedule_artifact = {
+        **inputs.schedule.to_dict(),
+        "commands": [
+            {
+                "episode_index": episode.episode_index,
+                "language_example_id": episode.language_example_id,
+                "command": inputs.examples_by_id[episode.language_example_id].raw_text,
+            }
+            for episode in inputs.episodes
+        ],
+    }
+    flags = {
+        "prior_one_scene_evidence_validated": True,
+        "neuro_symbolic_router_identity_validated": True,
+        "controller_registry_validated": True,
+        "three_scene_schedule_validated": True,
+        "paired_initial_states_validated": analysis["paired_initial_state_count"] == 18,
+        "oracle_control_executed": True,
+        "neuro_symbolic_control_executed": True,
+        "six_tasks_per_scene_validated": True,
+        "routing_results_validated": True,
+        "rejection_no_dispatch_validated": True,
+        "failure_attribution_validated": True,
+        "paired_comparison_validated": True,
+        "action_runtime_validated": True,
+        "three_scene_control_screen_completed": True,
+        "three_scene_control_screen_passed": bool(analysis["three_scene_control_screen_passed"]),
+        "selected_router_locked": bool(analysis["selected_router_locked"]),
+        "full_control_development_authorized": bool(
+            analysis["full_control_development_authorized"]
+        ),
+        "full_control_development_completed": False,
+        "language_final_accessed": False,
+        "control_final_accessed": False,
+        "test_split_accessed": False,
+        "historical_fresh_accessed": False,
+        "m42_final_accessed": False,
+        "smolvla_go": False,
+        "physical_target_validated": True,
+    }
+    summary_text = (
+        "# M5A Three-Scene Paired Control Screen\n\n"
+        f"Oracle success: {analysis['oracle_success_count']}/18.\n\n"
+        f"NeuroSymbolic success: {analysis['neuro_symbolic_success_count']}/18.\n\n"
+        f"Quality screen passed: {str(analysis['three_scene_control_screen_passed']).lower()}.\n\n"
+        "Full control development and all final/test/fresh schedules were not accessed.\n"
+    )
+    artifacts: dict[str, object] = {
+        "input_contract.json": {
+            "stage": M5AStage.THREE_SCENE_CONTROL_SCREEN.value,
+            "episode_pairs": 18,
+            "oracle_episodes": 18,
+            "neuro_symbolic_episodes": 18,
+            "prior_one_scene_authority": dict(prior_authority),
+            "prohibited_sources_accessed": False,
+        },
+        "schedule.json": schedule_artifact,
+        "router_identity.json": dict(dispatch_source),
+        "controller_registry.json": registry.to_dict(),
+        "runtime_identity.json": {
+            "control_atom_evidence_root": str(atom_root),
+            "control_run_fingerprint": control_result.get("run_fingerprint"),
+            "control_completion_fingerprint": control_result.get("completion_fingerprint"),
+            "controller_binding": dict(controller_binding),
+            "control_mode": "pd_joint_pos",
+            "execution_horizon": 10,
+            "action_bound_mode": "project",
+            "policy_reset_per_episode": True,
+            "m2_expert_call_count": 0,
+        },
+        "oracle_episodes.json": {"episodes": oracle_records},
+        "neuro_symbolic_episodes.json": {"episodes": learned_records},
+        "paired_results.json": {
+            "pairs": analysis["paired_results"],
+            "paired_outcome_counts": analysis["paired_outcome_counts"],
+        },
+        "rejection_probes.json": dict(rejection_probe_set),
+        "failure_attribution.json": {
+            "counts": analysis["failure_attribution_counts"],
+            "one_primary_category_per_neuro_symbolic_episode": True,
+        },
+        "benchmark_summary.json": analysis,
+        "gate_result.json": {
+            "gate_items": analysis["gate_items"],
+            "three_scene_control_screen_passed": analysis["three_scene_control_screen_passed"],
+            "selected_router_locked": analysis["selected_router_locked"],
+            "full_control_development_authorized": analysis["full_control_development_authorized"],
+            "full_control_development_completed": False,
+        },
+        "summary.md": summary_text,
+    }
+    evidence = write_three_scene_evidence(
+        output_root / "three-scene-control-screen",
+        owner=owner,
+        artifacts=artifacts,
+        flags=flags,
+    )
+    complete = cast(Mapping[str, object], evidence["complete"])
+    return {
+        "three_scene_evidence_root": evidence["root"],
+        "three_scene_run_fingerprint": run_fingerprint,
+        "three_scene_artifact_fingerprint": evidence["artifact_fingerprint"],
+        "three_scene_completion_fingerprint": complete["completion_fingerprint"],
+        "three_scene_evidence_reused": evidence["evidence_reused"],
+        "paired_analysis": analysis,
+        "stage_quality_gate_passed": bool(analysis["three_scene_control_screen_passed"]),
+        "promoted_to_next_stage": (
+            [NEURO_SYMBOLIC_DISPATCH_ROUTER_LABEL]
+            if analysis["three_scene_control_screen_passed"]
+            else []
+        ),
+        "selected_router": (
+            NEURO_SYMBOLIC_DISPATCH_ROUTER_LABEL
+            if analysis["three_scene_control_screen_passed"]
+            else None
+        ),
+        **flags,
+        "passed": True,
+    }
+
+
 def _create_environment() -> object:
     import gymnasium as gym
 
@@ -1880,6 +2188,62 @@ def _stage_candidates(
     return (cast(str, selected),)
 
 
+def _validate_prior_one_scene_authority(
+    *,
+    report_path: Path,
+    verification_path: Path,
+    schedule: ControlScheduleLock,
+    corpus: GeneratedLanguageCorpus,
+    registry: ControllerRegistry,
+    source: SelectedNeuroSymbolicDispatchSource,
+) -> dict[str, object]:
+    """Rehash the completed one-scene parent and match its independent audit."""
+
+    report = _read_object(
+        _resolved_unlinked(report_path, label="prior one-scene stage report"),
+        label="prior one-scene stage report",
+    )
+    verification = _read_object(
+        _resolved_unlinked(verification_path, label="prior one-scene verification"),
+        label="prior one-scene verification",
+    )
+    one_scene_inputs = prepare_development_inputs(
+        schedule=schedule,
+        corpus=corpus,
+        stage=M5AStage.ONE_SCENE_CONTROL_SMOKE,
+    )
+    recomputed = verify_neuro_symbolic_control_evidence(
+        report,
+        inputs=one_scene_inputs,
+        registry=registry,
+        source=source,
+    )
+    required_equal = (
+        "control_run_fingerprint",
+        "control_record_set_fingerprint",
+        "control_completion_fingerprint",
+        "dispatch_source_fingerprint",
+        "controller_registry_fingerprint",
+    )
+    if (
+        verification.get("passed") is not True
+        or verification.get("physical_target_validated") is not True
+        or any(verification.get(key) != recomputed.get(key) for key in required_equal)
+    ):
+        raise LanguageControlCommandError(
+            "prior one-scene report does not match its independent physical verification"
+        )
+    return {
+        "report_path": str(report_path),
+        "verification_path": str(verification_path),
+        "run_fingerprint": recomputed["control_run_fingerprint"],
+        "record_set_fingerprint": recomputed["control_record_set_fingerprint"],
+        "completion_fingerprint": recomputed["control_completion_fingerprint"],
+        "verification_schema": verification.get("schema_version"),
+        "validated": True,
+    }
+
+
 def execute(args: argparse.Namespace) -> dict[str, object]:
     router_source_mode = _router_source_mode(args)
     output_root, _report_path = _safe_paths(args)
@@ -1932,6 +2296,7 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
     neuro_symbolic_source = None
     neuro_symbolic_binding = None
     neuro_symbolic_router = None
+    prior_one_scene_authority: dict[str, object] | None = None
     if router_source_mode == NEURO_SYMBOLIC_DISPATCH_ROUTER_LABEL:
         assert args.neuro_symbolic_evidence_root is not None
         neuro_symbolic_source = validate_selected_neuro_symbolic_dispatch_source(
@@ -1942,6 +2307,17 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
             neuro_symbolic_source,
             registry,
         )
+        if stage is M5AStage.THREE_SCENE_CONTROL_SCREEN:
+            assert args.prior_stage_report is not None
+            assert args.prior_stage_verification is not None
+            prior_one_scene_authority = _validate_prior_one_scene_authority(
+                report_path=args.prior_stage_report,
+                verification_path=args.prior_stage_verification,
+                schedule=schedule,
+                corpus=corpus,
+                registry=registry,
+                source=neuro_symbolic_source,
+            )
         neuro_symbolic_router = load_selected_neuro_symbolic_router(
             neuro_symbolic_source,
             corpus=corpus,
@@ -2005,6 +2381,16 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
             environment=environment,
             router=(neuro_symbolic_router if neuro_symbolic_router is not None else rule),
         )
+        rejection_probe_set = (
+            run_three_scene_rejection_probes(
+                registry=registry,
+                loader=loader,
+                environment=environment,
+                router=neuro_symbolic_router,
+            )
+            if stage is M5AStage.THREE_SCENE_CONTROL_SCREEN and neuro_symbolic_router is not None
+            else None
+        )
         dispatcher = ControllerDispatcher(registry=registry, loader=loader)
         available: dict[str, DecisionProvider] = {}
         if classifier is not None and llm is not None:
@@ -2049,6 +2435,7 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
                     "prior_stage_report": (
                         None if args.prior_stage_report is None else str(args.prior_stage_report)
                     ),
+                    "prior_one_scene_authority": prior_one_scene_authority,
                 },
                 "runtime_selection_fingerprint": (
                     registry.entries[0].runtime_selection_fingerprint
@@ -2057,6 +2444,28 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
             require_active_episode_spec=True,
             rejection_noop_probe=rejection_noop_probe,
         )
+        if stage is M5AStage.THREE_SCENE_CONTROL_SCREEN:
+            if (
+                rejection_probe_set is None
+                or prior_one_scene_authority is None
+                or neuro_symbolic_source is None
+                or neuro_symbolic_binding is None
+            ):
+                raise LanguageControlCommandError("three-scene screen lacks immutable authority")
+            result = {
+                **result,
+                **_finalize_three_scene_screen(
+                    output_root=output_root,
+                    inputs=inputs,
+                    registry=registry,
+                    control_result=result,
+                    rejection_probe_set=rejection_probe_set,
+                    prior_authority=prior_one_scene_authority,
+                    dispatch_source=neuro_symbolic_source.to_dict(),
+                    controller_binding=neuro_symbolic_binding.to_dict(),
+                    git_commit=git.commit,
+                ),
+            }
     finally:
         close = getattr(environment, "close", None)
         if callable(close):
@@ -2076,6 +2485,7 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
             None if neuro_symbolic_binding is None else neuro_symbolic_binding.to_dict()
         ),
         "rejection_noop_probe": rejection_noop_probe,
+        "prior_one_scene_authority": prior_one_scene_authority,
         "physical_execution": True,
         "dry_run": False,
     }

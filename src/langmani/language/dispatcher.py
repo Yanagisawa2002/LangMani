@@ -57,6 +57,7 @@ class ControllerExecutionTrace:
     result: ControlExecutionResult
     policy_called: bool
     environment_reset_called: bool
+    episode_audit: Mapping[str, object] | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.result, ControlExecutionResult):
@@ -65,6 +66,10 @@ class ControllerExecutionTrace:
             self.environment_reset_called, bool
         ):
             raise TypeError("execution trace flags must be boolean")
+        if self.episode_audit is not None and not isinstance(self.episode_audit, Mapping):
+            raise TypeError("episode_audit must be a mapping when present")
+        if self.episode_audit is not None:
+            object.__setattr__(self, "episode_audit", dict(self.episode_audit))
 
 
 class PerTaskControllerExecutor(Protocol):
@@ -187,6 +192,11 @@ class _ActPerTaskExecutor:
             ),
             policy_called=True,
             environment_reset_called=True,
+            episode_audit={
+                "schema_version": "langmani-m5a-controller-episode-audit-v0",
+                "policy_reset_called": True,
+                "rollout": rollout.to_dict(),
+            },
         )
 
 
@@ -274,6 +284,7 @@ class ControllerDispatcher:
     def __init__(self, *, registry: ControllerRegistry, loader: PerTaskControllerLoader) -> None:
         self.registry = registry
         self.loader = loader
+        self.last_episode_audit: Mapping[str, object] | None = None
 
     def dispatch(
         self,
@@ -284,6 +295,7 @@ class ControllerDispatcher:
         oracle_task_spec: TaskSpec | None,
         scene_seed: int | None,
     ) -> EndToEndEpisodeResult:
+        self.last_episode_audit = None
         oracle_task_id = None if oracle_task_spec is None else stable_task_id(oracle_task_spec)
         if decision.status is not RouterStatus.ROUTE:
             dispatch = ControllerDispatchRecord(
@@ -395,6 +407,7 @@ class ControllerDispatcher:
             scene_seed=scene_seed,
             oracle_task_spec=oracle_task_spec,
         )
+        self.last_episode_audit = trace.episode_audit
         control = trace.result
         dispatch = ControllerDispatchRecord(
             decision_fingerprint=decision.decision_fingerprint,
@@ -495,6 +508,26 @@ class FixturePerTaskControllerExecutor:
             result=result,
             policy_called=True,
             environment_reset_called=True,
+            episode_audit={
+                "schema_version": "langmani-m5a-controller-episode-audit-v0",
+                "policy_reset_called": True,
+                "rollout": {
+                    "scene_seed": scene_seed,
+                    "task_id": stable_task_id(oracle_task_spec),
+                    "success": self.success,
+                    "episode_steps": 1,
+                    "time_to_first_target_grasp_s": None,
+                    "time_to_release_s": None,
+                    "time_to_success_s": 0.05 if self.success else None,
+                    "strict_unprojected_success": self.success,
+                    "action_bound_mode": "project",
+                    "action_projection_summary": {
+                        "maximum_linf_correction": 0.0,
+                        "any_nonfinite_action": False,
+                        "any_malformed_action": False,
+                    },
+                },
+            },
         )
 
 

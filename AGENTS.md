@@ -27,6 +27,10 @@ PerTask controller, the selected-router rejection probe did zero lookup/reset/st
 independent physical verifier passed. Learned and Oracle control each succeeded on 5/6 episodes
 with one timeout, so dispatch acceptance and observed controller quality remain separate.
 Three-scene/full control, the sealed final benchmark, and SmolVLA have not started.
+The three-scene paired-screen orchestration and independent verifier are implemented but have not
+yet produced target evidence. They require the independently verified one-scene parent, execute
+Oracle then NeuroSymbolic for each of 18 scene-task pairs, and atomically promote only the bounded
+three-scene evidence. Full development remains a separate authorization.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
@@ -169,6 +173,7 @@ python environment/verify_m5a.py
 python environment/verify_m5a3.py
 python environment/verify_m5a41.py
 python environment/verify_m5a_dispatch.py
+python environment/verify_m5a_three_scene.py
 python scripts/analyze_classifier_rejection.py --help
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
@@ -406,3 +411,8 @@ probe with zero lookup/reset/step, six learned routes matching their oracle Task
 IDs, six Oracle ceiling episodes, preserved raw/projected/executed action evidence, and an
 independent read-only verifier. This stage must leave all final/test/`m42_final_v0`/SmolVLA flags
 false; correct execution and the observed six-task control success count remain separate claims.
+The three-scene screen additionally requires 18 exact initial-state pairs, 36 per-episode policy
+resets, the fixed six-category rejection no-op set, paired Oracle/NeuroSymbolic controller identity,
+raw action-metric recomputation, atomic compact evidence, and a fresh-process verifier. Its
+`passed` flag validates execution/evidence; `three_scene_control_screen_passed` alone controls the
+separate full-development authorization, which the screen never executes automatically.

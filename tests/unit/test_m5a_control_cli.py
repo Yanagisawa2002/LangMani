@@ -83,6 +83,22 @@ class _SpyEnvironment:
             ),
         )
 
+    def get_expert_initial_scene_state(self) -> dict[str, object]:
+        assert self.last_seed is not None
+        offset = float(self.last_seed) / 1_000_000.0
+        return {
+            "object_poses": {
+                "red_cube": [0.1 + offset, 0.0, 0.03, 1.0, 0.0, 0.0, 0.0],
+                "green_cube": [0.2 + offset, 0.0, 0.03, 1.0, 0.0, 0.0, 0.0],
+                "blue_cube": [0.3 + offset, 0.0, 0.03, 1.0, 0.0, 0.0, 0.0],
+            },
+            "bin_poses": {
+                "left_bin": [0.4, 0.2, 0.02, 1.0, 0.0, 0.0, 0.0],
+                "right_bin": [0.4, -0.2, 0.02, 1.0, 0.0, 0.0, 0.0],
+            },
+            "panda_qpos": [0.0] * 9,
+        }
+
 
 def _control_schedule_config() -> ControlScheduleConfig:
     exclusions = tuple(
@@ -804,7 +820,7 @@ def _selected_neuro_symbolic_source(tmp_path: Path) -> SelectedNeuroSymbolicDisp
     )
 
 
-def test_neuro_symbolic_cli_is_one_source_one_scene_and_local_only(tmp_path: Path) -> None:
+def test_neuro_symbolic_cli_requires_verified_parent_for_three_scene(tmp_path: Path) -> None:
     command = _load_command()
     base = [
         "--control-schedule",
@@ -822,7 +838,7 @@ def test_neuro_symbolic_cli_is_one_source_one_scene_and_local_only(tmp_path: Pat
         )
     with pytest.raises(command.LanguageControlCommandError, match="local model cache"):
         command._router_source_mode(command.parse_args([*base, "--allow-model-download"]))
-    with pytest.raises(command.LanguageControlCommandError, match="only for one-scene"):
+    with pytest.raises(command.LanguageControlCommandError, match="requires the one-scene"):
         command._router_source_mode(
             command.parse_args(
                 [
@@ -832,6 +848,30 @@ def test_neuro_symbolic_cli_is_one_source_one_scene_and_local_only(tmp_path: Pat
                     str(tmp_path / "m5a41"),
                     "--stage",
                     "three_scene_control_screen",
+                ]
+            )
+        )
+    three = [
+        "--control-schedule",
+        str(tmp_path / "schedule.json"),
+        "--neuro-symbolic-evidence-root",
+        str(tmp_path / "m5a41"),
+        "--stage",
+        "three_scene_control_screen",
+        "--prior-stage-report",
+        str(tmp_path / "one-scene.json"),
+        "--prior-stage-verification",
+        str(tmp_path / "one-scene-verification.json"),
+    ]
+    assert command._router_source_mode(command.parse_args(three)) == "neuro_symbolic"
+    with pytest.raises(command.LanguageControlCommandError, match="not authorized for full"):
+        command._router_source_mode(
+            command.parse_args(
+                [
+                    *three[:4],
+                    "--stage",
+                    "full_control_development",
+                    *three[6:],
                 ]
             )
         )
