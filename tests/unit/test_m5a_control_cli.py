@@ -860,11 +860,21 @@ def test_neuro_symbolic_six_task_control_is_independently_rehashed(tmp_path: Pat
             router_version="neuro-symbolic-router-v0",
         )
 
+    class RejectingNeuroSymbolicRouter:
+        def route(self, _command: str) -> RouterDecision:
+            return RouterDecision.reject(
+                status=RouterStatus.REJECT_UNSUPPORTED,
+                rejection_reason=RouterRejectionReason.UNSUPPORTED_ACTION,
+                confidence=RouterConfidence.unavailable(),
+                router_name="NeuroSymbolicRouterV0",
+                router_version="neuro-symbolic-router-v0",
+            )
+
     probe = command.run_rejection_noop_probe(
         registry=registry,
         loader=loader,
         environment=environment,
-        router=RuleRouterV0(),
+        router=RejectingNeuroSymbolicRouter(),
     )
     result = command.run_development_control(
         inputs=inputs,

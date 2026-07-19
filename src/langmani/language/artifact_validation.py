@@ -1177,6 +1177,7 @@ def _validate_rejection_noop_probe(
     path: Path,
     *,
     registry: ControllerRegistry,
+    expected_router_name: str,
 ) -> dict[str, object]:
     probe = _read_object(path, label="M5A rejection no-op probe")
     base = dict(probe)
@@ -1235,7 +1236,7 @@ def _validate_rejection_noop_probe(
         result.evaluation_id != "m5a-target-development-rejection-noop-probe"
         or result.scene_seed is not None
         or decision.status is RouterStatus.ROUTE
-        or decision.router_name != "RuleRouterV0"
+        or decision.router_name != expected_router_name
         or dispatch.registry_fingerprint != registry.registry_fingerprint
         or not dispatch.safe_rejection
     ):
@@ -1450,6 +1451,7 @@ def validate_development_control_evidence(
     *,
     inputs: DevelopmentControlInputsLike,
     registry: ControllerRegistry,
+    rejection_probe_router_name: str = "RuleRouterV0",
 ) -> ValidatedControlEvidence:
     """Rehash every atom in one promoted 1/3/6-scene control stage."""
 
@@ -1518,6 +1520,7 @@ def validate_development_control_evidence(
         else _validate_rejection_noop_probe(
             run_root / "rejection_noop_probe.json",
             registry=registry,
+            expected_router_name=rejection_probe_router_name,
         )
     )
     if (

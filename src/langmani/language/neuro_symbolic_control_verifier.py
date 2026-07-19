@@ -71,6 +71,7 @@ def verify_neuro_symbolic_control_evidence(
         evidence_root,
         inputs=inputs,
         registry=registry,
+        rejection_probe_router_name="NeuroSymbolicRouterV0",
     )
     if validated.identity.get("router_order") != [
         "oracle",
