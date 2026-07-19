@@ -2274,3 +2274,18 @@ quality gates remain unchanged. This repair changes only evidence interpretation
 new model, prompt, schedule, rollout, threshold, or final attempt semantics. Recovery remains
 allowlisted to this exact `SealedFinalContractError` type and message; other contract or quality
 failures cannot reuse this authority.
+
+## D-079 — Verify the authoritative control lock separately from its staged schedule
+
+The first fresh-process verifier run rejected the completed compact archive with `materialized final
+schedules differ from their locks`. The main runner correctly validates the authoritative sealed
+control lock against the D-074 authorization and then derives a staged 72-episode schedule whose
+fingerprint intentionally binds additional stage material. The verifier incorrectly compared that
+derived fingerprint directly with the parent lock fingerprint, so two valid but distinct identities
+could never pass the same equality check.
+
+The verifier now compares the authoritative control lock fingerprint with the authorized lock and
+continues to compare the complete staged schedule separately with `control_schedule.json`. This is
+a read-only verifier correction: it does not change either schedule, any final result, access
+ledger, router, model, controller, threshold, or raw episode. The failed verifier report remains
+preserved and is not final experimental evidence.

@@ -249,7 +249,7 @@ def _verify_target(args: argparse.Namespace) -> dict[str, object]:
         len(final_examples) != 600
         or len(staged.episodes) != 72
         or language_final.schedule_fingerprint != EXPECTED_LANGUAGE_FINAL_SCHEDULE_FINGERPRINT
-        or staged.schedule_fingerprint != EXPECTED_CONTROL_FINAL_SCHEDULE_FINGERPRINT
+        or control_lock.schedule_fingerprint != EXPECTED_CONTROL_FINAL_SCHEDULE_FINGERPRINT
     ):
         raise M5AFinalVerificationError("materialized final schedules differ from their locks")
 

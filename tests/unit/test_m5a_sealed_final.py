@@ -807,6 +807,17 @@ def test_final_verifier_structural_mode_does_not_materialize_final() -> None:
     assert '"final_schedule_materialized": False' in structural
 
 
+def test_final_verifier_compares_authoritative_control_lock_not_staged_schedule() -> None:
+    source = (PROJECT_ROOT / "environment" / "verify_m5a_final.py").read_text(encoding="utf-8")
+    target = source[source.index("def _verify_target") : source.index("def _structural")]
+    assert (
+        "control_lock.schedule_fingerprint != EXPECTED_CONTROL_FINAL_SCHEDULE_FINGERPRINT" in target
+    )
+    assert (
+        "staged.schedule_fingerprint != EXPECTED_CONTROL_FINAL_SCHEDULE_FINGERPRINT" not in target
+    )
+
+
 def test_final_evidence_schema_is_fingerprint_bound() -> None:
     identity = _identity()
     assert identity.evidence_schema_fingerprint == SHA
