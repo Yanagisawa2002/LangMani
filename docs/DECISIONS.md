@@ -2271,4 +2271,6 @@ are false or zero. A routed record still requires a complete audit, and any reje
 entered the runtime is rejected structurally. A safe false rejection contributes no paired physical
 state, so the unchanged 72/72 state-pairing gate fails honestly; the routing and false-rejection
 quality gates remain unchanged. This repair changes only evidence interpretation and authorizes no
-new model, prompt, schedule, rollout, threshold, or final attempt semantics.
+new model, prompt, schedule, rollout, threshold, or final attempt semantics. Recovery remains
+allowlisted to this exact `SealedFinalContractError` type and message; other contract or quality
+failures cannot reuse this authority.

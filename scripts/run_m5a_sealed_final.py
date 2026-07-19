@@ -298,6 +298,10 @@ def _validate_recovery_parent(value: Path | None) -> dict[str, object] | None:
             "RouterEvaluationError",
             "language router evaluation allows validation/development only",
         ): "final_evaluation_authorization_contract",
+        (
+            "SealedFinalContractError",
+            "learned audit must be one object",
+        ): "safe_rejection_no_dispatch_evidence_contract",
     }
     error_identity = (
         (

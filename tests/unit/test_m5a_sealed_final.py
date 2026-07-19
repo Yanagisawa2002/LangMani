@@ -466,6 +466,21 @@ def test_final_evaluation_contract_attempt_is_explicit_recovery_only(tmp_path: P
     assert recovery["infrastructure_defect"] == "final_evaluation_authorization_contract"
 
 
+def test_safe_rejection_audit_contract_attempt_is_explicit_recovery_only(tmp_path: Path) -> None:
+    command = _command()
+    opened = open_final_attempt(tmp_path, run_identity=_identity().to_dict())
+    close_final_attempt(
+        str(opened["attempt_root"]),
+        completed=False,
+        error={
+            "error_type": "SealedFinalContractError",
+            "error_message": "learned audit must be one object",
+        },
+    )
+    recovery = command._validate_recovery_parent(Path(str(opened["attempt_root"])))
+    assert recovery["infrastructure_defect"] == "safe_rejection_no_dispatch_evidence_contract"
+
+
 def test_language_source_preflight_precedes_final_access_in_target_command() -> None:
     source = (PROJECT_ROOT / "scripts" / "run_m5a_sealed_final.py").read_text(encoding="utf-8")
     target = source[source.index("def _execute_target") : source.index("def main")]
