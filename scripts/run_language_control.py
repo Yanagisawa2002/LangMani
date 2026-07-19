@@ -2255,6 +2255,12 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
     stage = M5AStage(args.stage)
     inputs = prepare_development_inputs(schedule=schedule, corpus=corpus, stage=stage)
     budget = M5A_PHYSICAL_STAGE_BUDGETS[stage]
+    effective_candidate_limit = (
+        1
+        if router_source_mode == NEURO_SYMBOLIC_DISPATCH_ROUTER_LABEL
+        and stage is M5AStage.THREE_SCENE_CONTROL_SCREEN
+        else budget.maximum_learned_candidates
+    )
     base: dict[str, object] = {
         "schema_version": COMMAND_SCHEMA,
         "schedule_id": inputs.schedule.schedule_id,
@@ -2264,8 +2270,8 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
         "stage": stage.value,
         "router_source_mode": router_source_mode,
         "router_order": ["oracle", "promoted_learned_only"],
-        "maximum_learned_candidates": budget.maximum_learned_candidates,
-        "maximum_expected_episode_atoms": budget.maximum_episode_count,
+        "maximum_learned_candidates": effective_candidate_limit,
+        "maximum_expected_episode_atoms": len(inputs.episodes) * (1 + effective_candidate_limit),
         "language_final_accessed": False,
         "control_final_accessed": False,
         "m42_final_accessed": False,
