@@ -191,6 +191,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--runtime-selection", type=Path, default=DEFAULT_RUNTIME_SELECTION)
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
+    parser.add_argument(
+        "--recovery-from-invalid-attempt",
+        type=Path,
+        help="Explicit immutable invalid attempt authorizing one infrastructure-only recovery.",
+    )
     parser.add_argument("--local-files-only", action="store_true")
     parser.add_argument("--repeat-count", type=int, default=2)
     parser.add_argument("--semantic-maximum-new-tokens", type=int, default=256)
@@ -275,6 +280,49 @@ def _baseline_identity_fingerprint(source: SelectedNeuroSymbolicDispatchSource) 
             "dtype": source.dtype,
         }
     )
+
+
+def _validate_recovery_parent(value: Path | None) -> dict[str, object] | None:
+    if value is None:
+        return None
+    root = real_unlinked(value, label="invalid final recovery parent")
+    opened = read_object(root / "opened.json", label="invalid final attempt owner")
+    invalid = read_object(root / "invalid.json", label="invalid final attempt marker")
+    error = invalid.get("error")
+    if not isinstance(error, Mapping) or not (
+        invalid.get("completed") is False
+        and invalid.get("attempt_fingerprint") == opened.get("attempt_fingerprint")
+        and invalid.get("evidence_fingerprint") is None
+        and error.get("error_type") == "RejectionReportError"
+        and error.get("error_message") == "M5A.1 analysis artifact is missing"
+        and not (root / "completed.json").exists()
+    ):
+        raise SealedFinalCommandError("recovery parent is not the documented missing-input attempt")
+    return {
+        "attempt_fingerprint": opened["attempt_fingerprint"],
+        "terminal_fingerprint": invalid["terminal_fingerprint"],
+        "error": dict(error),
+        "infrastructure_defect": "missing_required_input",
+    }
+
+
+def _preflight_language_sources(paths: Mapping[str, Path]) -> dict[str, object]:
+    """Validate every small immutable language input before final materialization."""
+
+    classifier, classifier_identity = _load_classifier_negative(
+        checkpoint=paths["classifier"],
+        rejection_root=paths["rejection"],
+        local_files_only=True,
+    )
+    if not classifier.verify_unchanged():
+        raise SealedFinalCommandError("frozen classifier changed during final preflight")
+    return {
+        "classifier_negative_baseline": classifier_identity,
+        "qwen17b_negative_baseline": _frozen_baseline_identity(paths["qwen17"], label="Qwen3-1.7B"),
+        "qwen4b_negative_baseline": _frozen_baseline_identity(
+            paths["qwen4"], label="direct Qwen3-4B"
+        ),
+    }
 
 
 def _validate_parent_authority(
@@ -384,6 +432,7 @@ def _evaluate_final_language(
     source: SelectedNeuroSymbolicDispatchSource,
     repeat_count: int,
     semantic_maximum_new_tokens: int,
+    preflight_identities: Mapping[str, object],
 ) -> tuple[dict[str, object], NeuroSymbolicRouterV0, dict[str, object]]:
     if len(examples) != 600:
         raise SealedFinalCommandError("sealed language final must contain exactly 600 examples")
@@ -394,6 +443,12 @@ def _evaluate_final_language(
     )
     qwen17_identity = _frozen_baseline_identity(paths["qwen17"], label="Qwen3-1.7B")
     qwen4_identity = _frozen_baseline_identity(paths["qwen4"], label="direct Qwen3-4B")
+    if {
+        "classifier_negative_baseline": classifier_identity,
+        "qwen17b_negative_baseline": qwen17_identity,
+        "qwen4b_negative_baseline": qwen4_identity,
+    } != dict(preflight_identities):
+        raise SealedFinalCommandError("language inputs changed after final preflight")
     parser = SymbolicLexicalParserV0()
     arbiter = DeterministicSafetyArbiterV0()
     prompt_examples = select_semantic_prompt_examples(
@@ -571,6 +626,8 @@ def _execute_target(args: argparse.Namespace, paths: Mapping[str, Path]) -> dict
     if final_access_count(paths["output"]) != 0:
         raise SealedFinalCommandError("final access count is not zero")
 
+    recovery_parent = _validate_recovery_parent(args.recovery_from_invalid_attempt)
+
     corpus = build_language_corpus()
     _language_development, language_final = build_language_schedule_locks(corpus)
     final_control_lock = load_authoritative_final_schedule(paths["schedule"], corpus=corpus)
@@ -604,6 +661,7 @@ def _execute_target(args: argparse.Namespace, paths: Mapping[str, Path]) -> dict
         final_control_fingerprint=final_control_lock.schedule_fingerprint,
     )
     archive_fingerprint = _archive_fingerprint_prelock(paths["corpus"], corpus)
+    preflight_identities = _preflight_language_sources(paths)
     split_fingerprints = {
         split.value: corpus.manifest.split_manifests[split].content_fingerprint
         for split in LanguageSplit
@@ -638,6 +696,7 @@ def _execute_target(args: argparse.Namespace, paths: Mapping[str, Path]) -> dict
             source=source,
             repeat_count=args.repeat_count,
             semantic_maximum_new_tokens=args.semantic_maximum_new_tokens,
+            preflight_identities=preflight_identities,
         )
         final_slots = materialize_final_language_slot_map(corpus, authorize_final=True)
         staged = build_staged_control_schedule(
@@ -726,6 +785,7 @@ def _execute_target(args: argparse.Namespace, paths: Mapping[str, Path]) -> dict
             "implementation_git": git.commit,
             "final_authorization_fingerprint": EXPECTED_FINAL_AUTHORIZATION_FINGERPRINT,
             "final_access_attempt_fingerprint": attempt["attempt_fingerprint"],
+            "recovery_parent": recovery_parent,
             "language_evaluation_fingerprint": _sha(language_result),
             "control_analysis_fingerprint": control_analysis["analysis_fingerprint"],
             "control_run_fingerprint": control["run_fingerprint"],

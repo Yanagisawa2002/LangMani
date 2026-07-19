@@ -421,6 +421,41 @@ def test_invalid_final_attempt_cannot_be_reopened(tmp_path: Path) -> None:
         open_final_attempt(tmp_path, run_identity=_identity().to_dict())
 
 
+def test_documented_missing_input_attempt_authorizes_only_explicit_recovery(
+    tmp_path: Path,
+) -> None:
+    command = _command()
+    opened = open_final_attempt(tmp_path, run_identity=_identity().to_dict())
+    close_final_attempt(
+        str(opened["attempt_root"]),
+        completed=False,
+        error={
+            "error_type": "RejectionReportError",
+            "error_message": "M5A.1 analysis artifact is missing",
+        },
+    )
+    recovery = command._validate_recovery_parent(Path(str(opened["attempt_root"])))
+    assert recovery["infrastructure_defect"] == "missing_required_input"
+
+
+def test_quality_failure_cannot_be_relabelled_as_infrastructure_recovery(tmp_path: Path) -> None:
+    command = _command()
+    opened = open_final_attempt(tmp_path, run_identity=_identity().to_dict())
+    close_final_attempt(
+        str(opened["attempt_root"]),
+        completed=False,
+        error={"error_type": "ModelFailure", "error_message": "low quality"},
+    )
+    with pytest.raises(command.SealedFinalCommandError):
+        command._validate_recovery_parent(Path(str(opened["attempt_root"])))
+
+
+def test_language_source_preflight_precedes_final_access_in_target_command() -> None:
+    source = (PROJECT_ROOT / "scripts" / "run_m5a_sealed_final.py").read_text(encoding="utf-8")
+    target = source[source.index("def _execute_target") : source.index("def main")]
+    assert target.index("_preflight_language_sources(paths)") < target.index("open_final_attempt(")
+
+
 def test_sealed_evidence_is_atomic_checksummed_and_immutable(tmp_path: Path) -> None:
     owner = {"run_fingerprint": _identity().run_fingerprint}
     written = write_sealed_final_evidence(

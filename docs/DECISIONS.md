@@ -2221,3 +2221,20 @@ process recursively rehashes the archive, recomputes all five language-router me
 gates. Pipeline validity, safety-language quality, exact taxonomy quality, control quality, and the
 combined final quality gate remain separate flags. The final command never accesses M3B test,
 historical fresh, or `m42_final_v0`, never calls M2, and never starts SmolVLA.
+
+## D-076 — Invalidate the missing-input attempt and require pre-access language-source validation
+
+The first target invocation under D-075 opened its ledger and materialized the locked language-final
+split, then stopped before any model inference or robot environment construction because the
+migrated server's authoritative M5A.1 artifact was at an explicitly imported root rather than the
+default path. Its immutable marker records `RejectionReportError: M5A.1 analysis artifact is
+missing`. No language decision, controller lookup, policy reset, environment reset, or `env.step`
+occurred. The original attempt remains invalid and is never overwritten.
+
+The final-attempt policy explicitly classifies a missing required input as an infrastructure defect
+and permits one fresh-root recovery after a repair commit. The repair moves classifier and both
+frozen direct-LLM evidence validation before `open_final_attempt`; it also requires an explicit
+`--recovery-from-invalid-attempt` lineage whose terminal marker matches this exact error. The
+recovery uses the same router, prompt, parser, models, controllers, schedules, metric gates, and
+final examples. Other failures, including routing, model-quality, policy timeout, or controller
+quality, cannot be relabelled as recovery authority.

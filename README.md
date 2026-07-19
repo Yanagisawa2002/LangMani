@@ -1318,6 +1318,12 @@ python environment/verify_m5a_final.py \
 Implementation and dry-run completion do not claim final physical results. Those are recorded only
 after the single target attempt and independent verification finish.
 
+If and only if an immutable attempt is invalidated by one of the final protocol's declared
+infrastructure defects, a fresh output root may be used with
+`--recovery-from-invalid-attempt <old-attempt-root>`. All small immutable language inputs are
+validated before that recovery opens a ledger. Quality failures and policy timeouts never authorize
+recovery.
+
 Other later stages still require separate authorization and use ordinary `--target-resume` only
 for an originally promoted pilot, followed by offline language evaluation and
 `run_language_control.py --stage {one_scene_control_smoke,three_scene_control_screen,full_control_development}`.
