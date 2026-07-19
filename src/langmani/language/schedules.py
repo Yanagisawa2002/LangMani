@@ -25,6 +25,8 @@ M5A_CONTROL_DEV_SCHEDULE_ID = "m5a_control_dev_v0"
 M5A_CONTROL_FINAL_SCHEDULE_ID = "m5a_control_final_v0"
 M5A_DEVELOPMENT_SCENE_COUNT = 10
 M5A_FINAL_SCENE_COUNT = 12
+M5A_LEGACY_DEVELOPMENT_SCENE_COUNT = 12
+M5A_LEGACY_FINAL_SCENE_COUNT = 30
 M5A_DEFAULT_CANDIDATE_SEED_START = 2_000_000_000
 _MAX_SCENE_SEED = 2**31 - 1
 
@@ -235,24 +237,35 @@ class ControlScheduleLock:
         expected = {
             M5A_CONTROL_DEV_SCHEDULE_ID: (
                 LanguageSplit.DEVELOPMENT,
-                M5A_DEVELOPMENT_SCENE_COUNT,
-                M5A_FINAL_SCENE_COUNT,
+                {
+                    (M5A_DEVELOPMENT_SCENE_COUNT, M5A_FINAL_SCENE_COUNT),
+                    (
+                        M5A_LEGACY_DEVELOPMENT_SCENE_COUNT,
+                        M5A_LEGACY_FINAL_SCENE_COUNT,
+                    ),
+                },
                 False,
             ),
             M5A_CONTROL_FINAL_SCHEDULE_ID: (
                 LanguageSplit.FINAL,
-                M5A_FINAL_SCENE_COUNT,
-                M5A_DEVELOPMENT_SCENE_COUNT,
+                {
+                    (M5A_FINAL_SCENE_COUNT, M5A_DEVELOPMENT_SCENE_COUNT),
+                    (
+                        M5A_LEGACY_FINAL_SCENE_COUNT,
+                        M5A_LEGACY_DEVELOPMENT_SCENE_COUNT,
+                    ),
+                },
                 True,
             ),
         }.get(self.schedule_id)
         if expected is None:
             raise M5AScheduleError("unknown M5A control schedule ID")
-        split, scene_count, counterpart_count, sealed = expected
+        split, allowed_counts, sealed = expected
+        scene_count = len(self.ordered_scene_seeds)
+        counterpart_count = len(self.counterpart_scene_seeds)
         if (
             self.split is not split
-            or len(self.ordered_scene_seeds) != scene_count
-            or len(self.counterpart_scene_seeds) != counterpart_count
+            or (scene_count, counterpart_count) not in allowed_counts
             or self.sealed is not sealed
         ):
             raise M5AScheduleError("control schedule split, size, counterpart, or seal is invalid")

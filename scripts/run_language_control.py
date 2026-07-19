@@ -31,7 +31,8 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from langmani.datasets.identity import sha256_hex  # noqa: E402
-from langmani.environments.specs import TaskSpec  # noqa: E402
+from langmani.datasets.schedule import CANONICAL_TASK_SPECS  # noqa: E402
+from langmani.environments.specs import TaskSpec, stable_task_id  # noqa: E402
 from langmani.language.controller_registry import (  # noqa: E402
     ControllerRegistry,
     ControllerRegistryLocators,
@@ -69,15 +70,20 @@ from langmani.language.router_types import (  # noqa: E402
 from langmani.language.rule_router import RuleRouterV0  # noqa: E402
 from langmani.language.schedules import (  # noqa: E402
     M5A_CONTROL_DEV_SCHEDULE_ID,
+    M5A_CONTROL_FINAL_SCHEDULE_ID,
+    M5A_DEVELOPMENT_SCENE_COUNT,
+    M5A_FINAL_SCENE_COUNT,
+    M5A_LEGACY_DEVELOPMENT_SCENE_COUNT,
+    M5A_LEGACY_FINAL_SCENE_COUNT,
     M5A_TARGET_DEVELOPMENT_SCHEDULE_LOCK_SCHEMA,
     ControlScheduleConfig,
     ControlScheduleLock,
+    LanguageScheduleLock,
     M5AScheduleBundle,
     ScheduledControlEpisode,
     SeedExclusionSource,
     StagedControlSchedule,
     build_language_schedule_locks,
-    build_m5a_schedule_bundle,
     build_staged_control_schedule,
 )
 from langmani.language.stage_protocol import M5A_PHYSICAL_STAGE_BUDGETS, M5AStage  # noqa: E402
@@ -479,6 +485,14 @@ def load_development_schedule(path: Path) -> ControlScheduleLock:
 
     source = _resolved_unlinked(path, label="M5A control schedule")
     payload = _schedule_payload(_read_object(source, label="M5A control schedule"))
+    return _parse_development_schedule_payload(payload)
+
+
+def _parse_development_schedule_payload(
+    payload: Mapping[str, object],
+) -> ControlScheduleLock:
+    """Parse one fingerprint-owned development lock without materializing episodes."""
+
     if payload.get("schedule_id") != M5A_CONTROL_DEV_SCHEDULE_ID:
         raise LanguageControlCommandError(
             "run_language_control accepts only m5a_control_dev_v0; final remains sealed"
@@ -526,6 +540,113 @@ def load_development_schedule(path: Path) -> ControlScheduleLock:
     if result.sealed or result.split is not LanguageSplit.DEVELOPMENT:
         raise LanguageControlCommandError("development control lock cannot be sealed or final")
     return result
+
+
+def _ordered_unexcluded_seeds(
+    config: ControlScheduleConfig,
+    *,
+    count: int,
+) -> tuple[int, ...]:
+    selected: list[int] = []
+    for offset in range(config.maximum_candidate_count):
+        candidate = config.candidate_seed_start + offset
+        if candidate > 2**31 - 1:
+            break
+        if candidate in config.excluded_scene_seeds:
+            continue
+        selected.append(candidate)
+        if len(selected) == count:
+            return tuple(selected)
+    raise LanguageControlCommandError(
+        f"cannot rebuild {count} ordered unexcluded control scene seeds"
+    )
+
+
+def _associated_language_ids(
+    *,
+    corpus: GeneratedLanguageCorpus,
+    split: LanguageSplit,
+    scene_count: int,
+) -> tuple[str, ...]:
+    associated: list[str] = []
+    by_task = corpus.routeable_example_ids_by_task[split]
+    for scene_index in range(scene_count):
+        for task_spec in CANONICAL_TASK_SPECS:
+            candidates = by_task.get(stable_task_id(task_spec), ())
+            if not candidates:
+                raise LanguageControlCommandError(
+                    f"language split {split.value} lacks a canonical TaskSpec"
+                )
+            associated.append(candidates[scene_index % len(candidates)])
+    return tuple(associated)
+
+
+def _rebuild_recorded_control_locks(
+    *,
+    payload: Mapping[str, object],
+    corpus: GeneratedLanguageCorpus,
+    config: ControlScheduleConfig,
+    language_development: LanguageScheduleLock,
+    language_final: LanguageScheduleLock,
+) -> tuple[ControlScheduleLock, ControlScheduleLock]:
+    raw_development = payload.get("control_development")
+    if not isinstance(raw_development, Mapping):
+        raise LanguageControlCommandError("control_development must be one schedule lock")
+    try:
+        recorded = _parse_development_schedule_payload(raw_development)
+    except LanguageControlCommandError as error:
+        raise LanguageControlCommandError(
+            "target-development control_development differs from the rebuilt authoritative lock"
+        ) from error
+    shape = (len(recorded.ordered_scene_seeds), len(recorded.counterpart_scene_seeds))
+    if shape not in {
+        (M5A_DEVELOPMENT_SCENE_COUNT, M5A_FINAL_SCENE_COUNT),
+        (M5A_LEGACY_DEVELOPMENT_SCENE_COUNT, M5A_LEGACY_FINAL_SCENE_COUNT),
+    }:
+        raise LanguageControlCommandError("recorded control schedule shape is unauthorized")
+    selected = _ordered_unexcluded_seeds(config, count=sum(shape))
+    development_seeds = selected[: shape[0]]
+    final_seeds = selected[shape[0] :]
+    try:
+        development = ControlScheduleLock(
+            schedule_id=M5A_CONTROL_DEV_SCHEDULE_ID,
+            split=LanguageSplit.DEVELOPMENT,
+            ordered_scene_seeds=development_seeds,
+            counterpart_scene_seeds=final_seeds,
+            ordered_task_specs=CANONICAL_TASK_SPECS,
+            associated_language_example_ids=_associated_language_ids(
+                corpus=corpus,
+                split=LanguageSplit.DEVELOPMENT,
+                scene_count=shape[0],
+            ),
+            exclusion_digest=config.exclusion_digest,
+            language_schedule_fingerprint=language_development.schedule_fingerprint,
+            sealed=False,
+        )
+        final = ControlScheduleLock(
+            schedule_id=M5A_CONTROL_FINAL_SCHEDULE_ID,
+            split=LanguageSplit.FINAL,
+            ordered_scene_seeds=final_seeds,
+            counterpart_scene_seeds=development_seeds,
+            ordered_task_specs=CANONICAL_TASK_SPECS,
+            associated_language_example_ids=_associated_language_ids(
+                corpus=corpus,
+                split=LanguageSplit.FINAL,
+                scene_count=shape[1],
+            ),
+            exclusion_digest=config.exclusion_digest,
+            language_schedule_fingerprint=language_final.schedule_fingerprint,
+            sealed=True,
+        )
+    except ValueError as error:
+        raise LanguageControlCommandError(
+            f"cannot rebuild recorded control locks: {error}"
+        ) from error
+    if recorded != development:
+        raise LanguageControlCommandError(
+            "target-development control_development differs from the rebuilt authoritative lock"
+        )
+    return development, final
 
 
 def _parse_authoritative_control_config(payload: object) -> ControlScheduleConfig:
@@ -588,8 +709,10 @@ def _parse_authoritative_control_config(payload: object) -> ControlScheduleConfi
     return config
 
 
-def _sealed_language_lock_payload(bundle: M5AScheduleBundle) -> dict[str, object]:
-    language_final = bundle.language_final
+def _sealed_language_lock_payload(
+    value: M5AScheduleBundle | LanguageScheduleLock,
+) -> dict[str, object]:
+    language_final = value.language_final if isinstance(value, M5AScheduleBundle) else value
     return {
         "schedule_id": language_final.schedule_id,
         "schedule_fingerprint": language_final.schedule_fingerprint,
@@ -601,8 +724,10 @@ def _sealed_language_lock_payload(bundle: M5AScheduleBundle) -> dict[str, object
     }
 
 
-def _sealed_control_lock_payload(bundle: M5AScheduleBundle) -> dict[str, object]:
-    control_final = bundle.control_final
+def _sealed_control_lock_payload(
+    value: M5AScheduleBundle | ControlScheduleLock,
+) -> dict[str, object]:
+    control_final = value.control_final if isinstance(value, M5AScheduleBundle) else value
     return {
         "schedule_id": control_final.schedule_id,
         "schedule_fingerprint": control_final.schedule_fingerprint,
@@ -681,24 +806,26 @@ def load_authoritative_development_schedule(
             "target-development schedule bundle violates final/test/fresh access locks"
         )
     config = _parse_authoritative_control_config(payload.get("control_schedule_config"))
-    try:
-        bundle = build_m5a_schedule_bundle(corpus=corpus, config=config)
-    except (TypeError, ValueError) as error:
-        raise LanguageControlCommandError(
-            f"cannot rebuild target-development schedule bundle: {error}"
-        ) from error
+    language_development, language_final = build_language_schedule_locks(corpus)
+    control_development, control_final = _rebuild_recorded_control_locks(
+        payload=payload,
+        corpus=corpus,
+        config=config,
+        language_development=language_development,
+        language_final=language_final,
+    )
     expected_locks: dict[str, object] = {
-        "language_development": bundle.language_development.to_dict(),
-        "language_final": _sealed_language_lock_payload(bundle),
-        "control_development": bundle.control_development.to_dict(),
-        "control_final": _sealed_control_lock_payload(bundle),
+        "language_development": language_development.to_dict(),
+        "language_final": _sealed_language_lock_payload(language_final),
+        "control_development": control_development.to_dict(),
+        "control_final": _sealed_control_lock_payload(control_final),
     }
     for key, expected in expected_locks.items():
         if payload.get(key) != expected:
             raise LanguageControlCommandError(
                 f"target-development {key} differs from the rebuilt authoritative lock"
             )
-    return bundle.control_development
+    return control_development
 
 
 def prepare_development_inputs(

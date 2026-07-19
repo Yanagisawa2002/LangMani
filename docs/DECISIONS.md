@@ -2034,3 +2034,19 @@ one-scene schedule, rejection probe, all six learned atoms, all six Oracle atoms
 EpisodeSpecs, and separated action streams. It reports correct stage execution and observed control
 success separately. This interface change authorizes no three-scene/full/final stage, M3B test,
 historical fresh, `m42_final_v0`, M2 expert, or SmolVLA access and changes no dependency version.
+
+## D-068 — Revalidate the immutable pre-staging control lock instead of rewriting it
+
+The first physical M5A.4.1 dispatch attempt stopped before model, environment, or controller work
+because the server's authoritative schedule bundle was created before staged control reduced the
+new-build allocation from 12 development plus 30 sealed-final scenes to 10 plus 12. Its corpus,
+exclusion, task-order, and language identities were unchanged; only rebuilding with later global
+scene-count constants produced a different lock.
+
+Schedule construction remains 10 plus 12. The reader now also recognizes the original 12 plus 30
+shape as a legacy immutable contract. It does not trust the recorded shape alone: it recomputes the
+ordered unexcluded seed prefix, canonical six-task order, per-scene opaque language IDs, exclusion
+digest, both schedule fingerprints, and the sealed-final summary. Only the two declared shapes are
+accepted. Staged development reads the first disjoint 1/3/6-scene views from the validated parent;
+it neither rewrites that parent nor materializes final text or episodes. No dependency or physical
+success criterion changed.

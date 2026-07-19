@@ -26,6 +26,7 @@ from langmani.language.neuro_symbolic_dispatch import (
     bind_selected_router_to_controller_registry,
 )
 from langmani.language.router_types import (
+    LanguageSplit,
     RouterConfidence,
     RouterDecision,
     RouterRejectionReason,
@@ -148,6 +149,54 @@ def _authoritative_schedule_wrapper() -> tuple[object, object, dict[str, object]
         "final_episodes_materialized": False,
     }
     return corpus, bundle, payload
+
+
+def _legacy_authoritative_schedule_wrapper(
+    command: ModuleType,
+) -> tuple[object, object, dict[str, object]]:
+    """Recreate the immutable 12+30 lock written before staged control was added."""
+
+    corpus, _current_bundle, payload = _authoritative_schedule_wrapper()
+    config = _control_schedule_config()
+    selected = tuple(config.candidate_seed_start + index for index in range(42))
+    development_seeds = selected[:12]
+    final_seeds = selected[12:]
+
+    def associated(split: LanguageSplit, scene_count: int) -> tuple[str, ...]:
+        values: list[str] = []
+        by_task = corpus.routeable_example_ids_by_task[split]
+        for scene_index in range(scene_count):
+            for task_spec in command.CANONICAL_TASK_SPECS:
+                candidates = by_task[command.stable_task_id(task_spec)]
+                values.append(candidates[scene_index % len(candidates)])
+        return tuple(values)
+
+    language_development, language_final = command.build_language_schedule_locks(corpus)
+    development = command.ControlScheduleLock(
+        schedule_id=command.M5A_CONTROL_DEV_SCHEDULE_ID,
+        split=command.LanguageSplit.DEVELOPMENT,
+        ordered_scene_seeds=development_seeds,
+        counterpart_scene_seeds=final_seeds,
+        ordered_task_specs=command.CANONICAL_TASK_SPECS,
+        associated_language_example_ids=associated(command.LanguageSplit.DEVELOPMENT, 12),
+        exclusion_digest=config.exclusion_digest,
+        language_schedule_fingerprint=language_development.schedule_fingerprint,
+        sealed=False,
+    )
+    final = command.ControlScheduleLock(
+        schedule_id=command.M5A_CONTROL_FINAL_SCHEDULE_ID,
+        split=command.LanguageSplit.FINAL,
+        ordered_scene_seeds=final_seeds,
+        counterpart_scene_seeds=development_seeds,
+        ordered_task_specs=command.CANONICAL_TASK_SPECS,
+        associated_language_example_ids=associated(command.LanguageSplit.FINAL, 30),
+        exclusion_digest=config.exclusion_digest,
+        language_schedule_fingerprint=language_final.schedule_fingerprint,
+        sealed=True,
+    )
+    payload["control_development"] = development.to_dict()
+    payload["control_final"] = command._sealed_control_lock_payload(final)
+    return corpus, development, payload
 
 
 def _router_evaluation_fixture(
@@ -317,6 +366,31 @@ def test_authoritative_schedule_loader_rebuilds_all_four_locks(tmp_path: Path) -
     loaded = command.load_authoritative_development_schedule(path, corpus=corpus)
 
     assert loaded == bundle.control_development
+
+
+def test_authoritative_schedule_loader_reuses_pre_staging_lock_without_rewrite(
+    tmp_path: Path,
+) -> None:
+    command = _load_command()
+    corpus, development, payload = _legacy_authoritative_schedule_wrapper(command)
+    path = tmp_path / "legacy-target-development-schedules.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    loaded = command.load_authoritative_development_schedule(path, corpus=corpus)
+    staged = command.prepare_development_inputs(
+        schedule=loaded,
+        corpus=corpus,
+        stage=command.M5AStage.ONE_SCENE_CONTROL_SMOKE,
+    )
+
+    assert loaded == development
+    assert len(loaded.ordered_scene_seeds) == 12
+    assert len(loaded.counterpart_scene_seeds) == 30
+    assert staged.schedule.parent_schedule_fingerprint == development.schedule_fingerprint
+    assert len(staged.episodes) == 6
+    assert {episode.scene_seed for episode in staged.episodes} == {2_000_000_000}
+    assert payload["final_texts_materialized"] is False
+    assert payload["final_episodes_materialized"] is False
 
 
 @pytest.mark.parametrize(
