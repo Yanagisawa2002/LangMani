@@ -686,3 +686,12 @@ projected, and executed action evidence remains separate. Independent verificati
 atom and reports the learned/Oracle success counts separately from correct experiment execution.
 The smoke cannot authorize or access the three-scene screen, full development, language/control
 final, M3B test, historical fresh, `m42_final_v0`, or SmolVLA.
+
+The authorized native target execution completed this gate at implementation Git
+`16911a65540211d84883b354b1d1d9477174daae`. All six learned routes matched their scheduled
+TaskSpecs and frozen controller IDs; the real selected-router rejection probe performed zero
+lookup/reset/step work. Learned and Oracle execution each succeeded on 5/6 episodes and each had one
+timeout, with zero wrong-object, wrong-bin, off-table, invalid-action, infrastructure, or M2-expert
+failures. Independent verifier Git `cf6fbc07971cc2c507675763f04e6740adce40a4` accepted the immutable
+evidence with `physical_target_validated=true`. The timeout counts remain observed controller-quality
+evidence and do not weaken or redefine the dispatch gate.

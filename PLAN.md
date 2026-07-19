@@ -271,12 +271,13 @@ evidence distinguishes correct offline execution from quality promotion, and phy
 validation remains false.
 
 M5A.4.1 completed the bounded offline safety/taxonomy amendment and selected the unchanged frozen
-`NeuroSymbolicRouterV0`. The active stage is its separately authorized one-scene control smoke.
-The selected evidence is read-only and path-independent, binds metadata for exactly six frozen
-PerTask ACT controllers, then runs six learned task episodes alongside six Oracle ceiling episodes.
-A rejection no-op probe must prove zero controller lookup, reset, and step. Independent evidence
-verification reports dispatch correctness and observed control success separately. No later
-development stage, final split, `m42_final_v0`, or SmolVLA is authorized automatically.
+`NeuroSymbolicRouterV0`. Its separately authorized one-scene control smoke is also complete. The
+read-only source bound exactly six frozen PerTask ACT controllers, all six learned commands routed
+to the matching TaskSpec/controller, and the selected-router rejection probe performed zero
+controller lookup, environment reset, or environment step. Six learned and six Oracle episodes ran
+physically; each achieved 5/6 task success with one timeout. Independent verification passed and
+keeps dispatch correctness separate from observed controller quality. No later development stage,
+final split, `m42_final_v0`, or SmolVLA is authorized automatically.
 
 ## M5B — Sealed modular final and possible SmolVLA handoff (planned)
 

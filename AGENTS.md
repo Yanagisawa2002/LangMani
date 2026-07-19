@@ -20,11 +20,13 @@ and no classifier runtime exists. M5A.2 completed the one authorized Qwen3-1.7B 
 its train smoke passed, its 300-example validation gate failed, and language development stayed
 sealed. M5A.3 completed the bounded direct Qwen3-4B comparison and rejected it as a dispatch
 candidate. M5A.4 completed its immutable 20-example smoke with 17/20 exact RouterStatus decisions
-and zero unsafe false routes. M5A.4.1 completed its bounded offline taxonomy/safety amendment,
-selected the unchanged NeuroSymbolicRouterV0 on untouched language development, and authorized one
-separately executed control smoke. Read-only binding of that immutable router to the six frozen
-PerTask ACT controllers and the one-scene six-task physical smoke are the active work. The sealed
-final benchmark and SmolVLA have not started.
+and zero unsafe false routes. M5A.4.1 completed its bounded offline taxonomy/safety amendment and
+selected the unchanged `NeuroSymbolicRouterV0` on untouched language development. Its separately
+authorized one-scene dispatch smoke also completed: all six TaskSpecs routed to the matching frozen
+PerTask controller, the selected-router rejection probe did zero lookup/reset/step work, and the
+independent physical verifier passed. Learned and Oracle control each succeeded on 5/6 episodes
+with one timeout, so dispatch acceptance and observed controller quality remain separate.
+Three-scene/full control, the sealed final benchmark, and SmolVLA have not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level

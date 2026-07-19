@@ -1201,6 +1201,16 @@ This authorization is one-scene-only. Correct dispatch execution, the six learne
 count, and Oracle success count are separate fields. The command cannot access the three-scene or
 full-development stages, any final/test/fresh source, `m42_final_v0`, M2, or SmolVLA.
 
+The authorized native target run at implementation commit
+`16911a65540211d84883b354b1d1d9477174daae` completed all 12 control atoms. The selected router
+produced 6/6 correct TaskSpec/controller bindings and its real rejection probe recorded zero
+controller lookup, environment reset, and environment step. Learned and Oracle execution each
+finished 5/6 tasks with one timeout; neither path recorded a wrong-object, wrong-bin, off-table,
+invalid-action, infrastructure, or M2-expert failure. The fresh-process verifier at
+`cf6fbc07971cc2c507675763f04e6740adce40a4` returned `passed=true` and
+`physical_target_validated=true`. This is one-scene wiring/safety acceptance, not authorization for
+the three-scene screen or a claim of 6/6 controller quality.
+
 Other later stages still require separate authorization and use ordinary `--target-resume` only
 for an originally promoted pilot, followed by offline language evaluation and
 `run_language_control.py --stage {one_scene_control_smoke,three_scene_control_screen,full_control_development}`.

@@ -2063,3 +2063,33 @@ dispatch compares its hash against the immutable selected evidence before compil
 This restores the original prompt transport; it does not change the prompt, tokenizer, model,
 generation settings, parser, arbiter, or evidence. File hashes, snapshot size, semantic prompt hash,
 and transport hash remain separate hard gates.
+
+## D-070 — Accept the one-scene dispatch gate while reporting controller timeouts separately
+
+The authorized one-scene target run used clean implementation Git
+`16911a65540211d84883b354b1d1d9477174daae` on one NVIDIA GeForce RTX 5090 with driver
+595.71.05, Python 3.12.13, Torch 2.11.0+cu128, CUDA 12.8, ManiSkill 3.0.1, Transformers 5.4.0,
+and Outlines 1.3.1. Headless Vulkan/ManiSkill acceptance used the valid NVIDIA EGL ICD explicitly;
+GPU simulation, policy RGB observation, human rendering, stepping, and clean close passed before
+control. No dependency version or physical success geometry changed.
+
+The run produced immutable control fingerprint
+`sha256:6d6969730b284440094e5ee6281673dc602fd9320d9193fb638c4256b14bea32`, record-set fingerprint
+`sha256:589edce7d0417be8947c3cf923d69b8aaa2299605a108e65d5ebde5f780cf1c9`, and completion fingerprint
+`sha256:126d8900f949fd0735198d93825e9f6bc3cc917908c8e8d81bab3718e7b2bb5e`. The selected router
+emitted all six correct TaskSpecs and dispatched all six matching frozen PerTask controllers. Its
+real rejection probe returned `reject_unsupported` and performed zero controller lookup,
+environment reset, and environment step. The six learned episodes and six Oracle ceiling episodes
+each achieved 5/6 M1 success with one timeout. Both paths had zero wrong-object, wrong-bin,
+off-table, invalid/non-finite action, infrastructure, and M2-expert failures. Arm projection was
+zero; gripper projection remained explicitly reported (200 learned and 199 Oracle components).
+
+The first independent audit exposed a verifier-only identity defect: the legacy validator required
+`RuleRouterV0` even when the selected probe was produced by `NeuroSymbolicRouterV0`. Commit
+`cf6fbc07971cc2c507675763f04e6740adce40a4` made the expected rejection-probe router an explicit
+read-only verifier input, retained the legacy default, and added a regression test. The fresh
+re-audit rehashed existing evidence without rerunning episodes and returned `passed=true`,
+`physical_target_validated=true`, 6/6 correct routes, learned success 5/6, and Oracle success 5/6.
+Language/control final, M3B test, historical fresh, `m42_final_v0`, M2, and SmolVLA remained
+unaccessed. This accepts only one-scene dispatch wiring and safety; it does not authorize the
+three-scene screen or reinterpret the two timeouts as success.
