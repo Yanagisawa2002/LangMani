@@ -445,11 +445,42 @@ def analyze_final_control_records(
         )
         controller_agreement += int(same_controller)
         oracle_audit = _object(oracle_record.get("paired_execution_audit"), label="Oracle audit")
-        learned_audit = _object(learned_record.get("paired_execution_audit"), label="learned audit")
+        learned_audit_value = learned_record.get("paired_execution_audit")
+        learned_audit = (
+            None
+            if learned_audit_value is None
+            else _object(learned_audit_value, label="learned audit")
+        )
+        if routed and learned_audit is None:
+            raise SealedFinalContractError("a routed final episode lacks an execution audit")
+        rejected_without_runtime = (
+            learned_audit is None
+            and learned_record.get("active_episode_spec") is None
+            and learned_result.get("control") is None
+            and learned_result.get("failure_attribution")
+            == FailureAttribution.ROUTING_FALSE_REJECTION.value
+            and decision.get("task_spec") is None
+            and decision.get("task_id") is None
+            and decision.get("target_object_id") is None
+            and decision.get("target_bin_id") is None
+            and learned_dispatch.get("dispatched") is False
+            and learned_dispatch.get("controller_loaded") is False
+            and learned_dispatch.get("policy_called") is False
+            and learned_dispatch.get("environment_reset_called") is False
+            and learned_dispatch.get("environment_step_count") == 0
+        )
+        if not routed and not rejected_without_runtime:
+            raise SealedFinalContractError("a rejected final episode entered the runtime")
         oracle_state = normalize_initial_scene_state(oracle_audit.get("initial_physical_state"))
-        learned_state = normalize_initial_scene_state(learned_audit.get("initial_physical_state"))
+        learned_state = (
+            None
+            if learned_audit is None
+            else normalize_initial_scene_state(learned_audit.get("initial_physical_state"))
+        )
         state_equal = (
-            oracle_state == learned_state
+            learned_audit is not None
+            and learned_state is not None
+            and oracle_state == learned_state
             and oracle_audit.get("initial_physical_state_fingerprint")
             == initial_scene_state_fingerprint(oracle_state)
             and learned_audit.get("initial_physical_state_fingerprint")
@@ -478,7 +509,10 @@ def analyze_final_control_records(
         per_task[task_id]["neuro_symbolic_success"] += int(learned_success)
         per_family[example.template_family_id]["episodes"] += 1
         per_family[example.template_family_id]["routing_correct"] += int(correct)
-        for label, audit in (("oracle", oracle_audit), ("neuro_symbolic", learned_audit)):
+        audits = [("oracle", oracle_audit)]
+        if learned_audit is not None:
+            audits.append(("neuro_symbolic", learned_audit))
+        for label, audit in audits:
             rollout = _object(audit.get("rollout"), label=f"{label} rollout")
             if rollout.get("action_bound_mode") != "project":
                 raise SealedFinalContractError("final rollout changed the project action runtime")

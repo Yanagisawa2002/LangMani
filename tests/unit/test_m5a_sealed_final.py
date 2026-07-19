@@ -608,6 +608,81 @@ def test_final_control_state_mismatch_fails_quality_gate() -> None:
     assert analysis["gate_items"]["initial_state_pairing_72_of_72"] is False
 
 
+def test_final_control_safe_false_rejection_has_no_execution_audit() -> None:
+    oracle, learned, examples, summaries = _control_fixture()
+    rejected = learned[0]
+    rejected["active_episode_spec"] = None
+    rejected["paired_execution_audit"] = None
+    rejected["result"]["decision"] = RouterDecision.reject(
+        status=RouterStatus.REJECT_AMBIGUOUS,
+        rejection_reason=RouterRejectionReason.MISSING_OBJECT,
+        confidence=RouterConfidence.unavailable(),
+        router_name="NeuroSymbolicRouterV0",
+        router_version="neuro-symbolic-router-v0",
+    ).to_dict()
+    rejected["result"]["dispatch"] = {
+        "controller_task_id": None,
+        "controller_checkpoint_fingerprint": None,
+        "dispatched": False,
+        "controller_loaded": False,
+        "policy_called": False,
+        "environment_reset_called": False,
+        "environment_step_count": 0,
+    }
+    rejected["result"]["control"] = None
+    rejected["result"]["end_to_end_success"] = False
+    rejected["result"]["failure_attribution"] = FailureAttribution.ROUTING_FALSE_REJECTION.value
+    summaries["neuro_symbolic"]["end_to_end_success_count"] = 71
+
+    analysis = analyze_final_control_records(
+        oracle_records=oracle,
+        neuro_symbolic_records=learned,
+        rejection_probe_set=_safe_probes(),
+        examples_by_id=examples,
+        router_summaries=summaries,
+    )
+
+    assert analysis["false_rejection_count"] == 1
+    assert analysis["paired_initial_state_count"] == 71
+    assert analysis["gate_items"]["initial_state_pairing_72_of_72"] is False
+    assert analysis["final_control_quality_passed"] is False
+
+
+def test_final_control_rejected_episode_cannot_enter_runtime() -> None:
+    oracle, learned, examples, summaries = _control_fixture()
+    rejected = learned[0]
+    rejected["active_episode_spec"] = None
+    rejected["paired_execution_audit"] = None
+    rejected["result"]["decision"] = RouterDecision.reject(
+        status=RouterStatus.REJECT_AMBIGUOUS,
+        rejection_reason=RouterRejectionReason.MISSING_OBJECT,
+        confidence=RouterConfidence.unavailable(),
+        router_name="NeuroSymbolicRouterV0",
+        router_version="neuro-symbolic-router-v0",
+    ).to_dict()
+    rejected["result"]["dispatch"] = {
+        "controller_task_id": None,
+        "controller_checkpoint_fingerprint": None,
+        "dispatched": False,
+        "controller_loaded": False,
+        "policy_called": False,
+        "environment_reset_called": False,
+        "environment_step_count": 1,
+    }
+    rejected["result"]["control"] = None
+    rejected["result"]["end_to_end_success"] = False
+    rejected["result"]["failure_attribution"] = FailureAttribution.ROUTING_FALSE_REJECTION.value
+
+    with pytest.raises(SealedFinalContractError, match="entered the runtime"):
+        analyze_final_control_records(
+            oracle_records=oracle,
+            neuro_symbolic_records=learned,
+            rejection_probe_set=_safe_probes(),
+            examples_by_id=examples,
+            router_summaries=summaries,
+        )
+
+
 def test_final_control_controller_mismatch_fails_quality_gate() -> None:
     oracle, learned, examples, summaries = _control_fixture()
     learned[0]["result"]["dispatch"]["controller_checkpoint_fingerprint"] = "sha256:" + "2" * 64

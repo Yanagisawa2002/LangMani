@@ -2254,3 +2254,21 @@ it only through the sealed-final caller. Every existing validation/development c
 ordinary final calls still fail. A focused regression test proves both the default rejection and
 the explicit sealed-final path. A fresh-root recovery must name the exact D-077 invalid marker and
 keeps every frozen semantic and physical input unchanged.
+
+## D-078 — Treat safe final false rejections as no-runtime evidence
+
+The first complete sealed-final physical attempt produced all 600-example language results and all
+144 control atoms, then failed during compact analysis with `learned audit must be one object`.
+The eleven NeuroSymbolic false rejections correctly returned before controller lookup, policy reset,
+environment reset, and `env.step`; their atom contract therefore contains a null active EpisodeSpec,
+null control, and null paired execution audit. Requiring a physical audit for those records
+contradicted the existing rejection no-dispatch boundary and was an evidence-reader defect, not a
+model, routing, or controller failure. The invalid attempt and its raw evidence remain immutable.
+
+The analyzer now accepts a null learned audit only for a non-route decision whose executable fields
+are null, failure attribution is `routing_false_rejection`, and all dispatch/reset/step indicators
+are false or zero. A routed record still requires a complete audit, and any rejected record that
+entered the runtime is rejected structurally. A safe false rejection contributes no paired physical
+state, so the unchanged 72/72 state-pairing gate fails honestly; the routing and false-rejection
+quality gates remain unchanged. This repair changes only evidence interpretation and authorizes no
+new model, prompt, schedule, rollout, threshold, or final attempt semantics.
