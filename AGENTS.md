@@ -26,11 +26,12 @@ authorized one-scene dispatch smoke also completed: all six TaskSpecs routed to 
 PerTask controller, the selected-router rejection probe did zero lookup/reset/step work, and the
 independent physical verifier passed. Learned and Oracle control each succeeded on 5/6 episodes
 with one timeout, so dispatch acceptance and observed controller quality remain separate.
-Three-scene/full control, the sealed final benchmark, and SmolVLA have not started.
-The three-scene paired-screen orchestration and independent verifier are implemented but have not
-yet produced target evidence. They require the independently verified one-scene parent, execute
-Oracle then NeuroSymbolic for each of 18 scene-task pairs, and atomically promote only the bounded
-three-scene evidence. Full development remains a separate authorization.
+The separately authorized three-scene paired screen is also complete. Across three unseen
+development seeds, Oracle and NeuroSymbolic each succeeded on 15/18 episodes with the same three
+paired timeouts. All 18 routes and controller identities matched, all 18 initial physical states
+were exactly paired, the fixed six rejection probes did zero lookup/reset/step work, and the
+independent physical verifier passed. The conjunctive screen gate authorized, but did not start,
+full control development. Full control, the sealed final benchmark, and SmolVLA have not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level

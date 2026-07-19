@@ -727,3 +727,14 @@ quality makes the screen gate false. Only a true `three_scene_control_screen_pas
 `selected_router_locked=true` and `full_control_development_authorized=true`. The full stage is
 never executed automatically, and language/control final, M3B test, historical fresh,
 `m42_final_v0`, M2 expert actions, and SmolVLA remain unaccessed.
+
+The authorized target screen used clean implementation Git
+`e461c1e20f783e8c5f06e107289842665e08820b` and the three locked seeds `2000000001` through
+`2000000003`. All 18 routes, controller identities, and exact initial-state pairs passed. Oracle and
+NeuroSymbolic each achieved 15/18 M1 success, with the same three paired timeouts and zero success
+gap. The fixed six-category rejection set performed zero lookup, policy reset, environment reset,
+or step. Raw recomputation found zero arm projection, wrong-object, wrong-bin, off-table,
+malformed/non-finite action, infrastructure, and M2 counts. Gripper-only projection remained
+explicitly reported at 647 Oracle and 646 NeuroSymbolic components. The independent verifier
+accepted both compact and underlying atom evidence with `physical_target_validated=true`; the
+screen quality gate authorized but did not execute full control development.

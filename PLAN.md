@@ -279,13 +279,15 @@ physically; each achieved 5/6 task success with one timeout. Independent verific
 keeps dispatch correctness separate from observed controller quality. No later development stage,
 final split, `m42_final_v0`, or SmolVLA is authorized automatically.
 
-The next bounded physical stage is implemented as a three-scene paired screen but remains pending
-target execution. It consumes the verified one-scene parent, uses three disjoint predeclared
-development seeds in canonical six-task order, and runs Oracle then NeuroSymbolic from an exactly
-audited physical reset for every pair. Six fixed rejection probes must perform zero lookup,
-policy reset, environment reset, and step. Compact evidence is staged, checksummed, completed last,
-atomically promoted, and independently recomputed. This implementation does not authorize or run
-the later six-scene development stage.
+The bounded three-scene paired screen completed on the three disjoint predeclared development
+seeds. All 18 Oracle/NeuroSymbolic pairs had exact initial physical state and controller identity,
+and every learned route matched its scheduled TaskSpec. Oracle and NeuroSymbolic each achieved
+15/18 success; the same three pairs timed out on both paths, with no routing, wrong-object,
+wrong-bin, off-table, malformed-action, non-finite-action, infrastructure, or M2 failure. The six
+fixed rejection probes performed zero lookup, policy reset, environment reset, and step. The fresh
+independent verifier accepted the immutable compact and raw evidence, so the conjunctive gate locks
+the selected router and authorizes a separately invoked six-scene development stage. That later
+stage has not run.
 
 ## M5B — Sealed modular final and possible SmolVLA handoff (planned)
 

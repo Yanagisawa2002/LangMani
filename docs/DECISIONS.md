@@ -2114,5 +2114,35 @@ completion-last checks, and atomic promotion. Its independent reader rehashes th
 generic control atoms before recomputing pairing, action metrics, failure attribution, and the exact
 conjunctive gate. `passed=true` means the bounded stage and evidence are valid;
 `three_scene_control_screen_passed` alone authorizes, but never starts, full control development.
-All final/test/fresh schedules, shared ACT, M2 actions, and SmolVLA remain prohibited. Target
-physical results are pending and must not be inferred from fixture validation.
+All final/test/fresh schedules, shared ACT, M2 actions, and SmolVLA remain prohibited.
+
+## D-072 — Accept the paired three-scene screen without hiding shared controller timeouts
+
+The authorized target run used clean implementation Git
+`e461c1e20f783e8c5f06e107289842665e08820b`, schedule fingerprint
+`sha256:e55ad453f3a8747995594c33bac5a7ff76f6a32399a4bc50d3666ec778e1fa2f`, and development
+seeds `2000000001`, `2000000002`, and `2000000003`. Its immutable run fingerprint is
+`sha256:d9643f0e9a53ae70b367af87bb80ffad694cc85c582e51d447d9028e210c6480` and its raw
+control-record-set fingerprint is
+`sha256:14ba3ef901abc0e7a1d33d058523ff0060ce8b34ab7c96df8c03689ce29f351a`.
+
+All 18 NeuroSymbolic routes matched their scheduled TaskSpec and frozen PerTask controller. Exact
+three-cube, two-bin, and Panda-qpos reset state matched for all 18 Oracle/learned pairs. Oracle and
+NeuroSymbolic each succeeded on 15/18 episodes: 15 pairs both succeeded and the same three pairs
+timed out. Thus the success gap is zero and the failures remain attributed to shared frozen control,
+not routing. Per-task success was 2/3 red-left, 3/3 red-right, 2/3 green-left, 2/3 green-right, 3/3
+blue-left, and 3/3 blue-right on both paths.
+
+The fixed six rejection probes each returned its safe rejection status with zero controller lookup,
+policy reset, environment reset, and step. Raw evidence recorded zero wrong-object grasp/bin,
+wrong-bin placement, off-table, malformed/non-finite action, arm projection, infrastructure, and M2
+calls. Explicit `project` handling affected only the gripper dimension: 647 Oracle and 646
+NeuroSymbolic components, with maximum correction `0.060216546058654785`. This remains projection
+evidence, not hidden clipping or strict-unprojected success.
+
+Fresh-process independent verification recomputed all gates and returned `passed=true`,
+`physical_target_validated=true`, `three_scene_control_screen_passed=true`,
+`selected_router_locked=true`, and `full_control_development_authorized=true`. The full six-scene
+stage was not run. Language/control final, M3B test, historical fresh, `m42_final_v0`, shared ACT,
+M2 actions, and SmolVLA remain unaccessed. This decision accepts the bounded paired screen and its
+promotion result; it does not claim 18/18 controller success or authorize any final benchmark.

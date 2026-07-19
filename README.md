@@ -1240,6 +1240,17 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m5a_three_scene.py \
 `three_scene_control_screen_passed` flag controls whether full development is authorized; this
 command never starts full development or opens final/test/fresh schedules.
 
+The authorized target run at implementation Git
+`e461c1e20f783e8c5f06e107289842665e08820b` used development seeds `2000000001`, `2000000002`, and
+`2000000003`. All 18 NeuroSymbolic routes matched the scheduled TaskSpec and frozen controller, and
+all 18 Oracle/learned reset snapshots matched exactly. Oracle and NeuroSymbolic each succeeded on
+15/18 episodes; the same three pairs timed out. The six rejection probes performed zero controller
+lookup, policy reset, environment reset, and step. All 1,293 projected components were the explicit
+gripper dimension; arm projection, wrong-object, wrong-bin, off-table, malformed/non-finite action,
+infrastructure, and M2 counts were zero. Fresh-process independent verification returned
+`passed=true`, `physical_target_validated=true`, and
+`full_control_development_authorized=true`. Full development was not started.
+
 Other later stages still require separate authorization and use ordinary `--target-resume` only
 for an originally promoted pilot, followed by offline language evaluation and
 `run_language_control.py --stage {one_scene_control_smoke,three_scene_control_screen,full_control_development}`.
