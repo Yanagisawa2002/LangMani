@@ -295,7 +295,12 @@ NeuroSymbolic for each of 36 new development pairs, requires exact reset-state e
 fixed nine-category rejection no-op set. A compact immutable archive and fresh-process verifier
 recompute all 72 atoms, the locked 35/36 routing gate, controller/safety/action/latency metrics, and
 the bounded `M5AFinalAuthorizationV0`. Implementation completion is not physical evidence; the
-target benchmark remains pending until the dedicated command completes.
+target benchmark subsequently completed at implementation commit
+`f8c583aef35e8e64d758ef5aeddf6f11ea331be9`. All 36 routes and initial-state pairs matched. Oracle
+and NeuroSymbolic each achieved 25/36 success, with 25 pairs both succeeding and 11 pairs sharing a
+controller timeout. The nine rejection probes performed zero runtime work, the fresh verifier
+passed every item, and the quality gate created the bounded final authorization. Final remains
+sealed and was not executed.
 
 ## M5B — Sealed modular final and possible SmolVLA handoff (planned)
 

@@ -1277,6 +1277,19 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m5a_full_control.py \
 The verifier rehashes all 72 raw atoms and compact evidence in a fresh process. Neither command
 materializes final commands/seeds or starts the sealed final benchmark.
 
+The authorized full target run used clean implementation Git
+`f8c583aef35e8e64d758ef5aeddf6f11ea331be9` and schedule fingerprint
+`sha256:952029cbd35c4132dbfb32dd7efbf97fd783e233705437825a77c6d915756923`. All
+36 routes and exact initial-state pairs matched. Oracle and NeuroSymbolic each succeeded on 25/36:
+25 pairs both succeeded and 11 pairs timed out on both branches, so the success gap was zero. The
+nine rejection probes performed zero lookup, policy reset, environment reset, and step. Arm
+projection, wrong-object/wrong-bin interaction, off-table, malformed/non-finite action,
+infrastructure, environment, and M2 counts were zero; explicit gripper projection remained visible
+at 2,925 components. Fresh-process verification returned `passed=true`,
+`physical_target_validated=true`, and `final_benchmark_authorized=true`, creating authorization
+fingerprint `sha256:afb4d59a3549d42ac6e0e2cb010e8261cb39a47792af583fe5dd263645dd19b5`.
+The sealed final was not materialized or run.
+
 Other later stages still require separate authorization and use ordinary `--target-resume` only
 for an originally promoted pilot, followed by offline language evaluation and
 `run_language_control.py --stage {one_scene_control_smoke,three_scene_control_screen,full_control_development}`.

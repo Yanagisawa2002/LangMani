@@ -767,3 +767,21 @@ same-filesystem atomic promotion. A fresh process rehashes the archive and all 7
 recomputes every gate. `passed=true` means the authorized experiment and evidence completed
 correctly. Only a true quality gate creates a positive `M5AFinalAuthorizationV0`; that record
 contains final lock fingerprints but no command text or scene seed and never executes final.
+
+The authorized native target run completed at implementation Git
+`f8c583aef35e8e64d758ef5aeddf6f11ea331be9`. All 36 routed TaskSpecs, frozen controller identities,
+and paired reset states matched. Oracle and NeuroSymbolic each achieved 25/36 M1 success, with 25
+pairs both succeeding and 11 pairs sharing a timeout; no asymmetric outcome occurred. Per-task
+success for both paths was red-left 2/6, red-right 3/6, green-left 6/6, green-right 6/6, blue-left
+4/6, and blue-right 4/6. Target grasp occurred in 35/36 episodes on each path and post-grasp success
+was 25/35.
+
+All nine rejection probes performed zero lookup, policy reset, environment reset, and step. Raw
+recomputation found zero wrong-object/wrong-bin interaction, off-table, arm projection,
+malformed/non-finite action, environment/infrastructure failure, and M2 count. Explicit gripper
+projection remained visible at 2,925 components with maximum correction
+`0.05949103832244873`. The fresh verifier accepted the raw and compact evidence with
+`physical_target_validated=true`, all conjunctive quality items true, and positive final
+authorization fingerprint
+`sha256:afb4d59a3549d42ac6e0e2cb010e8261cb39a47792af583fe5dd263645dd19b5`.
+Final command text, scene seeds, and rollouts remained unmaterialized.

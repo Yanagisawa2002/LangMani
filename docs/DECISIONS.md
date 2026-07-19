@@ -1,6 +1,6 @@
 # Environment and dependency decisions
 
-This file records decisions through the active M5A milestone as of 2026-07-18.
+This file records decisions through the active M5A milestone as of 2026-07-19.
 “Metadata-compatible” means official package requirements have a non-empty version intersection;
 it is not a claim of native Linux GPU or rendering success.
 
@@ -2169,3 +2169,32 @@ quality predicate. A positive `M5AFinalAuthorizationV0` is derived only after al
 it contains sealed final-lock fingerprints but no final command or seed and never executes final.
 This is an orchestration/evidence interface change only: no router, prompt, controller, dependency,
 M1 success geometry, action bound, dataset, or model weight changes.
+
+## D-074 — Accept full control development and authorize, but do not execute, sealed final
+
+The authorized full run used clean implementation Git
+`f8c583aef35e8e64d758ef5aeddf6f11ea331be9`, schedule fingerprint
+`sha256:952029cbd35c4132dbfb32dd7efbf97fd783e233705437825a77c6d915756923`, raw
+control fingerprint `sha256:26df7fde9a1d4f3adb8521f2c5c5cd6765643c44873de46ad1ebdc25e8ef597e`,
+and immutable compact fingerprint
+`sha256:1e01efc61d3dbe45b43287b534745b0f78f5acf2345597c06ed278d4fcb9fd19`.
+It ran on one NVIDIA GeForce RTX 5090 with driver 595.71.05, Python 3.12.13, Torch
+2.11.0+cu128/CUDA 12.8, and ManiSkill 3.0.1 after the native Vulkan/GPU/RGB gate passed.
+
+All 36 NeuroSymbolic decisions matched the scheduled TaskSpec and frozen controller, and all 36
+Oracle/learned initial states matched exactly. Oracle and NeuroSymbolic each succeeded on 25/36:
+25 pairs both succeeded and 11 pairs timed out together. Thus language dispatch introduced zero
+measured control-success gap. Both paths grasped the target in 35/36 and converted 25/35 grasps to
+success. The nine fixed rejection probes performed zero lookup, policy reset, environment reset,
+and step.
+
+Independent recomputation found zero wrong-object/wrong-bin route or interaction, false rejection,
+off-table, arm projection, malformed/non-finite action, environment/infrastructure failure, and M2
+count. Explicit gripper projection remained visible at 2,925 components with maximum correction
+`0.05949103832244873`; this is not reported as strict-unprojected success. The fresh verifier
+returned `passed=true`, `physical_target_validated=true`, and every quality item true. It created
+`M5AFinalAuthorizationV0` fingerprint
+`sha256:afb4d59a3549d42ac6e0e2cb010e8261cb39a47792af583fe5dd263645dd19b5` while retaining only sealed
+final lock fingerprints. Language/control final, M3B test, historical fresh, `m42_final_v0`, shared
+ACT, M2 actions, and SmolVLA remained unaccessed. This decision authorizes only a later separately
+requested final command; it does not execute or score final.

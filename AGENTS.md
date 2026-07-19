@@ -30,8 +30,11 @@ The separately authorized three-scene paired screen is also complete. Across thr
 development seeds, Oracle and NeuroSymbolic each succeeded on 15/18 episodes with the same three
 paired timeouts. All 18 routes and controller identities matched, all 18 initial physical states
 were exactly paired, the fixed six rejection probes did zero lookup/reset/step work, and the
-independent physical verifier passed. The conjunctive screen gate authorized, but did not start,
-full control development. Full control, the sealed final benchmark, and SmolVLA have not started.
+independent physical verifier passed. The separately authorized six-scene full control development
+is also complete: all 36 routes and exact reset-state pairs matched; Oracle and NeuroSymbolic each
+succeeded on 25/36 with the same 11 timeouts; all nine rejection probes did zero runtime work; and
+the independent physical verifier passed. The quality gate created a positive, fingerprint-only
+`M5AFinalAuthorizationV0`. The sealed final benchmark and SmolVLA have not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
