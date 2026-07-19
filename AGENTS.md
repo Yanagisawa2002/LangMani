@@ -20,11 +20,11 @@ and no classifier runtime exists. M5A.2 completed the one authorized Qwen3-1.7B 
 its train smoke passed, its 300-example validation gate failed, and language development stayed
 sealed. M5A.3 completed the bounded direct Qwen3-4B comparison and rejected it as a dispatch
 candidate. M5A.4 completed its immutable 20-example smoke with 17/20 exact RouterStatus decisions
-and zero unsafe false routes. M5A.4.1 is the active bounded offline stage: it audits the unchanged
-rejection taxonomy, separates execution safety from exact rejection-category diagnostics, writes
-an amended router lock, then runs diagnostic validation and untouched language development without
-changing the Qwen3-4B checkpoint, prompt, schema, parser, or arbiter. Target control evaluation, the
-sealed final benchmark, and SmolVLA have not started.
+and zero unsafe false routes. M5A.4.1 completed its bounded offline taxonomy/safety amendment,
+selected the unchanged NeuroSymbolicRouterV0 on untouched language development, and authorized one
+separately executed control smoke. Read-only binding of that immutable router to the six frozen
+PerTask ACT controllers and the one-scene six-task physical smoke are the active work. The sealed
+final benchmark and SmolVLA have not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
@@ -166,6 +166,7 @@ python scripts/run_language_control.py --help
 python environment/verify_m5a.py
 python environment/verify_m5a3.py
 python environment/verify_m5a41.py
+python environment/verify_m5a_dispatch.py
 python scripts/analyze_classifier_rejection.py --help
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
@@ -315,6 +316,11 @@ The exact environment creation commands are maintained in `README.md`.
   preserving exact status/reason metrics as a separate diagnostic contract. Unsafe false routes,
   false rejections, malformed decisions, or executable rejection fields remain hard failures. It
   cannot relabel corpus examples or modify the frozen M5A.4 model/prompt/schema/parser/arbiter.
+- The selected M5A.4.1 dispatch source is checksum-bound to its immutable router lock and remains
+  local-cache-only. Its first physical authorization is exactly `one_scene_control_smoke`; it may
+  bind metadata for the six frozen PerTask entries but cannot load a controller before a route.
+  Independent verification must rehash all Oracle and learned atoms and the real rejection no-op
+  probe while reporting controller quality separately from correct stage execution.
 - M5A.1 may read only the frozen selected classifier checkpoint plus train/validation corpus
   contracts. It evaluates exactly the four locked decoder candidates and finite threshold grid.
   It cannot construct or step an optimizer, change checkpoint bytes/global step, start another
@@ -392,3 +398,9 @@ M5A.1 completion additionally requires a checksum-owned per-example validation d
 four-way and binary confusion analyses, the predeclared fixed-grid search, a decisive promoted or
 frozen conclusion, unchanged checkpoint/weights/step, zero optimizer activity, and independent
 stage verification. Correct analysis completion remains separate from classifier quality.
+The selected M5A.4.1 one-scene control smoke additionally requires a clean implementation commit,
+the exact immutable language evidence, metadata-only six-controller binding, one real rejection
+probe with zero lookup/reset/step, six learned routes matching their oracle TaskSpecs and controller
+IDs, six Oracle ceiling episodes, preserved raw/projected/executed action evidence, and an
+independent read-only verifier. This stage must leave all final/test/`m42_final_v0`/SmolVLA flags
+false; correct execution and the observed six-task control success count remain separate claims.

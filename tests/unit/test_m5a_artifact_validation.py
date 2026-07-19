@@ -499,7 +499,7 @@ def test_control_validator_rebuilds_288_records_summaries_and_completion(
         registry=registry,
         loader=loader,
         environment=environment,
-        rule_router=RuleRouterV0(),
+        router=RuleRouterV0(),
     )
 
     def correct(router_name):

@@ -270,13 +270,13 @@ development; neither failure authorizes an 8B model or prompt change. Independen
 evidence distinguishes correct offline execution from quality promotion, and physical target
 validation remains false.
 
-M5A.4 is the active bounded offline stage. The repeatedly observed validation partition is
-quarantined for architecture selection. Exactly one frozen `NeuroSymbolicRouterV0` combines
-project-owned lexical facts, an Outlines-constrained semantic frame from the immutable Qwen3-4B
-checkpoint, and one deterministic safety arbiter. Train smoke and historical diagnostic replay
-precede an immutable lock; promotion is decided once on complete `m5a_language_dev_v0`. Five
-routers are reported, but only the neuro-symbolic candidate is eligible. No training, controller,
-robot environment, final split, `m42_final_v0`, or SmolVLA is authorized.
+M5A.4.1 completed the bounded offline safety/taxonomy amendment and selected the unchanged frozen
+`NeuroSymbolicRouterV0`. The active stage is its separately authorized one-scene control smoke.
+The selected evidence is read-only and path-independent, binds metadata for exactly six frozen
+PerTask ACT controllers, then runs six learned task episodes alongside six Oracle ceiling episodes.
+A rejection no-op probe must prove zero controller lookup, reset, and step. Independent evidence
+verification reports dispatch correctness and observed control success separately. No later
+development stage, final split, `m42_final_v0`, or SmolVLA is authorized automatically.
 
 ## M5B — Sealed modular final and possible SmolVLA handoff (planned)
 

@@ -1167,6 +1167,40 @@ the command validates that artifact and the selected classifier checkpoint befor
 Only the unchanged hybrid is promotion-eligible, and only the execution-safety/TaskSpec gate can
 authorize a later one-scene control smoke. M5A.4.1 itself stops before all robot control.
 
+The selected M5A.4.1 artifact enters control only through the read-only dispatch binding. First run
+the portable structural verifier. On the target, the control command revalidates the immutable
+router source, loads the exact local Qwen cache once, proves a selected-router rejection has zero
+lookup/reset/step work, then runs six learned tasks plus the six Oracle ceiling episodes. A fresh
+process independently rehashes the full evidence:
+
+```bash
+python environment/verify_m5a_dispatch.py
+
+CUDA_VISIBLE_DEVICES=0 python scripts/run_language_control.py \
+  --control-schedule outputs/diagnostics/m5a/target-development-schedules.json \
+  --neuro-symbolic-evidence-root \
+    outputs/diagnostics/m5a/neuro-symbolic-safety-gate/<runtime-fingerprint> \
+  --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
+  --checkpoint-root outputs/models/act \
+  --runtime-selection outputs/diagnostics/m42/runtime_ablation/runtime_selection.json \
+  --device cuda \
+  --stage one_scene_control_smoke \
+  --output-root outputs/diagnostics/m5a/control \
+  --report outputs/diagnostics/m5a/stages/neuro-symbolic-one-scene-control.json
+
+CUDA_VISIBLE_DEVICES=0 python environment/verify_m5a_dispatch.py \
+  --target-evidence \
+  --stage-report outputs/diagnostics/m5a/stages/neuro-symbolic-one-scene-control.json \
+  --control-schedule outputs/diagnostics/m5a/target-development-schedules.json \
+  --neuro-symbolic-evidence-root \
+    outputs/diagnostics/m5a/neuro-symbolic-safety-gate/<runtime-fingerprint> \
+  --report outputs/diagnostics/m5a/stages/neuro-symbolic-one-scene-verification.json
+```
+
+This authorization is one-scene-only. Correct dispatch execution, the six learned control success
+count, and Oracle success count are separate fields. The command cannot access the three-scene or
+full-development stages, any final/test/fresh source, `m42_final_v0`, M2, or SmolVLA.
+
 Other later stages still require separate authorization and use ordinary `--target-resume` only
 for an originally promoted pilot, followed by offline language evaluation and
 `run_language_control.py --stage {one_scene_control_smoke,three_scene_control_screen,full_control_development}`.

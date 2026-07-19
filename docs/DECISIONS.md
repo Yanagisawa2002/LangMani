@@ -2011,3 +2011,26 @@ name. M5A.4.1 therefore accepts that root only through the explicit
 `--classifier-rejection-evidence` input, validates it with the selected checkpoint before loading a
 GPU model, and binds its analysis, checkpoint, and selection fingerprints into the run identity.
 Automatic discovery or fallback remains prohibited.
+
+## D-067 — Bind the selected hybrid read-only before one-scene physical control
+
+M5A.4.1 completed its immutable offline protocol and selected the unchanged
+`NeuroSymbolicRouterV0` under the execution-safety gate. Exact rejection taxonomy remains a
+reported limitation, but every rejection is structurally non-executable. The next separately
+authorized work therefore does not reopen language selection: it creates a path-independent
+dispatch-source identity over the completed artifact, router lock, exact Qwen files and revisions,
+prompt/schema/parser/arbiter fingerprints, and selection flags.
+
+That source may bind only the canonical six-entry frozen PerTask registry through metadata. Model
+loading remains exact local-cache-only; there is no download, fallback, prompt edit, controller
+reselection, retraining, blending, or shared-ACT path. The first physical command accepts only
+`one_scene_control_smoke` and runs Oracle plus the sole selected router. Rejection is tested through
+the selected router before controller lookup, reset, or step. Routeable episodes continue to use
+the schedule TaskSpec for M1 reset/evaluation and the predicted TaskSpec only for controller
+selection.
+
+An independent verifier rehashes the M5A.4.1 source, rebuilt six-controller registry, authoritative
+one-scene schedule, rejection probe, all six learned atoms, all six Oracle atoms, active
+EpisodeSpecs, and separated action streams. It reports correct stage execution and observed control
+success separately. This interface change authorizes no three-scene/full/final stage, M3B test,
+historical fresh, `m42_final_v0`, M2 expert, or SmolVLA access and changes no dependency version.

@@ -55,12 +55,17 @@ CONTROL_EPISODE_SCHEMA = "langmani-m5a-language-control-episode-v0"
 CONTROL_COMPLETION_SCHEMA = "langmani-m5a-language-control-complete-v0"
 REJECTION_NOOP_PROBE_SCHEMA = "langmani-m5a-rejection-noop-probe-v0"
 CONTROL_ROUTER_ORDER = ("oracle", "classifier", "llm")
+CONTROL_ALLOWED_ROUTER_LABELS = (*CONTROL_ROUTER_ORDER, "neuro_symbolic")
 _LANGUAGE_ROUTER_NAMES = {
     "rule": "RuleRouterV0",
     "classifier": "FactorizedTextClassifierV0",
     "llm": "StructuredLocalLLMRouterV0",
 }
-_CONTROL_ROUTER_NAMES = {"oracle": "OracleTaskSpecRouterV0", **_LANGUAGE_ROUTER_NAMES}
+_CONTROL_ROUTER_NAMES = {
+    "oracle": "OracleTaskSpecRouterV0",
+    **_LANGUAGE_ROUTER_NAMES,
+    "neuro_symbolic": "NeuroSymbolicRouterV0",
+}
 
 
 class M5AArtifactValidationError(RuntimeError):
@@ -1475,7 +1480,7 @@ def validate_development_control_evidence(
         not isinstance(router_order, list)
         or not router_order
         or router_order[0] != "oracle"
-        or any(value not in CONTROL_ROUTER_ORDER for value in router_order)
+        or any(value not in CONTROL_ALLOWED_ROUTER_LABELS for value in router_order)
         or len(set(router_order)) != len(router_order)
     ):
         raise M5AArtifactValidationError("control owner router order is not Oracle plus learned")
@@ -1660,6 +1665,7 @@ def validate_development_control_evidence(
 
 __all__ = [
     "CONTROL_COMPLETION_SCHEMA",
+    "CONTROL_ALLOWED_ROUTER_LABELS",
     "CONTROL_EPISODE_SCHEMA",
     "CONTROL_ROUTER_ORDER",
     "CONTROL_RUN_SCHEMA",

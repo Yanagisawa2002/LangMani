@@ -495,6 +495,12 @@ corpus path keeps only opaque final IDs/counts/digests and never imports
 - Target development independently revalidates a real rejection no-op probe and retains four action
   streams: raw policy output, optional binary-transformed output, bounds-projected output, and the
   action actually executed. The locked project-only runtime records the binary stream as absent.
+- The selected M5A.4.1 router enters control through a path-independent read-only source identity.
+  That identity revalidates the immutable safety-gate evidence, model-file hashes, prompt/schema/
+  parser/arbiter lock, and selection flags before it can bind the metadata-only six-controller
+  registry. The first authorization is one scene only. Independent verification rehashes all six
+  learned atoms, all six Oracle atoms, active EpisodeSpecs, action streams, controller IDs, and the
+  no-op rejection probe without loading a model or stepping an environment.
 - OneHot and TaskToken are oracle discrete-task controls, not language understanding.
 - Simulator, CUDA, Vulkan, or rendering failures remain visible and cause strict verification to
   fail.

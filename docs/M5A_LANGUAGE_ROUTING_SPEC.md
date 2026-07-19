@@ -662,3 +662,27 @@ validation. Control, language final, M3B test, `m42_final_v0`, and SmolVLA remai
 Evidence is written under
 `outputs/diagnostics/m5a/neuro-symbolic-safety-gate/<runtime-fingerprint>/` through fsynced staging,
 checksum validation, same-filesystem atomic promotion, and a completion marker written last.
+
+## Selected-router dispatch integration and one-scene control smoke
+
+The completed M5A.4.1 artifact is the sole eligible learned-router source. A path-independent
+dispatch identity binds its runtime/artifact fingerprints, router-lock fingerprint, exact model and
+tokenizer revisions, model-file hashes, prompt and rendered-transport fingerprints, semantic
+schema, lexical parser, safety arbiter, and the diagnostic exact-taxonomy limitation. Revalidation
+must pass before a model, controller, or environment runtime is entered. The model cache is local
+only; download fallback, another router, prompt change, and later physical stages are prohibited.
+
+The read-only controller binding covers exactly the canonical six TaskSpec IDs in registry order.
+It may inspect finalized metadata but sets controller-loaded/environment-created/reset/step fields
+to false. A routed decision then selects exactly one PerTask checkpoint while the schedule TaskSpec
+remains the M1 reset/evaluation oracle. A rejection probe uses the selected router on the active M1
+environment boundary and must return with zero controller lookup, zero reset, and zero `env.step`.
+
+The one-scene smoke executes six learned episodes and the six corresponding Oracle ceiling
+episodes. Each learned decision must match its scheduled TaskSpec, controller ID, and active
+EpisodeSpec; wrong-object/wrong-bin routes, false rejection, malformed/non-finite actions,
+infrastructure failures, dispatch after rejection, and M2 calls are zero. Raw, binary-transformed,
+projected, and executed action evidence remains separate. Independent verification rehashes every
+atom and reports the learned/Oracle success counts separately from correct experiment execution.
+The smoke cannot authorize or access the three-scene screen, full development, language/control
+final, M3B test, historical fresh, `m42_final_v0`, or SmolVLA.

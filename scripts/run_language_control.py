@@ -53,6 +53,12 @@ from langmani.language.llm_router import (  # noqa: E402
     build_structured_routing_prompt,
     select_structured_routing_prompt_examples,
 )
+from langmani.language.neuro_symbolic_dispatch import (  # noqa: E402
+    NEURO_SYMBOLIC_DISPATCH_ROUTER_LABEL,
+    bind_selected_router_to_controller_registry,
+    load_selected_neuro_symbolic_router,
+    validate_selected_neuro_symbolic_dispatch_source,
+)
 from langmani.language.router_types import (  # noqa: E402
     LanguageExample,
     LanguageSplit,
@@ -89,8 +95,8 @@ RUN_SCHEMA = "langmani-m5a-language-control-run-v0"
 EPISODE_SCHEMA = "langmani-m5a-language-control-episode-v0"
 COMPLETION_SCHEMA = "langmani-m5a-language-control-complete-v0"
 REJECTION_NOOP_PROBE_SCHEMA = "langmani-m5a-rejection-noop-probe-v0"
-ROUTER_ORDER = ("oracle", "rule", "classifier", "llm")
-LEARNED_ROUTER_ORDER = ("classifier", "llm")
+ROUTER_ORDER = ("oracle", "rule", "classifier", "llm", "neuro_symbolic")
+LEARNED_ROUTER_ORDER = ("classifier", "llm", NEURO_SYMBOLIC_DISPATCH_ROUTER_LABEL)
 DEFAULT_DATASET_ROOT = (
     PROJECT_ROOT / "outputs" / "datasets" / "m3b" / "langmani-pick-place-lerobot-v1"
 )
@@ -179,23 +185,30 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             "router training."
         ),
     )
-    parser.add_argument("--classifier-artifact-root", type=Path, required=True)
+    parser.add_argument("--classifier-artifact-root", type=Path)
     parser.add_argument(
         "--router-evaluation-evidence-root",
         type=Path,
-        required=True,
         help="Immutable evidence root produced by evaluate_language_routers.py.",
     )
-    parser.add_argument("--llm-model-id", required=True)
-    parser.add_argument("--llm-model-revision", required=True)
-    parser.add_argument("--llm-tokenizer-revision", required=True)
-    parser.add_argument("--llm-license", required=True)
+    parser.add_argument("--llm-model-id")
+    parser.add_argument("--llm-model-revision")
+    parser.add_argument("--llm-tokenizer-revision")
+    parser.add_argument("--llm-license")
     parser.add_argument("--llm-license-reviewed", action="store_true")
     parser.add_argument(
         "--llm-dtype", choices=("float32", "float16", "bfloat16"), default="bfloat16"
     )
     parser.add_argument("--llm-maximum-new-tokens", type=int, default=128)
     parser.add_argument("--allow-model-download", action="store_true")
+    parser.add_argument(
+        "--neuro-symbolic-evidence-root",
+        type=Path,
+        help=(
+            "Selected immutable M5A.4.1 evidence. This mode is local-cache-only and is "
+            "currently authorized only for one_scene_control_smoke."
+        ),
+    )
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
     parser.add_argument("--dataset-root", type=Path, default=DEFAULT_DATASET_ROOT)
     parser.add_argument("--checkpoint-root", type=Path, default=DEFAULT_CHECKPOINT_ROOT)
@@ -219,6 +232,41 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args(argv)
+
+
+def _router_source_mode(args: argparse.Namespace) -> str:
+    """Require exactly one immutable router lineage before any output or runtime work."""
+
+    legacy_values = (
+        args.classifier_artifact_root,
+        args.router_evaluation_evidence_root,
+        args.llm_model_id,
+        args.llm_model_revision,
+        args.llm_tokenizer_revision,
+        args.llm_license,
+    )
+    if args.neuro_symbolic_evidence_root is not None:
+        if any(value is not None for value in legacy_values):
+            raise LanguageControlCommandError(
+                "neuro-symbolic dispatch cannot mix legacy classifier/LLM evidence"
+            )
+        if args.allow_model_download:
+            raise LanguageControlCommandError(
+                "neuro-symbolic dispatch requires the immutable local model cache"
+            )
+        if (
+            args.stage != M5AStage.ONE_SCENE_CONTROL_SMOKE.value
+            or args.prior_stage_report is not None
+        ):
+            raise LanguageControlCommandError(
+                "the selected M5A.4.1 router is authorized only for one-scene control smoke"
+            )
+        return NEURO_SYMBOLIC_DISPATCH_ROUTER_LABEL
+    if any(value is None for value in legacy_values):
+        raise LanguageControlCommandError(
+            "legacy dispatch requires classifier, router-evaluation, and complete LLM identity"
+        )
+    return "legacy"
 
 
 def _lexical_absolute(path: Path) -> Path:
@@ -292,12 +340,16 @@ def _safe_output_paths(
 def _safe_paths(args: argparse.Namespace) -> tuple[Path, Path]:
     immutable_inputs = {
         "control schedule": args.control_schedule,
-        "classifier artifact": args.classifier_artifact_root,
-        "router evaluation evidence": args.router_evaluation_evidence_root,
         "M3B dataset": args.dataset_root,
         "ACT checkpoint": args.checkpoint_root,
         "runtime selection": args.runtime_selection,
     }
+    if args.classifier_artifact_root is not None:
+        immutable_inputs["classifier artifact"] = args.classifier_artifact_root
+    if args.router_evaluation_evidence_root is not None:
+        immutable_inputs["router evaluation evidence"] = args.router_evaluation_evidence_root
+    if args.neuro_symbolic_evidence_root is not None:
+        immutable_inputs["neuro-symbolic evidence"] = args.neuro_symbolic_evidence_root
     if args.m4_diagnostics_root is not None:
         immutable_inputs["legacy M4 diagnostics"] = args.m4_diagnostics_root
     return _safe_output_paths(
@@ -942,10 +994,10 @@ def run_rejection_noop_probe(
     registry: ControllerRegistry,
     loader: StrictPerTaskControllerLoader,
     environment: object,
-    rule_router: RuleRouterV0,
+    router: RouterLike,
 ) -> dict[str, object]:
     """Prove on the active target environment that rejection performs zero work."""
-    decision = rule_router.route("Open the drawer.")
+    decision = router.route("Open the drawer.")
     if decision.status is RouterStatus.ROUTE:
         raise LanguageControlCommandError("the rejection probe unexpectedly produced a route")
     counting_loader = _CountingControllerLoader(loader)
@@ -1702,6 +1754,7 @@ def _stage_candidates(
 
 
 def execute(args: argparse.Namespace) -> dict[str, object]:
+    router_source_mode = _router_source_mode(args)
     output_root, _report_path = _safe_paths(args)
     corpus = build_language_corpus()
     schedule = load_authoritative_development_schedule(
@@ -1718,6 +1771,7 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
         "corpus_fingerprint": inputs.corpus_fingerprint,
         "episode_count_per_router": len(inputs.episodes),
         "stage": stage.value,
+        "router_source_mode": router_source_mode,
         "router_order": ["oracle", "promoted_learned_only"],
         "maximum_learned_candidates": budget.maximum_learned_candidates,
         "maximum_expected_episode_atoms": budget.maximum_episode_count,
@@ -1742,41 +1796,73 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
         dataset_root=args.dataset_root,
         runtime_selection_path=args.runtime_selection,
     )
-    classifier, classifier_identity = _classifier_router(
-        args.classifier_artifact_root.resolve(), device=args.device
-    )
     rule = RuleRouterV0()
-    llm_config = StructuredLLMRouterConfig(
-        model_id=args.llm_model_id,
-        model_revision=args.llm_model_revision,
-        tokenizer_revision=args.llm_tokenizer_revision,
-        dtype=args.llm_dtype,
-        maximum_new_tokens=args.llm_maximum_new_tokens,
-    )
-    prompt_examples, router_evaluation_identity = _load_frozen_router_evaluation(
-        args.router_evaluation_evidence_root,
-        corpus=corpus,
-        classifier_identity=classifier_identity,
-        rule=rule,
-        llm_config=llm_config,
-        llm_license=args.llm_license,
-        llm_license_reviewed=bool(args.llm_license_reviewed),
-    )
-    llm_generator = TransformersLocalTextGenerator(
-        config=llm_config,
-        device=args.device,
-        local_files_only=not args.allow_model_download,
-    )
-    llm = StructuredLocalLLMRouterV0(
-        config=llm_config,
-        generator=llm_generator,
-        prompt_examples=prompt_examples,
-    )
-    candidates = _stage_candidates(
-        stage=stage,
-        router_evaluation_identity=router_evaluation_identity,
-        prior_stage_report=args.prior_stage_report,
-    )
+    classifier: FactorizedTextRouterV0 | None = None
+    classifier_identity: dict[str, object] | None = None
+    llm_config: StructuredLLMRouterConfig | None = None
+    llm: StructuredLocalLLMRouterV0 | None = None
+    router_evaluation_identity: dict[str, object] | None = None
+    neuro_symbolic_source = None
+    neuro_symbolic_binding = None
+    neuro_symbolic_router = None
+    if router_source_mode == NEURO_SYMBOLIC_DISPATCH_ROUTER_LABEL:
+        assert args.neuro_symbolic_evidence_root is not None
+        neuro_symbolic_source = validate_selected_neuro_symbolic_dispatch_source(
+            args.neuro_symbolic_evidence_root,
+            corpus=corpus,
+        )
+        neuro_symbolic_binding = bind_selected_router_to_controller_registry(
+            neuro_symbolic_source,
+            registry,
+        )
+        neuro_symbolic_router = load_selected_neuro_symbolic_router(
+            neuro_symbolic_source,
+            corpus=corpus,
+            device=args.device,
+            local_files_only=True,
+        )
+        candidates = (NEURO_SYMBOLIC_DISPATCH_ROUTER_LABEL,)
+    else:
+        assert args.classifier_artifact_root is not None
+        assert args.router_evaluation_evidence_root is not None
+        assert args.llm_model_id is not None
+        assert args.llm_model_revision is not None
+        assert args.llm_tokenizer_revision is not None
+        assert args.llm_license is not None
+        classifier, classifier_identity = _classifier_router(
+            args.classifier_artifact_root.resolve(), device=args.device
+        )
+        llm_config = StructuredLLMRouterConfig(
+            model_id=args.llm_model_id,
+            model_revision=args.llm_model_revision,
+            tokenizer_revision=args.llm_tokenizer_revision,
+            dtype=args.llm_dtype,
+            maximum_new_tokens=args.llm_maximum_new_tokens,
+        )
+        prompt_examples, router_evaluation_identity = _load_frozen_router_evaluation(
+            args.router_evaluation_evidence_root,
+            corpus=corpus,
+            classifier_identity=classifier_identity,
+            rule=rule,
+            llm_config=llm_config,
+            llm_license=args.llm_license,
+            llm_license_reviewed=bool(args.llm_license_reviewed),
+        )
+        llm_generator = TransformersLocalTextGenerator(
+            config=llm_config,
+            device=args.device,
+            local_files_only=not args.allow_model_download,
+        )
+        llm = StructuredLocalLLMRouterV0(
+            config=llm_config,
+            generator=llm_generator,
+            prompt_examples=prompt_examples,
+        )
+        candidates = _stage_candidates(
+            stage=stage,
+            router_evaluation_identity=router_evaluation_identity,
+            prior_stage_report=args.prior_stage_report,
+        )
     if not candidates:
         raise LanguageControlCommandError("no learned router was promoted to this physical stage")
     environment = _create_environment()
@@ -1790,13 +1876,19 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
             registry=registry,
             loader=loader,
             environment=environment,
-            rule_router=rule,
+            router=(neuro_symbolic_router if neuro_symbolic_router is not None else rule),
         )
         dispatcher = ControllerDispatcher(registry=registry, loader=loader)
-        available: dict[str, DecisionProvider] = {
-            "classifier": _provider(classifier),
-            "llm": _provider(llm),
-        }
+        available: dict[str, DecisionProvider] = {}
+        if classifier is not None and llm is not None:
+            available.update(
+                {
+                    "classifier": _provider(classifier),
+                    "llm": _provider(llm),
+                }
+            )
+        if neuro_symbolic_router is not None:
+            available[NEURO_SYMBOLIC_DISPATCH_ROUTER_LABEL] = _provider(neuro_symbolic_router)
         providers: dict[str, DecisionProvider] = {
             "oracle": _oracle_provider,
             **{candidate: available[candidate] for candidate in candidates},
@@ -1811,17 +1903,21 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
             run_identity={
                 "git_commit": git.commit,
                 "classifier": classifier_identity,
-                "llm_config": llm_config.to_dict(),
-                "llm_config_fingerprint": llm_config.fingerprint,
-                "llm_prompt_fingerprint": llm.prompt_fingerprint,
-                "llm_prompt_example_ids": list(llm.prompt_example_ids),
+                "llm_config": None if llm_config is None else llm_config.to_dict(),
+                "llm_config_fingerprint": (None if llm_config is None else llm_config.fingerprint),
+                "llm_prompt_fingerprint": None if llm is None else llm.prompt_fingerprint,
+                "llm_prompt_example_ids": (None if llm is None else list(llm.prompt_example_ids)),
                 "router_evaluation": router_evaluation_identity,
+                "neuro_symbolic_dispatch_source": (
+                    None if neuro_symbolic_source is None else neuro_symbolic_source.identity_dict()
+                ),
+                "neuro_symbolic_controller_binding": (
+                    None if neuro_symbolic_binding is None else neuro_symbolic_binding.to_dict()
+                ),
                 "rule_config_fingerprint": rule.config.fingerprint,
                 "candidate_promotion_identity": {
-                    "promoted_learned_routers": router_evaluation_identity[
-                        "promoted_learned_routers"
-                    ],
-                    "primary_learned_router": router_evaluation_identity["primary_learned_router"],
+                    "promoted_learned_routers": list(candidates),
+                    "primary_learned_router": candidates[0],
                     "stage_candidates": list(candidates),
                     "prior_stage_report": (
                         None if args.prior_stage_report is None else str(args.prior_stage_report)
@@ -1843,9 +1939,15 @@ def execute(args: argparse.Namespace) -> dict[str, object]:
         **result,
         "controller_registry": registry.to_dict(),
         "classifier_identity": classifier_identity,
-        "llm_config": llm_config.to_dict(),
-        "llm_prompt_fingerprint": llm.prompt_fingerprint,
+        "llm_config": None if llm_config is None else llm_config.to_dict(),
+        "llm_prompt_fingerprint": None if llm is None else llm.prompt_fingerprint,
         "router_evaluation_identity": router_evaluation_identity,
+        "neuro_symbolic_dispatch_source": (
+            None if neuro_symbolic_source is None else neuro_symbolic_source.to_dict()
+        ),
+        "neuro_symbolic_controller_binding": (
+            None if neuro_symbolic_binding is None else neuro_symbolic_binding.to_dict()
+        ),
         "rejection_noop_probe": rejection_noop_probe,
         "physical_execution": True,
         "dry_run": False,

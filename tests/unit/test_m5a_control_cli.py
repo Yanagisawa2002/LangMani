@@ -18,6 +18,13 @@ from langmani.language.dispatcher import (
     ControllerDispatcher,
     FixturePerTaskControllerLoader,
 )
+from langmani.language.neuro_symbolic_control_verifier import (
+    verify_neuro_symbolic_control_evidence,
+)
+from langmani.language.neuro_symbolic_dispatch import (
+    SelectedNeuroSymbolicDispatchSource,
+    bind_selected_router_to_controller_registry,
+)
 from langmani.language.router_types import (
     RouterConfidence,
     RouterDecision,
@@ -529,7 +536,7 @@ def test_target_rejection_probe_uses_real_environment_boundary_without_work() ->
         registry=registry,
         loader=loader,
         environment=environment,
-        rule_router=RuleRouterV0(),
+        router=RuleRouterV0(),
     )
 
     assert probe["passed"] is True
@@ -696,3 +703,128 @@ def test_controller_registry_gate_is_metadata_only_and_keeps_six_provenance_entr
             "runtime_selection_path": tmp_path / "runtime-selection.json",
         }
     ]
+
+
+def _selected_neuro_symbolic_source(tmp_path: Path) -> SelectedNeuroSymbolicDispatchSource:
+    return SelectedNeuroSymbolicDispatchSource(
+        evidence_root=tmp_path / "m5a41",
+        source_runtime_fingerprint=f"sha256:{'1' * 64}",
+        source_artifact_fingerprint=f"sha256:{'2' * 64}",
+        source_implementation_git="3" * 40,
+        router_lock_fingerprint=f"sha256:{'4' * 64}",
+        model_id="Qwen/Qwen3-4B-Instruct-2507",
+        model_revision="5" * 40,
+        tokenizer_revision="5" * 40,
+        model_fingerprint=f"sha256:{'6' * 64}",
+        model_file_identities={"model.safetensors": {"size_bytes": 8, "sha256": "sha256:x"}},
+        snapshot_size_bytes=8,
+        dtype="bfloat16",
+        prompt_fingerprint=f"sha256:{'7' * 64}",
+        rendered_prompt_fingerprint=f"sha256:{'8' * 64}",
+        prompt_example_ids=("train-a",),
+        semantic_schema_fingerprint=f"sha256:{'9' * 64}",
+        symbolic_contract_fingerprint=f"sha256:{'a' * 64}",
+        arbiter_fingerprint=f"sha256:{'b' * 64}",
+        semantic_maximum_new_tokens=256,
+        exact_rejection_taxonomy_quality_passed=False,
+    )
+
+
+def test_neuro_symbolic_cli_is_one_source_one_scene_and_local_only(tmp_path: Path) -> None:
+    command = _load_command()
+    base = [
+        "--control-schedule",
+        str(tmp_path / "schedule.json"),
+        "--neuro-symbolic-evidence-root",
+        str(tmp_path / "m5a41"),
+        "--stage",
+        "one_scene_control_smoke",
+    ]
+    assert command._router_source_mode(command.parse_args(base)) == "neuro_symbolic"
+
+    with pytest.raises(command.LanguageControlCommandError, match="cannot mix"):
+        command._router_source_mode(
+            command.parse_args([*base, "--classifier-artifact-root", str(tmp_path / "old")])
+        )
+    with pytest.raises(command.LanguageControlCommandError, match="local model cache"):
+        command._router_source_mode(command.parse_args([*base, "--allow-model-download"]))
+    with pytest.raises(command.LanguageControlCommandError, match="only for one-scene"):
+        command._router_source_mode(
+            command.parse_args(
+                [
+                    "--control-schedule",
+                    str(tmp_path / "schedule.json"),
+                    "--neuro-symbolic-evidence-root",
+                    str(tmp_path / "m5a41"),
+                    "--stage",
+                    "three_scene_control_screen",
+                ]
+            )
+        )
+
+
+def test_neuro_symbolic_six_task_control_is_independently_rehashed(tmp_path: Path) -> None:
+    command = _load_command()
+    corpus, bundle = _bundle()
+    inputs = command.prepare_development_inputs(
+        schedule=bundle.control_development,
+        corpus=corpus,
+        stage=command.M5AStage.ONE_SCENE_CONTROL_SMOKE,
+    )
+    registry = build_fixture_controller_registry()
+    source = _selected_neuro_symbolic_source(tmp_path)
+    binding = bind_selected_router_to_controller_registry(source, registry)
+    environment = _SpyEnvironment()
+    loader = FixturePerTaskControllerLoader()
+    dispatcher = ControllerDispatcher(registry=registry, loader=loader)
+
+    def correct(episode, _example):
+        return RouterDecision.route(
+            task_spec=episode.task_spec,
+            confidence=RouterConfidence.unavailable(),
+            router_name="NeuroSymbolicRouterV0",
+            router_version="neuro-symbolic-router-v0",
+        )
+
+    probe = command.run_rejection_noop_probe(
+        registry=registry,
+        loader=loader,
+        environment=environment,
+        router=RuleRouterV0(),
+    )
+    result = command.run_development_control(
+        inputs=inputs,
+        registry=registry,
+        dispatcher=dispatcher,
+        environment=environment,
+        providers={"oracle": command._oracle_provider, "neuro_symbolic": correct},
+        output_root=tmp_path / "control",
+        run_identity={
+            "git_commit": "c" * 40,
+            "neuro_symbolic_dispatch_source": source.identity_dict(),
+            "neuro_symbolic_controller_binding": binding.to_dict(),
+        },
+        require_active_episode_spec=True,
+        rejection_noop_probe=probe,
+    )
+    report = {
+        **result,
+        "router_source_mode": "neuro_symbolic",
+        "physical_execution": True,
+        "neuro_symbolic_dispatch_source": source.to_dict(),
+        "neuro_symbolic_controller_binding": binding.to_dict(),
+    }
+    verified = verify_neuro_symbolic_control_evidence(
+        report,
+        inputs=inputs,
+        registry=registry,
+        source=source,
+    )
+
+    assert result["completed_episode_atoms"] == 12
+    assert result["router_order"] == ["oracle", "neuro_symbolic"]
+    assert result["summaries"]["neuro_symbolic"]["routing_correct_count"] == 6
+    assert verified["passed"] is True
+    assert verified["six_task_routes_validated"] is True
+    assert verified["neuro_symbolic_control_success_count"] == 6
+    assert verified["physical_target_validated"] is True
