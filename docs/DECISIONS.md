@@ -2328,3 +2328,22 @@ rule. The completed final result is therefore terminal experimental evidence, no
 `final_control_quality_passed=false`, `final_quality_gate_passed=false`, and `smolvla_go=false`.
 M3B test, historical fresh, and `m42_final_v0` remained unaccessed. M5A is closed without starting
 SmolVLA; any later milestone requires a new explicit decision and authorization.
+
+## D-081 — Add a zero-action, initial-state-only LatentGuard bridge
+
+M5B adds an optional canonical-JSON boundary for the bounded LatentGuard M6B integration smoke.
+The accepted PerTask controller is selected by lexically sorting eligible canonical task IDs; no
+rollout result participates. One bridge probe may reset the selected task once, reconstruct its
+policy observation, query its accepted ACT checkpoint once, and project the resulting actions. A
+counting proxy rejects any `env.step` call.
+
+Projection remains owned by LangMani's existing `BoundedActionEnvPostprocessorV0`. The content-bound
+action-space contract can therefore project later candidate JSON without opening a second simulator
+or reset. Raw policy actions, raw transformed actions, projected executable actions, and actually
+executed actions retain distinct identities. M5B produces no actually executed candidate action.
+
+The future fixed continuation replays a previously recorded projected nominal trajectory after the
+ten-action candidate prefix and never requeries the policy after divergence. It is reproducible but
+does not provide an intermediate policy snapshot, intermediate exact replay, same-policy
+continuation, or closed-loop shielding. The bridge authorizes no training, rollout, task outcome,
+performance claim, VLM/LLM, or multi-GPU work.
