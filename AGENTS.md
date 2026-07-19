@@ -8,9 +8,10 @@ experimentally and physically validated, but `baseline_quality_validated=false`;
 candidate was rejected. The real M4.3a semantic-alignment audit and M4.3b FactorFiLM
 target-development are complete. FactorFiLM passed experiment/physical verification but failed its
 quality gate, so the shared-ACT architecture search is closed and `m42_final_v0` remains sealed.
-M5A modular language-to-TaskSpec routing over the six frozen PerTask ACT controllers is the active
-milestone. Its implementation now uses separately authorized fixture, tiny-overfit, authoritative
-single-seed pilot/resume, language-development, 1-scene smoke, 3-scene screen, and 6-scene full
+M5A modular language-to-TaskSpec routing over the six frozen PerTask ACT controllers is the latest
+completed milestone. Its implementation uses separately authorized fixture, tiny-overfit,
+authoritative single-seed pilot/resume, language-development, 1-scene smoke, 3-scene screen, and
+6-scene full
 development stages. The original step-29 classifier pilot and its exact D-061 recovery continuation
 completed. Validation selected epoch 4/step 116, but the unchanged full quality gate failed on
 rejection generalization. M5A.1 completed the validation-only, no-training post-hoc rejection
@@ -34,7 +35,14 @@ independent physical verifier passed. The separately authorized six-scene full c
 is also complete: all 36 routes and exact reset-state pairs matched; Oracle and NeuroSymbolic each
 succeeded on 25/36 with the same 11 timeouts; all nine rejection probes did zero runtime work; and
 the independent physical verifier passed. The quality gate created a positive, fingerprint-only
-`M5AFinalAuthorizationV0`. The sealed final benchmark and SmolVLA have not started.
+`M5AFinalAuthorizationV0`. The separately authorized sealed final benchmark is now complete and
+independently physically verified. Its 600-example language and 72-pair control evidence passed the
+pipeline contract, but the final quality gate failed: NeuroSymbolic routed 61/72 tasks, safely
+rejected 11 routeable commands, and achieved 46/72 end-to-end successes versus the Oracle ceiling's
+55/72. All ten rejection probes performed zero runtime work, and there were no wrong-object or
+wrong-bin routes, arm projections, infrastructure failures, M2 calls, or prohibited-source access.
+`final_pipeline_validated=true`, `physical_target_validated=true`,
+`final_quality_gate_passed=false`, and `smolvla_go=false`; SmolVLA has not started.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
@@ -426,3 +434,8 @@ resets, the immutable nine-category rejection set, 35/36 correct routes, 100% co
 agreement over every correct route, success gap at most two, full action/latency/failure
 recomputation, and a fresh-process verifier. It may create `M5AFinalAuthorizationV0` only when every
 quality item passes, and must never materialize or execute the sealed final schedules.
+The separately authorized sealed final additionally requires exactly 600 final-language examples,
+72 Oracle/NeuroSymbolic state pairs, 144 raw control atoms, ten zero-runtime rejection probes, an
+access ledger, atomic compact evidence, and fresh-process recomputation. Its completed pipeline and
+physical-verification flags do not override a false language, taxonomy, control, or combined quality
+gate. A failed final quality gate leaves `smolvla_go=false` and authorizes no automatic next stage.

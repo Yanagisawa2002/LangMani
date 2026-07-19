@@ -9,8 +9,8 @@ oracle-conditioned development diagnosis and rejected TaskToken. M4.3a completed
 policy semantic audit. M4.3b completed one factorized FiLM ACT target-development run, passed its
 experiment/physical verifier, and failed its quality gate. The shared-ACT architecture search is
 closed. M5A now implements modular language-to-TaskSpec routing over the six frozen PerTask ACT
-controllers; target classifier/LLM training and language/control development results are not yet
-claimed.
+controllers. Its separately authorized sealed final completed with valid physical evidence, while
+its language, control, and combined quality gates failed; SmolVLA remains unauthorized.
 
 M4 implements six per-task ACT policies, one mixed unconditioned ACT, and one mixed ACT with an
 oracle six-way task one-hot. Standard ACT consumes no natural-language text, so M4 is not a language
@@ -19,7 +19,7 @@ added no model and established that output changes are not reliably aligned with
 bin semantics. M4.3b added one oracle `ACT-Mixed-FactorFiLM`, not language understanding. M5A adds
 three explicit language routers and strict rejection, but keeps continuous control frozen. It does
 not add SmolVLA, rewrite M3B, reopen M3A, invoke M2 during policy rollouts, publish models to Hub,
-access any sealed final schedule, or change the M1/M2 task.
+reuse M3B test or historical fresh evaluation, access `m42_final_v0`, or change the M1/M2 task.
 
 ## Target platform
 
@@ -1317,6 +1317,41 @@ python environment/verify_m5a_final.py \
 
 Implementation and dry-run completion do not claim final physical results. Those are recorded only
 after the single target attempt and independent verification finish.
+
+The separately authorized target run completed at implementation Git
+`0c5bb7de045e936cd6a3ce850d620bba1d923a3d`; fresh-process verification completed at Git
+`b2489c73a10546ed1d4a2956649096d6255cd980`. The verifier recomputed all five 600-example language
+tables, 144 control atoms, 72 scheduled pairs, and ten rejection probes and returned
+`passed=true`, `final_pipeline_validated=true`, and `physical_target_validated=true`. Quality stayed
+separate and failed: `final_language_safety_quality_passed=false`,
+`final_rejection_taxonomy_quality_passed=false`, `final_control_quality_passed=false`, and
+`final_quality_gate_passed=false`.
+
+On the final language split, NeuroSymbolic achieved 78.33% routeable full TaskSpec accuracy, zero
+unsafe false routes, 100% final schema validity, and 100% deterministic repeatability. Its safe
+rejection recall was 100%, but it falsely rejected 21.67% of routeable commands; exact four-way
+status accuracy was 74.17%, exact rejection-status accuracy was 67.92%, and exact rejection-reason
+accuracy was 50.83%. The frozen direct Qwen3-4B baseline remained stronger descriptively at 99.17%
+routeable TaskSpec accuracy and 3.33% false-route rate, but it was already rejected and remained
+ineligible for dispatch.
+
+Physical control used 72 Oracle and 72 NeuroSymbolic atoms. Oracle succeeded on 55/72 and
+NeuroSymbolic on 46/72. NeuroSymbolic produced 61/72 correct routes and 11 safe false rejections;
+every correct route selected the matching frozen controller. The nine asymmetric outcomes were
+Oracle-success/NeuroSymbolic-failure pairs, while 46 pairs both succeeded and 17 both failed. There
+were zero wrong-object routes, wrong-bin routes, wrong-bin placements, off-table outcomes,
+malformed/non-finite actions, arm projections, infrastructure failures, and M2 calls. Projection
+affected only the gripper dimension: 2,408 Oracle and 2,071 NeuroSymbolic action components, with
+maximum correction `0.05956220626831055`. All ten final rejection probes performed zero controller
+lookup, policy reset, environment reset, and `env.step`.
+
+The immutable final run fingerprint is
+`sha256:d4d176d43cd9b6602f0a0e6c352e95a950a2fdbe96913ea0b12401f28712d2e5`; its artifact fingerprint
+is `sha256:2bfeaefdfb9a4ccb6a6e9a34a57ec053b06c1cb9cfc5ed0e98f5ab67863157c1`, and the independent
+verification fingerprint is
+`sha256:01c7add759f3e6691b5c8aa011c23db56389bb8ee10a8f964edb9aedacc52c08`. M3B test, historical
+fresh, and `m42_final_v0` were not accessed, M2 was not called, and `smolvla_go=false`. This is a
+valid final experimental result, not permission to retry a quality failure or begin SmolVLA.
 
 If and only if an immutable attempt is invalidated by one of the final protocol's declared
 infrastructure defects, a fresh output root may be used with

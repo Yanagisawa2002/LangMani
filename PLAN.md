@@ -4,10 +4,10 @@ M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and 
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected
 FactorFiLM after development; `m42_final_v0` remains sealed and unaccessed. The shared-ACT
-architecture search is therefore closed. M5A is the active implementation milestone: it adds
-modular language-to-TaskSpec routing over the six frozen PerTask ACT controls. M5A target
-classifier/LLM training and language/control development evidence are not yet claimed, its own
-final schedules remain sealed, and SmolVLA has not started.
+architecture search is therefore closed. M5A is the latest completed milestone: it adds
+modular language-to-TaskSpec routing over the six frozen PerTask ACT controls. Its separately
+authorized sealed final has completed with valid physical evidence but failed its conjunctive
+language/control quality gate. SmolVLA has not started and remains unauthorized.
 
 ## M0 — Reproducible environment foundation (complete)
 
@@ -302,20 +302,28 @@ controller timeout. The nine rejection probes performed zero runtime work, the f
 passed every item, and the quality gate created the bounded final authorization. Final remains
 sealed and was not executed.
 
-## M5B — Sealed modular final and possible SmolVLA handoff (planned)
+## M5A sealed modular final (complete; quality gate failed)
 
-Run a separate immutable M5A final benchmark only if at least one learned router passes every
-development gate. The sealed final uses 12 unseen scenes x 6 tasks and only Oracle plus the single
-locked router (72 + 72 = 144 physical episodes). A future SmolVLA comparison requires a later explicit decision and must preserve
-the M5A schedules, frozen-controller ceiling, and failure attribution. M5A never starts it
-automatically.
+The separately authorized immutable final used 600 language examples, 12 unseen scenes x six tasks,
+and only Oracle plus the locked NeuroSymbolic router (72 + 72 = 144 physical atoms). The completed
+pipeline and fresh-process verifier passed, but quality did not: NeuroSymbolic routed 61/72 tasks,
+safely rejected 11 routeable commands, and succeeded on 46/72 episodes versus Oracle's 55/72. The
+final language safety, rejection taxonomy, control, and combined gates are all false. Zero unsafe
+wrong-object/wrong-bin route, runtime work after rejection, arm projection, infrastructure failure,
+or M2 use was observed.
 
-The one-attempt orchestration, immutable evidence lifecycle, and fresh-process verifier are now
-implemented. Portable dry-run checks keep both final schedules sealed. The target command first
-evaluates the exact 600-example final language split with five frozen routers, then performs the 144
-paired physical rollouts and ten no-dispatch probes. Completion of this implementation is not a
-final result; the result exists only after the separately authorized target command and independent
-verification complete.
+Implementation Git `0c5bb7de045e936cd6a3ce850d620bba1d923a3d` produced the immutable run;
+verifier Git `b2489c73a10546ed1d4a2956649096d6255cd980` independently accepted it with
+`final_pipeline_validated=true` and `physical_target_validated=true`. The result is terminal quality
+evidence rather than recovery authority: `final_quality_gate_passed=false` and
+`smolvla_go=false`.
+
+## M5B — Possible SmolVLA handoff (blocked; not started)
+
+A future SmolVLA comparison would require a new explicit research decision and authorization. The
+completed M5A final does not supply that authorization because its quality gate failed. Any future
+work must preserve the final schedules, frozen-controller ceiling, failure attribution, and
+immutable M5A evidence; it must not reinterpret pipeline validity as model quality.
 
 ## M6 — Evaluation and release hardening (planned)
 

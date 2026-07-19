@@ -817,3 +817,37 @@ completion-last, and atomically promoted. A fresh-process verifier recomputes ev
 and control gate from raw records. `final_pipeline_validated` proves correct execution/evidence;
 `final_quality_gate_passed` separately reports candidate quality. Final completion never starts or
 authorizes SmolVLA automatically.
+
+### Observed sealed-final result
+
+The separately authorized target run completed at implementation Git
+`0c5bb7de045e936cd6a3ce850d620bba1d923a3d`. It evaluated all five frozen routers on exactly 600
+examples, wrote 144 control atoms for 72 scheduled Oracle/NeuroSymbolic pairs, and executed ten
+rejection probes. Fresh-process verifier Git `b2489c73a10546ed1d4a2956649096d6255cd980`
+recomputed the archive and returned `passed=true`, `final_pipeline_validated=true`, and
+`physical_target_validated=true`.
+
+The final NeuroSymbolic language result had 78.33% routeable full TaskSpec, object, and bin accuracy;
+zero unsafe false routes; 21.67% false rejection; 100% final schema validity and repeatability; and
+100% rejection recall. Exact four-way status accuracy was 74.17%, exact rejection-status accuracy
+was 67.92%, exact rejection-reason accuracy was 50.83%, and ambiguous/unsupported/malformed recall
+was 43.08%/95.95%/100%. Therefore both the safety-quality and exact-taxonomy gates failed.
+
+Oracle control succeeded on 55/72 atoms and NeuroSymbolic on 46/72. The learned path had 61 correct
+routes, 11 safe false rejections, 46 routing-correct successes, and 15 timeouts. Controller identity
+matched for all 61 dispatched correct routes. There were zero wrong-object/wrong-bin routes,
+wrong-bin placements, off-table outcomes, malformed/non-finite actions, arm projections,
+infrastructure failures, and M2 calls. The 11 safe false rejections correctly produced no physical
+reset audit, so only 61/72 physical pairs existed and the unchanged 72/72 pairing gate failed.
+Projection affected only the gripper action: 2,408 Oracle and 2,071 NeuroSymbolic components, with
+maximum correction `0.05956220626831055`. Every rejection probe performed zero lookup, policy reset,
+environment reset, and step.
+
+The final run fingerprint is
+`sha256:d4d176d43cd9b6602f0a0e6c352e95a950a2fdbe96913ea0b12401f28712d2e5`; the artifact fingerprint
+is `sha256:2bfeaefdfb9a4ccb6a6e9a34a57ec053b06c1cb9cfc5ed0e98f5ab67863157c1`; and the verifier
+fingerprint is `sha256:01c7add759f3e6691b5c8aa011c23db56389bb8ee10a8f964edb9aedacc52c08`.
+`final_language_safety_quality_passed=false`, `final_rejection_taxonomy_quality_passed=false`,
+`final_control_quality_passed=false`, `final_quality_gate_passed=false`, and `smolvla_go=false`.
+M3B test, historical fresh, and `m42_final_v0` remained unaccessed. This completed result cannot be
+retried as an infrastructure recovery and authorizes no automatic next stage.

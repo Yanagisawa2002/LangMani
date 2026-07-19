@@ -2289,3 +2289,42 @@ continues to compare the complete staged schedule separately with `control_sched
 a read-only verifier correction: it does not change either schedule, any final result, access
 ledger, router, model, controller, threshold, or raw episode. The failed verifier report remains
 preserved and is not final experimental evidence.
+
+## D-080 — Accept the sealed-final pipeline, reject its quality, and keep SmolVLA sealed
+
+The valid sealed-final recovery used clean implementation Git
+`0c5bb7de045e936cd6a3ce850d620bba1d923a3d` and final run fingerprint
+`sha256:d4d176d43cd9b6602f0a0e6c352e95a950a2fdbe96913ea0b12401f28712d2e5`. It consumed the exact
+D-074 authorization, evaluated five frozen routers on all 600 final-language examples, executed 72
+Oracle plus 72 NeuroSymbolic control atoms over 12 unseen scenes, and ran the immutable ten-case
+rejection set. The artifact fingerprint is
+`sha256:2bfeaefdfb9a4ccb6a6e9a34a57ec053b06c1cb9cfc5ed0e98f5ab67863157c1`.
+
+Fresh-process verifier Git `b2489c73a10546ed1d4a2956649096d6255cd980` recomputed every language
+metric, all 144 raw control atoms, 72 pair identities, action statistics, rejection probes, and
+quality predicates. Its verification fingerprint is
+`sha256:01c7add759f3e6691b5c8aa011c23db56389bb8ee10a8f964edb9aedacc52c08` and it returned
+`passed=true`, `final_pipeline_validated=true`, and `physical_target_validated=true`. The earlier
+failed verifier report from D-079 remains immutable and is not used as final evidence.
+
+Quality did not pass. NeuroSymbolic achieved 78.33% routeable TaskSpec/object/bin accuracy, zero
+unsafe false routes, 21.67% false rejection, and 100% schema validity/repeatability. Its exact
+four-way status, rejection-status, and rejection-reason accuracies were 74.17%, 67.92%, and 50.83%.
+Oracle succeeded on 55/72 control episodes; NeuroSymbolic succeeded on 46/72 after 61 correct routes,
+11 safe false rejections, and 15 routed timeouts. All 61 dispatched correct routes selected the
+matching frozen controller. There were zero wrong-object/wrong-bin routes or interactions,
+wrong-bin placements, off-table outcomes, arm projections, malformed/non-finite actions,
+infrastructure failures, and M2 calls. Explicit projection affected only the gripper dimension:
+2,408 Oracle and 2,071 NeuroSymbolic components, with maximum correction
+`0.05956220626831055`. Every rejection probe performed zero controller lookup, policy reset,
+environment reset, and step.
+
+Three infrastructure attempts remain preserved rather than rewritten: the D-076 missing imported
+classifier artifact, the D-077 final-capability guard, and the D-078 no-runtime-audit reader defect.
+The pre-access D-078 allowlist launcher failure opened no new final ledger. None changed a model,
+prompt, parser, threshold, corpus, schedule, checkpoint, controller, action runtime, or M1 success
+rule. The completed final result is therefore terminal experimental evidence, not retry authority:
+`final_language_safety_quality_passed=false`, `final_rejection_taxonomy_quality_passed=false`,
+`final_control_quality_passed=false`, `final_quality_gate_passed=false`, and `smolvla_go=false`.
+M3B test, historical fresh, and `m42_final_v0` remained unaccessed. M5A is closed without starting
+SmolVLA; any later milestone requires a new explicit decision and authorization.
