@@ -1290,6 +1290,34 @@ at 2,925 components. Fresh-process verification returned `passed=true`,
 fingerprint `sha256:afb4d59a3549d42ac6e0e2cb010e8261cb39a47792af583fe5dd263645dd19b5`.
 The sealed final was not materialized or run.
 
+The separately authorized sealed-final command is now implemented. Its non-target dry-run verifies
+the frozen 600-command and 12-scene/72-pair identities without revealing final command text or
+scene seeds. The target command opens a one-attempt access ledger before materialization, evaluates
+exactly the five frozen language routers, then runs 72 Oracle plus 72 NeuroSymbolic episodes and the
+fixed ten-command no-dispatch probe set. Evidence is checksum-owned, promoted atomically, and must
+pass a fresh-process independent verifier that recomputes all 600 language records and all 144 raw
+control atoms. `final_pipeline_validated` remains separate from `final_quality_gate_passed`; exact
+rejection taxonomy remains diagnostic and does not dispatch. Neither command starts SmolVLA.
+
+```bash
+# Portable preflight; no final text or seed is materialized.
+python scripts/run_m5a_sealed_final.py --dry-run
+python environment/verify_m5a_final.py --structural
+
+# One separately authorized target attempt. Run only after the exact clean implementation commit
+# is pulled on the target and the authoritative development artifacts are present.
+CUDA_VISIBLE_DEVICES=0 python scripts/run_m5a_sealed_final.py \
+  --target-final --local-files-only
+
+# Fresh-process verifier; use the run-owned root printed by the target command.
+python environment/verify_m5a_final.py \
+  --evidence-root outputs/diagnostics/m5a/sealed-final/<run-fingerprint> \
+  --sealed-output-root outputs/diagnostics/m5a/sealed-final
+```
+
+Implementation and dry-run completion do not claim final physical results. Those are recorded only
+after the single target attempt and independent verification finish.
+
 Other later stages still require separate authorization and use ordinary `--target-resume` only
 for an originally promoted pilot, followed by offline language evaluation and
 `run_language_control.py --stage {one_scene_control_smoke,three_scene_control_screen,full_control_development}`.

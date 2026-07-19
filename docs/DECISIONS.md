@@ -2198,3 +2198,26 @@ returned `passed=true`, `physical_target_validated=true`, and every quality item
 final lock fingerprints. Language/control final, M3B test, historical fresh, `m42_final_v0`, shared
 ACT, M2 actions, and SmolVLA remained unaccessed. This decision authorizes only a later separately
 requested final command; it does not execute or score final.
+
+## D-075 — Make the separately authorized M5A final single-attempt and independently reproducible
+
+The positive D-074 authorization is consumed only by an explicit sealed-final command. A
+project-owned access ledger is opened before final texts or scene seeds are materialized and permits
+exactly one attempt. A failure is terminal evidence rather than permission to retry, change a
+router, or substitute a schedule. Portable dry-run validates identities and exact counts without
+opening this ledger or revealing locked content.
+
+The final language evaluation is fixed at 600 examples and exactly five frozen routers. The physical
+evaluation is fixed at 12 scenes x six TaskSpecs with Oracle and NeuroSymbolic paired in reset order,
+for 72 state pairs and 144 rollouts. A ten-category rejection set remains outside that rollout
+budget and must perform zero lookup, policy reset, environment reset, and step. No controller,
+prompt, parser, model, dataset, action runtime, M1 success rule, or dependency changes in this
+decision.
+
+The compact archive binds all semantic inputs in a path- and time-independent run fingerprint,
+uses fsynced staging and same-filesystem atomic promotion, and writes `complete.json` last. A fresh
+process recursively rehashes the archive, recomputes all five language-router metrics, validates all
+144 raw control atoms, and recomputes pairing, routing, safety, action, attribution, and quality
+gates. Pipeline validity, safety-language quality, exact taxonomy quality, control quality, and the
+combined final quality gate remain separate flags. The final command never accesses M3B test,
+historical fresh, or `m42_final_v0`, never calls M2, and never starts SmolVLA.

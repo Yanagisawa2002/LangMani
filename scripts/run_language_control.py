@@ -928,6 +928,34 @@ def load_authoritative_development_schedule(
     return control_development
 
 
+def load_authoritative_final_schedule(
+    path: Path,
+    *,
+    corpus: GeneratedLanguageCorpus,
+) -> ControlScheduleLock:
+    """Rebuild the sealed final lock without materializing its episodes.
+
+    This reader deliberately shares every identity and exclusion check with the
+    development reader.  Returning the lock is not final access: scene/task
+    atoms remain sealed until ``build_staged_control_schedule`` receives the
+    separate final authorization.
+    """
+
+    source = _resolved_unlinked(path, label="M5A sealed final schedule bundle")
+    payload = _read_object(source, label="M5A sealed final schedule bundle")
+    load_authoritative_development_schedule(source, corpus=corpus)
+    config = _parse_authoritative_control_config(payload.get("control_schedule_config"))
+    language_development, language_final = build_language_schedule_locks(corpus)
+    _development, final = _rebuild_recorded_control_locks(
+        payload=payload,
+        corpus=corpus,
+        config=config,
+        language_development=language_development,
+        language_final=language_final,
+    )
+    return final
+
+
 def load_sealed_final_authority(
     path: Path,
     *,
@@ -1371,7 +1399,9 @@ def _episode_identity(
         "scene_seed": episode.scene_seed,
         "scene_id": episode.scene_id,
         "oracle_task_id": episode.task_id,
-        "language_example_id": example.example_id,
+        # Final schedules use an opaque sealed slot ID whose materialized
+        # LanguageExample keeps its independently content-derived ID.
+        "language_example_id": episode.language_example_id,
         "command_fingerprint": f"sha256:{sha256_hex(example.raw_text)}",
     }
 
@@ -1628,24 +1658,32 @@ def _stage_outcome(
             )
             common["routing_error"] = common["routing_error_bound"]
             common["false_rejection"] = common["false_rejection_bound"]
-        elif stage is M5AStage.FULL_CONTROL_DEVELOPMENT:
+        elif stage in {M5AStage.FULL_CONTROL_DEVELOPMENT, M5AStage.SEALED_FINAL}:
             oracle_success = int(oracle["end_to_end_success_count"])
             predicted_success = int(summary["end_to_end_success_count"])
+            final = stage is M5AStage.SEALED_FINAL
+            route_threshold_key = (
+                "routing_correct_count_at_least_69"
+                if final
+                else "routing_correct_count_at_least_35"
+            )
             common.update(
                 {
-                    "success_gap": abs(oracle_success - predicted_success) <= 2,
-                    "routing_correct_count_at_least_35": (
-                        int(summary["routing_correct_count"]) >= 35
-                    ),
-                    "routing_wrong_object": int(summary["routing_wrong_object_count"]) <= 2,
-                    "routing_wrong_bin": int(summary["routing_wrong_bin_count"]) <= 2,
-                    "false_rejection_bound": int(summary["routing_false_rejection_count"]) <= 3,
+                    "success_gap": abs(oracle_success - predicted_success) <= (4 if final else 2),
+                    route_threshold_key: int(summary["routing_correct_count"])
+                    >= (69 if final else 35),
+                    "routing_wrong_object": int(summary["routing_wrong_object_count"])
+                    <= (3 if final else 2),
+                    "routing_wrong_bin": int(summary["routing_wrong_bin_count"])
+                    <= (3 if final else 2),
+                    "false_rejection_bound": int(summary["routing_false_rejection_count"])
+                    <= (2 if final else 3),
                     "target_in_wrong_bin": int(summary["target_in_wrong_bin_count"]) == 0,
                     "target_off_table": int(summary["target_off_table_count"]) == 0,
                     "arm_projection": int(summary["arm_projected_component_count"]) == 0,
                 }
             )
-            common["routing_error"] = common["routing_correct_count_at_least_35"]
+            common["routing_error"] = common[route_threshold_key]
             common["false_rejection"] = common["false_rejection_bound"]
         candidate_checks[candidate] = common
     passed_candidates = tuple(
@@ -1672,7 +1710,7 @@ def _stage_outcome(
             )
         ranked.sort()
         selected = ranked[0][1]
-    elif stage is M5AStage.FULL_CONTROL_DEVELOPMENT and len(learned) == 1:
+    elif stage in {M5AStage.FULL_CONTROL_DEVELOPMENT, M5AStage.SEALED_FINAL} and len(learned) == 1:
         selected = learned[0]
     return {
         "candidate_gate_checks": candidate_checks,
@@ -1796,8 +1834,11 @@ def run_development_control(
     budget = M5A_PHYSICAL_STAGE_BUDGETS[inputs.schedule.stage]
     if len(learned) > budget.maximum_learned_candidates:
         raise LanguageControlCommandError("physical stage exceeds its learned-candidate budget")
-    if inputs.schedule.stage is M5AStage.FULL_CONTROL_DEVELOPMENT and len(learned) != 1:
-        raise LanguageControlCommandError("full development requires one selected learned router")
+    if (
+        inputs.schedule.stage in {M5AStage.FULL_CONTROL_DEVELOPMENT, M5AStage.SEALED_FINAL}
+        and len(learned) != 1
+    ):
+        raise LanguageControlCommandError("expanded development/final requires one locked router")
     validated_probe = (
         None
         if rejection_noop_probe is None
@@ -1861,7 +1902,11 @@ def run_development_control(
     paired_environment = (
         _PairedInitialStateEnvironment(environment)
         if inputs.schedule.stage
-        in {M5AStage.THREE_SCENE_CONTROL_SCREEN, M5AStage.FULL_CONTROL_DEVELOPMENT}
+        in {
+            M5AStage.THREE_SCENE_CONTROL_SCREEN,
+            M5AStage.FULL_CONTROL_DEVELOPMENT,
+            M5AStage.SEALED_FINAL,
+        }
         else None
     )
     runtime_environment = environment if paired_environment is None else paired_environment
@@ -2011,8 +2056,8 @@ def run_development_control(
         "m2_expert_call_count": 0,
         "m2_expert_free_validated": True,
         **stage_outcome,
-        "language_final_accessed": False,
-        "control_final_accessed": False,
+        "language_final_accessed": inputs.schedule.stage is M5AStage.SEALED_FINAL,
+        "control_final_accessed": inputs.schedule.stage is M5AStage.SEALED_FINAL,
         "m42_final_accessed": False,
         "test_split_accessed": False,
         "historical_fresh_accessed": False,

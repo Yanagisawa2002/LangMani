@@ -310,6 +310,13 @@ locked router (72 + 72 = 144 physical episodes). A future SmolVLA comparison req
 the M5A schedules, frozen-controller ceiling, and failure attribution. M5A never starts it
 automatically.
 
+The one-attempt orchestration, immutable evidence lifecycle, and fresh-process verifier are now
+implemented. Portable dry-run checks keep both final schedules sealed. The target command first
+evaluates the exact 600-example final language split with five frozen routers, then performs the 144
+paired physical rollouts and ten no-dispatch probes. Completion of this implementation is not a
+final result; the result exists only after the separately authorized target command and independent
+verification complete.
+
 ## M6 — Evaluation and release hardening (planned)
 
 Unify policy evaluation, regression thresholds, reproducibility reports, command-line workflows,

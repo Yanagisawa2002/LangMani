@@ -785,3 +785,35 @@ projection remained visible at 2,925 components with maximum correction
 authorization fingerprint
 `sha256:afb4d59a3549d42ac6e0e2cb010e8261cb39a47792af583fe5dd263645dd19b5`.
 Final command text, scene seeds, and rollouts remained unmaterialized.
+
+## Separately authorized sealed final
+
+The positive `M5AFinalAuthorizationV0` permits one valid final access attempt. The access ledger is
+created before any final command or seed is materialized; any failed attempt remains terminal and
+cannot be silently replaced. A portable dry-run may inspect only lock identities and counts.
+
+The language part contains exactly 600 final examples: 360 routeable commands, 60 for each canonical
+TaskSpec, and 240 rejected commands. It evaluates only `RuleRouterV0`, the frozen rejected
+`FactorizedTextClassifierV0`, the frozen direct Qwen3-1.7B and Qwen3-4B baselines, and the locked
+`NeuroSymbolicRouterV0`. The final safety-quality gate and exact rejection-taxonomy gate are
+reported independently. Only safety-valid route/reject behavior can influence physical dispatch.
+
+The control part contains 12 unseen scenes x six TaskSpecs. Oracle runs immediately before
+NeuroSymbolic for every pair, yielding exactly 72 reset-state pairs and 144 real rollouts. The
+frozen PerTask registry, H=10, `pd_joint_pos`, and explicit `project` action runtime are unchanged.
+The locked ten-category rejection set must perform zero controller lookup, policy reset,
+environment reset, and `env.step`.
+
+The conjunctive final control gate requires at least 69/72 exact routes, at most three wrong-object
+and three wrong-bin routes, at most two false rejections, no malformed executable decision, complete
+controller identity agreement for correct routes, a NeuroSymbolic/Oracle success gap of at most
+four, and exact equality for all 72 initial physical states. Wrong-bin placement, off-table, arm
+projection, malformed/non-finite action, M2 use, and infrastructure failure must remain zero.
+
+The run identity binds implementation Git, final authorization, router, registry, runtime, language
+and control schedules, corpus/splits, model/tokenizer, prompt, schema, parser, arbiter, metric
+contract, and evidence schema. Evidence is fsynced in staging, recursively checksummed, written
+completion-last, and atomically promoted. A fresh-process verifier recomputes every language metric
+and control gate from raw records. `final_pipeline_validated` proves correct execution/evidence;
+`final_quality_gate_passed` separately reports candidate quality. Final completion never starts or
+authorizes SmolVLA automatically.

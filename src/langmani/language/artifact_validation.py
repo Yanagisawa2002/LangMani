@@ -47,6 +47,7 @@ from langmani.language.router_types import (
     RouterStatus,
 )
 from langmani.language.schedules import ScheduledControlEpisode, StagedControlSchedule
+from langmani.language.stage_protocol import M5AStage
 
 CORPUS_ARCHIVE_SCHEMA = "langmani-m5a-language-corpus-archive-v1"
 ROUTER_EVALUATION_EVIDENCE_SCHEMA = "langmani-m5a-language-router-evaluation-evidence-v1"
@@ -923,7 +924,7 @@ def _episode_identity(
         "scene_seed": episode.scene_seed,
         "scene_id": episode.scene_id,
         "oracle_task_id": episode.task_id,
-        "language_example_id": example.example_id,
+        "language_example_id": episode.language_example_id,
         "command_fingerprint": f"sha256:{sha256_hex(example.raw_text)}",
     }
 
@@ -1453,11 +1454,13 @@ def validate_development_control_evidence(
     registry: ControllerRegistry,
     rejection_probe_router_name: str = "RuleRouterV0",
 ) -> ValidatedControlEvidence:
-    """Rehash every atom in one promoted 1/3/6-scene control stage."""
+    """Rehash every atom in one promoted 1/3/6/12-scene control stage."""
 
     run_root = _require_real_directory(root, label="development control evidence")
-    if len(inputs.episodes) not in {6, 18, 36}:
-        raise M5AArtifactValidationError("staged control inputs must contain 6, 18, or 36 episodes")
+    if len(inputs.episodes) not in {6, 18, 36, 72}:
+        raise M5AArtifactValidationError(
+            "staged control inputs must contain 6, 18, 36, or 72 episodes"
+        )
     owner = _read_object(run_root / "owner.json", label="control evidence owner")
     registry_payload = _read_object(
         run_root / "controller_registry.json", label="control controller registry"
@@ -1634,6 +1637,7 @@ def validate_development_control_evidence(
     zero_dispatch_validated = aggregate_expectations["dispatch_after_rejection_count"] == 0 and (
         rejection_probe is not None or observed_safe_rejections > 0
     )
+    sealed_final = inputs.schedule.stage is M5AStage.SEALED_FINAL
     required_safety = {
         "wrong_object_interaction_available": True,
         "rejection_noop_probe_fingerprint": rejection_probe_fingerprint,
@@ -1641,8 +1645,8 @@ def validate_development_control_evidence(
         "zero_dispatch_after_rejection_validated": zero_dispatch_validated,
         "m2_expert_call_count": 0,
         "m2_expert_free_validated": True,
-        "language_final_accessed": False,
-        "control_final_accessed": False,
+        "language_final_accessed": sealed_final,
+        "control_final_accessed": sealed_final,
         "m42_final_accessed": False,
         "test_split_accessed": False,
         "historical_fresh_accessed": False,
