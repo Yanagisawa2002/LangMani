@@ -7,7 +7,11 @@ FactorFiLM after development; `m42_final_v0` remains sealed and unaccessed. The 
 architecture search is therefore closed. M5A is the latest completed milestone: it adds
 modular language-to-TaskSpec routing over the six frozen PerTask ACT controls. Its separately
 authorized sealed final has completed with valid physical evidence but failed its conjunctive
-language/control quality gate. SmolVLA has not started and remains unauthorized.
+language/control quality gate. M5B now implements the optional canonical-JSON LatentGuard
+initial-state proposal bridge. Its implementation and CPU fixture gates are complete, but the real
+single-seed probe is blocked because the current execution server lacks the accepted controller
+registry, runtime-selection record, ACT checkpoint, and processor artifacts. SmolVLA and bounded
+M6B execution have not started and remain unauthorized.
 
 ## M0 — Reproducible environment foundation (complete)
 
@@ -318,12 +322,29 @@ verifier Git `b2489c73a10546ed1d4a2956649096d6255cd980` independently accepted i
 evidence rather than recovery authority: `final_quality_gate_passed=false` and
 `smolvla_go=false`.
 
-## M5B — Possible SmolVLA handoff (blocked; not started)
+## M5B — LatentGuard initial-state proposal bridge (implementation complete; target probe blocked)
 
-A future SmolVLA comparison would require a new explicit research decision and authorization. The
-completed M5A final does not supply that authorization because its quality gate failed. Any future
-work must preserve the final schedules, frozen-controller ceiling, failure attribution, and
-immutable M5A evidence; it must not reinterpret pipeline validity as model quality.
+Implementation commit `9713f7503dae6612309d0ef8a499d93f6c3899a3` adds an optional JSON-only
+boundary between the Python 3.12 LangMani runtime and the separate Python 3.11 LatentGuard runtime.
+It deterministically selects one accepted PerTask ACT controller, binds its task/checkpoint/
+processor/action-space identities, permits exactly one seeded reset and one `[50,8]` policy query,
+and reuses `BoundedActionEnvPostprocessorV0` to project candidate actions without opening a second
+simulator. The bridge never executes a candidate action and keeps raw, projected, and actually
+executed action identities separate.
+
+The implementation, bridge unit suite, clean isolated-Linux validation, build, and installation
+diagnostics passed. The real proposal probe did not run because the current execution server does
+not contain the accepted controller registry, runtime-selection record, ACT checkpoint, or
+processor artifacts required to construct an artifact-validated binding. The bridge failed closed
+before environment construction: reset, policy-query, `env.step`, candidate-projection, and outcome
+counts are all zero. No canonical real proposal was exported.
+
+M5B target readiness is therefore `blocked`, not `not started`: source implementation is complete,
+while the physical reset-only probe remains pending restoration and digest validation of the frozen
+controller artifacts. This stage makes no performance or task-outcome claim and does not authorize
+bounded M6B execution, SmolVLA, training, rollout, or model selection. A future SmolVLA comparison
+would still require a separate explicit research decision and must not reinterpret M5A pipeline
+validity as model quality.
 
 ## M6 — Evaluation and release hardening (planned)
 
