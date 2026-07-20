@@ -1,25 +1,85 @@
 # LangMani
 
-LangMani is a language-conditioned robotic manipulation research repository. M0 established the
-runtime foundation, M1 added the environment/language contracts, M2 added a deterministic
-privileged Panda expert, M3A implemented the authoritative ManiSkill-native raw archive, and M3B
-implemented its validated local LeRobotDataset v3 derivation. M4 and M4.1 established reproducible
-ACT controls, closed-loop evaluation, and auditable action projection. M4.2 completed its
-oracle-conditioned development diagnosis and rejected TaskToken. M4.3a completed the real frozen-
-policy semantic audit. M4.3b completed one factorized FiLM ACT target-development run, passed its
-experiment/physical verifier, and failed its quality gate. The shared-ACT architecture search is
-closed. M5A now implements modular language-to-TaskSpec routing over the six frozen PerTask ACT
-controllers. Its separately authorized sealed final completed with valid physical evidence, while
-its language, control, and combined quality gates failed; SmolVLA remains unauthorized.
+> **A reproducible, safety-audited language-to-robot manipulation stack built with ManiSkill,
+> LeRobot, and ACT.**
 
-M4 implements six per-task ACT policies, one mixed unconditioned ACT, and one mixed ACT with an
-oracle six-way task one-hot. Standard ACT consumes no natural-language text, so M4 is not a language
-understanding milestone. M4.2 added runtime ablations and exactly one oracle TaskToken ACT. M4.3a
-added no model and established that output changes are not reliably aligned with requested object/
-bin semantics. M4.3b added one oracle `ACT-Mixed-FactorFiLM`, not language understanding. M5A adds
-three explicit language routers and strict rejection, but keeps continuous control frozen. It does
-not add SmolVLA, rewrite M3B, reopen M3A, invoke M2 during policy rollouts, publish models to Hub,
-reuse M3B test or historical fresh evaluation, access `m42_final_v0`, or change the M1/M2 task.
+[![Release](https://img.shields.io/badge/release-v1.0.0-5b5bd6)](docs/RESULTS_INDEX.md)
+[![Pipeline](https://img.shields.io/badge/final_pipeline-validated-1f9d55)](docs/RESULTS_INDEX.md)
+[![Physical](https://img.shields.io/badge/physical_target-validated-1f9d55)](docs/RESULTS_INDEX.md)
+[![Quality](https://img.shields.io/badge/final_quality_gate-failed-c2410c)](docs/RESULTS_INDEX.md)
+[![SmolVLA](https://img.shields.io/badge/SmolVLA-not_started-64748b)](docs/RESULTS_INDEX.md)
+
+LangMani turns natural-language pick-and-place commands into typed `TaskSpec` decisions, selects
+one of six frozen Panda ACT controllers, bounds every action explicitly, and attributes failures to
+language, control, safety rejection, or infrastructure. The v1 release freezes M0–M5A and the M5B
+structural bridge. **The end-to-end pipeline and native physical verifier passed; the predeclared
+model-quality gate did not.** That negative result is part of the release rather than something the
+project hides or tunes away.
+
+中文简介：这是一个面向语言条件机器人操作的完整研究工程，覆盖确定性环境、运动规划专家、
+反事实轨迹数据、LeRobotDataset v3、八个 ACT 基线、自然语言安全路由、成对物理评测与独立
+验证。v1 已冻结，不再通过修改阈值、重训或重跑来改变最终结论。
+
+## v1 at a glance
+
+| What was built | Frozen result |
+| --- | ---: |
+| Counterfactual source data | 60 scenes × 6 tasks = 360 action-replayed episodes |
+| Derived LeRobot data | 360 episodes / 64,548 aligned frames / 288–36–36 split |
+| ACT baselines | 8 models × 100,000 steps |
+| Best fresh-seed control | PerTask: 143/180 |
+| Sealed-final language evaluation | 600 examples |
+| Sealed-final paired control | 72 Oracle + 72 NeuroSymbolic rollouts |
+| End-to-end success | NeuroSymbolic 46/72 vs Oracle 55/72 |
+| Safety | 0 wrong-object routes, 0 wrong-bin routes, 10/10 zero-runtime rejections |
+| Final decision | pipeline/physical passed; quality failed; SmolVLA not started |
+
+## System architecture
+
+```mermaid
+flowchart LR
+    C["Natural-language command"] --> R["Safety-arbitrated router"]
+    R -->|"typed TaskSpec"| L["Six frozen ACT-PerTask skills"]
+    R -->|"reject"| Z["Zero lookup · zero reset · zero env.step"]
+    O["RGB + 9D Panda state"] --> L
+    L --> A["Raw action chunk"]
+    A --> B["Versioned action-bound runtime"]
+    B --> E["LangMani M1 environment"]
+    T["Oracle EpisodeSpec"] --> E
+    E --> V["Success + failure attribution + provenance"]
+    R --> V
+    B --> V
+    X["M2 expert"] --> D1["M3A native archive"]
+    D1 --> D2["M3B LeRobotDataset v3"]
+    D2 --> L
+```
+
+The language route chooses a controller; the Oracle `EpisodeSpec` remains the physical truth used
+for reset and evaluation. Rejections contain no executable task and return before robot runtime
+work. See the [architecture note](docs/portfolio/ARCHITECTURE.md) for the trust boundaries.
+
+## Release and portfolio
+
+- [Frozen v1 results index](docs/RESULTS_INDEX.md)
+- [10-page technical report source](docs/portfolio/TECHNICAL_REPORT.md)
+- [Demo video script and asset provenance](docs/portfolio/DEMO_VIDEO_SCRIPT.md)
+- [Generated artifact identities](docs/portfolio/ARTIFACTS.md)
+- [Resume bullets and interview talk track](docs/portfolio/RESUME_AND_INTERVIEW.md)
+- Case studies: [success](docs/portfolio/cases/SUCCESS.md),
+  [safe false rejection](docs/portfolio/cases/FALSE_REJECTION.md),
+  [correct-route timeout](docs/portfolio/cases/ROUTED_TIMEOUT.md), and
+  [safe unsupported-action rejection](docs/portfolio/cases/SAFE_REJECTION.md)
+
+Generated PDF/video deliverables live under `outputs/portfolio/v1/` and remain outside Git by
+design. The source-controlled pages above preserve their claims and provenance.
+
+## Scope and honest limitations
+
+Standard ACT is not a language model. TaskOneHot, TaskToken, and FactorFiLM are oracle-conditioned
+controls; TaskToken and FactorFiLM were rejected during development. M5A adds language routing but
+keeps continuous control frozen. It does not reopen M3A/M3B, call M2 during policy rollouts, access
+`m42_final_v0`, or start SmolVLA. M5B adds a zero-action LatentGuard JSON bridge, but its real target
+probe remains blocked by missing accepted controller artifacts and makes no physical proposal claim.
 
 ## Target platform
 

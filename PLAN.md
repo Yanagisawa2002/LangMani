@@ -346,7 +346,15 @@ bounded M6B execution, SmolVLA, training, rollout, or model selection. A future 
 would still require a separate explicit research decision and must not reinterpret M5A pipeline
 validity as model quality.
 
-## M6 — Evaluation and release hardening (planned)
+## M6 — Release & Portfolio (complete)
 
-Unify policy evaluation, regression thresholds, reproducibility reports, command-line workflows,
-and GPU-runner CI when suitable hardware becomes available.
+Freeze LangMani v1 without changing runtime behavior, model weights, datasets, schedules, quality
+thresholds, or historical evidence. M6 owns the `v1.0.0` release tag, a source-controlled frozen
+results index, an 8–12 page technical report, a 3–5 minute evidence-labeled demo video, a concise
+README homepage and architecture diagram, resume/interview material, and four audited cases:
+success, safe false rejection, correct-route control timeout, and safe rejection.
+
+Generated PDF/video outputs remain outside Git. Their source narratives and provenance are
+source-controlled. M6 does not authorize M5B target execution, M6B, SmolVLA, controller retraining,
+new data, new tasks, or reinterpretation of a failed v1 quality gate. Any new research must begin in
+a later version or separately authorized milestone.

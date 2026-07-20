@@ -44,6 +44,12 @@ wrong-bin routes, arm projections, infrastructure failures, M2 calls, or prohibi
 `final_pipeline_validated=true`, `physical_target_validated=true`,
 `final_quality_gate_passed=false`, and `smolvla_go=false`; SmolVLA has not started.
 
+M6 is the completed release-and-portfolio freeze. It may index and visualize existing immutable v1
+evidence, generate untracked reports/videos, and improve release documentation. It must not modify
+v1 runtime behavior, datasets, models, checkpoints, schedules, gates, or experimental evidence.
+The release must preserve `final_pipeline_validated=true`, `physical_target_validated=true`,
+`final_quality_gate_passed=false`, and `smolvla_go=false` as separate claims.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.

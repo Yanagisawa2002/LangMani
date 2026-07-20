@@ -2347,3 +2347,17 @@ ten-action candidate prefix and never requeries the policy after divergence. It 
 does not provide an intermediate policy snapshot, intermediate exact replay, same-policy
 continuation, or closed-loop shielding. The bridge authorizes no training, rollout, task outcome,
 performance claim, VLM/LLM, or multi-GPU work.
+
+## D-082 — Freeze v1 as a release-and-portfolio milestone
+
+M6 freezes LangMani v1 at the existing M0–M5A results plus the structural M5B bridge. It adds a
+source-controlled results index, report/demo sources, a release-oriented README, an architecture
+summary, resume/interview material, and four evidence-bound cases. Generated PDF/video artifacts
+remain under `outputs/` and are not committed.
+
+This decision deliberately separates release completeness from model quality. The sealed-final
+pipeline and physical verification remain true; the language, control, combined quality gate, and
+SmolVLA authorization remain false. M6 cannot retrain, re-evaluate, change thresholds, rewrite
+evidence, complete the blocked M5B target probe, or begin a new model. The annotated `v1.0.0` tag
+will identify the validated release source and portfolio materials. Future behavioral work requires
+a new version or explicit milestone.

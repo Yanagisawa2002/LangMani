@@ -1,5 +1,9 @@
 # Architecture
 
+The concise v1 release diagram and trust-boundary summary are maintained in
+[`docs/portfolio/ARCHITECTURE.md`](portfolio/ARCHITECTURE.md). This document remains the detailed
+subsystem reference.
+
 This document defines current and future ownership boundaries. M0 and M1 established the runtime
 foundation and environment boundary, M2 added the privileged expert, M3A implemented the
 authoritative ManiSkill-native raw archive, and M3B added deterministic LeRobotDataset v3
