@@ -122,7 +122,6 @@ def build_command(args: argparse.Namespace, protocol: dict[str, Any]) -> tuple[l
         f"--policy.freeze_vision_encoder={str(model['freeze_vision_encoder']).lower()}",
         f"--policy.train_expert_only={str(model['train_expert_only']).lower()}",
         f"--policy.train_state_proj={str(model['train_state_proj']).lower()}",
-        f"--policy.dtype={model['dtype']}",
         f"--policy.use_amp={str(model['use_amp']).lower()}",
         "--policy.load_vlm_weights=true",
         f"--policy.optimizer_lr={optimizer['learning_rate']}",
@@ -147,7 +146,7 @@ def build_command(args: argparse.Namespace, protocol: dict[str, Any]) -> tuple[l
         "--dataset.return_uint8=true",
         "--dataset.video_backend=pyav",
         "--dataset.eval_split=0.0",
-        f"--output_dir={args.output_dir.resolve()}",
+        f"--output_dir={(args.output_dir.resolve() / 'lerobot')}",
         f"--job_name=phase2c-{args.stage}-seed{args.seed}",
         f"--seed={args.seed}",
         f"--num_workers={args.num_workers}",
@@ -181,6 +180,9 @@ def main(argv: list[str] | None = None) -> int:
     if output.exists() and args.resume_checkpoint is None:
         raise Phase2CContractError(f"refusing to overwrite training output: {output}")
     output.mkdir(parents=True, exist_ok=args.resume_checkpoint is not None)
+    lerobot_output = output / "lerobot"
+    if lerobot_output.exists() and args.resume_checkpoint is None:
+        raise Phase2CContractError(f"refusing to overwrite LeRobot output: {lerobot_output}")
     environment = {
         key: os.environ.get(key)
         for key in ("CUDA_VISIBLE_DEVICES", "HF_HOME", "HF_HUB_CACHE", "TRANSFORMERS_CACHE")
@@ -195,6 +197,7 @@ def main(argv: list[str] | None = None) -> int:
         "repo_id": args.repo_id,
         "base_model_root": base_model_root.as_posix(),
         "base_model_audit_sha256": f"sha256:{base_model_audit_sha256}",
+        "lerobot_output_dir": lerobot_output.as_posix(),
         "seed": args.seed,
         "batch_size": args.batch_size,
         "effective_batch_size": args.batch_size,
@@ -216,6 +219,11 @@ def main(argv: list[str] | None = None) -> int:
             "expected_input_features": protocol["feature_override"]["input_features"],
             "expected_output_features": protocol["feature_override"]["output_features"],
             "dictionary_cli_merge_prohibited": True,
+        },
+        "precision": {
+            "requested_parameter_dtype": protocol["model"]["dtype"],
+            "lerobot_policy_dtype_cli_supported": False,
+            "observed_dtype_must_be_recorded_by_training_runtime": True,
         },
     }
     write_json_once(output / "launch_manifest.json", manifest)
