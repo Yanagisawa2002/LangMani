@@ -32,10 +32,13 @@ from langmani.environments.pick_place_by_instruction import (
 )
 
 
-def test_exactly_one_langmani_environment_is_registered() -> None:
+def test_expected_langmani_environments_are_registered() -> None:
     langmani_ids = sorted(uid for uid in REGISTERED_ENVS if uid.startswith("LangMani-"))
 
-    assert langmani_ids == ["LangMani-PickPlaceByInstruction-v0"]
+    assert langmani_ids == [
+        "LangMani-PickPlaceByInstruction-v0",
+        "LangMani-PushToRegion-v0",
+    ]
     spec = REGISTERED_ENVS[ENV_ID]
     assert spec.max_episode_steps == MAX_EPISODE_STEPS == 200
     assert spec.asset_download_ids == []

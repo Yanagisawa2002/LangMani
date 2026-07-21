@@ -2,6 +2,13 @@
 
 from langmani.environments.expert_state import ExpertContextError, ExpertTaskContext
 from langmani.environments.pick_place_by_instruction import ENV_ID, PickPlaceByInstructionEnv
+from langmani.environments.push_specs import PushEpisodeSpec, PushTaskSpec
+from langmani.environments.push_to_region import (
+    ENV_ID as PUSH_ENV_ID,
+)
+from langmani.environments.push_to_region import (
+    PushToRegionEnv,
+)
 from langmani.environments.specs import EpisodeSpec, TaskSpec
 
 __all__ = [
@@ -10,5 +17,9 @@ __all__ = [
     "ExpertContextError",
     "ExpertTaskContext",
     "PickPlaceByInstructionEnv",
+    "PUSH_ENV_ID",
+    "PushEpisodeSpec",
+    "PushTaskSpec",
+    "PushToRegionEnv",
     "TaskSpec",
 ]
