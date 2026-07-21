@@ -71,6 +71,11 @@ def parse_args() -> argparse.Namespace:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--smoke", action="store_true")
     mode.add_argument("--target-validation", action="store_true")
+    mode.add_argument(
+        "--lateral-subset",
+        action="store_true",
+        help="diagnostic-only left/right subset of the fixed 50/30 schedule",
+    )
     parser.add_argument(
         "--sim-backend",
         choices=("physx_cpu", "physx_cuda"),
@@ -211,7 +216,11 @@ def main() -> int:
     args = parse_args()
     output = validated_output_path(args.output, output_root=OUTPUT_ROOT)
     schedule = build_schedule(smoke=args.smoke)
-    expected = 16 if args.smoke else 80
+    if args.lateral_subset:
+        schedule = tuple(
+            item for item in schedule if item.task_spec.target_region_id in {"left", "right"}
+        )
+    expected = 16 if args.smoke else (len(schedule) if args.lateral_subset else 80)
     if len(schedule) != expected or len({item.seed for item in schedule}) != expected:
         raise RuntimeError("push expert schedule contract changed")
 
@@ -227,9 +236,14 @@ def main() -> int:
     completed = len(results) == expected and not command_errors
     standard_quality = standard["success_rate"] >= 0.90
     hard_quality = hard["success_rate"] >= 0.70
+    mode = (
+        "smoke"
+        if args.smoke
+        else ("lateral_subset" if args.lateral_subset else "target_validation")
+    )
     payload = {
         "schema_version": "langmani-v2-push-expert-benchmark-v0",
-        "mode": "smoke" if args.smoke else "target_validation",
+        "mode": mode,
         "environment_id": ENV_ID,
         "config": config.to_dict(),
         "schedule": [item.to_dict() for item in schedule],
@@ -241,6 +255,7 @@ def main() -> int:
         "standard_quality_target_passed": standard_quality,
         "hard_quality_target_passed": hard_quality,
         "expert_quality_targets_passed": standard_quality and hard_quality,
+        "quality_gate_applicable": not args.lateral_subset,
         "event_counts": _event_counts(results),
         "command_errors": command_errors,
         "results": [result.to_dict() for result in results],

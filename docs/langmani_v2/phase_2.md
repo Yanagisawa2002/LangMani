@@ -127,3 +127,15 @@ controller must first improve those fixed failures and the complete lateral subs
 unchanged 16-task smoke and 50-standard/30-hard gate. The forward standard subset must remain
 24/24. Rejected candidate code is removed; diagnostic tooling and its machine-readable root-cause
 table may remain.
+
+The intermediate full lateral check is explicitly non-gating and preserves the exact target
+schedule order before filtering only `left` and `right`:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python environment/benchmark_push_expert.py \
+  --lateral-subset --sim-backend physx_cuda \
+  --output outputs/diagnostics/v2/phase2/push-expert-lateral-subset.json
+```
+
+It contains 26 standard and 16 hard episodes. Its report sets
+`quality_gate_applicable=false`; it cannot replace either official gate.

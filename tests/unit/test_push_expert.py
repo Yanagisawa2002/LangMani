@@ -282,6 +282,10 @@ def test_push_expert_validation_schedules_are_exact_and_balanced() -> None:
         "forward_right",
     }
     assert len({item.seed for item in target}) == 80
+    lateral = tuple(item for item in target if item.task_spec.target_region_id in {"left", "right"})
+    assert len(lateral) == 42
+    assert sum(item.task_spec.difficulty == "standard" for item in lateral) == 26
+    assert sum(item.task_spec.difficulty == "hard" for item in lateral) == 16
 
 
 def test_push_expert_benchmark_isolates_every_episode(monkeypatch) -> None:
