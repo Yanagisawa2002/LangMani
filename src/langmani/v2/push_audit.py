@@ -18,6 +18,7 @@ from langmani.v2.push_dataset import (
     accepted_counts,
     audit_split_leakage,
     build_split_manifest,
+    stage_runtime_manifest_name,
     summarize_attempt_records,
 )
 
@@ -110,6 +111,58 @@ def validated_pick_place_source_record(pick_place_root: str | Path) -> dict[str,
             "content_bound_to_prevalidated_m3a_source_not_replayed_again_in_phase2b"
         ),
     }
+
+
+def audit_stage_runtime_integrity(
+    *,
+    config: PushCollectionConfig,
+    source_root: str | Path,
+    stages: Sequence[str],
+) -> dict[str, object]:
+    """Validate each producer runtime without rewriting the base collection identity."""
+
+    root = Path(source_root).resolve()
+    manifests = root / "manifests"
+    required = config.payload.get("required_runtime")
+    if not isinstance(required, Mapping):
+        raise PushDatasetContractError("required runtime contract is malformed")
+    stage_results: dict[str, object] = {}
+    all_passed = True
+    for stage in stages:
+        runtime_path = manifests / stage_runtime_manifest_name(stage)
+        runtime = _read_json(runtime_path)
+        collection = _read_json(manifests / f"{stage}_collection.json")
+        owner = _read_json(manifests / f"{stage}_owner.json")
+        version_checks = {
+            name: runtime.get(name) == expected for name, expected in required.items()
+        }
+        checks = {
+            "versions_match": all(version_checks.values()),
+            "git_commit_present": isinstance(runtime.get("git_commit"), str)
+            and len(str(runtime["git_commit"])) == 40,
+            "git_clean": runtime.get("git_clean") is True,
+            "accepted_expert_matches": runtime.get("accepted_expert_commit")
+            == config.payload.get("accepted_expert_commit"),
+            "gpu_recorded": isinstance(runtime.get("gpu"), list) and bool(runtime["gpu"]),
+            "owner_runtime_matches": owner.get("runtime") == runtime,
+            "owner_stage_matches": owner.get("stage") == stage,
+            "owner_collection_matches": owner.get("collection_fingerprint") == config.fingerprint,
+            "collection_stage_matches": collection.get("stage") == stage,
+            "collection_completed": collection.get("completed") is True,
+            "collection_runtime_hash_matches": collection.get("runtime_environment_sha256")
+            == sha256_file(runtime_path),
+        }
+        passed = all(checks.values())
+        all_passed = all_passed and passed
+        stage_results[stage] = {
+            "runtime_path": runtime_path.as_posix(),
+            "runtime_sha256": sha256_file(runtime_path),
+            "git_commit": runtime.get("git_commit"),
+            "version_checks": version_checks,
+            "checks": checks,
+            "passed": passed,
+        }
+    return {"stages": stage_results, "passed": all_passed}
 
 
 def audit_pick_place_compatibility(
@@ -387,6 +440,11 @@ def verify_phase2b_evidence(
         final_metadata_report and final_metadata_report.get("preferred_shortfall_justified") is True
     )
     preferred_accepted = len(accepted) >= config.integer("preferred_accepted_episodes")
+    runtime_integrity = audit_stage_runtime_integrity(
+        config=config,
+        source_root=source,
+        stages=stages,
+    )
     gates = {
         "minimum_accepted": len(accepted) >= config.integer("minimum_accepted_episodes"),
         "preferred_accepted": preferred_accepted,
@@ -404,6 +462,7 @@ def verify_phase2b_evidence(
         "rejected_manifest_integrity": rejected_manifest_integrity,
         "export_metadata_integrity": export_metadata_integrity,
         "no_native_integrity_failures": not native_failures,
+        "runtime_environment_integrity": runtime_integrity["passed"] is True,
         "lerobot_api_readback": readback_episodes == len(accepted),
         "policy_schema_unambiguous": True,
         "privileged_policy_fields_excluded": True,
@@ -448,6 +507,7 @@ def verify_phase2b_evidence(
         "compatibility": compatibility,
         "gates": gates,
         "source_validation": source_validation_report,
+        "runtime_integrity": runtime_integrity,
         "final_metadata": final_metadata_report,
         "pipeline_integrity_validated": pipeline_integrity,
         "pilot_validated": not full and pipeline_integrity,

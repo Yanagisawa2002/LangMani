@@ -427,6 +427,14 @@ def build_top_up_schedule(
     return schedule
 
 
+def stage_runtime_manifest_name(stage: str) -> str:
+    """Keep the base producer immutable while recording later top-up code separately."""
+
+    if stage not in {"pilot", "full", "top_up"}:
+        raise PushDatasetContractError("runtime stage must be pilot, full, or top_up")
+    return "runtime_environment_top_up.json" if stage == "top_up" else "runtime_environment.json"
+
+
 def _validate_schedule(schedule: Sequence[PushScheduledAttempt]) -> None:
     ids = [item.episode_id for item in schedule]
     seeds = [item.seed for item in schedule]
@@ -720,5 +728,6 @@ __all__ = [
     "render_instruction",
     "sha256_bytes",
     "sha256_json",
+    "stage_runtime_manifest_name",
     "summarize_attempt_records",
 ]

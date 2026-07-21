@@ -32,6 +32,7 @@ from langmani.v2.push_dataset import (
     generation_acceptance_failures,
     quota_deficits,
     sha256_json,
+    stage_runtime_manifest_name,
 )
 
 COLLECTION_RUN_SCHEMA = "langmani-v2-phase2b-run-v0"
@@ -149,7 +150,7 @@ def collect_push_attempts(
     specification_path = manifests / "collection_specification.json"
     specification_payload = config.to_dict()
     _write_or_verify_json(specification_path, specification_payload)
-    runtime_path = manifests / "runtime_environment.json"
+    runtime_path = manifests / stage_runtime_manifest_name(stage)
     _write_or_verify_json(runtime_path, runtime)
     schedule_payload = {
         "schema_version": COLLECTION_RUN_SCHEMA,

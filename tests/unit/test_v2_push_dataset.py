@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from copy import deepcopy
 from pathlib import Path
@@ -21,6 +22,7 @@ from langmani.v2.push_archive import (
 from langmani.v2.push_audit import (
     PHASE2B_RESULT_SCHEMA,
     PHASE2B_SOURCE_VALIDATION_SCHEMA,
+    audit_stage_runtime_integrity,
     first_available_push_split,
     validate_phase2b_result_manifest,
     validate_pick_push_compatibility_report,
@@ -37,6 +39,8 @@ from langmani.v2.push_dataset import (
     build_top_up_schedule,
     generation_acceptance_failures,
     quota_deficits,
+    sha256_json,
+    stage_runtime_manifest_name,
     summarize_attempt_records,
 )
 
@@ -236,6 +240,48 @@ def test_top_up_uses_one_full_bounded_budget_for_any_post_replay_deficit() -> No
     assert len(schedule) == config.integer("maximum_top_up_attempts") == 96
     assert len({item.seed for item in schedule}) == 96
     assert len({item.episode_id for item in schedule}) == 96
+
+
+def test_top_up_records_a_separate_runtime_without_rewriting_base(tmp_path: Path) -> None:
+    config = PushCollectionConfig.load(CONFIG)
+    manifests = tmp_path / "manifests"
+    manifests.mkdir()
+    assert stage_runtime_manifest_name("full") == "runtime_environment.json"
+    assert stage_runtime_manifest_name("top_up") == "runtime_environment_top_up.json"
+    with pytest.raises(PushDatasetContractError, match="runtime stage"):
+        stage_runtime_manifest_name("other")
+
+    required = config.payload["required_runtime"]
+    assert isinstance(required, dict)
+    runtime = {
+        **required,
+        "git_commit": "1" * 40,
+        "git_clean": True,
+        "accepted_expert_commit": config.payload["accepted_expert_commit"],
+        "gpu": [{"name": "fixture"}],
+    }
+    runtime_path = manifests / stage_runtime_manifest_name("top_up")
+    runtime_path.write_text(json.dumps(runtime), encoding="utf-8")
+    runtime_sha = f"sha256:{hashlib.sha256(runtime_path.read_bytes()).hexdigest()}"
+    owner = {
+        "stage": "top_up",
+        "collection_fingerprint": config.fingerprint,
+        "runtime": runtime,
+    }
+    collection = {
+        "stage": "top_up",
+        "collection_fingerprint": config.fingerprint,
+        "runtime_environment_sha256": runtime_sha,
+        "completed": True,
+    }
+    (manifests / "top_up_owner.json").write_text(json.dumps(owner), encoding="utf-8")
+    (manifests / "top_up_collection.json").write_text(json.dumps(collection), encoding="utf-8")
+
+    audit = audit_stage_runtime_integrity(config=config, source_root=tmp_path, stages=("top_up",))
+
+    assert audit["passed"] is True
+    assert audit["stages"]["top_up"]["git_commit"] == "1" * 40
+    assert sha256_json(runtime).startswith("sha256:")
 
 
 def test_attempt_summary_separates_accepted_and_rejected_strata() -> None:
