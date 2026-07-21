@@ -403,10 +403,11 @@ def build_top_up_schedule(
                     eligible.append(task)
     if not eligible:
         return ()
-    count = min(
-        maximum,
-        max(int(deficits.get("total", 0)), sum(int(value) for value in deficits.values())),
-    )
+    # A top-up is a single immutable bounded schedule. Allocate the complete
+    # predeclared budget when any post-replay deficit exists; allocating only
+    # the current success deficit would incorrectly assume a 100% expert and
+    # replay yield and could leave the one allowed top-up short again.
+    count = maximum
     seed_start = (
         config.integer("full_seed_start")
         + config.integer("full_standard_attempts")

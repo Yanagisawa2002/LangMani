@@ -31,6 +31,7 @@ from langmani.v2.push_dataset import (
     audit_split_leakage,
     build_collection_schedule,
     build_split_manifest,
+    build_top_up_schedule,
     generation_acceptance_failures,
     quota_deficits,
     summarize_attempt_records,
@@ -224,6 +225,14 @@ def test_quota_accounting_uses_only_final_accepted_records() -> None:
     deficits = quota_deficits(config, records)
     assert deficits["standard"] > 0
     assert deficits["hard"] > 0
+
+
+def test_top_up_uses_one_full_bounded_budget_for_any_post_replay_deficit() -> None:
+    config = PushCollectionConfig.load(CONFIG)
+    schedule = build_top_up_schedule(config, deficits={"total": 1}, start_index=420)
+    assert len(schedule) == config.integer("maximum_top_up_attempts") == 96
+    assert len({item.seed for item in schedule}) == 96
+    assert len({item.episode_id for item in schedule}) == 96
 
 
 def test_attempt_summary_separates_accepted_and_rejected_strata() -> None:
