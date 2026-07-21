@@ -79,10 +79,15 @@ class PolicyContext:
 
     evaluation_task: EvaluationTask
     evaluation_id: str
+    language_instruction: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.evaluation_id, str) or not self.evaluation_id:
             raise PolicyContractError("evaluation_id must be a non-empty string")
+        if self.language_instruction is not None and (
+            not isinstance(self.language_instruction, str) or not self.language_instruction.strip()
+        ):
+            raise PolicyContractError("language_instruction must be None or a non-empty string")
 
 
 @dataclass(frozen=True, slots=True)

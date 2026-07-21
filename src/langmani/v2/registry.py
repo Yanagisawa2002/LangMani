@@ -8,13 +8,15 @@ from typing import Any
 
 from langmani.v2.act_adapter import ACT_ADAPTER_NAME, ActPerTaskPolicyAdapter
 from langmani.v2.policy import PolicyAdapter, PolicyContractError, PolicyRegistry
+from langmani.v2.smolvla_adapter import SMOLVLA_ADAPTER_NAME, SmolVLAPolicyAdapter
 
 
 def default_policy_registry() -> PolicyRegistry:
-    """Return registrations implemented today, without fake future adapters."""
+    """Return the implemented ACT and official SmolVLA adapters."""
 
     registry = PolicyRegistry()
     registry.register(ACT_ADAPTER_NAME, ActPerTaskPolicyAdapter.from_config)
+    registry.register(SMOLVLA_ADAPTER_NAME, SmolVLAPolicyAdapter.from_config)
     return registry
 
 

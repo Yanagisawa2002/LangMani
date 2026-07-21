@@ -1,0 +1,161 @@
+{
+  "schema_version": "langmani-v2-phase2c-experiment-protocol-v0",
+  "source": {
+    "phase2b_commit": "7394faba1ed2e29ab26b70dbc4058f46e5164041",
+    "skill_family": "push_to_region",
+    "train_episodes": 203,
+    "train_frames": 26968,
+    "validation_episodes": 77,
+    "test_splits": [
+      "test_unseen_scene",
+      "test_unseen_language",
+      "test_hard",
+      "test_visual_shift"
+    ]
+  },
+  "base_model": {
+    "repo_id": "lerobot/smolvla_base",
+    "revision": "c83c3163b8ca9b7e67c509fffd9121e66cb96205",
+    "config_sha256": "650584b56c104720f7a3c91d1ec6bec9e8de8ac11e60c92ba2fa82d93eda147d",
+    "official_lerobot_version": "0.6.0",
+    "pretrained_weights_required": true
+  },
+  "feature_override": {
+    "input_features": {
+      "observation.images.base_camera": {
+        "type": "VISUAL",
+        "shape": [
+          3,
+          256,
+          256
+        ]
+      },
+      "observation.state": {
+        "type": "STATE",
+        "shape": [
+          9
+        ]
+      }
+    },
+    "output_features": {
+      "action": {
+        "type": "ACTION",
+        "shape": [
+          8
+        ]
+      }
+    },
+    "privileged_features": []
+  },
+  "model": {
+    "chunk_size": 50,
+    "n_action_steps": 50,
+    "normalization_mapping": {
+      "VISUAL": "IDENTITY",
+      "STATE": "MEAN_STD",
+      "ACTION": "MEAN_STD"
+    },
+    "resize_imgs_with_padding": [
+      512,
+      512
+    ],
+    "tokenizer_max_length": 48,
+    "num_inference_steps": 10,
+    "freeze_vision_encoder": true,
+    "train_expert_only": true,
+    "train_state_proj": true,
+    "dtype": "bfloat16",
+    "use_amp": false
+  },
+  "optimizer": {
+    "name": "AdamW",
+    "learning_rate": 0.0001,
+    "betas": [
+      0.9,
+      0.95
+    ],
+    "epsilon": 1e-08,
+    "weight_decay": 1e-10,
+    "gradient_clip_norm": 10.0
+  },
+  "scheduler": {
+    "name": "CosineDecayWithWarmup",
+    "warmup_steps": 1000,
+    "decay_steps": 30000,
+    "decay_learning_rate": 2.5e-06
+  },
+  "batch_screen": {
+    "candidate_batch_sizes_descending": [
+      16,
+      8,
+      4,
+      2,
+      1
+    ],
+    "selection": "largest one-batch forward_backward size with finite gradients and peak allocated VRAM <= 28 GiB",
+    "gradient_accumulation": 1
+  },
+  "smoke": {
+    "steps": 1,
+    "real_train_batch_required": true,
+    "checkpoint_reload_required": true,
+    "adapter_inference_required": true,
+    "simulator_step_required": true
+  },
+  "micro_overfit": {
+    "episode_count": 16,
+    "steps": 500,
+    "label": "pipeline validation only",
+    "minimum_relative_loss_reduction": 0.2
+  },
+  "full_training": {
+    "primary_seed": 0,
+    "conditional_secondary_seed": 1,
+    "total_steps": 20000,
+    "checkpoint_steps": [
+      5000,
+      10000,
+      20000
+    ],
+    "offline_validation_steps": [
+      5000,
+      10000,
+      20000
+    ],
+    "num_workers": 4,
+    "push_to_hub": false
+  },
+  "offline_validation": {
+    "split": "validation",
+    "checkpoint_selection_rule": "lowest full validation flow-matching loss; tie-break by inverse-normalized first-action MAE; retain at most two",
+    "maximum_closed_loop_candidates": 2,
+    "deterministic_inference_seed": 314159
+  },
+  "closed_loop_development": {
+    "execution_horizon_candidates": [
+      1,
+      4,
+      8
+    ],
+    "minimum_episodes_per_candidate": 40,
+    "action_bound_mode": "reject",
+    "checkpoint_candidates_maximum": 2,
+    "selection_data": "validation only"
+  },
+  "development_gate": {
+    "overall_success_minimum": 0.5,
+    "standard_success_minimum": 0.6,
+    "minimum_cylinder_successes": 1,
+    "minimum_lateral_successes": 1,
+    "nan_or_inf_episode_maximum": 0,
+    "invalid_or_action_bound_rate_maximum": 0.02,
+    "bounded_repairs_maximum": 1
+  },
+  "sealed_evaluation": {
+    "train_distribution_sanity_minimum": 30,
+    "per_test_split_minimum": 50,
+    "test_outcome_tuning_prohibited": true,
+    "paired_candidate_e_expert": true,
+    "trivial_noop_baseline": true
+  }
+}

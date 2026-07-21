@@ -86,6 +86,35 @@ class M1PolicyObservationExtractor:
         )
 
 
+class Phase2CPolicyObservationExtractor:
+    """Apply one frozen outcome-independent visual domain after deployable extraction."""
+
+    def __init__(self, *, visual_domain: str = "base") -> None:
+        if visual_domain not in {"base", "photometric_shift_v0"}:
+            raise EvaluationError(f"unknown Phase 2C visual domain {visual_domain!r}")
+        self.visual_domain = visual_domain
+        self._base = M1PolicyObservationExtractor()
+
+    def extract(self, observation: object, *, environment: object) -> ObservationBatch:
+        result = self._base.extract(observation, environment=environment)
+        if self.visual_domain == "base":
+            return result
+        image = result.features[IMAGE_FEATURE_KEY]
+        gains = torch.tensor([0.82, 0.96, 1.08], dtype=torch.float32).reshape(3, 1, 1)
+        shifted = torch.clamp(torch.pow(image, 0.92) * gains + 0.025, 0.0, 1.0)
+        return ObservationBatch(
+            features={
+                **result.features,
+                IMAGE_FEATURE_KEY: shifted,
+            },
+            metadata={
+                **result.metadata,
+                "visual_domain": "photometric_shift_v0",
+                "visual_transform": "gamma=0.92,gains=[0.82,0.96,1.08],offset=0.025,clamp=[0,1]",
+            },
+        )
+
+
 def _single_bool(value: object, label: str) -> bool:
     candidate = value
     detach = getattr(candidate, "detach", None)
@@ -120,6 +149,28 @@ def _current_evaluation(environment: object, fallback: object) -> dict[str, bool
     if callable(accessor):
         return _evaluation_bools(accessor())
     return _evaluation_bools(fallback)
+
+
+def _current_numeric(environment: object, fallback: object, key: str) -> float | None:
+    """Read one finite scalar diagnostic without admitting it to policy inputs."""
+
+    base = getattr(environment, "unwrapped", environment)
+    accessor = getattr(base, "get_policy_rollout_evaluation", None)
+    value = accessor() if callable(accessor) else fallback
+    if not isinstance(value, Mapping) or key not in value:
+        return None
+    candidate = value[key]
+    detach = getattr(candidate, "detach", None)
+    if callable(detach):
+        candidate = detach()
+    cpu = getattr(candidate, "cpu", None)
+    if callable(cpu):
+        candidate = cpu()
+    array = np.asarray(candidate)
+    if array.size != 1:
+        return None
+    result = float(array.reshape(-1)[0])
+    return result if math.isfinite(result) else None
 
 
 def _latency_summary(values: Sequence[float]) -> dict[str, float | None]:
@@ -164,6 +215,13 @@ class EvaluationEpisodeResult:
     final_evaluation: Mapping[str, bool]
     failure_reason: str | None
     schema_version: str = EVALUATION_RESULT_SCHEMA
+    actions_executed: int = 0
+    mean_actions_per_policy_query: float = 0.0
+    final_object_to_target_distance: float | None = None
+    action_smoothness_mean_l2: float | None = None
+    action_saturation_rate: float = 0.0
+    effective_control_throughput_hz: float | None = None
+    progress_curve: tuple[float, ...] = ()
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -188,6 +246,13 @@ class EvaluationEpisodeResult:
             "environment_step_latency_ms": dict(self.environment_step_latency_ms),
             "final_evaluation": dict(self.final_evaluation),
             "failure_reason": self.failure_reason,
+            "actions_executed": self.actions_executed,
+            "mean_actions_per_policy_query": self.mean_actions_per_policy_query,
+            "final_object_to_target_distance": self.final_object_to_target_distance,
+            "action_smoothness_mean_l2": self.action_smoothness_mean_l2,
+            "action_saturation_rate": self.action_saturation_rate,
+            "effective_control_throughput_hz": self.effective_control_throughput_hz,
+            "progress_curve": list(self.progress_curve),
         }
 
 
@@ -199,6 +264,7 @@ class UnifiedPolicyEvaluator:
         *,
         environment: object,
         observation_extractor: ObservationExtractor | None = None,
+        action_bound_config: ActionBoundConfig | None = None,
     ) -> None:
         self.environment = environment
         self.base = getattr(environment, "unwrapped", environment)
@@ -206,7 +272,7 @@ class UnifiedPolicyEvaluator:
         self._validate_environment()
         self.action_processor = BoundedActionEnvPostprocessorV0.from_environment(
             environment,
-            ActionBoundConfig(mode=ActionBoundMode.PROJECT),
+            action_bound_config or ActionBoundConfig(mode=ActionBoundMode.PROJECT),
             expected_action_components=8,
         )
 
@@ -228,6 +294,7 @@ class UnifiedPolicyEvaluator:
         policy: PolicyAdapter,
         task: EvaluationTask,
         evaluation_id: str,
+        language_instruction: str | None = None,
     ) -> EvaluationEpisodeResult:
         instance = task.task_instance
         if getattr(self.environment.spec, "id", None) != instance.environment_id:
@@ -236,7 +303,11 @@ class UnifiedPolicyEvaluator:
             raise EvaluationError("policy is incompatible with the requested skill family")
         if instance.canonical_task_id not in policy.identity.compatible_task_ids:
             raise EvaluationError("policy is incompatible with the requested task instance")
-        context = PolicyContext(evaluation_task=task, evaluation_id=evaluation_id)
+        context = PolicyContext(
+            evaluation_task=task,
+            evaluation_id=evaluation_id,
+            language_instruction=language_instruction,
+        )
         policy.reset(context)
         reset_result = self.environment.reset(
             seed=task.scene_seed,
@@ -252,11 +323,16 @@ class UnifiedPolicyEvaluator:
             raise EvaluationError("EpisodeSpec disagrees with the requested scene seed")
 
         final_evaluation = _current_evaluation(self.environment, reset_info)
+        initial_distance = _current_numeric(self.environment, reset_info, "target_distance")
+        progress_curve: list[float] = [] if initial_distance is None else [initial_distance]
         inference_latencies: list[float] = []
         environment_latencies: list[float] = []
         projection_count = 0
         projection_components = 0
         policy_queries = 0
+        executed_actions: list[np.ndarray] = []
+        saturated_components = 0
+        action_components = 0
         steps = 0
         wrong_object = final_evaluation.get(
             "wrong_object_is_grasped", False
@@ -304,11 +380,23 @@ class UnifiedPolicyEvaluator:
                     break
                 projection_count += int(bounded.audit_record.was_projected)
                 projection_components += bounded.audit_record.projected_component_count
+                raw = np.asarray(bounded.audit_record.raw_action, dtype=np.float64)
+                low = np.asarray(bounded.audit_record.lower_bounds, dtype=np.float64)
+                high = np.asarray(bounded.audit_record.upper_bounds, dtype=np.float64)
+                span = high - low
+                saturation_margin = np.maximum(span * 0.01, 1e-8)
+                saturated_components += int(
+                    np.count_nonzero(
+                        (raw <= low + saturation_margin) | (raw >= high - saturation_margin)
+                    )
+                )
+                action_components += int(raw.size)
                 executed = bounded.executed_action
                 if isinstance(executed, torch.Tensor):
                     action = executed.detach().cpu().numpy()[0].copy()
                 else:
                     action = np.asarray(executed)[0].copy()
+                executed_actions.append(np.asarray(action, dtype=np.float64).copy())
                 start = time.perf_counter()
                 try:
                     step_result = self.environment.step(action)
@@ -324,6 +412,9 @@ class UnifiedPolicyEvaluator:
                 observation, _, terminated, truncated, info = step_result
                 steps += 1
                 final_evaluation = _current_evaluation(self.environment, info)
+                current_distance = _current_numeric(self.environment, info, "target_distance")
+                if current_distance is not None:
+                    progress_curve.append(current_distance)
                 wrong_object |= final_evaluation.get(
                     "wrong_object_is_grasped", False
                 ) or final_evaluation.get("wrong_object_in_target_bin", False)
@@ -358,6 +449,28 @@ class UnifiedPolicyEvaluator:
                 break
         if outcome is EpisodeOutcome.TIMEOUT and failure_reason is None:
             failure_reason = f"episode step budget {instance.maximum_episode_steps} exhausted"
+        smoothness = (
+            float(
+                np.mean(
+                    [
+                        np.linalg.norm(right - left)
+                        for left, right in zip(executed_actions, executed_actions[1:], strict=False)
+                    ]
+                )
+            )
+            if len(executed_actions) > 1
+            else None
+        )
+        total_latency_ms = sum(inference_latencies) + sum(environment_latencies)
+        final_distance = (
+            progress_curve[-1]
+            if progress_curve
+            else _current_numeric(
+                self.environment,
+                reset_info if not final_evaluation else None,
+                "target_distance",
+            )
+        )
         return EvaluationEpisodeResult(
             evaluation_id=evaluation_id,
             seed=task.scene_seed,
@@ -383,6 +496,19 @@ class UnifiedPolicyEvaluator:
             environment_step_latency_ms=_latency_summary(environment_latencies),
             final_evaluation=final_evaluation,
             failure_reason=failure_reason,
+            actions_executed=len(executed_actions),
+            mean_actions_per_policy_query=(
+                len(executed_actions) / policy_queries if policy_queries else 0.0
+            ),
+            final_object_to_target_distance=final_distance,
+            action_smoothness_mean_l2=smoothness,
+            action_saturation_rate=(
+                saturated_components / action_components if action_components else 0.0
+            ),
+            effective_control_throughput_hz=(
+                len(executed_actions) * 1000.0 / total_latency_ms if total_latency_ms > 0 else None
+            ),
+            progress_curve=tuple(progress_curve),
         )
 
 
@@ -473,6 +599,7 @@ __all__ = [
     "EvaluationError",
     "M1PolicyObservationExtractor",
     "ObservationExtractor",
+    "Phase2CPolicyObservationExtractor",
     "UnifiedPolicyEvaluator",
     "persist_evaluation",
     "summarize_results",
