@@ -2654,3 +2654,29 @@ metadata gate. Its report SHA-256 is
 This accepts Phase 2B data production and authorizes only a separately invoked Phase 2C consumer.
 It does not claim learned-policy quality and does not install, load, train, or evaluate SmolVLA.
 Phase 2C must bind the immutable source identities and begin only under a new explicit command.
+
+## D-097 - Bind official SmolVLA without forking its model or projecting learned actions
+
+Phase 2C resolves `lerobot/smolvla_base` to Hugging Face revision
+`c83c3163b8ca9b7e67c509fffd9121e66cb96205` under installed LeRobot 0.6.0. The published config
+uses three cameras and 6D state/action, whereas accepted Phase 2B uses one `base_camera`, 9D
+`PandaPolicyStateV0`, and 8D `PandaJointPositionActionV0`. The official implementation pads state
+and action to fixed 32D internal maxima, so Phase 2C replaces only the public feature descriptors
+before loading the unchanged pretrained tensor file. This is an explicit embodiment adaptation,
+not a source fork or randomly initialized substitute.
+
+The generic adapter calls official `predict_action_chunk` and exposes a true-prefix LangMani
+`ActionChunk`. Model chunk length remains 50 while validation chooses only among execution horizons
+1, 4, and 8. Policy, preprocessor, and postprocessor reset at every episode. Flow-matching noise is
+seeded by episode query ordinal, and inference latency, queries, emitted actions, queue resets,
+underruns, and invalid outputs are recorded.
+
+Unlike the historical ACT path, learned SmolVLA evaluation fixes the environment action-bound
+processor to `reject`. A learned action outside the active bounds is a classified failed episode;
+it is never clipped or projected. The only frozen visual-shift domain is a deterministic RGB
+photometric transform fixed before any learned outcome. No privileged state enters either mapping.
+
+The currently reachable RTX 5090 host lacks the accepted Phase 2B external roots, while the former
+LangMani host is offline. This is an external-artifact availability blocker, not a Phase 2B
+verification failure. No optimizer step or simulator competence claim is permitted until the
+accepted roots are accessible and the independent verifier passes again.
