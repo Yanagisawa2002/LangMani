@@ -19,7 +19,7 @@ dependencies:
       - opencv-python-headless==4.13.0.92
       - sapien==3.0.3
       - mani-skill==3.0.1
-      - lerobot[dataset]==0.6.0
+      - lerobot[dataset,smolvla]==0.6.0
       - safetensors==0.8.0
       - tokenizers==0.22.2
       - transformers==5.4.0

@@ -27,6 +27,7 @@ def test_official_lerobot_smolvla_dependency_is_installed() -> None:
     """Target gate; the full real batch/model/simulator smoke writes external evidence."""
 
     import lerobot
+    import num2words
     from lerobot.policies.smolvla.configuration_smolvla import SmolVLAConfig
     from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
     from lerobot.policies.smolvla.processor_smolvla import make_smolvla_pre_post_processors
@@ -35,6 +36,7 @@ def test_official_lerobot_smolvla_dependency_is_installed() -> None:
     assert SmolVLAConfig.__name__ == "SmolVLAConfig"
     assert SmolVLAPolicy.__name__ == "SmolVLAPolicy"
     assert callable(make_smolvla_pre_post_processors)
+    assert callable(num2words.num2words)
 
 
 @pytest.mark.gpu

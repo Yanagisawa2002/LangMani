@@ -53,11 +53,6 @@ def _stage_steps(protocol: dict[str, Any], stage: str) -> int:
     return int(protocol["full_training"]["total_steps"])
 
 
-def _feature_json(protocol: dict[str, Any], key: str) -> str:
-    value = protocol["feature_override"][key]
-    return json.dumps(value, separators=(",", ":"), sort_keys=True)
-
-
 def build_command(args: argparse.Namespace, protocol: dict[str, Any]) -> tuple[list[str], int]:
     """Construct the exact installed LeRobot 0.6 command without shell interpolation."""
 
@@ -89,8 +84,10 @@ def build_command(args: argparse.Namespace, protocol: dict[str, Any]) -> tuple[l
     policy_arguments = [
         f"--policy.path={base['repo_id']}",
         f"--policy.pretrained_revision={base['revision']}",
-        f"--policy.input_features={_feature_json(protocol, 'input_features')}",
-        f"--policy.output_features={_feature_json(protocol, 'output_features')}",
+        # LeRobot 0.6 recursively merges dictionary CLI overrides into the published
+        # three-camera config. Null is the documented replacement semantic: make_policy
+        # then derives the complete input mapping from the already verified train view.
+        "--policy.input_features=null",
         f"--policy.chunk_size={model['chunk_size']}",
         f"--policy.n_action_steps={model['n_action_steps']}",
         f"--policy.num_steps={model['num_inference_steps']}",
@@ -184,6 +181,12 @@ def main(argv: list[str] | None = None) -> int:
         "dry_run": args.dry_run,
         "checkpoint_resume_supported": True,
         "periodic_offline_validation": "run on immutable validation root after each frozen checkpoint",
+        "feature_binding": {
+            "semantic": "complete_dataset_metadata_inference_v0",
+            "expected_input_features": protocol["feature_override"]["input_features"],
+            "expected_output_features": protocol["feature_override"]["output_features"],
+            "dictionary_cli_merge_prohibited": True,
+        },
     }
     write_json_once(output / "launch_manifest.json", manifest)
     if args.dry_run:

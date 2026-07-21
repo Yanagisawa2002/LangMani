@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -46,6 +47,17 @@ from langmani.v2.smolvla_adapter import (
     SmolVLAPolicyAdapter,
 )
 from langmani.v2.taxonomy import EvaluationTask, PushTaskInstanceSpec
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _load_training_launcher():
+    path = PROJECT_ROOT / "environment" / "launch_v2_smolvla_training.py"
+    spec = importlib.util.spec_from_file_location("phase2c_training_launcher_test", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def _input_manifest() -> dict[str, object]:
@@ -531,3 +543,33 @@ def test_hold_position_baseline_uses_only_deployable_state() -> None:
     assert torch.equal(chunk.actions[0, :7], torch.arange(7, dtype=torch.float32))
     assert chunk.actions[0, 7].item() == 7.5
     assert policy.runtime_manifest["privileged_inputs"] is False
+
+
+def test_training_launcher_replaces_base_camera_mapping_instead_of_merging(tmp_path: Path) -> None:
+    launcher = _load_training_launcher()
+    protocol = json.loads(
+        (PROJECT_ROOT / "configs" / "langmani_v2" / "phase2c_smolvla_push.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    args = SimpleNamespace(
+        stage="smoke",
+        batch_size=1,
+        num_workers=0,
+        seed=0,
+        max_steps=1,
+        limit_samples=None,
+        checkpoint_every=1,
+        episodes=None,
+        resume_checkpoint=None,
+        dry_run=True,
+        lerobot_train="lerobot-train",
+        repo_id="phase2c-train-view",
+        train_root=tmp_path / "train",
+        output_dir=tmp_path / "output",
+    )
+    command, steps = launcher.build_command(args, protocol)
+    assert steps == 1
+    assert "--policy.input_features=null" in command
+    assert not any(item.startswith("--policy.output_features=") for item in command)
+    assert not any("observation.images.camera" in item for item in command)
