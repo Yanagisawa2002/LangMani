@@ -571,5 +571,7 @@ def test_training_launcher_replaces_base_camera_mapping_instead_of_merging(tmp_p
     command, steps = launcher.build_command(args, protocol)
     assert steps == 1
     assert "--policy.input_features=null" in command
+    assert "--policy.optimizer_betas=[0.9,0.95]" in command
+    assert "0.95" not in command
     assert not any(item.startswith("--policy.output_features=") for item in command)
     assert not any("observation.images.camera" in item for item in command)
