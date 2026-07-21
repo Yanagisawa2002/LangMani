@@ -1,13 +1,13 @@
-# LangMani 2.0 Phase 2: precondition status
+# LangMani 2.0 Phase 2: pushing expert gate
 
 ## Status
 
 Phase 2 is authorized and its pushing task plus privileged expert are implemented. The required
-Phase 1 native smoke and independent entry gate pass. The real pushing environment has also been
-created, stepped, rendered, reset deterministically, and exercised with vectorized RGB
-observations on the RTX 5090 target. Expert quality acceptance is still gated by the fixed
-all-task smoke followed by 50 standard and 30 hard episodes. This status is not a claim that the
-multi-skill dataset, SmolVLA baseline, or Phase 2 quality result already exists.
+Phase 1 native smoke and independent entry gate pass. The real pushing environment was created,
+stepped, rendered, reset deterministically, and exercised with vectorized RGB observations on the
+RTX 5090 target. The fixed expert gate is now complete and failed conjunctively: standard reached
+41/50 (82%) against 90%, while hard reached 21/30 (70%) against 70%. The workflow stops before
+demonstration collection, unified data, SmolVLA integration, or training.
 
 The first implementation checkpoint defines an immutable `PushTaskSpec` with two contact
 geometries (`blue_cube`, `orange_cylinder`), four parameterized target regions (`left`, `right`,
@@ -59,8 +59,32 @@ passed=true
 ```
 
 No push task, pushing expert, pushing dataset, SmolVLA integration, model training, or closed-loop
-Phase 2 evaluation existed at the moment of authorization. Phase 2 must now proceed in its declared
-order beginning with the standard `push_to_region` task.
+Phase 2 evaluation existed at the moment of authorization. The environment and expert were then
+implemented in that declared order. The later expert gate result below supersedes the historical
+authorization-time snapshot without changing the Phase 1 evidence.
+
+## Pushing expert validation
+
+The accepted native producer is Git `500b09ce9d1cf10f7ac2f6f585a5fb8efed9e686`, using the pinned
+mplib side runtime (`numpy==1.26.4`, `mplib==0.1.1`) with PhysX CUDA and the NVIDIA Vulkan ICD.
+An earlier launcher mistakenly used the main NumPy 2.2.6 runtime and produced 16 zero-step
+initialization failures; that artifact is invalid infrastructure evidence and is not included in
+the rates below.
+
+| Schedule | Standard | Hard | Conjunctive gate |
+| --- | ---: | ---: | --- |
+| All-task smoke | 8/8 (100%) | 5/8 (62.5%) | failed |
+| Fixed target validation | 41/50 (82%) | 21/30 (70%) | failed |
+
+Wilson 95% intervals for the target validation are 69.2%–90.2% for standard and 52.1%–83.3% for
+hard. Standard failures were five timeouts, three verification failures, and one planning failure.
+Hard failures were two timeouts, three wrong-object interactions, two workspace exits, one
+planning failure, and one out-of-bounds execution failure. Forward standard tasks reached 24/24;
+the main weakness was lateral pushing, especially the rolling cylinder.
+
+Two bounded diagnostic probes tested a deeper endpoint/longer settle and a compact correction
+path. Each produced only 10/17 successes and introduced new workspace or baseline regressions, so
+neither was committed and neither is quality evidence. The stop condition remains active.
 
 ## Exact unblock sequence
 
@@ -82,6 +106,7 @@ python environment/verify_v2_phase1.py \
   --output outputs/diagnostics/v2/phase1/precondition-verification.json
 ```
 
-Resume Phase 2 at the standard `push_to_region` task only when the final command returns zero and
-reports `phase2_authorized=true`. Do not start SmolVLA work before that gate and before the pushing
-expert and dataset stop conditions are independently satisfied.
+The Phase 1 command already returns zero with `phase2_authorized=true`. Resume Phase 2 only by
+making a bounded controller-quality change, rerunning the all-task smoke, and then producing a new
+fixed 50/30 report with standard at least 90% and hard at least 70%. Do not start demonstration
+collection or SmolVLA work before that expert gate passes.

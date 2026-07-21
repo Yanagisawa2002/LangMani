@@ -61,9 +61,13 @@ acceptance are complete. After the bounded Docker/Windows and one invalid GLX la
 kept as infrastructure diagnostics, the accepted EGL/Vulkan run at `aa599dd` completed seeds
 41001/41002/41003 with 3/3 successes, 40 real ACT queries, and 392 real environment steps. The
 independent `environment/verify_v2_phase1.py` gate returned `phase2_authorized=true`. LangMani 2.0
-Phase 2 may now begin with the standard `push_to_region` task, but must still follow its ordered
-expert, dataset, adapter, push-only, and multi-skill stop conditions. No Phase 2 model or result
-exists merely because the Phase 1 entry gate passed.
+Phase 2 then implemented and physically exercised `LangMani-PushToRegion-v0` plus its deterministic
+privileged expert. The corrected all-task smoke reached 8/8 standard and 5/8 hard successes, but
+the fixed 50-standard/30-hard target validation reached only 41/50 standard and 21/30 hard. The
+hard target passed exactly while the standard 90% target and conjunctive expert gate failed.
+Phase 2 is therefore blocked before demonstration collection: do not generate the pushing dataset,
+implement or load SmolVLA, or begin training/evaluation until a later controller change passes a
+fresh fixed expert gate. Probe runs are diagnostics, not quality evidence.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level

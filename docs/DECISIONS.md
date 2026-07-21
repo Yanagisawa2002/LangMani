@@ -2473,3 +2473,19 @@ lies on the table. Native reachability probes also showed that the original forw
 forward centers to `x=0.22` keeps all four semantic regions distinct and reachable. These are
 geometry/orientation corrections: the object sizes, containment radii, success predicates,
 planner bounds, and 250-step limit remain unchanged.
+
+## D-088 - Stop Phase 2 before data after the fixed pushing-expert gate
+
+The corrected native all-task smoke at Git `500b09ce9d1cf10f7ac2f6f585a5fb8efed9e686`
+completed all 16 episodes with 8/8 standard and 5/8 hard successes. The subsequent predeclared
+50-standard/30-hard validation completed without command errors and produced 41/50 standard
+successes (82%) and 21/30 hard successes (70%). Hard met its target exactly, but the conjunctive
+expert gate failed because standard remained below 90%. This is valid controller-quality evidence,
+not an infrastructure failure.
+
+One invalid launcher artifact used the main NumPy 2.2.6 runtime and failed all episodes at planner
+initialization before any environment step; the accepted runs use the pinned NumPy 1.26.4/mplib
+side runtime. Two later bounded diagnostic probes each reached 10/17 and caused new regressions, so
+their candidate changes were rejected. In accordance with the declared stop condition, no pushing
+demonstration archive, unified dataset, SmolVLA adapter, model load, training, or learned-policy
+evaluation is authorized from this result. Existing Phase 1 and v1 evidence remain unchanged.

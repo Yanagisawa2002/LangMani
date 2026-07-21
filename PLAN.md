@@ -18,15 +18,18 @@ remain explicitly invalid infrastructure attempts.
 The next phase may compare another real policy architecture only after it implements this same
 adapter and evidence contract. It may not modify or relabel the frozen v1 release.
 
-## LangMani 2.0 Phase 2 - multi-skill and SmolVLA (authorized; implementation starting)
+## LangMani 2.0 Phase 2 - multi-skill and SmolVLA (expert gate blocked)
 
-The required real Phase 1 smoke and its independent verifier now pass. Phase 2 is authorized to
-start in the requested order: standard push task, pushing expert, hard variations, demonstration
-archive, unified dataset, SmolVLA adapter, push-only training/evaluation, then multi-skill work.
+The required real Phase 1 smoke and its independent verifier pass. Phase 2 implemented the
+parameterized `push_to_region` environment, its standard/hard variations, conservative evaluation,
+and a deterministic Panda/mplib expert. Native geometry corrections made all eight standard smoke
+tasks succeed, but the fixed target validation produced 41/50 standard successes (82%) and 21/30
+hard successes (70%). The required standard reliability target is therefore false.
 
-At authorization time no `push_to_region` environment/expert, pushing dataset, SmolVLA dependency,
-training run, or Phase 2 evaluation exists yet. Each later stop condition remains active; in
-particular, do not begin SmolVLA work until the pushing expert and data are genuinely validated.
+The ordered workflow stops before the demonstration archive. No pushing dataset, unified dataset,
+SmolVLA dependency, adapter, training run, or learned-policy Phase 2 result exists. Resume only by
+improving the controller without changing success geometry or filtering seeds, then rerunning the
+same 50/30 gate. Do not begin data or SmolVLA work until that fresh gate passes.
 
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
