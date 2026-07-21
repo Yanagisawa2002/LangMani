@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import numpy as np
 
+from environment.diagnose_push_expert import _failed_lateral_schedule
+from langmani.environments.push_specs import PushTaskSpec
 from langmani.experts.push_diagnostics import (
     PushDiagnosticSnapshot,
     classify_push_failure,
@@ -90,3 +92,30 @@ def test_push_failure_classifier_separates_boundary_and_origin_failures() -> Non
 
     assert boundary == "verification_boundary_case"
     assert action == "action_bound_violation"
+
+
+def test_failed_lateral_schedule_accepts_only_fixed_report_shapes() -> None:
+    result = _failed_lateral_schedule(
+        {
+            "mode": "lateral_subset",
+            "expected_episodes": 42,
+            "results": [
+                {
+                    "success": False,
+                    "scene_seed": 44000,
+                    "target_object_id": "blue_cube",
+                    "target_region_id": "left",
+                    "difficulty": "standard",
+                },
+                {
+                    "success": True,
+                    "scene_seed": 44001,
+                    "target_object_id": "blue_cube",
+                    "target_region_id": "right",
+                    "difficulty": "standard",
+                },
+            ],
+        }
+    )
+
+    assert result == ((44000, PushTaskSpec("blue_cube", "left", "standard")),)

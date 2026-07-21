@@ -64,8 +64,10 @@ def _create_environment(sim_backend: str) -> Any:
 
 
 def _failed_lateral_schedule(payload: dict[str, Any]) -> tuple[tuple[int, PushTaskSpec], ...]:
-    if payload.get("mode") != "target_validation" or payload.get("expected_episodes") != 80:
-        raise ValueError("baseline report must be the fixed 50/30 target validation")
+    expected_by_mode = {"target_validation": 80, "lateral_subset": 42}
+    mode = payload.get("mode")
+    if mode not in expected_by_mode or payload.get("expected_episodes") != expected_by_mode[mode]:
+        raise ValueError("baseline report must be the fixed target or lateral validation")
     selected: list[tuple[int, PushTaskSpec]] = []
     for raw in payload.get("results", []):
         if raw.get("success") is True or raw.get("target_region_id") not in LATERAL_REGIONS:

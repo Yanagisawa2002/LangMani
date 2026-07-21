@@ -29,7 +29,7 @@ location is clearly labeled as a TCP-center proxy.
 | Change | Hypothesis | Lateral replay | Lateral subset | Forward | Smoke | Fixed 50/30 | Decision |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | baseline | geometry-corrected expert | 16/16 reproduced | pending | 24/24 standard | 8/8, 5/8 | 41/50, 21/30 | blocked |
-| A | compensate signed lateral drift by 15 degrees; add safe fixed fallback list | 8/16 recovered; 3 new standard workspace exits | pending | pending | pending | pending | provisional |
+| A | 15-degree compensation plus 4 cm cylinder contact | 8/16 recovered; 3 new standard workspace exits | Standard 20/26, Hard 11/16; 6 workspace exits | not run | not run | not run | rejected |
 
 The behavior-neutral replay classified the 16 lateral failures as seven contact losses, two
 verification-boundary cases, two workspace-margin violations, and one each of overshoot, primary
@@ -41,6 +41,12 @@ the single predeclared response to that measured asymmetry, not a parameter swee
 Earlier uncommitted probes that combined a deeper endpoint with longer settling, or removed the
 separate correction lift, each reached only 10/17 and introduced workspace or forward regressions.
 They remain rejected and are not silently restored.
+
+Candidate A recovered five of nine failed standard lateral seeds and three of seven failed hard
+lateral seeds, but the complete subset exposed five new standard cylinder workspace exits and one
+hard cylinder workspace exit. Its protected forward and official gates were therefore not run.
+The next bounded diagnostic replays only those fixed candidate-A failures to separate the signed
+direction compensation from the newly deeper cylinder contact and correction behavior.
 
 ## Gate
 
