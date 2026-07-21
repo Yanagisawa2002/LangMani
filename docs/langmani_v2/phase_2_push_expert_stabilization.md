@@ -28,12 +28,12 @@ location is clearly labeled as a TCP-center proxy.
 
 | Change | Hypothesis | Lateral replay | Lateral subset | Forward | Smoke | Fixed 50/30 | Decision |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| baseline | geometry-corrected expert | 16/16 reproduced | pending | 24/24 standard | 8/8, 5/8 | 41/50, 21/30 | blocked |
+| baseline | geometry-corrected expert | 16/16 failures reproduced | Standard 17/26, Hard 9/16 | 24/24 standard | 8/8, 5/8 | 41/50, 21/30 | blocked |
 | A | 15-degree compensation plus 4 cm cylinder contact | 8/16 recovered; 3 new standard workspace exits | Standard 20/26, Hard 11/16; 6 workspace exits | not run | not run | not run | rejected |
-| B | cube-only 15-degree compensation; baseline cylinder contact/direction | pending | pending | protected | pending | pending | provisional |
-| C | Candidate B plus 3 cm workspace-bounded cylinder corrections | pending | pending | protected | pending | pending | provisional |
-| D | Candidate B with unsafe cylinder re-contact disabled | pending | pending | protected | pending | pending | provisional |
-| E | Candidate D plus pre-execution joint-bound fallback | pending | pending | protected | pending | pending | provisional |
+| B | cube-only 15-degree compensation; baseline cylinder contact/direction | 8/16 baseline failures recovered | Standard 22/26, Hard 10/16; 3 standard workspace exits | protected | not run | not run | rejected |
+| C | Candidate B plus 3 cm workspace-bounded cylinder corrections | all 10 Candidate-B failures reproduced | not run | protected | not run | not run | rejected |
+| D | Candidate B with unsafe cylinder re-contact disabled | workspace exits became honest verification failures | Standard 22/26, Hard 10/16; 0 workspace exits | protected | 8/8, 5/8 | not run | rejected by smoke |
+| E | Candidate D plus pre-execution joint-bound fallback | 1/10 Candidate-D failures recovered | Standard 22/26, Hard 11/16; 0 workspace/action failures | 24/24 standard | 8/8, 6/8 | 46/50, 23/30 | accepted |
 
 The behavior-neutral replay classified the 16 lateral failures as seven contact losses, two
 verification-boundary cases, two workspace-margin violations, and one each of overshoot, primary
@@ -73,8 +73,26 @@ Candidate D retained the 22/26 and 10/16 lateral result with zero workspace exit
 layer: reject the complete joint plan before stepping it, then try the next fixed safe approach.
 No action is clipped or projected.
 
+Candidate E recovered hard seed 45005, completed the fixed lateral subset at 22/26 standard and
+11/16 hard, and passed the exact smoke at 8/8 and 6/8. The unchanged target schedule then completed
+all 80 episodes at 46/50 standard and 23/30 hard. Standard forward remained 24/24. Both the lateral
+and target reports recorded zero workspace exits and zero action-bound events. The remaining target
+failures are four standard cylinder verification failures, three hard cylinder verification
+failures, and four hard wrong-object precontact interactions.
+
+The accepted machine-readable reports are:
+
+- `side-push-candidate-e-replay-59ca88e.json` (`sha256:3a8a9993f13cc19ec26fec76281ec55c720f3f7db80ab2bd17135b6bfe4206d9`);
+- `push-expert-lateral-subset-candidate-e-59ca88e.json` (`sha256:e7277e6f1c70b1d8192abb1e126c6b7483bfb6cdbf7fb10bbed73a931c345cdd`);
+- `push-expert-smoke-phase2a-59ca88e.json` (`sha256:7b35e5543e05dd7dcb24b063ae528f3d709b105a22bedc02294fd5430fee72a8`);
+- `push-expert-target-validation-phase2a-59ca88e.json` (`sha256:2dd043220a6736bcc8df2f085a6b5322bee76bc96a79b209465cd63d7ecc286c`).
+
+Each report preserves the fixed schedule order, has no duplicate episode identity or command error,
+and was independently recomputed from its raw per-episode records before documentation.
+
 ## Gate
 
-Dataset collection and SmolVLA remain unauthorized unless the unchanged fixed evaluation reaches
-Standard at least 45/50, Hard at least 21/30, the 16-task joint gate passes, the standard forward
-subset remains 24/24, and no systemic workspace/action-bound regression appears.
+The unchanged fixed evaluation reaches Standard 46/50 and Hard 23/30; the 16-task joint gate passes,
+the protected standard forward subset remains 24/24, and workspace/action-bound counts are both
+zero. Phase 2A therefore passes. Demonstration collection is now the next separately authorized
+stage, but it was not run here. SmolVLA remains unstarted and downstream of an accepted dataset.

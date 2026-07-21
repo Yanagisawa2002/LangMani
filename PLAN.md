@@ -18,18 +18,21 @@ remain explicitly invalid infrastructure attempts.
 The next phase may compare another real policy architecture only after it implements this same
 adapter and evidence contract. It may not modify or relabel the frozen v1 release.
 
-## LangMani 2.0 Phase 2 - multi-skill and SmolVLA (expert gate blocked)
+## LangMani 2.0 Phase 2 - multi-skill and SmolVLA (expert gate passed)
 
 The required real Phase 1 smoke and its independent verifier pass. Phase 2 implemented the
 parameterized `push_to_region` environment, its standard/hard variations, conservative evaluation,
-and a deterministic Panda/mplib expert. Native geometry corrections made all eight standard smoke
-tasks succeed, but the fixed target validation produced 41/50 standard successes (82%) and 21/30
-hard successes (70%). The required standard reliability target is therefore false.
+and a deterministic Panda/mplib expert. Phase 2A then stabilized lateral pushing through bounded,
+geometry-specific contact selection, fail-safe cylinder correction, and pre-execution action-bound
+validation. The unchanged smoke reached 8/8 standard and 6/8 hard; the fixed target validation
+reached 46/50 standard successes (92%) and 23/30 hard successes (76.7%). Standard forward remained
+24/24, with zero workspace-exit and zero action-bound events. The expert quality gate is true.
 
-The ordered workflow stops before the demonstration archive. No pushing dataset, unified dataset,
-SmolVLA dependency, adapter, training run, or learned-policy Phase 2 result exists. Resume only by
-improving the controller without changing success geometry or filtering seeds, then rerunning the
-same 50/30 gate. Do not begin data or SmolVLA work until that fresh gate passes.
+The next separately authorized stage is deterministic pushing demonstration collection and archive
+validation. No pushing dataset, unified dataset, SmolVLA dependency, adapter, training run, or
+learned-policy Phase 2 result exists yet. Data collection must preserve the fixed task/seed and
+success contracts; SmolVLA work remains downstream of an accepted dataset rather than starting
+automatically from this expert result.
 
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically

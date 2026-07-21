@@ -32,11 +32,12 @@ python environment/verify_v2_phase1.py \
 ```
 
 The command now returns zero with `phase2_authorized=true`. Phase 2 subsequently implemented and
-physically validated the new `push_to_region` environment and expert execution path. Its all-task
-smoke reached 8/8 standard and 5/8 hard successes, while the fixed 50-standard/30-hard gate reached
-41/50 (82%) and 21/30 (70%). Because the standard 90% reliability target failed, Phase 2 stops
-before demonstration collection. No pushing dataset, SmolVLA adapter, trained SmolVLA model, or
-learned Phase 2 policy metric exists. See
+physically validated the new `push_to_region` environment and expert execution path. Phase 2A's
+accepted side-push stabilization reached 8/8 standard and 6/8 hard on the all-task smoke, then
+46/50 (92%) and 23/30 (76.7%) on the unchanged fixed gate. Standard forward tasks remained 24/24;
+workspace-exit and action-bound events were both zero. The expert gate now passes, so deterministic
+pushing demonstration collection is the next separately authorized stage. No pushing dataset,
+SmolVLA adapter, trained SmolVLA model, or learned Phase 2 policy metric exists yet. See
 [`docs/langmani_v2/phase_2_results.md`](docs/langmani_v2/phase_2_results.md).
 
 LangMani turns natural-language pick-and-place commands into typed `TaskSpec` decisions, selects

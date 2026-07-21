@@ -62,12 +62,13 @@ kept as infrastructure diagnostics, the accepted EGL/Vulkan run at `aa599dd` com
 41001/41002/41003 with 3/3 successes, 40 real ACT queries, and 392 real environment steps. The
 independent `environment/verify_v2_phase1.py` gate returned `phase2_authorized=true`. LangMani 2.0
 Phase 2 then implemented and physically exercised `LangMani-PushToRegion-v0` plus its deterministic
-privileged expert. The corrected all-task smoke reached 8/8 standard and 5/8 hard successes, but
-the fixed 50-standard/30-hard target validation reached only 41/50 standard and 21/30 hard. The
-hard target passed exactly while the standard 90% target and conjunctive expert gate failed.
-Phase 2 is therefore blocked before demonstration collection: do not generate the pushing dataset,
-implement or load SmolVLA, or begin training/evaluation until a later controller change passes a
-fresh fixed expert gate. Probe runs are diagnostics, not quality evidence.
+privileged expert. Phase 2A stabilized lateral pushing without changing forward behavior, success
+geometry, schedules, or the 250-step budget. The accepted Candidate E smoke reached 8/8 standard
+and 6/8 hard; the fixed 50-standard/30-hard validation reached 46/50 and 23/30, with the protected
+standard forward subset still 24/24 and zero workspace-exit or action-bound events. The unchanged
+conjunctive expert gate therefore passes. Demonstration collection is now the next separately
+authorized Phase 2 stage, but no pushing dataset has been generated and SmolVLA has not started.
+Rejected probe runs remain diagnostics, not quality evidence.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level

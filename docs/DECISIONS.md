@@ -2596,3 +2596,25 @@ lateral approach loop try the next fixed safe normal. A zero-compensation cylind
 bounded symmetric set 0, plus or minus 7.5, and plus or minus 15 degrees; all candidates retain the
 same reachability, workspace, and distractor scoring. This is a general origin-layer action-bound
 fix, not a seed exception. Wrong-object and forward paths are otherwise unchanged.
+
+## D-095 - Accept Candidate E and open the pushing-data entry gate
+
+Candidate E at Git `59ca88e9f0514187252a6286ab1b8e06c4318fb4` completed every predeclared
+Phase 2A stage in the pinned NumPy 1.26.4/mplib 0.1.1 planner environment on one RTX 5090. The full
+fixed lateral subset improved from 17/26 to 22/26 standard and from 9/16 to 11/16 hard. The exact
+16-task smoke then reached 8/8 standard and 6/8 hard, satisfying its unchanged joint gate. The
+fixed target schedule completed all 80 episodes without command errors at 46/50 standard and 23/30
+hard, exceeding the 45/50 and 21/30 thresholds. Standard forward remained 24/24.
+
+The target report contains zero workspace exits, zero action-bound events, zero timeouts, and zero
+planner failures. Its remaining failures are four standard cylinder verification failures, three
+hard cylinder verification failures, and four hard wrong-object precontact interactions. Independent
+recomputation matched every scheduled episode identity in order, found no duplicate identity, and
+reproduced the aggregate counts from raw episode records. The accepted report SHA-256 is
+`2dd043220a6736bcc8df2f085a6b5322bee76bc96a79b209465cd63d7ecc286c`.
+
+The unchanged expert quality gate therefore passes. Phase 2 may advance to a separately authorized
+deterministic demonstration-collection stage under the frozen task, seed, action, and success
+contracts. This decision does not claim that a pushing dataset exists, does not authorize bypassing
+raw/archive validation, and does not start or validate SmolVLA. SmolVLA remains downstream of an
+accepted dataset and a later explicit stage.
