@@ -506,26 +506,31 @@ def quota_deficits(
 def summarize_attempt_records(records: Sequence[Mapping[str, object]]) -> dict[str, object]:
     """Aggregate preserved attempts without hiding genuine failure strata."""
 
-    counts: dict[str, Counter[str]] = {
-        "geometry": Counter(),
-        "direction": Counter(),
-        "difficulty": Counter(),
-        "template_group": Counter(),
-        "failure_category": Counter(),
-        "episode_length_bucket": Counter(),
-        "correction_push_count": Counter(),
-    }
+    names = (
+        "geometry",
+        "direction",
+        "difficulty",
+        "template_group",
+        "failure_category",
+        "episode_length_bucket",
+        "correction_push_count",
+    )
+    counts = {name: Counter[str]() for name in names}
+    accepted_counts_by = {name: Counter[str]() for name in names}
+    rejected_counts_by = {name: Counter[str]() for name in names}
     accepted = 0
     rejected = 0
     for record in records:
         task = _mapping(record.get("task_spec"), "task_spec")
         geometry = "cube" if task.get("target_object_id") == "blue_cube" else "horizontal_cylinder"
-        counts["geometry"][geometry] += 1
-        counts["direction"][_string(task.get("target_region_id"), "target_region_id")] += 1
-        counts["difficulty"][_string(task.get("difficulty"), "difficulty")] += 1
-        counts["template_group"][_string(record.get("template_group"), "template_group")] += 1
+        values = {
+            "geometry": geometry,
+            "direction": _string(task.get("target_region_id"), "target_region_id"),
+            "difficulty": _string(task.get("difficulty"), "difficulty"),
+            "template_group": _string(record.get("template_group"), "template_group"),
+        }
         length = _integer(record.get("episode_length"), "episode_length")
-        bucket = (
+        values["episode_length_bucket"] = (
             "0-49"
             if length < 50
             else "50-99"
@@ -534,20 +539,31 @@ def summarize_attempt_records(records: Sequence[Mapping[str, object]]) -> dict[s
             if length < 150
             else "150+"
         )
-        counts["episode_length_bucket"][bucket] += 1
         corrections = _integer(record.get("correction_push_count", 0), "correction_push_count")
-        counts["correction_push_count"][str(corrections)] += 1
+        values["correction_push_count"] = str(corrections)
+        selected = accepted_counts_by if record.get("accepted") is True else rejected_counts_by
+        for name, value in values.items():
+            counts[name][value] += 1
+            selected[name][value] += 1
         if record.get("accepted") is True:
             accepted += 1
         else:
             rejected += 1
             category = record.get("failure_category")
-            counts["failure_category"][str(category or "replay_or_contract_rejection")] += 1
+            failure = str(category or "replay_or_contract_rejection")
+            counts["failure_category"][failure] += 1
+            rejected_counts_by["failure_category"][failure] += 1
     return {
         "attempted": len(records),
         "accepted": accepted,
         "rejected": rejected,
         **{name: dict(sorted(value.items())) for name, value in counts.items()},
+        "accepted_by": {
+            name: dict(sorted(value.items())) for name, value in accepted_counts_by.items()
+        },
+        "rejected_by": {
+            name: dict(sorted(value.items())) for name, value in rejected_counts_by.items()
+        },
     }
 
 
@@ -604,6 +620,7 @@ def audit_split_leakage(
     assignments = _mapping(split_manifest.get("assignments"), "assignments")
     errors: list[str] = []
     seen_episode: set[str] = set()
+    seen_seed: dict[int, str] = {}
     seen_trajectory: dict[str, str] = {}
     seen_state: dict[str, str] = {}
     scene_splits: dict[str, set[str]] = defaultdict(set)
@@ -617,6 +634,11 @@ def audit_split_leakage(
         if episode_id in seen_episode:
             errors.append(f"duplicate_episode_id:{episode_id}")
         seen_episode.add(episode_id)
+        seed = _integer(record.get("seed"), "seed")
+        other_seed_episode = seen_seed.get(seed)
+        if other_seed_episode is not None and other_seed_episode != episode_id:
+            errors.append(f"duplicate_seed:{other_seed_episode}:{episode_id}:{seed}")
+        seen_seed[seed] = episode_id
         for field, seen, code in (
             ("trajectory_sha256", seen_trajectory, "duplicate_trajectory_hash"),
             ("initial_state_sha256", seen_state, "duplicate_initial_state_hash"),
@@ -658,6 +680,7 @@ def audit_split_leakage(
         "duplicate_trajectory_hash_count": sum(
             error.startswith("duplicate_trajectory_hash") for error in errors
         ),
+        "duplicate_seed_count": sum(error.startswith("duplicate_seed") for error in errors),
         "duplicate_initial_state_hash_count": sum(
             error.startswith("duplicate_initial_state_hash") for error in errors
         ),

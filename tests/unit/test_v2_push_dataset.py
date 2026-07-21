@@ -18,6 +18,12 @@ from langmani.v2.push_archive import (
     state_mapping_sha256,
     validate_push_native_episode,
 )
+from langmani.v2.push_audit import (
+    PHASE2B_RESULT_SCHEMA,
+    PHASE2B_SOURCE_VALIDATION_SCHEMA,
+    validate_phase2b_result_manifest,
+    validate_source_validation_report,
+)
 from langmani.v2.push_dataset import (
     PushCollectionConfig,
     PushDatasetContractError,
@@ -27,6 +33,7 @@ from langmani.v2.push_dataset import (
     build_split_manifest,
     generation_acceptance_failures,
     quota_deficits,
+    summarize_attempt_records,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -187,6 +194,7 @@ def test_splits_are_episode_level_and_leakage_free() -> None:
     }
     audit = audit_split_leakage(records, manifest)
     assert audit["passed"] is True
+    assert audit["duplicate_seed_count"] == 0
     assert audit["exported_frame_file_overlap_count"] == 0
 
 
@@ -199,6 +207,14 @@ def test_leakage_audit_detects_duplicate_content(field: str) -> None:
     assert any(field.removesuffix("_sha256") in item for item in audit["errors"])
 
 
+def test_leakage_audit_detects_duplicate_seed() -> None:
+    records = [_accepted_record(index) for index in range(420)]
+    records[1]["seed"] = records[0]["seed"]
+    audit = audit_split_leakage(records, build_split_manifest(records))
+    assert audit["passed"] is False
+    assert audit["duplicate_seed_count"] == 1
+
+
 def test_quota_accounting_uses_only_final_accepted_records() -> None:
     config = PushCollectionConfig.load(CONFIG)
     records = [_accepted_record(index) for index in range(160)]
@@ -208,6 +224,17 @@ def test_quota_accounting_uses_only_final_accepted_records() -> None:
     deficits = quota_deficits(config, records)
     assert deficits["standard"] > 0
     assert deficits["hard"] > 0
+
+
+def test_attempt_summary_separates_accepted_and_rejected_strata() -> None:
+    records = [_accepted_record(0), _accepted_record(1)]
+    records[1]["accepted"] = False
+    records[1]["failure_category"] = "verification_failure"
+    records[0].update(episode_length=120, correction_push_count=0)
+    records[1].update(episode_length=80, correction_push_count=1)
+    summary = summarize_attempt_records(records)
+    assert summary["accepted_by"]["geometry"] == {"cube": 1}
+    assert summary["rejected_by"]["failure_category"] == {"verification_failure": 1}
 
 
 def test_policy_feature_schema_excludes_privileged_simulator_state() -> None:
@@ -222,3 +249,34 @@ def test_policy_feature_schema_excludes_privileged_simulator_state() -> None:
         for key in contract.policy_feature_keys
         for token in ("target", "object_pose", "region", "task_id")
     )
+
+
+def test_source_validation_requires_every_declared_gate() -> None:
+    report: dict[str, object] = {
+        "schema_version": PHASE2B_SOURCE_VALIDATION_SCHEMA,
+        "ruff": {"passed": True},
+        "cpu_safe_tests": {"passed": True},
+        "push_specific_tests": {"passed": True},
+        "dataset_specific_tests": {"passed": True},
+        "isolated_build": {"passed": True},
+        "server_integration": {"passed": True},
+        "passed": True,
+    }
+    assert validate_source_validation_report(report)
+    report["server_integration"] = {"passed": False}
+    assert not validate_source_validation_report(report)
+
+
+def test_final_result_manifest_is_bound_to_recomputed_identity() -> None:
+    expected = {
+        "collection_fingerprint": "sha256:collection",
+        "accepted_episode_count": 360,
+    }
+    manifest = {
+        "schema_version": PHASE2B_RESULT_SCHEMA,
+        **expected,
+        "completed": True,
+    }
+    assert validate_phase2b_result_manifest(manifest, expected=expected)
+    manifest["accepted_episode_count"] = 359
+    assert not validate_phase2b_result_manifest(manifest, expected=expected)

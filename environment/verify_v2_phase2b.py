@@ -24,6 +24,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--export-root", type=Path, required=True)
     parser.add_argument("--stages", nargs="+", choices=("pilot", "full", "top_up"), required=True)
     parser.add_argument("--compatibility-report", type=Path)
+    parser.add_argument("--source-validation", type=Path)
+    parser.add_argument("--final-metadata", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     return parser.parse_args()
 
@@ -36,6 +38,8 @@ def main() -> int:
         export_root=args.export_root,
         stages=args.stages,
         compatibility_report=args.compatibility_report,
+        source_validation=args.source_validation,
+        final_metadata=args.final_metadata,
         output=args.output,
         full=args.full,
     )

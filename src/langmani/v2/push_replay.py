@@ -99,6 +99,7 @@ def replay_push_attempts(
                 else:
                     failure_counts["replay_rejected_unclassified"] += 1
     categorical_matches = sum(item["categorical_outcome_match"] is True for item in results)
+    transition_label_matches = sum(item["transition_label_match"] is True for item in results)
     report = {
         "schema_version": REPLAY_SCHEMA_VERSION,
         "collection_fingerprint": config.fingerprint,
@@ -110,6 +111,10 @@ def replay_push_attempts(
         "replay_failed_count": len(results) - len(accepted_records),
         "categorical_outcome_match_count": categorical_matches,
         "categorical_outcome_match_rate": (categorical_matches / len(results) if results else 0.0),
+        "transition_label_match_count": transition_label_matches,
+        "transition_label_match_rate": (
+            transition_label_matches / len(results) if results else 0.0
+        ),
         "frame_count_match_rate": (
             sum(item["frame_count_match"] is True for item in results) / len(results)
             if results

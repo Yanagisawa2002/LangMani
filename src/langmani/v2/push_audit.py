@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, cast
@@ -21,6 +22,42 @@ from langmani.v2.push_dataset import (
 )
 
 PHASE2B_VERIFICATION_SCHEMA = "langmani-v2-phase2b-verification-v0"
+PHASE2B_SOURCE_VALIDATION_SCHEMA = "langmani-v2-phase2b-source-validation-v0"
+PHASE2B_RESULT_SCHEMA = "langmani-v2-phase2b-result-v0"
+
+
+def validate_source_validation_report(report: Mapping[str, object]) -> bool:
+    """Validate the tracked, compact source/test/build completion record."""
+
+    required = (
+        "ruff",
+        "cpu_safe_tests",
+        "push_specific_tests",
+        "dataset_specific_tests",
+        "isolated_build",
+        "server_integration",
+    )
+    return bool(
+        report.get("schema_version") == PHASE2B_SOURCE_VALIDATION_SCHEMA
+        and report.get("passed") is True
+        and all(
+            isinstance(report.get(key), Mapping)
+            and cast(Mapping[str, object], report[key]).get("passed") is True
+            for key in required
+        )
+    )
+
+
+def validate_phase2b_result_manifest(
+    manifest: Mapping[str, object], *, expected: Mapping[str, object]
+) -> bool:
+    """Validate content-bound final metadata without trusting its quality claim."""
+
+    return bool(
+        manifest.get("schema_version") == PHASE2B_RESULT_SCHEMA
+        and all(manifest.get(key) == value for key, value in expected.items())
+        and manifest.get("completed") is True
+    )
 
 
 def audit_pick_place_compatibility(
@@ -170,6 +207,8 @@ def verify_phase2b_evidence(
     export_root: str | Path,
     stages: Sequence[str],
     compatibility_report: str | Path | None,
+    source_validation: str | Path | None = None,
+    final_metadata: str | Path | None = None,
     output: str | Path,
     full: bool,
 ) -> dict[str, object]:
@@ -239,6 +278,9 @@ def verify_phase2b_evidence(
     compatibility = (
         _read_json(Path(compatibility_report)) if compatibility_report is not None else None
     )
+    source_validation_report = (
+        _read_json(Path(source_validation)) if source_validation is not None else None
+    )
     counts = accepted_counts(accepted)
     quotas = config.payload.get("minimum_quotas")
     if not isinstance(quotas, Mapping):
@@ -251,12 +293,59 @@ def verify_phase2b_evidence(
         }
         for key, value in quotas.items()
     }
+    accepted_manifest_integrity = accepted_manifest.get("fingerprint") == _records_fingerprint(
+        accepted
+    )
+    rejected_manifest_integrity = rejected_manifest.get("fingerprint") == _records_fingerprint(
+        rejected
+    )
+    export_metadata_integrity = _export_metadata_integrity(exported, export_manifest)
+    source_validation_passed = bool(
+        source_validation_report and validate_source_validation_report(source_validation_report)
+    )
+    replay_path = source / "audits" / f"replay_{'-'.join(stages)}.json"
+    compatibility_sha256 = (
+        sha256_file(Path(compatibility_report)) if compatibility_report is not None else None
+    )
+    expected_final_metadata = {
+        "collection_fingerprint": config.fingerprint,
+        "attempted_episode_count": len(all_records),
+        "accepted_episode_count": len(accepted),
+        "replay_validation_sha256": sha256_file(replay_path),
+        "export_manifest_sha256": sha256_file(exported / "langmani" / "export_manifest.json"),
+        "compatibility_report_sha256": compatibility_sha256,
+        "source_validation_sha256": (
+            sha256_file(Path(source_validation)) if source_validation is not None else None
+        ),
+    }
+    final_metadata_report = _read_json(Path(final_metadata)) if final_metadata is not None else None
+    final_metadata_valid = bool(
+        final_metadata_report
+        and validate_phase2b_result_manifest(
+            final_metadata_report, expected=expected_final_metadata
+        )
+        and _git_tracks(Path(final_metadata))
+    )
+    preferred_shortfall_justified = bool(
+        final_metadata_report and final_metadata_report.get("preferred_shortfall_justified") is True
+    )
+    preferred_accepted = len(accepted) >= config.integer("preferred_accepted_episodes")
     gates = {
         "minimum_accepted": len(accepted) >= config.integer("minimum_accepted_episodes"),
-        "preferred_accepted": len(accepted) >= config.integer("preferred_accepted_episodes"),
-        "categorical_replay_match": float(replay["categorical_outcome_match_rate"]) >= 0.99,
+        "preferred_accepted": preferred_accepted,
+        "preferred_or_justified": preferred_accepted or preferred_shortfall_justified,
+        "categorical_replay_match": float(replay["categorical_outcome_match_rate"])
+        >= float(
+            cast(Mapping[str, object], config.payload["replay"])["minimum_categorical_match_rate"]
+        ),
+        "transition_labels_match": float(replay.get("transition_label_match_rate", 0.0)) == 1.0,
+        "frame_counts_match": float(replay["frame_count_match_rate"]) == 1.0,
+        "all_replayed_episodes_passed": int(replay["replay_passed_count"]) == len(accepted),
         "all_generation_accepted_replayed": int(replay["replayed_count"])
         == int(replay["generation_accepted_count"]),
+        "accepted_manifest_integrity": accepted_manifest_integrity,
+        "rejected_manifest_integrity": rejected_manifest_integrity,
+        "export_metadata_integrity": export_metadata_integrity,
         "no_native_integrity_failures": not native_failures,
         "lerobot_api_readback": readback_episodes == len(accepted),
         "policy_schema_unambiguous": True,
@@ -268,16 +357,24 @@ def verify_phase2b_evidence(
             and compatibility.get("unified_dataset_status")
             in {"immutable_multi_root_index_ready", "blocked"}
         ),
-        "required_tests_passed": False,
-        "final_metadata_committed": False,
+        "required_tests_passed": source_validation_passed,
+        "final_metadata_committed": final_metadata_valid,
     }
-    pipeline_passed = bool(
+    pipeline_integrity = bool(
         not native_failures
         and readback_episodes == len(accepted)
         and leakage.get("passed") is True
         and replay.get("replayed_count") == replay.get("generation_accepted_count")
+        and replay.get("replay_passed_count") == len(accepted)
+        and accepted_manifest_integrity
+        and rejected_manifest_integrity
+        and export_metadata_integrity
     )
-    smolvla_authorized = bool(full and all(gates.values()))
+    authorization_gate_names = tuple(key for key in gates if key != "preferred_accepted")
+    full_passed = bool(
+        full and pipeline_integrity and all(gates[key] for key in authorization_gate_names)
+    )
+    smolvla_authorized = full_passed
     report = {
         "schema_version": PHASE2B_VERIFICATION_SCHEMA,
         "mode": "full" if full else "pilot",
@@ -295,14 +392,54 @@ def verify_phase2b_evidence(
         "leakage_audit": leakage,
         "compatibility": compatibility,
         "gates": gates,
-        "pilot_validated": not full and pipeline_passed,
-        "full_collection_validated": full and pipeline_passed,
+        "source_validation": source_validation_report,
+        "final_metadata": final_metadata_report,
+        "pipeline_integrity_validated": pipeline_integrity,
+        "pilot_validated": not full and pipeline_integrity,
+        "full_collection_validated": full and pipeline_integrity,
         "smolvla_phase2c_authorized": smolvla_authorized,
-        "physical_target_validated": pipeline_passed,
-        "passed": pipeline_passed,
+        "physical_target_validated": pipeline_integrity,
+        "passed": pipeline_integrity if not full else full_passed,
     }
     _write_json(Path(output), report)
     return report
+
+
+def _records_fingerprint(records: Sequence[Mapping[str, object]]) -> str:
+    from langmani.v2.push_dataset import sha256_json
+
+    return sha256_json(records)
+
+
+def _export_metadata_integrity(root: Path, manifest: Mapping[str, object]) -> bool:
+    sidecar = root / "langmani"
+    names = {
+        "feature_schema_sha256": "dataset_schema.json",
+        "statistics_sha256": "dataset_statistics.json",
+        "split_manifest_sha256": "split_manifest.json",
+        "leakage_audit_sha256": "leakage_audit.json",
+        "episodes_sha256": "episodes.json",
+    }
+    if any(manifest.get(key) != sha256_file(sidecar / name) for key, name in names.items()):
+        return False
+    complete = _read_json(sidecar / "complete.json")
+    return complete.get("export_manifest_sha256") == sha256_file(sidecar / "export_manifest.json")
+
+
+def _git_tracks(path: Path) -> bool:
+    project_root = Path(__file__).resolve().parents[3]
+    try:
+        relative = path.resolve().relative_to(project_root).as_posix()
+    except ValueError:
+        return False
+    result = subprocess.run(
+        ["git", "ls-files", "--error-unmatch", relative],
+        cwd=project_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0
 
 
 def _pick_repo_id(manifest: Mapping[str, object]) -> str:
@@ -354,7 +491,11 @@ def _write_json(path: Path, value: Mapping[str, object]) -> None:
 
 __all__ = [
     "PHASE2B_VERIFICATION_SCHEMA",
+    "PHASE2B_RESULT_SCHEMA",
+    "PHASE2B_SOURCE_VALIDATION_SCHEMA",
     "audit_pick_place_compatibility",
     "build_unified_dataset_index",
     "verify_phase2b_evidence",
+    "validate_phase2b_result_manifest",
+    "validate_source_validation_report",
 ]
