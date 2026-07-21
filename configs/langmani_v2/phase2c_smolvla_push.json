@@ -17,6 +17,7 @@
     "repo_id": "lerobot/smolvla_base",
     "revision": "c83c3163b8ca9b7e67c509fffd9121e66cb96205",
     "config_sha256": "650584b56c104720f7a3c91d1ec6bec9e8de8ac11e60c92ba2fa82d93eda147d",
+    "model_sha256": "7cd549ac2351fb069c0ddb3c34ad2d09cfc92b56a15dccdfc2e41467aaca01eb",
     "official_lerobot_version": "0.6.0",
     "vlm_dependency": {
       "repo_id": "HuggingFaceTB/SmolVLM2-500M-Video-Instruct",

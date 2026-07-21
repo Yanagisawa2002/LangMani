@@ -25,6 +25,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--prepare-root", type=Path, required=True)
     parser.add_argument("--train-root", type=Path, required=True)
     parser.add_argument("--repo-id", required=True)
+    parser.add_argument("--base-model-root", type=Path, required=True)
+    parser.add_argument("--base-model-audit", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--batch-size", type=int, required=True)
     parser.add_argument("--max-steps", type=int)
@@ -51,6 +53,32 @@ def _stage_steps(protocol: dict[str, Any], stage: str) -> int:
     if stage == "micro":
         return int(protocol["micro_overfit"]["steps"])
     return int(protocol["full_training"]["total_steps"])
+
+
+def _verify_base_model(
+    args: argparse.Namespace,
+    protocol: dict[str, Any],
+) -> tuple[Path, str]:
+    root = args.base_model_root.resolve()
+    audit_path = args.base_model_audit.resolve()
+    audit = read_json_object(audit_path, "Phase 2C base-model audit")
+    base = protocol["base_model"]
+    if audit.get("passed") is not True or audit.get("resolved_revision") != base["revision"]:
+        raise Phase2CContractError("base-model audit does not bind the frozen official revision")
+    construction = audit.get("construction")
+    if not isinstance(construction, dict) or construction.get("passed") is not True:
+        raise Phase2CContractError("base-model audit lacks strict construction evidence")
+    if Path(str(audit.get("snapshot_path"))).resolve() != root:
+        raise Phase2CContractError("base-model root differs from the audited snapshot")
+    expected = {
+        "config.json": base["config_sha256"],
+        "model.safetensors": base["model_sha256"],
+    }
+    for name, digest in expected.items():
+        path = root / name
+        if not path.is_file() or sha256_file(path) != digest:
+            raise Phase2CContractError(f"audited base-model {name} changed")
+    return root, sha256_file(audit_path)
 
 
 def build_command(args: argparse.Namespace, protocol: dict[str, Any]) -> tuple[list[str], int]:
@@ -82,7 +110,7 @@ def build_command(args: argparse.Namespace, protocol: dict[str, Any]) -> tuple[l
     optimizer = protocol["optimizer"]
     scheduler = protocol["scheduler"]
     policy_arguments = [
-        f"--policy.path={base['repo_id']}",
+        f"--policy.path={args.base_model_root.resolve()}",
         f"--policy.pretrained_revision={base['revision']}",
         # LeRobot 0.6 recursively merges dictionary CLI overrides into the published
         # three-camera config. Null is the documented replacement semantic: make_policy
@@ -147,6 +175,7 @@ def main(argv: list[str] | None = None) -> int:
         raise Phase2CContractError("Phase 2C input preparation has not passed")
     if not args.train_root.resolve().is_dir():
         raise Phase2CContractError("immutable train root is unavailable")
+    base_model_root, base_model_audit_sha256 = _verify_base_model(args, protocol)
     command, steps = build_command(args, protocol)
     output = args.output_dir.resolve()
     if output.exists() and args.resume_checkpoint is None:
@@ -164,6 +193,8 @@ def main(argv: list[str] | None = None) -> int:
         "prepare_complete_sha256": f"sha256:{sha256_file(complete_path)}",
         "train_root": args.train_root.resolve().as_posix(),
         "repo_id": args.repo_id,
+        "base_model_root": base_model_root.as_posix(),
+        "base_model_audit_sha256": f"sha256:{base_model_audit_sha256}",
         "seed": args.seed,
         "batch_size": args.batch_size,
         "effective_batch_size": args.batch_size,

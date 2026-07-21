@@ -565,12 +565,15 @@ def test_training_launcher_replaces_base_camera_mapping_instead_of_merging(tmp_p
         dry_run=True,
         lerobot_train="lerobot-train",
         repo_id="phase2c-train-view",
+        base_model_root=tmp_path / "base-model",
+        base_model_audit=tmp_path / "base-model-audit.json",
         train_root=tmp_path / "train",
         output_dir=tmp_path / "output",
     )
     command, steps = launcher.build_command(args, protocol)
     assert steps == 1
     assert "--policy.input_features=null" in command
+    assert f"--policy.path={(tmp_path / 'base-model').resolve()}" in command
     assert "--policy.optimizer_betas=[0.9,0.95]" in command
     assert "0.95" not in command
     assert not any(item.startswith("--policy.output_features=") for item in command)
