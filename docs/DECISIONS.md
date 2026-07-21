@@ -2454,9 +2454,11 @@ field is exposed to visual policy observations.
 The first real 16-task smoke was valid infrastructure evidence but rejected expert-quality
 evidence: direct motion to an 8 cm precontact point toppled every cylinder and displaced two hard
 distractors, while two long center-seeking pushes timed out. Bounded single-episode probes showed
-that a 16 cm precontact height avoids the approach collision and a 1.5 cm TCP push height prevents
-cylinder toppling. The expert therefore uses those fixed geometry-level values and stops at a
-fixed 1.5 cm margin inside the exact full-containment center boundary rather than pushing every
-object to the visual marker center. This changes neither task success geometry nor the 250-step
+that a 12 cm precontact height avoids the target approach collision, while geometry-specific
+2.5 cm cube and 1.5 cm cylinder TCP heights prevent grasp and toppling respectively. The expert
+therefore uses those fixed geometry-level values and stops at a fixed 3.5 cm margin inside the
+exact full-containment center boundary rather than pushing every object to the visual marker
+center. Hard distractors remain 8.5 cm lateral to the push path but are placed at 75% of its length
+so they do not overlap the Panda's reset-time arm sweep. This changes neither task success geometry nor the 250-step
 episode limit. The same immutable all-task smoke and then the fixed 50-standard/30-hard schedule
 must pass before Phase 2 data collection may start.

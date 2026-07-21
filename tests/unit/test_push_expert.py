@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import torch
 
-from environment.benchmark_push_expert import build_schedule
+from environment.benchmark_push_expert import ScheduledPushEpisode, _run_schedule, build_schedule
 from langmani.environments.push_expert_state import (
     PushExpertTaskContext,
     PushObjectHandle,
@@ -179,8 +179,38 @@ def test_push_endpoint_stops_inside_full_containment_with_geometry_margin() -> N
     pose = expert._push_endpoint_pose(np.array([-0.2, 0.0, 0.025]))
 
     expected_tcp_x = 0.2 - ((0.07 - 0.015) + 0.035)
-    assert pose[:3] == pytest.approx([expected_tcp_x, 0.0, 0.015])
+    assert pose[:3] == pytest.approx([expected_tcp_x, 0.0, 0.025])
     assert expert.config.to_dict()["region_goal_margin"] == pytest.approx(0.015)
+
+
+def test_push_height_is_geometry_specific() -> None:
+    environment = _FakeEnvironment()
+    expert = PushToRegionExpert(
+        environment,
+        planner_factory=lambda _env: _FakePlanner(environment),
+    )
+    expert._context = environment.context
+    assert expert._push_height() == pytest.approx(0.025)
+
+    environment.context = PushExpertTaskContext(
+        environment_id=environment.context.environment_id,
+        episode_spec=PushEpisodeSpec.create(
+            scene_seed=77,
+            task_spec=PushTaskSpec("orange_cylinder", "left", "standard"),
+        ),
+        agent=environment.context.agent,
+        robot=environment.context.robot,
+        target_object=environment.context.objects[1],
+        objects=environment.context.objects,
+        target_region_center=environment.context.target_region_center,
+        target_region_radius=environment.context.target_region_radius,
+        target_object_planar_radius=0.025,
+        target_object_resting_height=0.025,
+        full_containment_center_radius=0.08,
+        table_top_z=environment.context.table_top_z,
+    )
+    expert._context = environment.context
+    assert expert._push_height() == pytest.approx(0.015)
 
 
 def test_push_expert_result_is_json_serializable() -> None:
@@ -214,3 +244,44 @@ def test_push_expert_validation_schedules_are_exact_and_balanced() -> None:
         "forward_right",
     }
     assert len({item.seed for item in target}) == 80
+
+
+def test_push_expert_benchmark_isolates_every_episode(monkeypatch) -> None:
+    created: list[SimpleNamespace] = []
+    schedule = (
+        ScheduledPushEpisode(1, PushTaskSpec("blue_cube", "left", "standard")),
+        ScheduledPushEpisode(2, PushTaskSpec("blue_cube", "right", "standard")),
+    )
+    result = PushToRegionExpert(
+        _FakeEnvironment(),
+        planner_factory=lambda environment: _FakePlanner(environment),
+    ).run()
+
+    def factory() -> SimpleNamespace:
+        environment = SimpleNamespace(
+            reset=lambda **_kwargs: None,
+            close=lambda: setattr(environment, "closed", True),
+            closed=False,
+        )
+        created.append(environment)
+        return environment
+
+    class StubExpert:
+        def __init__(self, environment, *, config) -> None:
+            del config
+            self.environment = environment
+
+        def run(self):
+            return result
+
+    monkeypatch.setattr("environment.benchmark_push_expert.PushToRegionExpert", StubExpert)
+    results, errors = _run_schedule(
+        schedule,
+        environment_factory=factory,
+        config=PushExpertConfig(),
+    )
+
+    assert len(results) == 2
+    assert not errors
+    assert len({id(environment) for environment in created}) == 2
+    assert all(environment.closed for environment in created)

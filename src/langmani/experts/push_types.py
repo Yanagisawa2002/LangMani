@@ -70,9 +70,10 @@ class PushExpertConfig:
     gripper_close_steps: int = 6
     precontact_clearance: float = 0.075
     contact_offset: float = 0.045
-    precontact_height: float = 0.16
-    push_height: float = 0.015
-    region_goal_margin: float = 0.015
+    precontact_height: float = 0.12
+    push_height: float = 0.025
+    cylinder_push_height: float = 0.015
+    region_goal_margin: float = 0.035
     settle_steps: int = 12
     maximum_corrective_pushes: int = 2
     tcp_position_tolerance: float = 0.025
@@ -100,6 +101,7 @@ class PushExpertConfig:
             "contact_offset",
             "precontact_height",
             "push_height",
+            "cylinder_push_height",
             "region_goal_margin",
             "tcp_position_tolerance",
         ):
@@ -117,6 +119,7 @@ class PushExpertConfig:
             "contact_offset": self.contact_offset,
             "precontact_height": self.precontact_height,
             "push_height": self.push_height,
+            "cylinder_push_height": self.cylinder_push_height,
             "region_goal_margin": self.region_goal_margin,
             "settle_steps": self.settle_steps,
             "maximum_corrective_pushes": self.maximum_corrective_pushes,

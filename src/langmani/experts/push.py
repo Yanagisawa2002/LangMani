@@ -281,7 +281,7 @@ class PushToRegionExpert:
         direction = self._push_direction(object_position)
         pose = self._tcp_pose()
         pose[:2] = object_position[:2] - direction * self.config.contact_offset
-        pose[2] = self.config.push_height
+        pose[2] = self._push_height()
         return self._planned_motion(PushExpertPhase.ESTABLISH_CONTACT, (pose,))
 
     def _primary_push(self) -> PushPhaseResult:
@@ -304,7 +304,7 @@ class PushToRegionExpert:
         behind_high[2] = self.config.precontact_height
         contact = behind_high.copy()
         contact[:2] = object_position[:2] - direction * self.config.contact_offset
-        contact[2] = self.config.push_height
+        contact[2] = self._push_height()
         push = self._push_endpoint_pose(object_position)
         return self._planned_motion(phase, (lift, behind_high, contact, push))
 
@@ -326,8 +326,19 @@ class PushToRegionExpert:
         pose[:2] = self._target_center()[:2] - direction * (
             object_center_distance + context.target_object_planar_radius
         )
-        pose[2] = self.config.push_height
+        pose[2] = self._push_height()
         return pose
+
+    def _push_height(self) -> float:
+        object_id = self._require_context().target_object.object_id
+        if object_id == "blue_cube":
+            return self.config.push_height
+        if object_id == "orange_cylinder":
+            return self.config.cylinder_push_height
+        raise _PushAbort(
+            PushExpertStatus.INVALID_TASK,
+            f"push height is undefined for {object_id!r}",
+        )
 
     def _settle(self) -> PushPhaseResult:
         started = time.perf_counter()

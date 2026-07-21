@@ -130,22 +130,29 @@ def _difficulty_summary(
     }
 
 
-def main() -> int:
-    args = parse_args()
-    output = validated_output_path(args.output, output_root=OUTPUT_ROOT)
-    schedule = build_schedule(smoke=args.smoke)
-    expected = 16 if args.smoke else 80
-    if len(schedule) != expected or len({item.seed for item in schedule}) != expected:
-        raise RuntimeError("push expert schedule contract changed")
+def _run_schedule(
+    schedule: tuple[ScheduledPushEpisode, ...],
+    *,
+    environment_factory: Any,
+    config: PushExpertConfig,
+) -> tuple[list[PushExpertResult], list[dict[str, str]]]:
+    """Run each scheduled episode in a fresh simulator instance.
 
-    config = PushExpertConfig()
-    environment: Any | None = None
+    A pushing rollout intentionally ends with a closed gripper near the target.
+    Reusing that simulator can expose stale contact/grasp state after reset, so
+    quality validation treats environment construction as part of episode
+    isolation rather than silently contaminating the next task.
+    """
+
+    expected = len(schedule)
     results: list[PushExpertResult] = []
     command_errors: list[dict[str, str]] = []
-    try:
-        environment = _create_environment(args.sim_backend)
-        for index, scheduled in enumerate(schedule):
-            expert: PushToRegionExpert | None = None
+    for index, scheduled in enumerate(schedule):
+        environment: Any | None = None
+        expert: PushToRegionExpert | None = None
+        result: PushExpertResult | None = None
+        try:
+            environment = environment_factory()
             try:
                 environment.reset(
                     seed=scheduled.seed,
@@ -163,26 +170,57 @@ def main() -> int:
                             "message": str(error),
                         }
                     )
-                    break
-                result = expert.unexpected_exception_result(error)
-            results.append(result)
-            print(
-                f"[{index + 1}/{expected}] seed={scheduled.seed} "
-                f"task={result.target_object_id}/{result.target_region_id}/"
-                f"{result.difficulty} status={result.status.value} "
-                f"steps={result.total_environment_steps}",
-                flush=True,
+                else:
+                    result = expert.unexpected_exception_result(error)
+        except Exception as error:  # noqa: BLE001 - environment construction boundary
+            traceback.print_exc()
+            command_errors.append(
+                {
+                    "seed": str(scheduled.seed),
+                    "type": type(error).__name__,
+                    "message": str(error),
+                }
             )
-    except Exception as error:  # noqa: BLE001 - outer benchmark boundary
-        traceback.print_exc()
-        command_errors.append({"type": type(error).__name__, "message": str(error)})
-    finally:
-        if environment is not None:
-            try:
-                environment.close()
-            except Exception as error:  # noqa: BLE001 - outer benchmark boundary
-                traceback.print_exc()
-                command_errors.append({"type": type(error).__name__, "message": str(error)})
+        finally:
+            if environment is not None:
+                try:
+                    environment.close()
+                except Exception as error:  # noqa: BLE001 - outer benchmark boundary
+                    traceback.print_exc()
+                    command_errors.append(
+                        {
+                            "seed": str(scheduled.seed),
+                            "type": type(error).__name__,
+                            "message": str(error),
+                        }
+                    )
+        if result is None:
+            break
+        results.append(result)
+        print(
+            f"[{index + 1}/{expected}] seed={scheduled.seed} "
+            f"task={result.target_object_id}/{result.target_region_id}/"
+            f"{result.difficulty} status={result.status.value} "
+            f"steps={result.total_environment_steps}",
+            flush=True,
+        )
+    return results, command_errors
+
+
+def main() -> int:
+    args = parse_args()
+    output = validated_output_path(args.output, output_root=OUTPUT_ROOT)
+    schedule = build_schedule(smoke=args.smoke)
+    expected = 16 if args.smoke else 80
+    if len(schedule) != expected or len({item.seed for item in schedule}) != expected:
+        raise RuntimeError("push expert schedule contract changed")
+
+    config = PushExpertConfig()
+    results, command_errors = _run_schedule(
+        schedule,
+        environment_factory=lambda: _create_environment(args.sim_backend),
+        config=config,
+    )
 
     standard = _difficulty_summary(results, "standard")
     hard = _difficulty_summary(results, "hard")
