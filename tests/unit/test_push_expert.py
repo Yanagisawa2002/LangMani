@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 import torch
 
+from environment.benchmark_push_expert import build_schedule
 from langmani.environments.push_expert_state import (
     PushExpertTaskContext,
     PushObjectHandle,
@@ -175,3 +176,24 @@ def test_push_expert_result_is_json_serializable() -> None:
     ).run()
 
     assert json.loads(json.dumps(result.to_dict()))["task_id"] == result.task_id
+
+
+def test_push_expert_validation_schedules_are_exact_and_balanced() -> None:
+    smoke = build_schedule(smoke=True)
+    target = build_schedule(smoke=False)
+
+    assert len(smoke) == 16
+    assert len(target) == 80
+    assert sum(item.task_spec.difficulty == "standard" for item in target) == 50
+    assert sum(item.task_spec.difficulty == "hard" for item in target) == 30
+    assert {item.task_spec.target_object_id for item in target} == {
+        "blue_cube",
+        "orange_cylinder",
+    }
+    assert {item.task_spec.target_region_id for item in target} == {
+        "left",
+        "right",
+        "forward_left",
+        "forward_right",
+    }
+    assert len({item.seed for item in target}) == 80
