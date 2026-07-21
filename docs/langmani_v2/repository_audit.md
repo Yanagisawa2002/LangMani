@@ -81,3 +81,10 @@ inside the historical training configuration are provenance only and are not run
 On 2026-07-21 the artifact host had 109 GB free and all canonical ACT files, but it exposed no
 `/dev/nvidia*` device; the alternate cloned host was unreachable. The new smoke result is therefore
 `not_run_infrastructure_gpu_unavailable`, not a reproduced success rate.
+
+The local RTX 4090 did not remove the native-target requirement. Docker Desktop exposed CUDA
+compute but only a CPU llvmpipe Vulkan device, and native Windows SAPIEN crashed while acquiring the
+first camera observation even after all robot assets were presented through an ASCII path. Both
+bounded attempts stopped before policy loading or environment stepping and are classified as
+invalid infrastructure attempts. The selected checkpoint remains recovered and content-valid; its
+new Phase 1 runtime behavior remains unmeasured.

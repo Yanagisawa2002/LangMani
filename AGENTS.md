@@ -56,6 +56,10 @@ policy/action-chunk contract, define one `pick_and_place` skill family with six 
 run a new language-independent smoke evaluation. It must not rewrite v1 evidence, retrain a model,
 introduce a new policy architecture or router, or describe structural/no-GPU checks as real policy
 rollouts. Generated v2 evaluation evidence remains under `outputs/` and is not source-controlled.
+Phase 1 implementation, release validation, and canonical artifact recovery are complete. Its new
+three-seed runtime smoke remains pending a native Linux NVIDIA/Vulkan target. The bounded local
+Docker and Windows attempts stopped during renderer initialization before policy loading or
+`env.step`; they are invalid infrastructure attempts and must not be reported as policy results.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level

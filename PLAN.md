@@ -9,6 +9,12 @@ policy/action-chunk plus unified evaluation contracts. It does not add a new arc
 dataset, reward, task, or training run. Native runtime acceptance is a separate real-policy smoke
 over one task and three deterministic seeds; no-GPU checks remain structural only.
 
+Implementation, v1 release validation, canonical checkpoint recovery, and CPU-safe verification
+are complete. Runtime acceptance is still pending: the Linux artifact host exposes no GPU, the
+bounded Docker fallback has CUDA but no NVIDIA Vulkan device, and the bounded native Windows
+fallback crashes in SAPIEN's initial camera read before policy loading or `env.step`. These attempts
+are infrastructure diagnostics and provide no Phase 1 policy-quality metric.
+
 The next phase may compare another real policy architecture only after it implements this same
 adapter and evidence contract. It may not modify or relabel the frozen v1 release.
 

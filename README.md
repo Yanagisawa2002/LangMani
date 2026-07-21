@@ -21,6 +21,12 @@ it through a generic policy/action-chunk adapter and language-independent evalua
 The v1 claims and evidence remain immutable. Phase 1 neither retrains a controller nor changes the
 v1 task, action, success, split, checkpoint-selection, language-routing, or safety contracts.
 
+Phase 1 source, release, artifact, and CPU-safe validation are complete. Its new three-seed policy
+smoke remains pending a native Linux NVIDIA/Vulkan target: the current artifact host has no GPU,
+Docker Desktop exposes CUDA but not NVIDIA Vulkan, and native Windows SAPIEN failed during the
+first camera observation. None of those infrastructure attempts reached policy inference or an
+environment step, so no Phase 1 success rate is claimed.
+
 LangMani turns natural-language pick-and-place commands into typed `TaskSpec` decisions, selects
 one of six frozen Panda ACT controllers, bounds every action explicitly, and attributes failures to
 language, control, safety rejection, or infrastructure. The v1 release freezes M0–M5A and the M5B

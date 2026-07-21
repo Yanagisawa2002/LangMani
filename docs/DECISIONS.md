@@ -2379,3 +2379,11 @@ Phase 1 registers no placeholder future models and performs no training. Its thr
 smoke is a new v2 runtime check, not a reproduction of historical v1 metrics. Source validation on
 a machine without a visible NVIDIA/Vulkan target is explicitly structural and cannot set a
 physical-validation claim.
+
+The 2026-07-21 bounded fallback audit did not relax that boundary. Docker Desktop exposed a real
+RTX 4090 to PyTorch CUDA but only the llvmpipe CPU Vulkan implementation, and SAPIEN failed before
+environment construction. Native Windows loaded the pinned CUDA and Python packages, but SAPIEN
+raised access violation `0xC0000005` at the first camera observation after the Unicode asset path
+was eliminated. Neither attempt loaded the ACT policy, called `env.step`, or completed an episode.
+They are retained only as untracked invalid-infrastructure evidence; the native Linux
+NVIDIA/Vulkan three-seed smoke remains the sole runtime acceptance path.

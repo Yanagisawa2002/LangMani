@@ -88,8 +88,18 @@ infrastructure failure.
   passed.
 - The requested three-seed real-policy smoke has **not run yet**. The available artifact host was
   booted without `/dev/nvidia*`, and `nvidia-smi` was unavailable; the second known cloned host was
-  unreachable. This is an infrastructure block, not a policy-quality result. No historical v1
-  success count is reused as Phase 1 output.
+  unreachable. Two bounded local fallbacks were also tested without producing an episode. Docker
+  Desktop exposed the RTX 4090 to PyTorch CUDA but only llvmpipe CPU Vulkan, so SAPIEN rejected the
+  renderer with `ErrorIncompatibleDriver`. A native Windows Python 3.12 runtime loaded the exact
+  package versions and CUDA device; after eliminating the non-ASCII package-path issue, SAPIEN
+  still terminated with access violation `0xC0000005` in `RenderCamera.get_picture` during its
+  constructor reset. In both attempts the policy was not loaded, no inference or `env.step`
+  occurred, and zero episodes completed. These are infrastructure blocks, not policy-quality
+  results. No historical v1 success count is reused as Phase 1 output.
+
+The two small, untracked attempt records are retained under
+`outputs/diagnostics/v2/phase1/infrastructure-attempts/`. They explicitly set
+`physical_target_validated=false` and are not substitutes for the four successful-run artifacts.
 
 Consequently, the source implementation and artifact recovery are validated, while Phase 1 runtime
 acceptance remains pending the documented three-seed command on a GPU/Vulkan-capable native host.
