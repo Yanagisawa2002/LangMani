@@ -32,6 +32,7 @@ location is clearly labeled as a TCP-center proxy.
 | A | 15-degree compensation plus 4 cm cylinder contact | 8/16 recovered; 3 new standard workspace exits | Standard 20/26, Hard 11/16; 6 workspace exits | not run | not run | not run | rejected |
 | B | cube-only 15-degree compensation; baseline cylinder contact/direction | pending | pending | protected | pending | pending | provisional |
 | C | Candidate B plus 3 cm workspace-bounded cylinder corrections | pending | pending | protected | pending | pending | provisional |
+| D | Candidate B with unsafe cylinder re-contact disabled | pending | pending | protected | pending | pending | provisional |
 
 The behavior-neutral replay classified the 16 lateral failures as seven contact losses, two
 verification-boundary cases, two workspace-margin violations, and one each of overshoot, primary
@@ -60,6 +61,11 @@ standard workspace-exit terminal labels from zero to three, including one new re
 44044. It is rejected before smoke. Candidate C retains its primary-push geometry but bounds only
 lateral-cylinder corrections to the smaller of 3 cm, remaining target progress, and footprint-safe
 workspace headroom. The existing two-correction budget can cover the observed 3.5--5 cm residual.
+
+Candidate C reproduced all ten Candidate-B failures at the same terminal steps, proving that the
+cylinder was swept before the bounded endpoint was reached. Its unused controls are removed.
+Candidate D makes lateral-cylinder correction phases no-motion fail-safe phases; incomplete primary
+pushes must still pass the unchanged final verification and therefore remain honest failures.
 
 ## Gate
 

@@ -328,6 +328,14 @@ class PushToRegionExpert:
     def _corrective_push(self, phase: PushExpertPhase) -> PushPhaseResult:
         if self._terminal_success or self._evaluation().get("target_inside_region") is True:
             return self._success(phase, "target already reached the region; no correction needed")
+        if (
+            self._is_lateral_task()
+            and self._require_context().target_object.object_id == "orange_cylinder"
+        ):
+            return self._success(
+                phase,
+                "unsafe lateral-cylinder re-contact is disabled after the primary push",
+            )
         object_position = self._target_position()
         if self._is_lateral_task():
             candidates = self._lateral_approach_candidates(
@@ -354,54 +362,8 @@ class PushToRegionExpert:
         contact = behind_high.copy()
         contact[:2] = object_position[:2] - direction * self._contact_offset()
         contact[2] = self._push_height()
-        push = (
-            self._bounded_cylinder_correction_endpoint_pose(object_position)
-            if self._is_lateral_task()
-            and self._require_context().target_object.object_id == "orange_cylinder"
-            else self._push_endpoint_pose(object_position)
-        )
+        push = self._push_endpoint_pose(object_position)
         return self._planned_motion(phase, (lift, behind_high, contact, push))
-
-    def _bounded_cylinder_correction_endpoint_pose(
-        self,
-        object_position: np.ndarray,
-    ) -> np.ndarray:
-        """Cap a cylinder correction by remaining progress and workspace headroom."""
-
-        context = self._require_context()
-        direction = self._motion_direction(object_position)
-        target_distance = float(np.linalg.norm(self._target_center()[:2] - object_position[:2]))
-        goal_distance = max(
-            0.0,
-            context.full_containment_center_radius - self.config.region_goal_margin,
-        )
-        requested_distance = min(
-            max(0.0, target_distance - goal_distance),
-            self.config.maximum_cylinder_correction_push_distance,
-        )
-
-        x_min, x_max, y_min, y_max = WORKSPACE_BOUNDS_XY
-        radius_and_margin = (
-            context.target_object_planar_radius + self.config.minimum_object_workspace_margin
-        )
-        lower = np.array([x_min, y_min], dtype=np.float64) + radius_and_margin
-        upper = np.array([x_max, y_max], dtype=np.float64) - radius_and_margin
-        allowances: list[float] = []
-        for axis in range(2):
-            component = float(direction[axis])
-            if component > 1e-9:
-                allowances.append((upper[axis] - object_position[axis]) / component)
-            elif component < -1e-9:
-                allowances.append((object_position[axis] - lower[axis]) / -component)
-        workspace_distance = max(0.0, min(allowances, default=0.0))
-        push_distance = min(requested_distance, workspace_distance)
-
-        pose = self._tcp_pose()
-        pose[:2] = (
-            object_position[:2] - direction * self._contact_offset() + direction * push_distance
-        )
-        pose[2] = self._push_height()
-        return pose
 
     def _push_endpoint_pose(self, object_position: np.ndarray) -> np.ndarray:
         """Return a conservative TCP endpoint just inside full containment.

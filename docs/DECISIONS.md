@@ -2565,3 +2565,17 @@ budget can therefore supply at most 6 cm, covering the observed remaining range 
 correction. Low-level actions are still rejected rather than clipped. Candidate C remains
 provisional until the same bounded replay and complete lateral subset show zero new workspace or
 action-bound failures.
+
+## D-093 - Disable the unsafe lateral-cylinder re-contact path
+
+Candidate C reproduced all ten Candidate-B failures with identical terminal statuses and, for the
+three workspace exits, identical environment-step counts. The correction endpoint cap was never
+reached: the cylinder had already been swept during the high-to-contact re-contact motion.
+Candidate C is rejected and its unused distance/margin controls are removed.
+
+Candidate D preserves the primary lateral-cylinder push but makes its later correction phases
+explicit no-motion completions. This is a fail-safe response to observed unsafe re-contact, not a
+success relaxation: an incomplete primary push still fails the unchanged stable containment
+verification. Cube lateral corrections, all forward behavior, environment success/failure
+predicates, planner bounds, and action validation remain unchanged. Candidate D must restore the
+workspace-exit count before it can proceed beyond the fixed lateral subset.
