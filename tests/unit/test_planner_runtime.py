@@ -21,7 +21,7 @@ def test_planner_python_defaults_to_current_interpreter_and_honors_explicit_env(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.delenv(PLANNER_PYTHON_ENV, raising=False)
-    assert resolve_planner_python() == str(Path(sys.executable).resolve())
+    assert resolve_planner_python() == str(Path(sys.executable).absolute())
 
     side_python = tmp_path / "side-python"
     side_python.write_text("placeholder", encoding="utf-8")
