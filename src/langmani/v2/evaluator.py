@@ -19,7 +19,8 @@ import torch
 from langmani.datasets.lerobot_types import IMAGE_FEATURE_KEY, STATE_FEATURE_KEY
 from langmani.datasets.observation_reconstruction import extract_base_camera_rgb
 from langmani.datasets.policy_state import extract_panda_policy_state_v0
-from langmani.environments.pick_place_by_instruction import ENV_ID
+from langmani.environments.pick_place_by_instruction import ENV_ID as PICK_ENVIRONMENT_ID
+from langmani.environments.push_to_region import ENV_ID as PUSH_ENVIRONMENT_ID
 from langmani.policies.act_action_bounds import (
     ActionBoundConfig,
     ActionBoundMode,
@@ -60,7 +61,11 @@ class ObservationExtractor(Protocol):
 
 
 class M1PolicyObservationExtractor:
-    """Extract only deployed-policy RGB and PandaPolicyStateV0 features."""
+    """Extract only deployed-policy RGB and PandaPolicyStateV0 features.
+
+    Both registered v2 environments deliberately share this deployable input
+    contract; no privileged task or simulator state crosses this boundary.
+    """
 
     def extract(self, observation: object, *, environment: object) -> ObservationBatch:
         base = getattr(environment, "unwrapped", environment)
@@ -69,7 +74,7 @@ class M1PolicyObservationExtractor:
         image = image_to_policy_float(rgb)
         state = extract_panda_policy_state_v0(base.agent.robot)
         if tuple(image.shape) != (3, 256, 256) or image.dtype is not torch.float32:
-            raise EvaluationError("M1 base_camera extraction must produce float32[3,256,256]")
+            raise EvaluationError("base_camera extraction must produce float32[3,256,256]")
         if state.shape != (9,) or state.dtype != np.dtype(np.float32):
             raise EvaluationError("PandaPolicyStateV0 extraction must produce float32[9]")
         return ObservationBatch(
@@ -207,12 +212,15 @@ class UnifiedPolicyEvaluator:
 
     def _validate_environment(self) -> None:
         spec = getattr(self.environment, "spec", None)
-        if getattr(spec, "id", None) != ENV_ID:
-            raise EvaluationError(f"unified M1 evaluator requires {ENV_ID}")
+        if getattr(spec, "id", None) not in {
+            PICK_ENVIRONMENT_ID,
+            PUSH_ENVIRONMENT_ID,
+        }:
+            raise EvaluationError("unified evaluator requires a registered LangMani v2 environment")
         if int(getattr(self.base, "num_envs", 0)) != 1:
-            raise EvaluationError("Phase 1 evaluator requires num_envs=1")
+            raise EvaluationError("unified evaluator requires num_envs=1")
         if getattr(self.base, "control_mode", None) != "pd_joint_pos":
-            raise EvaluationError("Phase 1 evaluator requires pd_joint_pos")
+            raise EvaluationError("unified evaluator requires pd_joint_pos")
 
     def run_episode(
         self,
@@ -222,6 +230,8 @@ class UnifiedPolicyEvaluator:
         evaluation_id: str,
     ) -> EvaluationEpisodeResult:
         instance = task.task_instance
+        if getattr(self.environment.spec, "id", None) != instance.environment_id:
+            raise EvaluationError("environment identity disagrees with the requested task instance")
         if instance.skill_family_id not in policy.identity.compatible_skill_families:
             raise EvaluationError("policy is incompatible with the requested skill family")
         if instance.canonical_task_id not in policy.identity.compatible_task_ids:
@@ -233,13 +243,13 @@ class UnifiedPolicyEvaluator:
             options={"task_spec": instance.environment_task_spec.to_dict()},
         )
         if not isinstance(reset_result, tuple) or len(reset_result) != 2:
-            raise EvaluationError("M1 reset must return the Gymnasium two-tuple")
+            raise EvaluationError("environment reset must return the Gymnasium two-tuple")
         observation, reset_info = reset_result
         specs = self.base.get_episode_specs()
         if len(specs) != 1 or specs[0].task_id != instance.canonical_task_id:
-            raise EvaluationError("M1 EpisodeSpec disagrees with the requested task")
+            raise EvaluationError("EpisodeSpec disagrees with the requested task")
         if specs[0].scene_seed != task.scene_seed:
-            raise EvaluationError("M1 EpisodeSpec disagrees with the requested scene seed")
+            raise EvaluationError("EpisodeSpec disagrees with the requested scene seed")
 
         final_evaluation = _current_evaluation(self.environment, reset_info)
         inference_latencies: list[float] = []
@@ -251,7 +261,12 @@ class UnifiedPolicyEvaluator:
         wrong_object = final_evaluation.get(
             "wrong_object_is_grasped", False
         ) or final_evaluation.get("wrong_object_in_target_bin", False)
+        wrong_object |= final_evaluation.get("wrong_object_contact", False)
+        wrong_object |= final_evaluation.get("wrong_object_displaced", False)
         object_loss = final_evaluation.get("target_off_table", False)
+        object_loss |= final_evaluation.get("target_outside_workspace", False)
+        object_loss |= final_evaluation.get("target_lifted", False)
+        object_loss |= final_evaluation.get("target_toppled", False)
         outcome = EpisodeOutcome.TIMEOUT
         failure_reason: str | None = None
 
@@ -312,13 +327,20 @@ class UnifiedPolicyEvaluator:
                 wrong_object |= final_evaluation.get(
                     "wrong_object_is_grasped", False
                 ) or final_evaluation.get("wrong_object_in_target_bin", False)
+                wrong_object |= final_evaluation.get("wrong_object_contact", False)
+                wrong_object |= final_evaluation.get("wrong_object_displaced", False)
                 object_loss |= final_evaluation.get("target_off_table", False)
+                object_loss |= final_evaluation.get("target_outside_workspace", False)
+                object_loss |= final_evaluation.get("target_lifted", False)
+                object_loss |= final_evaluation.get("target_toppled", False)
                 if final_evaluation.get("success", False):
                     outcome = EpisodeOutcome.SUCCESS
                     break
-                if final_evaluation.get("target_off_table", False):
+                if final_evaluation.get("target_off_table", False) or final_evaluation.get(
+                    "target_outside_workspace", False
+                ):
                     outcome = EpisodeOutcome.TARGET_OFF_TABLE
-                    failure_reason = "M1 evaluator reported target_off_table"
+                    failure_reason = "environment reported target workspace loss"
                     break
                 if _single_bool(truncated, "truncated"):
                     outcome = EpisodeOutcome.TIMEOUT
@@ -348,7 +370,11 @@ class UnifiedPolicyEvaluator:
             timeout=outcome is EpisodeOutcome.TIMEOUT,
             wrong_object_interaction=wrong_object,
             object_drop_or_loss=object_loss,
-            invalid_action=outcome is EpisodeOutcome.INVALID_ACTION,
+            invalid_action=(
+                outcome is EpisodeOutcome.INVALID_ACTION
+                or final_evaluation.get("invalid_action", False)
+                or final_evaluation.get("action_out_of_bounds", False)
+            ),
             episode_length=steps,
             action_projection_count=projection_count,
             action_projection_component_count=projection_components,

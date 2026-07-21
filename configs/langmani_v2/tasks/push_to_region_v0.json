@@ -1,0 +1,161 @@
+{
+  "schema_version": "langmani-v2-task-taxonomy-v0",
+  "skill_family": {
+    "schema_version": "langmani-v2-task-taxonomy-v0",
+    "skill_family_id": "push_to_region",
+    "description": "Move one selected object into one planar target region by pushing.",
+    "object_attribute_name": "geometry",
+    "target_attribute_name": "target_region",
+    "future_instance_axes": [
+      "difficulty",
+      "material",
+      "size"
+    ]
+  },
+  "task_instances": [
+    {
+      "canonical_task_id": "langmani-push-task-v0:blue_cube:left:standard:canonical_push_v0",
+      "skill_family_id": "push_to_region",
+      "object_attribute": "blue_cube",
+      "target_region": "left",
+      "difficulty": "standard",
+      "language_instruction": "Push the blue cube into the left target region without picking it up.",
+      "environment_task_spec": {"target_object_id": "blue_cube", "target_region_id": "left", "difficulty": "standard", "instruction_template_id": "canonical_push_v0"}
+    },
+    {
+      "canonical_task_id": "langmani-push-task-v0:blue_cube:left:hard:canonical_push_v0",
+      "skill_family_id": "push_to_region",
+      "object_attribute": "blue_cube",
+      "target_region": "left",
+      "difficulty": "hard",
+      "language_instruction": "Push the blue cube into the left target region without picking it up.",
+      "environment_task_spec": {"target_object_id": "blue_cube", "target_region_id": "left", "difficulty": "hard", "instruction_template_id": "canonical_push_v0"}
+    },
+    {
+      "canonical_task_id": "langmani-push-task-v0:blue_cube:right:standard:canonical_push_v0",
+      "skill_family_id": "push_to_region",
+      "object_attribute": "blue_cube",
+      "target_region": "right",
+      "difficulty": "standard",
+      "language_instruction": "Push the blue cube into the right target region without picking it up.",
+      "environment_task_spec": {"target_object_id": "blue_cube", "target_region_id": "right", "difficulty": "standard", "instruction_template_id": "canonical_push_v0"}
+    },
+    {
+      "canonical_task_id": "langmani-push-task-v0:blue_cube:right:hard:canonical_push_v0",
+      "skill_family_id": "push_to_region",
+      "object_attribute": "blue_cube",
+      "target_region": "right",
+      "difficulty": "hard",
+      "language_instruction": "Push the blue cube into the right target region without picking it up.",
+      "environment_task_spec": {"target_object_id": "blue_cube", "target_region_id": "right", "difficulty": "hard", "instruction_template_id": "canonical_push_v0"}
+    },
+    {
+      "canonical_task_id": "langmani-push-task-v0:blue_cube:forward_left:standard:canonical_push_v0",
+      "skill_family_id": "push_to_region",
+      "object_attribute": "blue_cube",
+      "target_region": "forward_left",
+      "difficulty": "standard",
+      "language_instruction": "Push the blue cube into the forward-left target region without picking it up.",
+      "environment_task_spec": {"target_object_id": "blue_cube", "target_region_id": "forward_left", "difficulty": "standard", "instruction_template_id": "canonical_push_v0"}
+    },
+    {
+      "canonical_task_id": "langmani-push-task-v0:blue_cube:forward_left:hard:canonical_push_v0",
+      "skill_family_id": "push_to_region",
+      "object_attribute": "blue_cube",
+      "target_region": "forward_left",
+      "difficulty": "hard",
+      "language_instruction": "Push the blue cube into the forward-left target region without picking it up.",
+      "environment_task_spec": {"target_object_id": "blue_cube", "target_region_id": "forward_left", "difficulty": "hard", "instruction_template_id": "canonical_push_v0"}
+    },
+    {
+      "canonical_task_id": "langmani-push-task-v0:blue_cube:forward_right:standard:canonical_push_v0",
+      "skill_family_id": "push_to_region",
+      "object_attribute": "blue_cube",
+      "target_region": "forward_right",
+      "difficulty": "standard",
+      "language_instruction": "Push the blue cube into the forward-right target region without picking it up.",
+      "environment_task_spec": {"target_object_id": "blue_cube", "target_region_id": "forward_right", "difficulty": "standard", "instruction_template_id": "canonical_push_v0"}
+    },
+    {
+      "canonical_task_id": "langmani-push-task-v0:blue_cube:forward_right:hard:canonical_push_v0",
+      "skill_family_id": "push_to_region",
+      "object_attribute": "blue_cube",
+      "target_region": "forward_right",
+      "difficulty": "hard",
+      "language_instruction": "Push the blue cube into the forward-right target region without picking it up.",
+      "environment_task_spec": {"target_object_id": "blue_cube", "target_region_id": "forward_right", "difficulty": "hard", "instruction_template_id": "canonical_push_v0"}
+    },
+    {
+      "canonical_task_id": "langmani-push-task-v0:orange_cylinder:left:standard:canonical_push_v0",
+      "skill_family_id": "push_to_region",
+      "object_attribute": "orange_cylinder",
+      "target_region": "left",
+      "difficulty": "standard",
+      "language_instruction": "Push the orange cylinder into the left target region without picking it up.",
+      "environment_task_spec": {"target_object_id": "orange_cylinder", "target_region_id": "left", "difficulty": "standard", "instruction_template_id": "canonical_push_v0"}
+    },
+    {
+      "canonical_task_id": "langmani-push-task-v0:orange_cylinder:left:hard:canonical_push_v0",
+      "skill_family_id": "push_to_region",
+      "object_attribute": "orange_cylinder",
+      "target_region": "left",
+      "difficulty": "hard",
+      "language_instruction": "Push the orange cylinder into the left target region without picking it up.",
+      "environment_task_spec": {"target_object_id": "orange_cylinder", "target_region_id": "left", "difficulty": "hard", "instruction_template_id": "canonical_push_v0"}
+    },
+    {
+      "canonical_task_id": "langmani-push-task-v0:orange_cylinder:right:standard:canonical_push_v0",
+      "skill_family_id": "push_to_region",
+      "object_attribute": "orange_cylinder",
+      "target_region": "right",
+      "difficulty": "standard",
+      "language_instruction": "Push the orange cylinder into the right target region without picking it up.",
+      "environment_task_spec": {"target_object_id": "orange_cylinder", "target_region_id": "right", "difficulty": "standard", "instruction_template_id": "canonical_push_v0"}
+    },
+    {
+      "canonical_task_id": "langmani-push-task-v0:orange_cylinder:right:hard:canonical_push_v0",
+      "skill_family_id": "push_to_region",
+      "object_attribute": "orange_cylinder",
+      "target_region": "right",
+      "difficulty": "hard",
+      "language_instruction": "Push the orange cylinder into the right target region without picking it up.",
+      "environment_task_spec": {"target_object_id": "orange_cylinder", "target_region_id": "right", "difficulty": "hard", "instruction_template_id": "canonical_push_v0"}
+    },
+    {
+      "canonical_task_id": "langmani-push-task-v0:orange_cylinder:forward_left:standard:canonical_push_v0",
+      "skill_family_id": "push_to_region",
+      "object_attribute": "orange_cylinder",
+      "target_region": "forward_left",
+      "difficulty": "standard",
+      "language_instruction": "Push the orange cylinder into the forward-left target region without picking it up.",
+      "environment_task_spec": {"target_object_id": "orange_cylinder", "target_region_id": "forward_left", "difficulty": "standard", "instruction_template_id": "canonical_push_v0"}
+    },
+    {
+      "canonical_task_id": "langmani-push-task-v0:orange_cylinder:forward_left:hard:canonical_push_v0",
+      "skill_family_id": "push_to_region",
+      "object_attribute": "orange_cylinder",
+      "target_region": "forward_left",
+      "difficulty": "hard",
+      "language_instruction": "Push the orange cylinder into the forward-left target region without picking it up.",
+      "environment_task_spec": {"target_object_id": "orange_cylinder", "target_region_id": "forward_left", "difficulty": "hard", "instruction_template_id": "canonical_push_v0"}
+    },
+    {
+      "canonical_task_id": "langmani-push-task-v0:orange_cylinder:forward_right:standard:canonical_push_v0",
+      "skill_family_id": "push_to_region",
+      "object_attribute": "orange_cylinder",
+      "target_region": "forward_right",
+      "difficulty": "standard",
+      "language_instruction": "Push the orange cylinder into the forward-right target region without picking it up.",
+      "environment_task_spec": {"target_object_id": "orange_cylinder", "target_region_id": "forward_right", "difficulty": "standard", "instruction_template_id": "canonical_push_v0"}
+    },
+    {
+      "canonical_task_id": "langmani-push-task-v0:orange_cylinder:forward_right:hard:canonical_push_v0",
+      "skill_family_id": "push_to_region",
+      "object_attribute": "orange_cylinder",
+      "target_region": "forward_right",
+      "difficulty": "hard",
+      "language_instruction": "Push the orange cylinder into the forward-right target region without picking it up.",
+      "environment_task_spec": {"target_object_id": "orange_cylinder", "target_region_id": "forward_right", "difficulty": "hard", "instruction_template_id": "canonical_push_v0"}
+    }
+  ]
+}

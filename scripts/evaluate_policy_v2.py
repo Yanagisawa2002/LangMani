@@ -6,10 +6,9 @@ import argparse
 import json
 from pathlib import Path
 
-from langmani.environments.pick_place_by_instruction import ENV_ID
 from langmani.v2.evaluator import UnifiedPolicyEvaluator, persist_evaluation
 from langmani.v2.registry import load_policy_adapter
-from langmani.v2.taxonomy import EvaluationTask, load_task_catalog
+from langmani.v2.taxonomy import EvaluationTask, load_any_task_catalog
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_POLICY = (
@@ -32,13 +31,13 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _create_environment(sim_backend: str) -> object:
+def _create_environment(environment_id: str, sim_backend: str) -> object:
     import gymnasium as gym
 
-    import langmani.environments  # noqa: F401 - registers ENV_ID
+    import langmani.environments  # noqa: F401 - registers project environments
 
     return gym.make(
-        ENV_ID,
+        environment_id,
         num_envs=1,
         obs_mode="rgb",
         reward_mode="none",
@@ -52,7 +51,7 @@ def _task_instance(path: Path, task_id: str):
     value = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(value, dict):
         raise ValueError("task catalog must be a JSON object")
-    _, tasks = load_task_catalog(value)
+    _, tasks = load_any_task_catalog(value)
     try:
         return next(item for item in tasks if item.canonical_task_id == task_id)
     except StopIteration as error:
@@ -64,7 +63,7 @@ def main() -> int:
     if len(set(args.seeds)) != len(args.seeds) or any(seed < 0 for seed in args.seeds):
         raise ValueError("seeds must be unique non-negative integers")
     task_instance = _task_instance(args.task_config.resolve(), args.task_id)
-    environment = _create_environment(args.sim_backend)
+    environment = _create_environment(task_instance.environment_id, args.sim_backend)
     policy = None
     try:
         policy = load_policy_adapter(

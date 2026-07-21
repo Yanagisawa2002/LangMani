@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 import torch
 
+from langmani.environments.push_specs import PushEpisodeSpec, PushTaskSpec
 from langmani.environments.specs import EpisodeSpec, TaskSpec
 from langmani.v2 import act_adapter as act_adapter_module
 from langmani.v2.act_adapter import ActAdapterConfig, ActAdapterError, ActPerTaskPolicyAdapter
@@ -28,9 +29,14 @@ from langmani.v2.policy import (
 from langmani.v2.release import V1ReleaseError, validate_v1_release
 from langmani.v2.taxonomy import (
     PICK_AND_PLACE_SKILL,
+    PUSH_TO_REGION_SKILL,
     EvaluationTask,
+    PushTaskInstanceSpec,
     TaskInstanceSpec,
     canonical_pick_and_place_tasks,
+    canonical_push_to_region_tasks,
+    load_any_task_catalog,
+    load_push_task_catalog,
     load_task_catalog,
 )
 
@@ -57,6 +63,26 @@ def test_six_legacy_combinations_are_one_skill_family_and_round_trip() -> None:
     family, loaded = load_task_catalog(catalog)
     assert family == PICK_AND_PLACE_SKILL
     assert loaded == tasks
+
+
+def test_push_product_is_one_skill_family_and_catalog_round_trips() -> None:
+    tasks = canonical_push_to_region_tasks()
+
+    assert len(tasks) == 16
+    assert {item.skill_family_id for item in tasks} == {"push_to_region"}
+    assert {item.difficulty for item in tasks} == {"standard", "hard"}
+    assert len({item.canonical_task_id for item in tasks}) == 16
+    assert tuple(PushTaskInstanceSpec.from_dict(item.to_dict()) for item in tasks) == tasks
+
+    catalog = json.loads(
+        (PROJECT_ROOT / "configs/langmani_v2/tasks/push_to_region_v0.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    family, loaded = load_push_task_catalog(catalog)
+    any_family, any_loaded = load_any_task_catalog(catalog)
+    assert family == any_family == PUSH_TO_REGION_SKILL
+    assert loaded == any_loaded == tasks
 
 
 def test_canonical_runtime_config_contains_no_absolute_paths() -> None:
@@ -213,6 +239,66 @@ def test_unified_evaluator_is_policy_agnostic_and_persists_schema(tmp_path: Path
     assert summary["success_count"] == 1
     assert record["checkpoint_identity"] == "fixture-checkpoint"
     assert record["policy_inference_latency_ms"]["p95"] is not None
+
+
+class _PushFixturePolicy(_FixturePolicy):
+    def __init__(self, task_id: str) -> None:
+        super().__init__(task_id)
+        self._identity = PolicyIdentity(
+            policy_id="fixture-push-policy",
+            adapter_name="fixture",
+            implementation="tests.PushFixturePolicy",
+            checkpoint_identity="fixture-push-checkpoint",
+            compatible_skill_families=("push_to_region",),
+            compatible_task_ids=(task_id,),
+        )
+
+
+class _FixturePushEnvironment(_FixtureEnvironment):
+    def __init__(self) -> None:
+        super().__init__()
+        self.spec = SimpleNamespace(id="LangMani-PushToRegion-v0")
+        self._episode_spec: PushEpisodeSpec | None = None
+
+    def reset(self, *, seed: int, options: dict[str, object]):
+        task_spec = PushTaskSpec.from_mapping(options["task_spec"])
+        self._episode_spec = PushEpisodeSpec.create(scene_seed=seed, task_spec=task_spec)
+        self.step_count = 0
+        return {}, {"success": False}
+
+    def get_policy_rollout_evaluation(self):
+        return {
+            "success": self.step_count >= 2,
+            "target_outside_workspace": False,
+            "target_lifted": False,
+            "target_toppled": False,
+            "wrong_object_contact": False,
+            "wrong_object_displaced": False,
+            "invalid_action": False,
+            "action_out_of_bounds": False,
+        }
+
+
+def test_unified_evaluator_executes_push_skill_without_a_parallel_framework() -> None:
+    task_instance = canonical_push_to_region_tasks()[0]
+    policy = _PushFixturePolicy(task_instance.canonical_task_id)
+    evaluator = UnifiedPolicyEvaluator(
+        environment=_FixturePushEnvironment(),
+        observation_extractor=_FixtureExtractor(),
+    )
+
+    result = evaluator.run_episode(
+        policy=policy,
+        task=EvaluationTask(task_instance=task_instance, scene_seed=29),
+        evaluation_id="push-fixture:29",
+    )
+
+    assert result.success
+    assert result.skill_family == "push_to_region"
+    assert result.task_identity == task_instance.canonical_task_id
+    assert result.episode_length == 2
+    assert not result.wrong_object_interaction
+    assert not result.object_drop_or_loss
 
 
 def test_unified_evaluator_rejects_incompatible_policy_before_reset() -> None:
