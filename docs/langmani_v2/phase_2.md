@@ -18,6 +18,12 @@ separate numeric/tensor events. The expert uses explicit semantic handles, high 
 low planar contact, a full-containment-derived endpoint, and at most two corrections. No expert
 state is added to visual policy observations.
 
+The cylinder is an intentional horizontal rolling geometry: its local-`x` symmetry axis must
+remain approximately horizontal, while rotation about that axis is normal push motion. Target
+markers are flat on the table. Left/right region centers use `x=0.12`; forward-left/forward-right
+use the still-distinct but Panda-reachable `x=0.22`. Standard and hard containment radii remain
+`0.11` and `0.085`, respectively.
+
 ## Minimum recovery implemented
 
 `environment/verify_v2_phase1.py` independently validates:

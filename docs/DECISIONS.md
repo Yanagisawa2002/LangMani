@@ -2462,3 +2462,14 @@ center. Hard distractors remain 8.5 cm lateral to the push path but are placed a
 so they do not overlap the Panda's reset-time arm sweep. This changes neither task success geometry nor the 250-step
 episode limit. The same immutable all-task smoke and then the fixed 50-standard/30-hard schedule
 must pass before Phase 2 data collection may start.
+
+The installed target-renderer helper follows SAPIEN's cylinder convention: its symmetry axis is
+local `x`. The orange cylinder intentionally starts with that axis horizontal, so rolling about
+local `x` is valid planar motion; cylinder stability therefore measures whether local `x` remains
+horizontal instead of incorrectly treating local `z` as an upright axis. The red/white target
+helper is rotated 90 degrees about world `y`, matching the installed ManiSkill example so its disk
+lies on the table. Native reachability probes also showed that the original forward-region
+`x=0.28` extended the Panda TCP to its screw-planner singular boundary. Moving only the two
+forward centers to `x=0.22` keeps all four semantic regions distinct and reachable. These are
+geometry/orientation corrections: the object sizes, containment radii, success predicates,
+planner bounds, and 250-step limit remain unchanged.

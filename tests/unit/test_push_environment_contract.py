@@ -20,6 +20,8 @@ from langmani.environments.push_to_region import (
     MAX_EPISODE_STEPS,
     ROBOT_INIT_QPOS_NOISE,
     STANDARD_REGION_RADIUS,
+    TARGET_MARKER_QUATERNION,
+    TARGET_REGION_CENTERS_XY,
     PushToRegionEnv,
     _normalize_push_reset_options,
 )
@@ -91,6 +93,20 @@ def test_push_scene_builds_two_dynamic_geometries_and_two_exact_goal_markers(
     ]
     assert all(item["body_type"] == "kinematic" for item in targets)
     assert all(item["add_collision"] is False for item in targets)
+    assert all(
+        np.allclose(item["initial_pose"].q, TARGET_MARKER_QUATERNION)  # type: ignore[union-attr]
+        for item in targets
+    )
+
+
+def test_push_target_regions_are_distinct_and_within_panda_reach() -> None:
+    assert TARGET_REGION_CENTERS_XY == (
+        (0.12, 0.22),
+        (0.12, -0.22),
+        (0.22, 0.14),
+        (0.22, -0.14),
+    )
+    assert len(set(TARGET_REGION_CENTERS_XY)) == 4
 
 
 def test_push_reset_options_are_strict_and_json_shaped() -> None:

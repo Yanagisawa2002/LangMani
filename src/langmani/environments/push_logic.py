@@ -17,6 +17,22 @@ PUSH_PRIVILEGED_OBSERVATION_KEYS = frozenset(
 )
 
 
+def compute_push_object_planar_alignment(
+    cube_rotation: torch.Tensor,
+    cylinder_rotation: torch.Tensor,
+) -> torch.Tensor:
+    """Measure the cube's uprightness and the rolling cylinder's planarity."""
+
+    if cube_rotation.ndim != 3 or cube_rotation.shape[-2:] != (3, 3):
+        raise ValueError("cube_rotation must have shape (batch, 3, 3)")
+    if cylinder_rotation.shape != cube_rotation.shape:
+        raise ValueError("cylinder_rotation must match cube_rotation")
+    cube_up = torch.abs(cube_rotation[:, 2, 2])
+    cylinder_axis_vertical = torch.abs(cylinder_rotation[:, 2, 0]).clamp(0.0, 1.0)
+    cylinder_horizontal = torch.sqrt((1.0 - cylinder_axis_vertical.square()).clamp_min(0.0))
+    return torch.stack((cube_up, cylinder_horizontal), dim=1)
+
+
 def build_push_observation_extra(
     *,
     tcp_pose: torch.Tensor,
@@ -205,6 +221,7 @@ def evaluate_push_state(
 __all__ = [
     "PUSH_PRIVILEGED_OBSERVATION_KEYS",
     "build_push_observation_extra",
+    "compute_push_object_planar_alignment",
     "evaluate_push_state",
     "update_progress_state",
     "update_stable_success_count",

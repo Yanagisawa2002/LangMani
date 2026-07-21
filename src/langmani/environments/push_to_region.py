@@ -29,6 +29,7 @@ from langmani.environments.push_expert_state import (
 )
 from langmani.environments.push_logic import (
     build_push_observation_extra,
+    compute_push_object_planar_alignment,
     evaluate_push_state,
     update_progress_state,
     update_stable_success_count,
@@ -55,8 +56,8 @@ HARD_REGION_RADIUS = 0.085
 TARGET_REGION_CENTERS_XY = (
     (0.12, 0.22),
     (0.12, -0.22),
-    (0.28, 0.14),
-    (0.28, -0.14),
+    (0.22, 0.14),
+    (0.22, -0.14),
 )
 TARGET_REGION_JITTER = 0.012
 
@@ -83,6 +84,7 @@ INITIAL_OBJECT_BUILD_POSITIONS = (
     (-0.18, 0.08, CYLINDER_HALF_LENGTH),
 )
 INITIAL_TARGET_BUILD_POSITION = (0.18, 0.0, 0.001)
+TARGET_MARKER_QUATERNION = (math.sqrt(0.5), 0.0, math.sqrt(0.5), 0.0)
 
 _ALLOWED_RESET_OPTION_KEYS = frozenset({"env_idx", "reconfigure", "task_spec"})
 
@@ -216,7 +218,10 @@ class PushToRegionEnv(BaseEnv):
                 name=f"push_target_region_{difficulty}",
                 add_collision=False,
                 body_type="kinematic",
-                initial_pose=sapien.Pose(p=INITIAL_TARGET_BUILD_POSITION),
+                initial_pose=sapien.Pose(
+                    p=INITIAL_TARGET_BUILD_POSITION,
+                    q=TARGET_MARKER_QUATERNION,
+                ),
             )
             for difficulty, radius in zip(
                 PUSH_DIFFICULTIES,
@@ -407,7 +412,9 @@ class PushToRegionEnv(BaseEnv):
         for difficulty_index, target_region in enumerate(self.target_regions):
             active = difficulty_indices == difficulty_index
             marker_centers = torch.where(active[:, None], target_centers, hidden_target_centers)
-            target_region.set_pose(Pose.create_from_pq(p=marker_centers, q=[1, 0, 0, 0]))
+            target_region.set_pose(
+                Pose.create_from_pq(p=marker_centers, q=TARGET_MARKER_QUATERNION)
+            )
 
         self._stable_success_count[env_idx] = 0
         self._best_target_distance[env_idx] = torch.linalg.vector_norm(source_xy - region_xy, dim=1)
@@ -433,9 +440,7 @@ class PushToRegionEnv(BaseEnv):
     def _object_up_alignment(self) -> torch.Tensor:
         cube_rotation = self.push_objects[0].pose.to_transformation_matrix()[:, :3, :3]
         cylinder_rotation = self.push_objects[1].pose.to_transformation_matrix()[:, :3, :3]
-        cube_up = torch.abs(cube_rotation[:, 2, 2])
-        cylinder_axis_up = torch.abs(cylinder_rotation[:, 2, 2])
-        return torch.stack((cube_up, cylinder_axis_up), dim=1)
+        return compute_push_object_planar_alignment(cube_rotation, cylinder_rotation)
 
     def _robot_contact_magnitude(self, actor: Actor, *, arm_only: bool) -> torch.Tensor:
         magnitudes: list[torch.Tensor] = []

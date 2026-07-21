@@ -1,14 +1,37 @@
 from __future__ import annotations
 
+import pytest
 import torch
 
 from langmani.environments.push_logic import (
     PUSH_PRIVILEGED_OBSERVATION_KEYS,
     build_push_observation_extra,
+    compute_push_object_planar_alignment,
     evaluate_push_state,
     update_progress_state,
     update_stable_success_count,
 )
+
+
+def test_push_object_alignment_allows_cylinder_roll_but_rejects_upright_axis() -> None:
+    cube_rotation = torch.eye(3).repeat(3, 1, 1)
+    cylinder_rotation = torch.eye(3).repeat(3, 1, 1)
+    # Rolling about local x preserves the cylinder's intended horizontal symmetry axis.
+    cylinder_rotation[1] = torch.tensor([[1.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, 1.0, 0.0]])
+    # Rotating local x onto world z leaves the intended rolling plane.
+    cylinder_rotation[2] = torch.tensor([[0.0, 0.0, 1.0], [0.0, 1.0, 0.0], [-1.0, 0.0, 0.0]])
+
+    alignment = compute_push_object_planar_alignment(cube_rotation, cylinder_rotation)
+
+    assert torch.allclose(alignment[:, 0], torch.ones(3))
+    assert torch.allclose(alignment[:, 1], torch.tensor([1.0, 1.0, 0.0]))
+
+
+def test_push_object_alignment_validates_rotation_shapes() -> None:
+    with pytest.raises(ValueError, match="cube_rotation"):
+        compute_push_object_planar_alignment(torch.eye(3), torch.eye(3))
+    with pytest.raises(ValueError, match="cylinder_rotation"):
+        compute_push_object_planar_alignment(torch.eye(3)[None], torch.eye(3).repeat(2, 1, 1))
 
 
 def test_push_visual_observation_has_no_privileged_state() -> None:
