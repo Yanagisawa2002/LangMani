@@ -1,0 +1,177 @@
+from __future__ import annotations
+
+from types import SimpleNamespace
+
+import numpy as np
+import pytest
+import torch
+
+from langmani.environments.push_expert_state import (
+    PushExpertTaskContext,
+    PushObjectHandle,
+)
+from langmani.environments.push_specs import PushEpisodeSpec, PushTaskSpec
+from langmani.environments.push_to_region import ENV_ID
+from langmani.experts.planner import PlannerPlanResult
+from langmani.experts.push import PushToRegionExpert
+from langmani.experts.push_types import (
+    PUSH_EXPERT_PHASE_SEQUENCE,
+    PushExpertConfig,
+    PushExpertPhase,
+    PushExpertStatus,
+)
+
+
+class _Pose:
+    def __init__(self, value: list[float]) -> None:
+        self.raw_pose = torch.tensor([value], dtype=torch.float32)
+
+
+class _Robot:
+    def __init__(self) -> None:
+        self._qpos = torch.zeros((1, 9), dtype=torch.float32)
+
+    def get_qpos(self) -> torch.Tensor:
+        return self._qpos
+
+
+class _FakeEnvironment:
+    def __init__(self, *, wrong_object_after_step: bool = False) -> None:
+        self.unwrapped = self
+        self.num_envs = 1
+        self.control_mode = "pd_joint_pos"
+        self.step_count = 0
+        self.wrong_object_after_step = wrong_object_after_step
+        self.robot = _Robot()
+        self.tcp = SimpleNamespace(pose=_Pose([0.0, 0.0, 0.3, 1.0, 0.0, 0.0, 0.0]))
+        self.agent = SimpleNamespace(robot=self.robot, tcp=self.tcp)
+        self.target = SimpleNamespace(pose=_Pose([-0.2, 0.0, 0.025, 1.0, 0.0, 0.0, 0.0]))
+        self.distractor = SimpleNamespace(pose=_Pose([-0.28, 0.24, 0.025, 1.0, 0.0, 0.0, 0.0]))
+        episode = PushEpisodeSpec.create(
+            scene_seed=77,
+            task_spec=PushTaskSpec("blue_cube", "left", "standard"),
+        )
+        handles = (
+            PushObjectHandle("blue_cube", self.target),
+            PushObjectHandle("orange_cylinder", self.distractor),
+        )
+        self.context = PushExpertTaskContext(
+            environment_id=ENV_ID,
+            episode_spec=episode,
+            agent=self.agent,
+            robot=self.robot,
+            target_object=handles[0],
+            objects=handles,
+            target_region_center=torch.tensor([0.2, 0.0, 0.001]),
+            target_region_radius=0.11,
+            target_object_planar_radius=0.035,
+            target_object_resting_height=0.025,
+            table_top_z=0.0,
+        )
+
+    def get_push_expert_task_context(self) -> PushExpertTaskContext:
+        return self.context
+
+    def get_push_expert_evaluation(self) -> dict[str, torch.Tensor]:
+        success = self.step_count >= 9
+        return {
+            "success": torch.tensor([success]),
+            "target_inside_region": torch.tensor([success]),
+            "target_is_static": torch.tensor([True]),
+            "stable_success_steps": torch.tensor([5 if success else 0]),
+            "target_distance": torch.tensor([0.0 if success else 0.4]),
+            "target_outside_workspace": torch.tensor([False]),
+            "target_lifted": torch.tensor([False]),
+            "target_toppled": torch.tensor([False]),
+            "target_is_grasped": torch.tensor([False]),
+            "wrong_object_displaced": torch.tensor(
+                [self.wrong_object_after_step and self.step_count > 0]
+            ),
+            "invalid_action": torch.tensor([False]),
+            "action_out_of_bounds": torch.tensor([False]),
+        }
+
+    def step(self, action: np.ndarray):
+        assert action.shape == (8,)
+        self.step_count += 1
+        evaluation = self.get_push_expert_evaluation()
+        return {}, 0.0, evaluation["success"], torch.tensor([False]), evaluation
+
+
+class _FakePlanner:
+    def __init__(self, environment: _FakeEnvironment) -> None:
+        self.environment = environment
+        self.plan_count = 0
+        self.closed = False
+
+    def synchronize(self) -> None:
+        return None
+
+    def plan_pose(self, pose7, *, use_attached: bool = False) -> PlannerPlanResult:
+        del use_attached
+        self.plan_count += 1
+        self.environment.tcp.pose.raw_pose = torch.tensor([pose7], dtype=torch.float32)
+        return PlannerPlanResult(
+            success=True,
+            status="Success",
+            failure=None,
+            positions=(tuple([0.0] * 7),),
+        )
+
+    def attach_box(self, relative_pose7) -> None:
+        del relative_pose7
+
+    def detach(self) -> None:
+        return None
+
+    def close(self) -> None:
+        self.closed = True
+
+
+def test_push_expert_completes_explicit_planar_phase_sequence() -> None:
+    environment = _FakeEnvironment()
+    planner = _FakePlanner(environment)
+    expert = PushToRegionExpert(environment, planner_factory=lambda _env: planner)
+
+    result = expert.run()
+
+    assert result.success
+    assert result.status is PushExpertStatus.SUCCESS
+    assert result.completed_phases == PUSH_EXPERT_PHASE_SEQUENCE
+    assert result.failed_phase is None
+    assert result.final_environment_evaluation["success"] is True
+    assert result.total_environment_steps == len(expert.action_trace) == 9
+    assert result.total_planning_calls == 3
+    assert planner.closed
+
+
+def test_push_expert_classifies_wrong_object_displacement() -> None:
+    environment = _FakeEnvironment(wrong_object_after_step=True)
+    expert = PushToRegionExpert(
+        environment,
+        planner_factory=lambda _env: _FakePlanner(environment),
+    )
+
+    result = expert.run()
+
+    assert not result.success
+    assert result.status is PushExpertStatus.WRONG_OBJECT_INTERACTION
+    assert result.failed_phase is PushExpertPhase.CLOSE_GRIPPER
+    assert result.total_environment_steps == 1
+
+
+def test_push_expert_config_rejects_unbounded_correction_search() -> None:
+    with pytest.raises(ValueError, match="exactly two"):
+        PushExpertConfig(maximum_corrective_pushes=3)
+
+
+def test_push_expert_result_is_json_serializable() -> None:
+    import json
+
+    environment = _FakeEnvironment()
+    result = PushToRegionExpert(
+        environment,
+        planner_factory=lambda _env: _FakePlanner(environment),
+    ).run()
+
+    assert json.loads(json.dumps(result.to_dict()))["task_id"] == result.task_id

@@ -22,6 +22,11 @@ from langmani.environments.pick_place_by_instruction import (
     _PrimitiveTableSceneBuilder,
     _validated_env_indices,
 )
+from langmani.environments.push_expert_state import (
+    PushExpertContextError,
+    PushExpertTaskContext,
+    PushObjectHandle,
+)
 from langmani.environments.push_logic import (
     build_push_observation_extra,
     evaluate_push_state,
@@ -686,6 +691,48 @@ class PushToRegionEnv(BaseEnv):
             "difficulty_index": self._difficulty_indices,
             "tcp_position": self.agent.tcp.pose.p,
         }
+
+    def get_push_expert_task_context(self) -> PushExpertTaskContext:
+        """Materialize explicit privileged state for one scripted expert only."""
+
+        if self.num_envs != 1:
+            raise ValueError(f"push expert requires num_envs=1, got {self.num_envs}")
+        if not hasattr(self, "_scene_seeds"):
+            raise PushExpertContextError("reset before requesting push expert context")
+        if not hasattr(self, "_objects_by_id"):
+            raise PushExpertContextError("push object handles are unavailable")
+        if not hasattr(self, "agent") or not hasattr(self.agent, "robot"):
+            raise PushExpertContextError("Panda handles are unavailable")
+
+        episode = self.get_episode_specs()[0]
+        object_id = episode.task_spec.target_object_id
+        if object_id not in self._objects_by_id:
+            raise PushExpertContextError(f"missing semantic actor handle for {object_id!r}")
+        object_index = PUSH_OBJECT_IDS.index(object_id)
+        handles = tuple(
+            PushObjectHandle(object_id=item, actor=self._objects_by_id[item])
+            for item in PUSH_OBJECT_IDS
+        )
+        return PushExpertTaskContext(
+            environment_id=ENV_ID,
+            episode_spec=episode,
+            agent=self.agent,
+            robot=self.agent.robot,
+            target_object=handles[object_index],
+            objects=handles,
+            target_region_center=self._target_region_centers[0].detach().clone(),
+            target_region_radius=float(self._target_region_radii[0].detach().cpu()),
+            target_object_planar_radius=OBJECT_PLANAR_RADII[object_index],
+            target_object_resting_height=OBJECT_RESTING_HEIGHTS[object_index],
+            table_top_z=TABLE_TOP_Z,
+        )
+
+    def get_push_expert_evaluation(self) -> dict[str, torch.Tensor]:
+        """Return fresh evaluation tensors without exposing them to the policy."""
+
+        if self.num_envs != 1:
+            raise ValueError(f"push expert requires num_envs=1, got {self.num_envs}")
+        return dict(self.evaluate())
 
 
 __all__ = [
