@@ -2546,3 +2546,22 @@ only the ideal candidate rather than duplicate planner attempts. The independent
 static-boundary failures. No target geometry, success predicate, episode limit, action handling,
 schedule, or forward strategy changes. Candidate B remains provisional until the unchanged staged
 gates accept it.
+
+## D-092 - Bound only lateral-cylinder correction travel before replanning
+
+Candidate B improved the complete fixed lateral subset from 17/26 to 22/26 standard and from 9/16
+to 10/16 hard, but it produced three standard workspace-exit terminal statuses where the baseline
+reported none. Two correspond to workspace-margin root causes already exposed by the neutral
+replay; seed 44044 is a new regression. Candidate B is therefore rejected before smoke under the
+predeclared no-increase rule.
+
+The failed-phase traces show that all three exits occur during cylinder correction after a useful
+primary push. The object then travels roughly 35--40 cm during a correction even though only
+3.5--5 cm of additional center progress is required. Candidate C changes no primary or cube path.
+For a lateral cylinder correction only, it commands at most 3 cm from the current contact pose,
+uses the measured remaining distance rather than replaying the original endpoint, and further caps
+that distance by the object's footprint plus a fixed 1 cm workspace margin. The existing two-push
+budget can therefore supply at most 6 cm, covering the observed remaining range without one long
+correction. Low-level actions are still rejected rather than clipped. Candidate C remains
+provisional until the same bounded replay and complete lateral subset show zero new workspace or
+action-bound failures.

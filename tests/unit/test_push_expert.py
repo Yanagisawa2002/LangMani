@@ -258,6 +258,75 @@ def test_lateral_contact_strategy_is_geometry_specific() -> None:
     assert expert._lateral_compensation_degrees() == pytest.approx(0.0)
 
 
+def test_lateral_cylinder_correction_is_bounded_by_remaining_distance() -> None:
+    environment = _FakeEnvironment()
+    environment.context = PushExpertTaskContext(
+        environment_id=environment.context.environment_id,
+        episode_spec=PushEpisodeSpec.create(
+            scene_seed=77,
+            task_spec=PushTaskSpec("orange_cylinder", "left", "standard"),
+        ),
+        agent=environment.context.agent,
+        robot=environment.context.robot,
+        target_object=environment.context.objects[1],
+        objects=environment.context.objects,
+        target_region_center=torch.tensor([0.12, 0.22, 0.001]),
+        target_region_radius=0.11,
+        target_object_planar_radius=0.025,
+        target_object_resting_height=0.025,
+        full_containment_center_radius=0.085,
+        table_top_z=environment.context.table_top_z,
+    )
+    expert = PushToRegionExpert(
+        environment,
+        planner_factory=lambda _env: _FakePlanner(environment),
+    )
+    expert._context = environment.context
+    position = np.array([-0.28, 0.24, 0.025])
+    direction = expert._push_direction(position)
+    contact = position[:2] - direction * expert.config.contact_offset
+
+    endpoint = expert._bounded_cylinder_correction_endpoint_pose(position)
+
+    assert np.linalg.norm(endpoint[:2] - contact) == pytest.approx(0.03)
+
+
+def test_lateral_cylinder_correction_respects_object_workspace_margin() -> None:
+    environment = _FakeEnvironment()
+    environment.distractor.pose.raw_pose = torch.tensor(
+        [[0.0, 0.34, 0.025, 1.0, 0.0, 0.0, 0.0]], dtype=torch.float32
+    )
+    environment.context = PushExpertTaskContext(
+        environment_id=environment.context.environment_id,
+        episode_spec=PushEpisodeSpec.create(
+            scene_seed=77,
+            task_spec=PushTaskSpec("orange_cylinder", "left", "standard"),
+        ),
+        agent=environment.context.agent,
+        robot=environment.context.robot,
+        target_object=environment.context.objects[1],
+        objects=environment.context.objects,
+        target_region_center=torch.tensor([0.0, 0.50, 0.001]),
+        target_region_radius=0.11,
+        target_object_planar_radius=0.025,
+        target_object_resting_height=0.025,
+        full_containment_center_radius=0.085,
+        table_top_z=environment.context.table_top_z,
+    )
+    expert = PushToRegionExpert(
+        environment,
+        planner_factory=lambda _env: _FakePlanner(environment),
+    )
+    expert._context = environment.context
+    position = np.array([0.0, 0.34, 0.025])
+    direction = expert._push_direction(position)
+    contact = position[:2] - direction * expert.config.contact_offset
+
+    endpoint = expert._bounded_cylinder_correction_endpoint_pose(position)
+
+    assert np.linalg.norm(endpoint[:2] - contact) == pytest.approx(0.005)
+
+
 def test_forward_strategy_preserves_the_original_contact_formula() -> None:
     environment = _FakeEnvironment()
     environment.context = PushExpertTaskContext(

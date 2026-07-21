@@ -79,6 +79,8 @@ class PushExpertConfig:
     tcp_position_tolerance: float = 0.025
     lateral_cube_compensation_degrees: float = 15.0
     lateral_cylinder_compensation_degrees: float = 0.0
+    maximum_cylinder_correction_push_distance: float = 0.03
+    minimum_object_workspace_margin: float = 0.01
     minimum_approach_obstacle_clearance: float = 0.015
     diagnostic_rendering: bool = False
 
@@ -108,6 +110,8 @@ class PushExpertConfig:
             "region_goal_margin",
             "tcp_position_tolerance",
             "minimum_approach_obstacle_clearance",
+            "maximum_cylinder_correction_push_distance",
+            "minimum_object_workspace_margin",
         ):
             object.__setattr__(self, label, _finite(getattr(self, label), label))
         for label in (
@@ -141,6 +145,10 @@ class PushExpertConfig:
             "tcp_position_tolerance": self.tcp_position_tolerance,
             "lateral_cube_compensation_degrees": self.lateral_cube_compensation_degrees,
             "lateral_cylinder_compensation_degrees": self.lateral_cylinder_compensation_degrees,
+            "maximum_cylinder_correction_push_distance": (
+                self.maximum_cylinder_correction_push_distance
+            ),
+            "minimum_object_workspace_margin": self.minimum_object_workspace_margin,
             "minimum_approach_obstacle_clearance": self.minimum_approach_obstacle_clearance,
             "diagnostic_rendering": self.diagnostic_rendering,
         }
