@@ -42,10 +42,13 @@ def audit_pick_place_compatibility(
     pick_manifest = _read_json(pick_manifest_path)
     pick_summary = _read_json(pick_summary_path) if pick_summary_path.is_file() else {}
     push_manifest = _read_json(push_root / "langmani" / "export_manifest.json")
+    push_repo_id_prefix = push_manifest.get("repo_id_prefix")
+    if not isinstance(push_repo_id_prefix, str):
+        raise PushDatasetContractError("push export manifest lacks repo_id_prefix")
     push_splits = _read_json(push_root / "langmani" / "split_manifest.json")
     first_split = next(split for split in DATASET_SPLITS if (push_root / "splits" / split).is_dir())
     push_dataset = LeRobotDataset(
-        repo_id=f"langmani/phase2b-push-v0-{first_split}",
+        repo_id=f"{push_repo_id_prefix}-{first_split}",
         root=push_root / "splits" / first_split,
         video_backend="pyav",
         return_uint8=True,
@@ -216,9 +219,13 @@ def verify_phase2b_evidence(
         split_names = ("pilot",)
     readback_episodes = 0
     readback_frames = 0
+    export_manifest = _read_json(exported / "langmani" / "export_manifest.json")
+    repo_id_prefix = export_manifest.get("repo_id_prefix")
+    if not isinstance(repo_id_prefix, str):
+        raise PushDatasetContractError("push export manifest lacks repo_id_prefix")
     for split in split_names:
         dataset = LeRobotDataset(
-            repo_id=f"langmani/phase2b-push-v0-{split}",
+            repo_id=f"{repo_id_prefix}-{split}",
             root=exported / "splits" / split,
             video_backend="pyav",
             return_uint8=True,

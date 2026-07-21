@@ -11,7 +11,7 @@ from langmani.v2.push_lerobot import export_push_lerobot_dataset
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = PROJECT_ROOT / "configs" / "langmani_v2" / "phase2b_push_collection.yaml"
-DEFAULT_SOURCE = PROJECT_ROOT / "outputs" / "datasets" / "langmani_v2" / "phase2b"
+DEFAULT_SOURCE = PROJECT_ROOT / "outputs" / "datasets" / "langmani_v2" / "phase2b-v1"
 
 
 def parse_args() -> argparse.Namespace:

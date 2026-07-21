@@ -54,6 +54,12 @@ def export_push_lerobot_dataset(
     records = _load_accepted_records(source, stages)
     if not records:
         raise PushDatasetContractError("no independently replay-validated records to export")
+    dataset_config = config.payload.get("dataset")
+    if not isinstance(dataset_config, Mapping) or not isinstance(
+        dataset_config.get("repo_id"), str
+    ):
+        raise PushDatasetContractError("collection dataset repo_id is malformed")
+    repo_id_prefix = str(dataset_config["repo_id"])
     pilot = tuple(stages) == ("pilot",)
     if pilot:
         split_manifest: dict[str, object] = {
@@ -101,7 +107,7 @@ def export_push_lerobot_dataset(
                 ]
                 writer = LeRobotWriterAdapter.create(
                     root=staging / "splits" / split,
-                    repo_id=f"langmani/phase2b-push-v0-{split}",
+                    repo_id=f"{repo_id_prefix}-{split}",
                     fps=20,
                     feature_contract=FeatureContract(),
                     codec=VideoCodecConfig(),
@@ -147,7 +153,7 @@ def export_push_lerobot_dataset(
                             "scene_group_id": record["scene_group_id"],
                             "seed": seed,
                             "split": split,
-                            "lerobot_repo_id": f"langmani/phase2b-push-v0-{split}",
+                            "lerobot_repo_id": f"{repo_id_prefix}-{split}",
                             "lerobot_episode_index": split_episode_index,
                             "frame_count": len(actions),
                             "raw_h5_path": record["raw_h5_path"],
@@ -161,7 +167,9 @@ def export_push_lerobot_dataset(
                 if writer.saved_episodes != len(selected):
                     raise PushDatasetContractError("LeRobot writer episode count changed")
 
-        readback = _validate_real_readback(staging / "splits", split_names, episode_sidecars)
+        readback = _validate_real_readback(
+            staging / "splits", split_names, episode_sidecars, repo_id_prefix=repo_id_prefix
+        )
         sidecar = staging / "langmani"
         sidecar.mkdir(parents=True)
         schema = {
@@ -197,6 +205,7 @@ def export_push_lerobot_dataset(
             "schema_version": PUSH_LEROBOT_SCHEMA,
             "export_fingerprint": export_fingerprint,
             "collection_fingerprint": config.fingerprint,
+            "repo_id_prefix": repo_id_prefix,
             "source_root": source.as_posix(),
             "stages": list(stages),
             "episode_count": len(records),
@@ -365,6 +374,8 @@ def _validate_real_readback(
     splits_root: Path,
     split_names: Sequence[str],
     episodes: Sequence[Mapping[str, object]],
+    *,
+    repo_id_prefix: str,
 ) -> dict[str, object]:
     from lerobot.datasets import LeRobotDataset
 
@@ -375,7 +386,7 @@ def _validate_real_readback(
     reports: dict[str, object] = {}
     for split in split_names:
         dataset = LeRobotDataset(
-            repo_id=f"langmani/phase2b-push-v0-{split}",
+            repo_id=f"{repo_id_prefix}-{split}",
             root=splits_root / split,
             video_backend="pyav",
             return_uint8=True,
