@@ -2618,3 +2618,39 @@ deterministic demonstration-collection stage under the frozen task, seed, action
 contracts. This decision does not claim that a pushing dataset exists, does not authorize bypassing
 raw/archive validation, and does not start or validate SmolVLA. SmolVLA remains downstream of an
 accepted dataset and a later explicit stage.
+
+## D-096 - Accept the Phase 2B pushing dataset and authorize a separate Phase 2C
+
+Phase 2B ran the frozen Candidate E expert and deterministic schedule on one RTX 5090. The full and
+bounded top-up stages attempted 516 episodes, admitted 397 generation successes, and preserved 119
+rejected attempts. A separate fresh-environment process action-replayed all 397 generation-accepted
+trajectories: categorical outcomes, every transition label, and frame counts matched 397/397; final
+position error was zero and maximum quaternion angular error was approximately 5.96e-8 radians. No
+replay failure entered the accepted archive.
+
+The derived LeRobot 0.6 dataset contains 397 episodes and 53,297 frames. Its six stable splits have
+zero episode-ID, seed, initial-state, trajectory, scene, held-out-language, source-shard, or exported
+file overlap. A real readback confirmed 256x256 RGB, 9D Panda state, 8D `pd_joint_pos` actions,
+20 Hz control, task strings, and no privileged state. The compatibility audit left the historical
+360-episode/64,548-frame pick-and-place root unchanged and created only a content-bound immutable
+multi-root index. The push export and multi-root index are therefore accepted as separate immutable
+sources rather than a rewritten combined dataset.
+
+The first superseded pilot and an interrupted detached replay remain invalid infrastructure
+evidence. The first top-up launcher also failed before collection because it compared the top-up
+runtime against the full-stage immutable runtime manifest. Commit
+`f081275478a72aa90b7b6529874c974a02e695dc` fixed the contract by assigning full and top-up separate
+stage-owned runtime manifests; it did not rename a run, rewrite a manifest, or retrain the expert.
+The completed full/top-up collection, replay, export, failure corpus, and source-validation records
+remain immutable.
+
+The independent verifier at Git `45009f6b13677413a0262f9521f0e9dcbd74ed5f` passed every collection,
+replay, schema, quota, readback, runtime-lineage, leakage, compatibility, source-test, and tracked
+metadata gate. Its report SHA-256 is
+`b07f97c8ade07e23eac8b710dfee801ebd8f8ef5df44e92c967958122b0310ee` and it records
+`pipeline_integrity_validated=true`, `full_collection_validated=true`,
+`physical_target_validated=true`, and `smolvla_phase2c_authorized=true`.
+
+This accepts Phase 2B data production and authorizes only a separately invoked Phase 2C consumer.
+It does not claim learned-policy quality and does not install, load, train, or evaluate SmolVLA.
+Phase 2C must bind the immutable source identities and begin only under a new explicit command.

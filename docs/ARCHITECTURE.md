@@ -207,6 +207,27 @@ M4.3b consumes the unchanged M3B train and validation episode views. It derives 
 indices from stable TaskSpec metadata in memory and writes no dataset. Semantic-audit observations,
 M3B test, M4 fresh, `m42_dev_v0`, and `m42_final_v0` are not training or checkpoint-selection data.
 
+### LangMani 2.0 Phase 2B pushing data
+
+Phase 2B adds a parallel, skill-owned data path for `push_to_region`; it does not reopen or rewrite
+M3A/M3B. The ManiSkill-native push archive is authoritative and keeps every scheduled attempt,
+including failed expert executions, original `pd_joint_pos` actions, T transition labels, T+1
+states, reset identity, semantic TaskSpec, runtime identity, and checksums. Full collection and the
+bounded top-up use separate immutable producer/runtime manifests.
+
+Generation success is only a replay candidate. A fresh environment replays every candidate action
+sequence without the expert and must reproduce categorical outcome, every transition label, frame
+count, and bounded final pose. Only replay-accepted episodes enter the derived LeRobot 0.6 root;
+failures stay in a separately addressable corpus. Stable scene, seed, trajectory, language, shard,
+and file identities define six leakage-audited splits.
+
+The historical pick-and-place and pushing LeRobot roots remain immutable. Their compatibility layer
+loads real samples, compares RGB/state/action/control-rate/task contracts, and writes a
+content-bound multi-root index rather than copying or concatenating either source. Skill-specific
+TaskSpec sidecars remain separate, and future normalization must be recomputed from the exact
+train-only multi-root view. Phase 2B's independent verifier may authorize a separately invoked
+Phase 2C consumer, but it never imports, loads, trains, or evaluates SmolVLA.
+
 ## Policies
 
 `langmani.policies` owns M4's project-level ACT boundary:

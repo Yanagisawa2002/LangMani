@@ -66,9 +66,18 @@ privileged expert. Phase 2A stabilized lateral pushing without changing forward 
 geometry, schedules, or the 250-step budget. The accepted Candidate E smoke reached 8/8 standard
 and 6/8 hard; the fixed 50-standard/30-hard validation reached 46/50 and 23/30, with the protected
 standard forward subset still 24/24 and zero workspace-exit or action-bound events. The unchanged
-conjunctive expert gate therefore passes. Demonstration collection is now the next separately
-authorized Phase 2 stage, but no pushing dataset has been generated and SmolVLA has not started.
-Rejected probe runs remain diagnostics, not quality evidence.
+conjunctive expert gate therefore passes. Phase 2B then completed the separately authorized pushing
+data pipeline. It preserved all 516 real expert attempts, accepted 397 demonstrations only after
+397/397 independent action replays passed, retained 119 rejected attempts as a failure corpus, and
+exported 53,297 aligned frames in 397 LeRobot 0.6 episodes. All six stable splits passed scene,
+seed, trajectory, language, shard, and file-overlap checks. The frozen 360-episode pick-and-place
+dataset remained byte-identical and a content-bound immutable multi-root index passed the real
+cross-dataset compatibility audit. The independent final verifier returned
+`pipeline_integrity_validated=true`, `full_collection_validated=true`,
+`physical_target_validated=true`, and `smolvla_phase2c_authorized=true`. This authorization means
+only that a separately invoked Phase 2C may consume the frozen data; no SmolVLA dependency, model,
+training run, or learned pushing result exists yet. Rejected probes and invalid infrastructure
+attempts remain diagnostics, not quality evidence.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
@@ -219,6 +228,13 @@ python scripts/analyze_classifier_rejection.py --help
 python scripts/validate_v1_release.py
 python scripts/evaluate_policy_v2.py --help
 python environment/verify_v2_phase1.py --help
+
+# LangMani 2.0 Phase 2B deterministic pushing-data commands
+python environment/collect_push_demos.py --help
+python environment/replay_push_demos.py --help
+python scripts/export_push_lerobot_dataset.py --help
+python scripts/audit_push_pick_compatibility.py --help
+python environment/verify_v2_phase2b.py --help
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,
@@ -400,6 +416,19 @@ The exact environment creation commands are maintained in `README.md`.
   paths. Historical absolute paths may be retained only as provenance and must not become runtime
   dependencies. The unified evaluator accepts canonical task instances directly and must not import
   or invoke the language router.
+- LangMani 2.0 Phase 2B keeps the ManiSkill-native push archive as its raw authority. An expert
+  success enters the derived dataset only after fresh-environment action replay reproduces task,
+  terminal, transition-label, frame-count, and final-pose contracts. Every failed attempt remains
+  in the manifest and failure corpus; collection and replay identities are never inferred from file
+  enumeration order.
+- Phase 2B full collection and bounded top-up have separate immutable producer/runtime manifests.
+  A later stage may combine only explicitly named compatible stages and must not rename, rewrite, or
+  silently reuse an incompatible runtime. The historical pick-and-place and new pushing LeRobot
+  roots remain immutable and are joined only through the content-bound multi-root index.
+- Phase 2B dataset acceptance authorizes only a separately invoked Phase 2C consumer. It does not
+  authorize automatic SmolVLA installation, training, evaluation, or a learned-policy quality
+  claim. Generated raw archives, failure trajectories, LeRobot data, videos, and verifier reports
+  remain under `outputs/`.
 
 ## Definition of done
 
@@ -480,3 +509,10 @@ catalog, policy-neutral evaluator tests, Ruff, CPU-safe regression, and a packag
 acceptance is separate and requires the recovered checkpoint to produce real actions in the M1
 environment for at least one task over three deterministic seeds, with an atomically persisted
 runtime manifest, episode JSONL, summary, and completion marker.
+LangMani 2.0 Phase 2B completion additionally requires a real corrected pilot, all bounded full and
+top-up attempts, immutable accepted and rejected records, fresh-environment action replay of every
+generation-accepted episode, exact T/T+1 and transition-label checks, a real LeRobot 0.6 export and
+readback, six stable leakage-free splits, preserved failed-attempt diagnostics, and a content-bound
+compatibility audit against the unchanged M3B pick-and-place dataset. The final independent
+verifier must recompute every admission gate and distinguish
+`smolvla_phase2c_authorized=true` from `smolvla_started=false`.

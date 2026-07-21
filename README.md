@@ -35,10 +35,32 @@ The command now returns zero with `phase2_authorized=true`. Phase 2 subsequently
 physically validated the new `push_to_region` environment and expert execution path. Phase 2A's
 accepted side-push stabilization reached 8/8 standard and 6/8 hard on the all-task smoke, then
 46/50 (92%) and 23/30 (76.7%) on the unchanged fixed gate. Standard forward tasks remained 24/24;
-workspace-exit and action-bound events were both zero. The expert gate now passes, so deterministic
-pushing demonstration collection is the next separately authorized stage. No pushing dataset,
-SmolVLA adapter, trained SmolVLA model, or learned Phase 2 policy metric exists yet. See
-[`docs/langmani_v2/phase_2_results.md`](docs/langmani_v2/phase_2_results.md).
+workspace-exit and action-bound events were both zero. Phase 2B then preserved 516 real collection
+attempts, admitted 397 demonstrations after 397/397 independent action replays, retained 119
+rejected attempts, and exported 397 LeRobot 0.6 episodes with 53,297 aligned frames. All six stable
+splits passed leakage checks; the frozen 360-episode pick-and-place dataset passed a real
+content-bound multi-root compatibility audit without being rewritten. The independent Phase 2B
+verifier passed, so Phase 2C is authorized as a separately invoked data consumer. No SmolVLA
+adapter, trained model, or learned Phase 2 policy metric exists yet. See the
+[`Phase 2A results`](docs/langmani_v2/phase_2_results.md),
+[`Phase 2B results`](docs/langmani_v2/phase_2b_results.md), and
+[`Phase 2B dataset audit`](docs/langmani_v2/phase_2b_dataset_audit.md).
+
+The completed Phase 2B archive can be independently re-audited without starting training:
+
+```bash
+python environment/verify_v2_phase2b.py --full --stages full top_up \
+  --source-root outputs/datasets/langmani_v2/phase2b-v1 \
+  --export-root outputs/datasets/langmani_v2/phase2b-push-lerobot-v1 \
+  --compatibility-report outputs/diagnostics/v2/phase2b-v1-pick-push-compatibility.json \
+  --source-validation docs/langmani_v2/phase_2b_source_validation.json \
+  --final-metadata docs/langmani_v2/phase_2b_result_manifest.json \
+  --output outputs/diagnostics/v2/phase2b-v1-verification-rerun.json
+```
+
+This verifier consumes the immutable generated roots under `outputs/`; it does not reconstruct the
+dataset, retrain an expert, or begin Phase 2C. The output path must be new so the accepted final
+verification report is not overwritten.
 
 LangMani turns natural-language pick-and-place commands into typed `TaskSpec` decisions, selects
 one of six frozen Panda ACT controllers, bounds every action explicitly, and attributes failures to
@@ -1685,6 +1707,10 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 | `python environment/verify_m5a.py` | No | No | No; deterministic corpus/router/dispatch CPU fixtures only |
 | `python environment/verify_m5a.py --verify-stage <stage>` | Stage-dependent | Stage-dependent | Independently validates exactly one immutable M5A stage report; final stays sealed |
 | `python environment/verify_m5a_full_control.py --target-evidence ...` | Yes | No new training; reuses one local LLM and six frozen controls | Yes; independently audits 72 completed paired rollouts without opening final |
+| `environment/collect_push_demos.py`, `environment/replay_push_demos.py` | Yes | Planner/runtime dependent | Yes for collection and real replay |
+| `scripts/export_push_lerobot_dataset.py` | Yes | Rendering-capable runtime | Yes; restores native states and records RGB |
+| `scripts/audit_push_pick_compatibility.py` | Yes for real-source audit | No new training | Reads existing validated datasets only |
+| `environment/verify_v2_phase2b.py --full` | Yes | No new training | Independently audits completed physical data evidence |
 | `scripts/export_lerobot_dataset.py` | Real export: yes | According to source/render backend | Yes |
 | `scripts/validate_lerobot_dataset.py` | Full source alignment: yes | According to source/render backend | Yes |
 | `scripts/inspect_lerobot_episode.py` | No | No | No |
@@ -1711,6 +1737,7 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 - `src/langmani/datasets/lerobot_*.py`: M3B source gate, contracts, export, and validation.
 - `src/langmani/policies/`: M4 ACT, M4.2 runtime/TaskToken, M4.3a semantic audit, and M4.3b FactorFiLM boundaries.
 - `src/langmani/language/`: M5A corpus/split/schedule locks, routers, strict schemas, metadata-only controller registry, dispatch, evaluation, artifact validation, and failure attribution.
+- `src/langmani/v2/`: v1-release validation, generic policy/evaluation contracts, pushing collection/replay/archive/export/audit, and immutable multi-root dataset indexing.
 - `scripts/`: M3B data commands; M4/M4.2/M4.3 training and evaluation; and M5A corpus, classifier, router-evaluation, and control commands.
 - `environment/`: reproducible declaration plus M0 through M5A diagnostics, including independent M4.3b evidence and M5A target-development verification.
 - `tests/unit/`: environment/expert/data, ACT contracts, and M5A corpus/router/registry/dispatch/evidence checks.

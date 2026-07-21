@@ -18,7 +18,7 @@ remain explicitly invalid infrastructure attempts.
 The next phase may compare another real policy architecture only after it implements this same
 adapter and evidence contract. It may not modify or relabel the frozen v1 release.
 
-## LangMani 2.0 Phase 2 - multi-skill and SmolVLA (expert gate passed)
+## LangMani 2.0 Phase 2 - multi-skill data foundation (Phase 2B complete)
 
 The required real Phase 1 smoke and its independent verifier pass. Phase 2 implemented the
 parameterized `push_to_region` environment, its standard/hard variations, conservative evaluation,
@@ -28,11 +28,17 @@ validation. The unchanged smoke reached 8/8 standard and 6/8 hard; the fixed tar
 reached 46/50 standard successes (92%) and 23/30 hard successes (76.7%). Standard forward remained
 24/24, with zero workspace-exit and zero action-bound events. The expert quality gate is true.
 
-The next separately authorized stage is deterministic pushing demonstration collection and archive
-validation. No pushing dataset, unified dataset, SmolVLA dependency, adapter, training run, or
-learned-policy Phase 2 result exists yet. Data collection must preserve the fixed task/seed and
-success contracts; SmolVLA work remains downstream of an accepted dataset rather than starting
-automatically from this expert result.
+Phase 2B completed the separately authorized deterministic pushing-data stage. The real collector
+preserved 516 attempts, admitted 397 demonstrations after 397/397 independent action replays, and
+retained 119 rejected attempts. The LeRobot 0.6 export contains 397 episodes and 53,297 aligned
+frames across six stable, leakage-free splits. Its compatibility audit left the historical
+360-episode pick-and-place source immutable and produced only a content-bound multi-root index.
+The independent final verifier passed every collection, replay, schema, split, readback,
+provenance, and compatibility gate, so `smolvla_phase2c_authorized=true`.
+
+The exact next stage is a separately invoked Phase 2C SmolVLA implementation/training milestone.
+That authorization is dataset readiness only: no SmolVLA dependency, adapter, model, training run,
+evaluation, or learned-policy Phase 2 result exists yet, and Phase 2B starts none automatically.
 
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically

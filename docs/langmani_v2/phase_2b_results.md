@@ -28,7 +28,7 @@ implemented or trained in this phase.
 | LeRobot export | 397 episodes / 53,297 frames / 141,422,866 bytes |
 | Split leakage | passed; all eight overlap counters are zero |
 | Pick/push compatibility | passed; immutable multi-root index ready |
-| Phase 2C authorization | data gates satisfied; final independent verifier pending |
+| Phase 2C authorization | granted by the passing independent Phase 2B verifier |
 
 ## Why the dataset is trustworthy
 
@@ -57,6 +57,6 @@ The detailed audit is [`phase_2b_dataset_audit.md`](phase_2b_dataset_audit.md). 
 release identities are in `phase_2b_result_manifest.json` and exact source/test/build evidence is in
 `phase_2b_source_validation.json`.
 
-The exact next stage is a separately invoked Phase 2C SmolVLA implementation/training milestone
-after the final independent Phase 2B verifier passes. Dataset readiness does not imply
-learned-policy success, and Phase 2B makes no SmolVLA training or control-quality claim.
+The exact next stage is a separately invoked Phase 2C SmolVLA implementation/training milestone.
+Dataset readiness does not imply learned-policy success, and Phase 2B makes no SmolVLA training or
+control-quality claim.

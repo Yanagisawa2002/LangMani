@@ -5,9 +5,10 @@
 Phase 2B produced a real ManiSkill-native `push_to_region` archive with every attempted trajectory
 retained, independently action-replayed every generation-accepted trajectory, and exported only
 replay-accepted demonstrations through the real LeRobot 0.6 API. The final Phase 2C authorization
-decision is **Phase 2C authorized, pending only the final tracked-manifest verifier run**. This
-decision authorizes only the next separately invoked data
-consumer; no SmolVLA model was implemented, loaded, or trained in Phase 2B.
+decision is **Phase 2C authorized**. The independent final verifier passed every tracked-manifest,
+collection, replay, export, split, readback, runtime-lineage, and cross-dataset compatibility gate.
+This decision authorizes only the next separately invoked data consumer; no SmolVLA model was
+implemented, loaded, or trained in Phase 2B.
 
 ## Frozen producer and runtime
 
@@ -209,8 +210,9 @@ rewritten.
 - Server-side Phase 2B/push contract suite: 72 passed.
 - Isolated sdist and wheel build: passed.
 - Corrected physical pilot, LeRobot readback, compatibility audit, full replay/export, and final
-  independent verifier: all producer-side gates passed; the final verifier is the one remaining
-  tracked-manifest check before this report is frozen.
+  independent verifier: passed. The final report set `pipeline_integrity_validated=true`,
+  `full_collection_validated=true`, `physical_target_validated=true`, and
+  `smolvla_phase2c_authorized=true` with every admission gate true.
 
 Critical content identities are recorded in `phase_2b_result_manifest.json`; exact commands and
 their validation status are recorded in `phase_2b_source_validation.json`. Generated trajectories,
@@ -226,6 +228,6 @@ videos, datasets, logs, and full raw reports remain under `outputs/` and are not
   not established by dataset acceptance.
 - Phase 2B does not implement, load, train, or evaluate SmolVLA.
 
-The exact next stage is a separately invoked Phase 2C SmolVLA implementation/training milestone
-after the final independent Phase 2B verifier passes. It must consume only the content-bound
-accepted dataset and requires a new explicit command; Phase 2B never starts training automatically.
+The exact next stage is a separately invoked Phase 2C SmolVLA implementation/training milestone.
+It must consume only the content-bound accepted dataset and requires a new explicit command;
+Phase 2B never starts training automatically.
