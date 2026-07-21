@@ -15,7 +15,11 @@ import numpy as np
 
 from langmani.environments.push_specs import PushTaskSpec
 from langmani.environments.push_to_region import ENV_ID
-from langmani.v2.push_archive import load_native_actions, state_mapping_sha256
+from langmani.v2.push_archive import (
+    load_native_actions,
+    load_native_transition_labels,
+    state_mapping_sha256,
+)
 from langmani.v2.push_collection import load_attempt_records
 from langmani.v2.push_dataset import (
     REPLAY_SCHEMA_VERSION,
@@ -180,6 +184,7 @@ def _replay_one(
         raise PushDatasetContractError("accepted attempt lacks a native episode ID")
     h5_path = Path(str(record["raw_h5_path"]))
     actions = load_native_actions(h5_path, native_episode_id=native_id)
+    recorded_labels = load_native_transition_labels(h5_path, native_episode_id=native_id)
     environment: Any = gym.make(
         ENV_ID,
         num_envs=1,
@@ -191,19 +196,25 @@ def _replay_one(
     )
     final_info: Mapping[str, object] = {}
     executed = 0
-    early_terminal = False
+    replayed_labels: dict[str, list[bool]] = {
+        "terminated": [],
+        "truncated": [],
+        "success": [],
+        "fail": [],
+    }
     try:
         environment.reset(seed=seed, options={"task_spec": task.to_dict()})
         base = environment.unwrapped
         initial_hash = state_mapping_sha256(base.get_state_dict())
-        for action_index, action in enumerate(actions):
+        for action in actions:
             _observation, _reward, terminated, truncated, info = environment.step(action)
             final_info = info
             executed += 1
-            terminal = _single_bool(terminated) or _single_bool(truncated)
-            if terminal and action_index + 1 < len(actions):
-                early_terminal = True
-                break
+            replayed_labels["terminated"].append(_single_bool(terminated))
+            replayed_labels["truncated"].append(_single_bool(truncated))
+            json_info = _json_tensor_mapping(info)
+            replayed_labels["success"].append(bool(json_info.get("success", False)))
+            replayed_labels["fail"].append(bool(json_info.get("fail", False)))
         evaluation = _json_tensor_mapping(base.get_push_expert_evaluation())
         final_pose = _target_pose(base, task)
     finally:
@@ -231,8 +242,17 @@ def _replay_one(
     failure_reasons: list[str] = []
     if initial_hash != record.get("initial_state_sha256"):
         failure_reasons.append("initial_state_mismatch")
-    if early_terminal or executed != len(actions):
+    if executed != len(actions):
         failure_reasons.append("trajectory_length_mismatch")
+    label_mismatches = [
+        key
+        for key in recorded_labels
+        if not np.array_equal(
+            recorded_labels[key], np.asarray(replayed_labels[key], dtype=np.bool_)
+        )
+    ]
+    if label_mismatches:
+        failure_reasons.append("transition_label_mismatch")
     if categorical_mismatches:
         failure_reasons.append("categorical_outcome_mismatch")
     if evaluation.get("success") is not True:
@@ -253,7 +273,9 @@ def _replay_one(
         "expert_invoked": False,
         "action_count": len(actions),
         "executed_action_count": executed,
-        "frame_count_match": not early_terminal and executed == len(actions),
+        "frame_count_match": executed == len(actions),
+        "transition_label_match": not label_mismatches,
+        "transition_label_mismatches": label_mismatches,
         "initial_state_sha256": initial_hash,
         "initial_state_match": initial_hash == record.get("initial_state_sha256"),
         "categorical_outcome_match": not categorical_mismatches,

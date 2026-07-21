@@ -179,6 +179,25 @@ def load_native_actions(h5_path: str | Path, *, native_episode_id: int) -> np.nd
     return np.array(actions, dtype=np.float32, copy=True, order="C")
 
 
+def load_native_transition_labels(
+    h5_path: str | Path, *, native_episode_id: int
+) -> dict[str, np.ndarray]:
+    """Load the exact T transition labels used by independent action replay."""
+
+    result: dict[str, np.ndarray] = {}
+    with h5py.File(Path(h5_path), "r") as archive:
+        group = archive[f"traj_{native_episode_id}"]
+        for key in ("terminated", "truncated", "success", "fail"):
+            value = np.asarray(group[key])
+            if value.ndim != 1 or value.dtype != np.dtype(np.bool_):
+                raise PushDatasetContractError(f"stored {key} labels must be a boolean vector")
+            result[key] = np.array(value, dtype=np.bool_, copy=True, order="C")
+    lengths = {len(value) for value in result.values()}
+    if len(lengths) != 1:
+        raise PushDatasetContractError("stored transition labels disagree in length")
+    return result
+
+
 def restore_native_state(
     environment: object,
     h5_path: str | Path,
@@ -246,6 +265,11 @@ def state_mapping_sha256(value: Mapping[str, object]) -> str:
             if callable(numpy):
                 candidate = numpy()
             array = np.asarray(candidate)
+            # A public one-environment ManiSkill state has a leading batch
+            # dimension. RecordEpisode removes that dimension when it writes
+            # one trajectory's state slice. Hash the same semantic value.
+            if array.ndim >= 2 and array.shape[0] == 1:
+                array = array[0]
             digest.update(path.encode("utf-8"))
             digest.update(array.dtype.str.encode("ascii"))
             digest.update(json.dumps(array.shape).encode("ascii"))
@@ -330,6 +354,7 @@ __all__ = [
     "PUSH_RAW_ARCHIVE_SCHEMA",
     "PushNativeEpisodeValidation",
     "load_native_actions",
+    "load_native_transition_labels",
     "load_native_state",
     "native_state_sha256",
     "restore_native_state",

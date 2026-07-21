@@ -241,33 +241,36 @@ def _collect_shard(
 
     shard = attempts_root / f"shard-{shard_index:04d}"
     shard.mkdir(parents=True, exist_ok=False)
-    stem = "attempts"
-    environment: Any = gym.make(
-        ENV_ID,
-        num_envs=1,
-        obs_mode="state_dict",
-        reward_mode="none",
-        control_mode="pd_joint_pos",
-        render_mode=None,
-        sim_backend=sim_backend,
-    )
-    recorder = RecordEpisode(
-        environment,
-        output_dir=str(shard),
-        trajectory_name=stem,
-        save_trajectory=True,
-        save_video=False,
-        save_on_reset=False,
-        clean_on_close=True,
-        record_reward=False,
-        record_env_state=True,
-        source_type="motionplanning",
-        source_desc="LangMani 2.0 Phase 2B accepted Candidate E push demonstrations",
-    )
-    pending: list[tuple[PushScheduledAttempt, PushExpertResult, int | None, dict[str, object]]] = []
-    try:
-        for scheduled in schedule:
-            started = time.perf_counter()
+    records: list[dict[str, object]] = []
+    archives: list[dict[str, object]] = []
+    for scheduled in schedule:
+        started = time.perf_counter()
+        stem = f"attempt-{scheduled.attempt_index:04d}"
+        h5_path = shard / f"{stem}.h5"
+        json_path = shard / f"{stem}.json"
+        environment: Any = gym.make(
+            ENV_ID,
+            num_envs=1,
+            obs_mode="state_dict",
+            reward_mode="none",
+            control_mode="pd_joint_pos",
+            render_mode=None,
+            sim_backend=sim_backend,
+        )
+        recorder = RecordEpisode(
+            environment,
+            output_dir=str(shard),
+            trajectory_name=stem,
+            save_trajectory=True,
+            save_video=False,
+            save_on_reset=False,
+            clean_on_close=True,
+            record_reward=False,
+            record_env_state=True,
+            source_type="motionplanning",
+            source_desc="LangMani 2.0 Phase 2B accepted Candidate E push demonstrations",
+        )
+        try:
             recorder.reset(
                 seed=scheduled.seed,
                 options={"task_spec": scheduled.task_spec.to_dict()},
@@ -278,12 +281,8 @@ def _collect_shard(
             expert = PushToRegionExpert(recorder, config=PushExpertConfig())
             try:
                 result = expert.run()
-            except Exception as error:  # noqa: BLE001 - outer attempt boundary preserves evidence
+            except Exception as error:  # noqa: BLE001 - attempt boundary preserves evidence
                 result = expert.unexpected_exception_result(error)
-            before = _native_episode_count(shard / f"{stem}.json")
-            recorder.flush_trajectory(save=True)
-            after = _native_episode_count(shard / f"{stem}.json")
-            native_id = after - 1 if after == before + 1 else None
             final_pose = _target_pose(base, scheduled.task_spec)
             diagnostics = {
                 "episode_spec": episode.to_dict(),
@@ -294,38 +293,40 @@ def _collect_shard(
                 "approach_candidates": list(expert.approach_candidate_diagnostics),
                 "wall_clock_seconds": time.perf_counter() - started,
             }
-            pending.append((scheduled, result, native_id, diagnostics))
-    finally:
-        recorder.close()
-
-    h5_path = shard / f"{stem}.h5"
-    json_path = shard / f"{stem}.json"
-    records: list[dict[str, object]] = []
-    for scheduled, result, native_id, diagnostics in pending:
+            recorder.flush_trajectory(save=True)
+        finally:
+            recorder.close()
+        native_id = 0 if _native_episode_count(json_path) == 1 else None
         validation = (
-            validate_push_native_episode(h5_path, json_path, native_episode_id=native_id)
+            validate_push_native_episode(h5_path, json_path, native_episode_id=0)
             if native_id is not None
             else None
         )
-        records.append(
-            _attempt_record(
-                scheduled,
-                result,
-                diagnostics,
-                validation=validation.to_dict() if validation is not None else None,
-                run_id=run_id,
-                h5_path=h5_path,
-                json_path=json_path,
-            )
+        record = _attempt_record(
+            scheduled,
+            result,
+            diagnostics,
+            validation=validation.to_dict() if validation is not None else None,
+            run_id=run_id,
+            h5_path=h5_path,
+            json_path=json_path,
+        )
+        records.append(record)
+        archives.append(
+            {
+                "episode_id": scheduled.episode_id,
+                "h5_path": h5_path.as_posix(),
+                "json_path": json_path.as_posix(),
+                "h5_sha256": sha256_file(h5_path),
+                "json_sha256": sha256_file(json_path),
+            }
         )
     shard_manifest = {
         "schema_version": COLLECTION_RUN_SCHEMA,
         "collection_run_id": run_id,
         "shard_index": shard_index,
-        "h5_path": h5_path.as_posix(),
-        "json_path": json_path.as_posix(),
-        "h5_sha256": sha256_file(h5_path),
-        "json_sha256": sha256_file(json_path),
+        "fresh_environment_per_attempt": True,
+        "archives": archives,
         "attempt_records": records,
         "completed": True,
     }
@@ -358,7 +359,7 @@ def _attempt_record(
         "schema_version": ATTEMPT_RECORD_SCHEMA,
         "collection_run_id": run_id,
         **scheduled.to_dict(),
-        "skill_family": "pick_and_place/push_to_region",
+        "skill_family": "push_to_region",
         "object_geometry": (
             "cube" if scheduled.task_spec.target_object_id == "blue_cube" else "horizontal_cylinder"
         ),

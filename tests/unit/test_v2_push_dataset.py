@@ -13,6 +13,8 @@ import pytest
 from langmani.datasets.lerobot_types import FeatureContract
 from langmani.v2.push_archive import (
     load_native_actions,
+    load_native_transition_labels,
+    native_state_sha256,
     state_mapping_sha256,
     validate_push_native_episode,
 )
@@ -39,7 +41,7 @@ def _accepted_record(index: int) -> dict[str, object]:
         "accepted": True,
         "trajectory_sha256": f"sha256:{index + 1:064x}",
         "initial_state_sha256": f"sha256:{index + 1000:064x}",
-        "raw_h5_path": f"attempts/shard-{index // 16:04d}/attempts.h5",
+        "raw_h5_path": (f"attempts/shard-{index // 16:04d}/attempt-{index:04d}.h5"),
     }
 
 
@@ -67,6 +69,13 @@ def _write_native_pair(tmp_path: Path, *, terminal: bool = True) -> tuple[Path, 
 def test_collection_config_and_schedule_are_frozen_and_unique() -> None:
     config = PushCollectionConfig.load(CONFIG)
     assert config.payload["accepted_expert_commit"] == ("59ca88e9f0514187252a6286ab1b8e06c4318fb4")
+    assert config.payload["collection_revision"] == "fresh-environment-per-attempt-v1"
+    assert config.payload["supersedes_invalid_collection_fingerprint"] == (
+        "sha256:cacc0abc38c66c983bcbe7ca0b8e278870220a454bbbdc6cd06a5563060a16f1"
+    )
+    dataset = config.payload["dataset"]
+    assert isinstance(dataset, dict)
+    assert dataset["output_directory"] == "outputs/datasets/langmani_v2/phase2b-v1"
     pilot = build_collection_schedule(config, "pilot")
     full = build_collection_schedule(config, "full")
     assert len(pilot) == 32
@@ -122,6 +131,9 @@ def test_native_archive_enforces_t_plus_one_and_float32_action_contract(
     assert result.action_contract_valid
     assert result.native_final_success
     assert load_native_actions(h5_path, native_episode_id=0).shape == (3, 8)
+    labels = load_native_transition_labels(h5_path, native_episode_id=0)
+    assert set(labels) == {"terminated", "truncated", "success", "fail"}
+    assert all(value.shape == (3,) for value in labels.values())
 
 
 def test_native_archive_reports_nonterminal_flush_as_time_contract_failure(
@@ -149,6 +161,17 @@ def test_public_state_mapping_hash_is_deterministic() -> None:
     }
     right = {"articulations": left["articulations"], "actors": left["actors"]}
     assert state_mapping_sha256(left) == state_mapping_sha256(right)
+
+
+def test_public_batched_state_hash_matches_native_unbatched_slice(tmp_path: Path) -> None:
+    h5_path, _json_path = _write_native_pair(tmp_path)
+    state = {
+        "actors": {"blue_cube": np.zeros((1, 13), dtype=np.float32)},
+        "articulations": {"panda": np.zeros((1, 31), dtype=np.float32)},
+    }
+    assert state_mapping_sha256(state) == native_state_sha256(
+        h5_path, native_episode_id=0, state_index=0
+    )
 
 
 def test_splits_are_episode_level_and_leakage_free() -> None:
