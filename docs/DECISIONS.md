@@ -2440,3 +2440,23 @@ wrong-object contact/displacement, projection, collision, and no-progress stall 
 events so later expert and learned-policy reports do not infer every failure from one final bit.
 The pure batched Torch contract is accepted before simulator integration; it is not physical task
 evidence.
+
+## D-087 - Use geometry-bounded planar contact for the pushing expert
+
+The Phase 2 privileged expert uses the installed ManiSkill 3.0.1 Panda/mplib integration through
+the existing project-owned planner adapter. It closes the gripper before contact, approaches from
+behind the selected object, keeps the TCP planar, performs one primary push and at most two bounded
+state-dependent corrections, and aborts on lift, grasp, topple, workspace exit, invalid action, or
+wrong-object displacement. The expert receives semantic actor handles and the exact
+full-containment object-center radius only through its explicit expert context; no new privileged
+field is exposed to visual policy observations.
+
+The first real 16-task smoke was valid infrastructure evidence but rejected expert-quality
+evidence: direct motion to an 8 cm precontact point toppled every cylinder and displaced two hard
+distractors, while two long center-seeking pushes timed out. Bounded single-episode probes showed
+that a 16 cm precontact height avoids the approach collision and a 1.5 cm TCP push height prevents
+cylinder toppling. The expert therefore uses those fixed geometry-level values and stops at a
+fixed 1.5 cm margin inside the exact full-containment center boundary rather than pushing every
+object to the visual marker center. This changes neither task success geometry nor the 250-step
+episode limit. The same immutable all-task smoke and then the fixed 50-standard/30-hard schedule
+must pass before Phase 2 data collection may start.

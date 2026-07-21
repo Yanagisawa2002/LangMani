@@ -67,6 +67,7 @@ class _FakeEnvironment:
             target_region_radius=0.11,
             target_object_planar_radius=0.035,
             target_object_resting_height=0.025,
+            full_containment_center_radius=0.07,
             table_top_z=0.0,
         )
 
@@ -164,6 +165,22 @@ def test_push_expert_classifies_wrong_object_displacement() -> None:
 def test_push_expert_config_rejects_unbounded_correction_search() -> None:
     with pytest.raises(ValueError, match="exactly two"):
         PushExpertConfig(maximum_corrective_pushes=3)
+
+
+def test_push_endpoint_stops_inside_full_containment_with_geometry_margin() -> None:
+    environment = _FakeEnvironment()
+    expert = PushToRegionExpert(
+        environment,
+        config=PushExpertConfig(region_goal_margin=0.015),
+        planner_factory=lambda _env: _FakePlanner(environment),
+    )
+    expert._context = environment.context
+
+    pose = expert._push_endpoint_pose(np.array([-0.2, 0.0, 0.025]))
+
+    expected_tcp_x = 0.2 - ((0.07 - 0.015) + 0.035)
+    assert pose[:3] == pytest.approx([expected_tcp_x, 0.0, 0.015])
+    assert expert.config.to_dict()["region_goal_margin"] == pytest.approx(0.015)
 
 
 def test_push_expert_result_is_json_serializable() -> None:

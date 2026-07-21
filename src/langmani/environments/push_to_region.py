@@ -724,6 +724,11 @@ class PushToRegionEnv(BaseEnv):
             target_region_radius=float(self._target_region_radii[0].detach().cpu()),
             target_object_planar_radius=OBJECT_PLANAR_RADII[object_index],
             target_object_resting_height=OBJECT_RESTING_HEIGHTS[object_index],
+            full_containment_center_radius=(
+                float(self._target_region_radii[0].detach().cpu())
+                - OBJECT_PLANAR_RADII[object_index]
+                - CONTAINMENT_CLEARANCE
+            ),
             table_top_z=TABLE_TOP_Z,
         )
 

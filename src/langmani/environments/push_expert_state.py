@@ -37,6 +37,7 @@ class PushExpertTaskContext:
     target_region_radius: float
     target_object_planar_radius: float
     target_object_resting_height: float
+    full_containment_center_radius: float
     table_top_z: float
 
 

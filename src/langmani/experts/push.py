@@ -286,10 +286,7 @@ class PushToRegionExpert:
 
     def _primary_push(self) -> PushPhaseResult:
         object_position = self._target_position()
-        direction = self._push_direction(object_position)
-        pose = self._tcp_pose()
-        pose[:2] = self._target_center()[:2] - direction * self.config.contact_offset
-        pose[2] = self.config.push_height
+        pose = self._push_endpoint_pose(object_position)
         return self._planned_motion(PushExpertPhase.PRIMARY_PUSH, (pose,))
 
     def _corrective_push(self, phase: PushExpertPhase) -> PushPhaseResult:
@@ -308,9 +305,29 @@ class PushToRegionExpert:
         contact = behind_high.copy()
         contact[:2] = object_position[:2] - direction * self.config.contact_offset
         contact[2] = self.config.push_height
-        push = contact.copy()
-        push[:2] = self._target_center()[:2] - direction * self.config.contact_offset
+        push = self._push_endpoint_pose(object_position)
         return self._planned_motion(phase, (lift, behind_high, contact, push))
+
+    def _push_endpoint_pose(self, object_position: np.ndarray) -> np.ndarray:
+        """Return a conservative TCP endpoint just inside full containment.
+
+        The target object follows ahead of the TCP by its planar support radius.
+        Stopping at a margin inside the exact full-containment center radius
+        shortens the push while retaining a deterministic geometric buffer.
+        """
+
+        context = self._require_context()
+        direction = self._push_direction(object_position)
+        object_center_distance = max(
+            0.0,
+            context.full_containment_center_radius - self.config.region_goal_margin,
+        )
+        pose = self._tcp_pose()
+        pose[:2] = self._target_center()[:2] - direction * (
+            object_center_distance + context.target_object_planar_radius
+        )
+        pose[2] = self.config.push_height
+        return pose
 
     def _settle(self) -> PushPhaseResult:
         started = time.perf_counter()

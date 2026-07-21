@@ -2,16 +2,21 @@
 
 ## Status
 
-Phase 2 is authorized to begin but is not yet implemented. The required Phase 1 native smoke and
-independent entry gate now pass. This status is not a claim that the multi-skill benchmark or
-SmolVLA baseline already exists.
+Phase 2 is authorized and its pushing task plus privileged expert are implemented. The required
+Phase 1 native smoke and independent entry gate pass. The real pushing environment has also been
+created, stepped, rendered, reset deterministically, and exercised with vectorized RGB
+observations on the RTX 5090 target. Expert quality acceptance is still gated by the fixed
+all-task smoke followed by 50 standard and 30 hard episodes. This status is not a claim that the
+multi-skill dataset, SmolVLA baseline, or Phase 2 quality result already exists.
 
 The first implementation checkpoint defines an immutable `PushTaskSpec` with two contact
 geometries (`blue_cube`, `orange_cylinder`), four parameterized target regions (`left`, `right`,
 `forward_left`, `forward_right`), and explicit `standard`/`hard` difficulty. Its batched evaluation
 logic keeps stable-success count, full-region containment, workspace exit, lift, topple, grasp,
 wrong-object displacement/contact, overshoot, action validity, projection, collision, and stall as
-separate numeric/tensor events. Simulator integration and physical validation remain pending.
+separate numeric/tensor events. The expert uses explicit semantic handles, high precontact transit,
+low planar contact, a full-containment-derived endpoint, and at most two corrections. No expert
+state is added to visual policy observations.
 
 ## Minimum recovery implemented
 
