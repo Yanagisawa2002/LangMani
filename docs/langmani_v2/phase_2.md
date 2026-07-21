@@ -2,13 +2,9 @@
 
 ## Status
 
-Phase 2 is blocked before implementation. This document records the discrepancy required by the
-Phase 2 instructions; it is not a claim that the multi-skill benchmark or SmolVLA baseline exists.
-
-The requested Phase 2 entry contract requires a real Phase 1 smoke rollout. No accepted Phase 1
-runtime evidence currently exists. The Docker attempt exposed CUDA but not NVIDIA Vulkan, and the
-native Windows attempt failed in the first rendered camera observation. Both stopped before policy
-loading, model inference, or `env.step`. The available Linux artifact host was booted without a GPU.
+Phase 2 is authorized to begin but is not yet implemented. The required Phase 1 native smoke and
+independent entry gate now pass. This status is not a claim that the multi-skill benchmark or
+SmolVLA baseline already exists.
 
 ## Minimum recovery implemented
 
@@ -31,22 +27,22 @@ Phase 1 rollout. Any missing, malformed, incompatible, or changed input leaves
 
 ## Current observed result
 
-On 2026-07-21 the v1 release validation passed, but the default three-seed evidence root was absent.
-The resulting flags were:
+On 2026-07-21 the accepted native run produced 3/3 successful episodes, 40 real policy queries, and
+392 real environment steps. The independently recomputed flags were:
 
 ```text
 v1_release_validated=true
-phase1_runtime_evidence_validated=false
-three_seed_schedule_validated=false
-real_policy_inference_validated=false
-real_environment_steps_validated=false
-phase2_authorized=false
-passed=false
+phase1_runtime_evidence_validated=true
+three_seed_schedule_validated=true
+real_policy_inference_validated=true
+real_environment_steps_validated=true
+phase2_authorized=true
+passed=true
 ```
 
-Therefore no push task, pushing expert, pushing dataset, SmolVLA integration, model training, or
-closed-loop Phase 2 evaluation was created. This follows the instruction to complete only the
-minimum recovery when a major Phase 1 acceptance criterion is missing.
+No push task, pushing expert, pushing dataset, SmolVLA integration, model training, or closed-loop
+Phase 2 evaluation existed at the moment of authorization. Phase 2 must now proceed in its declared
+order beginning with the standard `push_to_region` task.
 
 ## Exact unblock sequence
 

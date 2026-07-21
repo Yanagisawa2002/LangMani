@@ -56,15 +56,14 @@ policy/action-chunk contract, define one `pick_and_place` skill family with six 
 run a new language-independent smoke evaluation. It must not rewrite v1 evidence, retrain a model,
 introduce a new policy architecture or router, or describe structural/no-GPU checks as real policy
 rollouts. Generated v2 evaluation evidence remains under `outputs/` and is not source-controlled.
-Phase 1 implementation, release validation, and canonical artifact recovery are complete. Its new
-three-seed runtime smoke remains pending a native Linux NVIDIA/Vulkan target. The bounded local
-Docker and Windows attempts stopped during renderer initialization before policy loading or
-`env.step`; they are invalid infrastructure attempts and must not be reported as policy results.
-LangMani 2.0 Phase 2 is therefore blocked before implementation. `environment/verify_v2_phase1.py`
-is the fail-closed entry gate: Phase 2 may begin only after it independently validates the frozen
-v1 release plus at least three deterministic episodes containing real policy queries and real
-environment steps. Until `phase2_authorized=true`, do not implement `push_to_region`, collect new
-data, install or train SmolVLA, or report Phase 2 metrics.
+Phase 1 implementation, release validation, canonical artifact recovery, and native target
+acceptance are complete. After the bounded Docker/Windows and one invalid GLX launch attempt were
+kept as infrastructure diagnostics, the accepted EGL/Vulkan run at `aa599dd` completed seeds
+41001/41002/41003 with 3/3 successes, 40 real ACT queries, and 392 real environment steps. The
+independent `environment/verify_v2_phase1.py` gate returned `phase2_authorized=true`. LangMani 2.0
+Phase 2 may now begin with the standard `push_to_region` task, but must still follow its ordered
+expert, dataset, adapter, push-only, and multi-skill stop conditions. No Phase 2 model or result
+exists merely because the Phase 1 entry gate passed.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level

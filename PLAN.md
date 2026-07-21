@@ -9,28 +9,24 @@ policy/action-chunk plus unified evaluation contracts. It does not add a new arc
 dataset, reward, task, or training run. Native runtime acceptance is a separate real-policy smoke
 over one task and three deterministic seeds; no-GPU checks remain structural only.
 
-Implementation, v1 release validation, canonical checkpoint recovery, and CPU-safe verification
-are complete. Runtime acceptance is still pending: the Linux artifact host exposes no GPU, the
-bounded Docker fallback has CUDA but no NVIDIA Vulkan device, and the bounded native Windows
-fallback crashes in SAPIEN's initial camera read before policy loading or `env.step`. These attempts
-are infrastructure diagnostics and provide no Phase 1 policy-quality metric.
+Implementation, v1 release validation, canonical checkpoint recovery, CPU-safe verification, and
+native runtime acceptance are complete. The accepted RTX 5090 EGL/Vulkan run evaluated seeds
+41001/41002/41003 with 3/3 successes, 40 real policy queries, and 392 real environment steps. The
+independent entry gate returned `phase2_authorized=true`. Earlier Docker, Windows, and GLX failures
+remain explicitly invalid infrastructure attempts.
 
 The next phase may compare another real policy architecture only after it implements this same
 adapter and evidence contract. It may not modify or relabel the frozen v1 release.
 
-## LangMani 2.0 Phase 2 - multi-skill and SmolVLA (blocked before implementation)
+## LangMani 2.0 Phase 2 - multi-skill and SmolVLA (authorized; implementation starting)
 
-Phase 2 was requested with an explicit prerequisite that at least one real Phase 1 smoke rollout
-already exist. That prerequisite is not met: both bounded local attempts failed during rendering
-before policy loading, inference, or `env.step`, and the current artifact host has no GPU. The
-repository therefore stops at the minimum recovery required by the Phase 2 contract: a standalone,
-fail-closed `environment/verify_v2_phase1.py` verifier that checks the frozen v1 release, canonical
-ACT artifact hashes, the exact four-file runtime evidence contract, three unique deterministic
-seeds, real policy-query counts, and real environment-step counts.
+The required real Phase 1 smoke and its independent verifier now pass. Phase 2 is authorized to
+start in the requested order: standard push task, pushing expert, hard variations, demonstration
+archive, unified dataset, SmolVLA adapter, push-only training/evaluation, then multi-skill work.
 
-No `push_to_region` environment/expert, pushing dataset, SmolVLA dependency, training run, or Phase
-2 evaluation has been started. Resume Phase 2 only after the verifier reports
-`phase2_authorized=true`; then follow the requested order beginning with the standard push task.
+At authorization time no `push_to_region` environment/expert, pushing dataset, SmolVLA dependency,
+training run, or Phase 2 evaluation exists yet. Each later stop condition remains active; in
+particular, do not begin SmolVLA work until the pushing expert and data are genuinely validated.
 
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically

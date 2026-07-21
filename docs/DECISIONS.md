@@ -2405,3 +2405,23 @@ evaluation framework.
 No push environment, expert, demonstration archive, multi-skill dataset, SmolVLA dependency,
 training, or evaluation is authorized until this gate passes on native Linux NVIDIA/Vulkan
 hardware. Historical v1 metrics and invalid infrastructure attempts cannot satisfy it.
+
+## D-085 - Accept the native Phase 1 ACT smoke and open the Phase 2 entry gate
+
+On 2026-07-21 the native target exposed one RTX 5090 with 32 GB VRAM. The accepted runtime used
+Python 3.12.13, PyTorch 2.11.0+cu128, ManiSkill 3.0.1, SAPIEN 3.0.3, LeRobot 0.6.0, NVIDIA driver
+595.71.05, and the installed EGL NVIDIA Vulkan ICD. The strict installation target passed CUDA,
+Vulkan, explicit PhysX GPU simulation, RGB observation/rendering, and one environment step.
+
+An initial GLX launch was invalid because its nested shell lost the EGL ICD environment. The first
+correct EGL launch then found a Phase 1 adapter compatibility defect: the historical
+`model_config` is a recursively frozen mapping, but the adapter attempted attribute access. Commit
+`aa599dd` repaired only that mapping access and added a realistic regression assertion. Neither
+invalid attempt reached a policy query, and neither is policy-quality evidence.
+
+The repaired, unchanged three-seed evaluation completed seeds 41001/41002/41003 with 3/3
+successes, 40 real ACT queries, 392 real environment steps, zero timeouts, zero invalid actions,
+and zero policy/environment failures. The independent verifier rehashed the canonical checkpoint,
+recomputed the four-file evidence contract, and returned `phase2_authorized=true`. Phase 2 may now
+start with the standard pushing task; this decision does not pre-authorize its expert, data, or
+SmolVLA stages.

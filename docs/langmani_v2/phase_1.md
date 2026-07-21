@@ -90,24 +90,22 @@ infrastructure failure.
 - The full CPU-safe suite passed with 1396 tests, 15 platform-capability skips, and 16 explicitly
   deselected GPU/rendering tests. Ruff formatting/checks and isolated sdist/wheel construction
   passed.
-- The requested three-seed real-policy smoke has **not run yet**. The available artifact host was
-  booted without `/dev/nvidia*`, and `nvidia-smi` was unavailable; the second known cloned host was
-  unreachable. Two bounded local fallbacks were also tested without producing an episode. Docker
-  Desktop exposed the RTX 4090 to PyTorch CUDA but only llvmpipe CPU Vulkan, so SAPIEN rejected the
-  renderer with `ErrorIncompatibleDriver`. A native Windows Python 3.12 runtime loaded the exact
-  package versions and CUDA device; after eliminating the non-ASCII package-path issue, SAPIEN
-  still terminated with access violation `0xC0000005` in `RenderCamera.get_picture` during its
-  constructor reset. In both attempts the policy was not loaded, no inference or `env.step`
-  occurred, and zero episodes completed. These are infrastructure blocks, not policy-quality
-  results. No historical v1 success count is reused as Phase 1 output.
+- The accepted native RTX 5090 run used the EGL NVIDIA Vulkan ICD with Python 3.12.13, PyTorch
+  2.11.0+cu128, ManiSkill 3.0.1, SAPIEN 3.0.3, and LeRobot 0.6.0. The strict installation target
+  gate passed CUDA, Vulkan, PhysX GPU simulation, RGB observations, rendering, and one real step.
+- The recovered ACT policy then completed seeds 41001/41002/41003 with 3/3 successes, 40 policy
+  queries, 392 environment steps, zero timeouts, zero invalid actions, and zero policy/environment
+  failures. This is new Phase 1 evidence, not a reused historical v1 success count.
+- The adapter initially exposed a real compatibility defect: a recursively frozen historical
+  `model_config` was read as an attribute object. Commit `aa599dd` changed that access to the
+  declared mapping contract and added a regression assertion. The pre-fix run stopped before the
+  first policy query and remains an invalid infrastructure/software attempt.
 
 The two small, untracked attempt records are retained under
 `outputs/diagnostics/v2/phase1/infrastructure-attempts/`. They explicitly set
 `physical_target_validated=false` and are not substitutes for the four successful-run artifacts.
 
-Consequently, the source implementation and artifact recovery are validated, while Phase 1 runtime
-acceptance remains pending the documented three-seed command on a GPU/Vulkan-capable native host.
-The independent verifier currently reports `v1_release_validated=true` but
-`phase1_runtime_evidence_validated=false`, `real_policy_inference_validated=false`,
-`real_environment_steps_validated=false`, and `phase2_authorized=false`. This is the required
-fail-closed state, not a Phase 2 result.
+Consequently, Phase 1 source, artifact, native runtime, and independent evidence acceptance are all
+complete. The verifier reports `v1_release_validated=true`,
+`phase1_runtime_evidence_validated=true`, `real_policy_inference_validated=true`,
+`real_environment_steps_validated=true`, and `phase2_authorized=true`.

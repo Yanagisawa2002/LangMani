@@ -21,24 +21,19 @@ it through a generic policy/action-chunk adapter and language-independent evalua
 The v1 claims and evidence remain immutable. Phase 1 neither retrains a controller nor changes the
 v1 task, action, success, split, checkpoint-selection, language-routing, or safety contracts.
 
-Phase 1 source, release, artifact, and CPU-safe validation are complete. Its new three-seed policy
-smoke remains pending a native Linux NVIDIA/Vulkan target: the current artifact host has no GPU,
-Docker Desktop exposes CUDA but not NVIDIA Vulkan, and native Windows SAPIEN failed during the
-first camera observation. None of those infrastructure attempts reached policy inference or an
-environment step, so no Phase 1 success rate is claimed.
-
-Phase 2 (`push_to_region` plus a real SmolVLA baseline) has **not started**. Its explicit
-precondition requires the missing Phase 1 smoke, so the repository now provides a fail-closed
-independent gate:
+Phase 1 is complete. On the native RTX 5090 target, the recovered ACT policy completed deterministic
+seeds 41001/41002/41003 with 3/3 successes, 40 real policy queries, and 392 real ManiSkill steps.
+The independent gate revalidated the frozen v1 release, checkpoint hashes, four-file evidence, seed
+order, runtime identities, inference, and environment stepping:
 
 ```bash
 python environment/verify_v2_phase1.py \
   --evidence-root outputs/diagnostics/v2/phase1/act-red-left-three-seed
 ```
 
-The command currently validates the frozen v1 release but returns nonzero with
-`phase2_authorized=false`. It will authorize Phase 2 only after the evidence contains at least
-three deterministic episodes with real ACT inference and real ManiSkill environment steps.
+The command now returns zero with `phase2_authorized=true`. Phase 2 (`push_to_region` plus a real
+SmolVLA baseline) is authorized to start, but no pushing task, dataset, trained model, or Phase 2
+metric should be inferred from this Phase 1 acceptance result.
 
 LangMani turns natural-language pick-and-place commands into typed `TaskSpec` decisions, selects
 one of six frozen Panda ACT controllers, bounds every action explicitly, and attributes failures to
