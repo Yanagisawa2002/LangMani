@@ -13,7 +13,7 @@ from langmani.environments.push_expert_state import (
     PushExpertTaskContext,
 )
 from langmani.environments.push_specs import PUSH_OBJECT_IDS, TARGET_REGION_IDS, PushTaskSpec
-from langmani.environments.push_to_region import ENV_ID
+from langmani.environments.push_to_region import ENV_ID, WORKSPACE_BOUNDS_XY
 from langmani.experts.planner import (
     MplibPandaPlannerAdapter,
     PlannerAdapter,
@@ -22,6 +22,7 @@ from langmani.experts.planner import (
     PlannerImportError,
     PlannerVersionError,
 )
+from langmani.experts.push_diagnostics import PushDiagnosticSnapshot, planar_diagnostics
 from langmani.experts.push_types import (
     PUSH_EXPERT_PHASE_SEQUENCE,
     PushExpertConfig,
@@ -82,12 +83,23 @@ class PushToRegionExpert:
         self._execution_duration = 0.0
         self._terminal_success = False
         self._rollout_started_at: float | None = None
+        self._diagnostic_trace: list[PushDiagnosticSnapshot] = []
+        self._initial_target_position: np.ndarray | None = None
+        self._initial_push_direction: np.ndarray | None = None
+        self._chosen_precontact_point: np.ndarray | None = None
+        self._chosen_contact_point: np.ndarray | None = None
 
     @property
     def action_trace(self) -> tuple[np.ndarray, ...]:
         """Return copied actions for recorder-side quality and replay checks."""
 
         return tuple(action.copy() for action in self._actions)
+
+    @property
+    def diagnostic_trace(self) -> tuple[PushDiagnosticSnapshot, ...]:
+        """Return immutable phase-boundary privileged telemetry for offline diagnosis."""
+
+        return tuple(self._diagnostic_trace)
 
     def run(self) -> PushExpertResult:
         self._rollout_started_at = time.perf_counter()
@@ -108,6 +120,7 @@ class PushToRegionExpert:
                 if result.phase is not expected:
                     raise RuntimeError(f"push phase returned {result.phase}, expected {expected}")
                 self._phase_results.append(result)
+                self._capture_diagnostic_snapshot(result.phase.value)
                 self._capture_phase_frame(result.phase)
                 if not result.success:
                     return self._build_result(result.status)
@@ -208,6 +221,8 @@ class PushToRegionExpert:
                 execution_duration=time.perf_counter() - started,
             )
         self._context = context
+        self._initial_target_position = self._target_position()
+        self._initial_push_direction = self._push_direction(self._initial_target_position)
         terminal = self._event_abort()
         if terminal is not None:
             return self._failure(
@@ -274,6 +289,7 @@ class PushToRegionExpert:
             self.config.contact_offset + self.config.precontact_clearance
         )
         pose[2] = self.config.precontact_height
+        self._chosen_precontact_point = pose[:3].copy()
         return self._planned_motion(PushExpertPhase.MOVE_TO_PRECONTACT, (pose,))
 
     def _establish_contact(self) -> PushPhaseResult:
@@ -282,6 +298,7 @@ class PushToRegionExpert:
         pose = self._tcp_pose()
         pose[:2] = object_position[:2] - direction * self.config.contact_offset
         pose[2] = self._push_height()
+        self._chosen_contact_point = pose[:3].copy()
         return self._planned_motion(PushExpertPhase.ESTABLISH_CONTACT, (pose,))
 
     def _primary_push(self) -> PushPhaseResult:
@@ -617,6 +634,70 @@ class PushToRegionExpert:
         Image.fromarray(frame).save(
             self._diagnostic_directory / f"{len(self._phase_results):02d}_{phase.value}.png"
         )
+
+    def _capture_diagnostic_snapshot(self, phase: str) -> None:
+        context = self._context
+        initial = self._initial_target_position
+        direction = self._initial_push_direction
+        if context is None or initial is None or direction is None:
+            return
+        target_pose = self._target_position_pose()
+        target_position = target_pose[:3]
+        center = self._target_center()
+        distance, progress, lateral = planar_diagnostics(
+            initial_position=initial,
+            current_position=target_position,
+            target_center=center,
+            push_direction=direction,
+        )
+        tcp = self._tcp_pose()
+        contact_distance = float(np.linalg.norm(tcp[:2] - target_position[:2]))
+        x_min, x_max, y_min, y_max = WORKSPACE_BOUNDS_XY
+        radius = context.target_object_planar_radius
+        workspace_margin = min(
+            target_position[0] - radius - x_min,
+            x_max - target_position[0] - radius,
+            target_position[1] - radius - y_min,
+            y_max - target_position[1] - radius,
+        )
+        evaluation = self._evaluation()
+        object_poses = {
+            item.object_id: tuple(float(value) for value in _pose7(item.actor.pose.raw_pose))
+            for item in context.objects
+        }
+        self._diagnostic_trace.append(
+            PushDiagnosticSnapshot(
+                phase=phase,
+                environment_steps=self._environment_steps,
+                target_object_pose=tuple(float(value) for value in target_pose),
+                object_poses=object_poses,
+                target_center=tuple(float(value) for value in center),
+                tcp_pose=tuple(float(value) for value in tcp),
+                intended_push_direction=tuple(float(value) for value in direction),
+                chosen_precontact_point=(
+                    tuple(float(value) for value in self._chosen_precontact_point)
+                    if self._chosen_precontact_point is not None
+                    else None
+                ),
+                chosen_contact_point=(
+                    tuple(float(value) for value in self._chosen_contact_point)
+                    if self._chosen_contact_point is not None
+                    else None
+                ),
+                target_distance=distance,
+                projected_progress=progress,
+                lateral_error=lateral,
+                contact_proxy=contact_distance <= self.config.contact_offset + 0.025,
+                contact_proxy_distance=contact_distance,
+                workspace_margin=float(workspace_margin),
+                target_inside_region=bool(evaluation.get("target_inside_region", False)),
+                target_is_static=bool(evaluation.get("target_is_static", False)),
+                stable_success_steps=int(evaluation.get("stable_success_steps", 0)),
+            )
+        )
+
+    def _target_position_pose(self) -> np.ndarray:
+        return _pose7(self._require_context().target_object.actor.pose.raw_pose)
 
     def _require_context(self) -> PushExpertTaskContext:
         if self._context is None:

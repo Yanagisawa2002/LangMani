@@ -110,3 +110,20 @@ The Phase 1 command already returns zero with `phase2_authorized=true`. Resume P
 making a bounded controller-quality change, rerunning the all-task smoke, and then producing a new
 fixed 50/30 report with standard at least 90% and hard at least 70%. Do not start demonstration
 collection or SmolVLA work before that expert gate passes.
+
+## Phase 2A side-push stabilization protocol
+
+The bounded recovery starts with a behavior-neutral replay of exactly the failed lateral episodes
+from the fixed report:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python environment/diagnose_push_expert.py \
+  --baseline-report outputs/diagnostics/v2/phase2/push-expert-target-validation-500b09c.json \
+  --output outputs/diagnostics/v2/phase2/side-push-failure-replay.json
+```
+
+The diagnostic trace is phase-boundary expert metadata, never a policy observation. A candidate
+controller must first improve those fixed failures and the complete lateral subset, then pass the
+unchanged 16-task smoke and 50-standard/30-hard gate. The forward standard subset must remain
+24/24. Rejected candidate code is removed; diagnostic tooling and its machine-readable root-cause
+table may remain.

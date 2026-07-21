@@ -2489,3 +2489,21 @@ side runtime. Two later bounded diagnostic probes each reached 10/17 and caused 
 their candidate changes were rejected. In accordance with the declared stop condition, no pushing
 demonstration archive, unified dataset, SmolVLA adapter, model load, training, or learned-policy
 evaluation is authorized from this result. Existing Phase 1 and v1 evidence remain unchanged.
+
+## D-089 - Diagnose side pushes at phase boundaries without changing the policy path
+
+Phase 2A begins with a behavior-neutral diagnostic layer because the rejected 41/50 standard
+expert report identifies timeouts and verification failures but does not preserve the object and
+TCP geometry that preceded those terminal labels. `PushToRegionExpert.diagnostic_trace` therefore
+records one immutable privileged snapshot after each existing expert phase. The snapshots include
+semantic object poses, the target center, chosen precontact/contact points, intended push
+direction, progress and lateral error, a TCP-distance contact proxy, workspace margin, and stable
+success state. They are expert-only metadata: no field enters a policy observation, per-step info,
+or success calculation, and the expert issues exactly the same actions as before.
+
+`environment/diagnose_push_expert.py` reads the immutable fixed 50/30 report and replays only its
+failed `left`/`right` episodes in fresh environments. It produces the requested phase-segment
+table and assigns one deterministic preceding root cause rather than treating `timeout` as an
+explanation. The contact point is explicitly a TCP-center phase-boundary proxy because the
+installed public environment contract does not expose a stable contact-manifold point. This
+instrumentation may remain even if all subsequent controller candidates are rejected.

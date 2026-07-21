@@ -144,6 +144,10 @@ def test_push_expert_completes_explicit_planar_phase_sequence() -> None:
     assert result.final_environment_evaluation["success"] is True
     assert result.total_environment_steps == len(expert.action_trace) == 9
     assert result.total_planning_calls == 3
+    assert [item.phase for item in expert.diagnostic_trace] == [
+        phase.value for phase in PUSH_EXPERT_PHASE_SEQUENCE
+    ]
+    assert expert.diagnostic_trace[0].projected_progress == pytest.approx(0.0)
     assert planner.closed
 
 
