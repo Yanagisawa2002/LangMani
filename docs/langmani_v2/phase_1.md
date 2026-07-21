@@ -75,3 +75,21 @@ lint, and build. Runtime acceptance additionally requires one canonical controll
 three deterministic seeds on the native target, with real model output and all four persisted run
 files. Runtime success rate is reported honestly; a low policy success rate is not itself an
 infrastructure failure.
+
+## Observed Phase 1 validation (2026-07-21)
+
+- The release validator passed locally and on the Linux artifact host. `v1.0.0` resolves to
+  `58434cb17a7234b6d4b2c4fb15aecf8df0621487`; all seven frozen files and declared identities
+  validated.
+- The three deployable checkpoint files on the artifact host matched the SHA-256 values in the
+  repository-controlled adapter configuration.
+- The full CPU-safe suite passed with 1396 tests, 15 platform-capability skips, and 16 explicitly
+  deselected GPU/rendering tests. Ruff formatting/checks and isolated sdist/wheel construction
+  passed.
+- The requested three-seed real-policy smoke has **not run yet**. The available artifact host was
+  booted without `/dev/nvidia*`, and `nvidia-smi` was unavailable; the second known cloned host was
+  unreachable. This is an infrastructure block, not a policy-quality result. No historical v1
+  success count is reused as Phase 1 output.
+
+Consequently, the source implementation and artifact recovery are validated, while Phase 1 runtime
+acceptance remains pending the documented three-seed command on a GPU/Vulkan-capable native host.
