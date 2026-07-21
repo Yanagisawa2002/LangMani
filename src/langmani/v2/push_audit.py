@@ -24,6 +24,7 @@ from langmani.v2.push_dataset import (
 PHASE2B_VERIFICATION_SCHEMA = "langmani-v2-phase2b-verification-v0"
 PHASE2B_SOURCE_VALIDATION_SCHEMA = "langmani-v2-phase2b-source-validation-v0"
 PHASE2B_RESULT_SCHEMA = "langmani-v2-phase2b-result-v0"
+PICK_PUSH_COMPATIBILITY_SCHEMA = "langmani-v2-phase2b-pick-push-compatibility-v0"
 
 
 def validate_source_validation_report(report: Mapping[str, object]) -> bool:
@@ -57,6 +58,19 @@ def validate_phase2b_result_manifest(
         manifest.get("schema_version") == PHASE2B_RESULT_SCHEMA
         and all(manifest.get(key) == value for key, value in expected.items())
         and manifest.get("completed") is True
+    )
+
+
+def validate_pick_push_compatibility_report(report: Mapping[str, object]) -> bool:
+    """Require proven compatibility; a documented blocker is not an acceptance pass."""
+
+    return bool(
+        report.get("schema_version") == PICK_PUSH_COMPATIBILITY_SCHEMA
+        and report.get("passed") is True
+        and report.get("original_pick_place_dataset_unchanged") is True
+        and report.get("schema_alignment_proven") is True
+        and report.get("unified_dataset_status") == "immutable_multi_root_index_ready"
+        and report.get("incompatible_fields") == []
     )
 
 
@@ -179,7 +193,7 @@ def audit_pick_place_compatibility(
         key for key, value in fields.items() if value["classification"] == "incompatible"
     ]
     report = {
-        "schema_version": "langmani-v2-phase2b-pick-push-compatibility-v0",
+        "schema_version": PICK_PUSH_COMPATIBILITY_SCHEMA,
         "pick_place_root": pick_root.as_posix(),
         "push_root": push_root.as_posix(),
         "pick_place_episode_count": int(pick_dataset.num_episodes),
@@ -396,9 +410,7 @@ def verify_phase2b_evidence(
         "split_leakage_free": leakage.get("passed") is True,
         "minimum_strata_quotas": all(item["passed"] for item in quota_results.values()),
         "pick_place_compatibility_resolved": bool(
-            compatibility
-            and compatibility.get("unified_dataset_status")
-            in {"immutable_multi_root_index_ready", "blocked"}
+            compatibility and validate_pick_push_compatibility_report(compatibility)
         ),
         "required_tests_passed": source_validation_passed,
         "final_metadata_committed": final_metadata_valid,

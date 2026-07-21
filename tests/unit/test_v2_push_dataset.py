@@ -22,6 +22,7 @@ from langmani.v2.push_audit import (
     PHASE2B_RESULT_SCHEMA,
     PHASE2B_SOURCE_VALIDATION_SCHEMA,
     first_available_push_split,
+    validate_pick_push_compatibility_report,
     validate_phase2b_result_manifest,
     validate_source_validation_report,
     validated_pick_place_source_record,
@@ -291,6 +292,20 @@ def test_final_result_manifest_is_bound_to_recomputed_identity() -> None:
     assert validate_phase2b_result_manifest(manifest, expected=expected)
     manifest["accepted_episode_count"] = 359
     assert not validate_phase2b_result_manifest(manifest, expected=expected)
+
+
+def test_pick_push_compatibility_blocker_cannot_pass_full_gate() -> None:
+    report = {
+        "schema_version": "langmani-v2-phase2b-pick-push-compatibility-v0",
+        "passed": True,
+        "original_pick_place_dataset_unchanged": True,
+        "schema_alignment_proven": True,
+        "unified_dataset_status": "immutable_multi_root_index_ready",
+        "incompatible_fields": [],
+    }
+    assert validate_pick_push_compatibility_report(report)
+    report["unified_dataset_status"] = "blocked"
+    assert not validate_pick_push_compatibility_report(report)
 
 
 def test_pick_compatibility_can_select_pilot_or_canonical_split(tmp_path: Path) -> None:
