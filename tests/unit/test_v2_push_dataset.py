@@ -21,6 +21,7 @@ from langmani.v2.push_archive import (
 from langmani.v2.push_audit import (
     PHASE2B_RESULT_SCHEMA,
     PHASE2B_SOURCE_VALIDATION_SCHEMA,
+    first_available_push_split,
     validate_phase2b_result_manifest,
     validate_source_validation_report,
 )
@@ -289,3 +290,10 @@ def test_final_result_manifest_is_bound_to_recomputed_identity() -> None:
     assert validate_phase2b_result_manifest(manifest, expected=expected)
     manifest["accepted_episode_count"] = 359
     assert not validate_phase2b_result_manifest(manifest, expected=expected)
+
+
+def test_pick_compatibility_can_select_pilot_or_canonical_split(tmp_path: Path) -> None:
+    (tmp_path / "splits" / "pilot").mkdir(parents=True)
+    assert first_available_push_split(tmp_path) == "pilot"
+    (tmp_path / "splits" / "train").mkdir()
+    assert first_available_push_split(tmp_path) == "train"

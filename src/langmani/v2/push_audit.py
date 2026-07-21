@@ -83,7 +83,7 @@ def audit_pick_place_compatibility(
     if not isinstance(push_repo_id_prefix, str):
         raise PushDatasetContractError("push export manifest lacks repo_id_prefix")
     push_splits = _read_json(push_root / "langmani" / "split_manifest.json")
-    first_split = next(split for split in DATASET_SPLITS if (push_root / "splits" / split).is_dir())
+    first_split = first_available_push_split(push_root)
     push_dataset = LeRobotDataset(
         repo_id=f"{push_repo_id_prefix}-{first_split}",
         root=push_root / "splits" / first_split,
@@ -450,6 +450,16 @@ def _pick_repo_id(manifest: Mapping[str, object]) -> str:
     return str(value) if isinstance(value, str) else "langmani/pick-place-by-instruction-v1"
 
 
+def first_available_push_split(push_root: str | Path) -> str:
+    """Select a real exported split, including the separately scoped pilot."""
+
+    root = Path(push_root)
+    for split in (*DATASET_SPLITS, "pilot"):
+        if (root / "splits" / split).is_dir():
+            return split
+    raise PushDatasetContractError("push export contains no readable split directory")
+
+
 def _classify_shape_dtype(left: object, right: object) -> dict[str, object]:
     left_shape = tuple(int(item) for item in left.shape)  # type: ignore[attr-defined]
     right_shape = tuple(int(item) for item in right.shape)  # type: ignore[attr-defined]
@@ -495,6 +505,7 @@ __all__ = [
     "PHASE2B_SOURCE_VALIDATION_SCHEMA",
     "audit_pick_place_compatibility",
     "build_unified_dataset_index",
+    "first_available_push_split",
     "verify_phase2b_evidence",
     "validate_phase2b_result_manifest",
     "validate_source_validation_report",
