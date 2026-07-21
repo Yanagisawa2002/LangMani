@@ -226,6 +226,13 @@ class ActPerTaskPolicyAdapter:
         manifest = ActExperimentManifest.from_dict(
             _read_json_object(self.run_root / "run_manifest.json", "ACT run manifest")
         )
+        normalization = manifest.identity.model_config.get("normalization_mapping")
+        if not isinstance(normalization, Mapping) or not all(
+            isinstance(key, str) and isinstance(value, str) for key, value in normalization.items()
+        ):
+            raise ActAdapterError(
+                "ACT run manifest model_config.normalization_mapping must be a string mapping"
+            )
         config_relative = self.config_path.relative_to(self.project_root).as_posix()
         checkpoint_root = self.run_root / PurePosixPath(config.selected_checkpoint_relative_path)
         self._runtime_manifest: Mapping[str, Any] = {
@@ -248,7 +255,7 @@ class ActPerTaskPolicyAdapter:
             "action_shape": [ACT_ACTION_COMPONENTS],
             "predicted_chunk_size": 50,
             "execution_horizon": config.execution_horizon,
-            "normalization": dict(manifest.identity.model_config.normalization_mapping),
+            "normalization": dict(normalization),
             "preprocessing": {
                 "pipeline": "LeRobot PolicyProcessorPipeline",
                 "config": "pretrained_model/policy_preprocessor.json",

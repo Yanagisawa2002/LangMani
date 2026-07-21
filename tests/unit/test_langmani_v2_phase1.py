@@ -318,7 +318,7 @@ def test_act_adapter_reset_and_real_chunk_contract(
     )
     monkeypatch.setattr(act_adapter_module, "load_m4_checkpoint_context", lambda *_a, **_k: context)
     fake_identity = SimpleNamespace(
-        model_config=SimpleNamespace(normalization_mapping={"ACTION": "MEAN_STD"}),
+        model_config={"normalization_mapping": {"ACTION": "MEAN_STD"}},
         git_commit="a" * 40,
         m3b_export_fingerprint="sha256:" + "3" * 64,
         train_statistics_fingerprint="sha256:" + "4" * 64,
@@ -357,6 +357,7 @@ def test_act_adapter_reset_and_real_chunk_contract(
     assert chunk.valid_action_count == 10
     assert policy.reset_count == preprocessor.reset_count == postprocessor.reset_count == 1
     assert adapter.runtime_manifest["action_shape"] == [8]
+    assert adapter.runtime_manifest["normalization"] == {"ACTION": "MEAN_STD"}
 
 
 def test_v1_release_manifest_validates_and_detects_drift(
