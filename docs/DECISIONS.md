@@ -2680,3 +2680,32 @@ The currently reachable RTX 5090 host lacks the accepted Phase 2B external roots
 LangMani host is offline. This is an external-artifact availability blocker, not a Phase 2B
 verification failure. No optimizer step or simulator competence claim is permitted until the
 accepted roots are accessible and the independent verifier passes again.
+
+## D-098 - Replace SmolVLA feature dictionaries completely and launch from audited local bytes
+
+The first target construction probe showed that LeRobot 0.6 recursively merges dictionary CLI
+overrides into the published SmolVLA config. Supplying the LangMani camera dictionary therefore
+retained `camera1`, `camera2`, and `camera3` and added `base_camera`; that four-camera result is
+invalid for Phase 2C and was not accepted as a smoke pass.
+
+The official documented replacement path is now used instead: training supplies
+`input_features=null`, after which the official factory derives the complete input and output maps
+from the already verified train-only LeRobot metadata. A separate strict construction gate assigns
+and asserts exactly `base_camera + 9D state -> 8D action` before loading the unchanged official
+weights. The accepted construction loaded 450,046,176 parameters and 99,880,992 trainable
+parameters, with no missing or unexpected tensor under strict loading.
+
+The probe also identified three launch-contract defects before any optimizer work: the SmolVLA
+extra (including `num2words`) was not installed, optimizer betas were split across two CLI
+arguments, and the wrapper pre-created the same output directory that LeRobot refuses to
+overwrite. The dependency is now explicit, betas are one JSON argument, and official outputs live
+under a fresh `<run>/lerobot/` child. LeRobot 0.6 also resolves Hub config before applying its
+revision field and does not expose a SmolVLA policy `dtype` argument, so training launches from the
+audited local official snapshot and uses explicit BF16 Accelerate mixed precision instead of an
+invented policy flag.
+
+On the exact submitted source, the unmodified official CLI accepted every frozen argument and
+reached dataset creation. The deliberate empty-root probe stopped at missing `meta/info.json` and
+executed zero optimizer steps. This validates base loading and launch mechanics only. The accepted
+Phase 2B roots remain unavailable, so it does not satisfy the real-batch smoke, training,
+checkpoint, or closed-loop gates.

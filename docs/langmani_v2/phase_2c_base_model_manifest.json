@@ -1,0 +1,96 @@
+{
+  "schema_version": "langmani-v2-phase2c-sanitized-base-model-evidence-v0",
+  "status": {
+    "base_model_download_verified": true,
+    "strict_model_construction_verified": true,
+    "official_cli_parser_verified": true,
+    "official_cli_reached_dataset_loading": true,
+    "real_train_batch_verified": false,
+    "optimizer_step_executed": false,
+    "training_started": false,
+    "blocker": "accepted Phase 2B external dataset roots are unavailable on the reachable host"
+  },
+  "source": {
+    "branch": "codex/langmani-v2-phase2c-smolvla-push",
+    "base_audit_commit": "842aa991887c397faf9bd242c5e561c52116620c",
+    "cli_parser_probe_commit": "8ad59da693b5d1a2a792463d62109fec4a92f4a1",
+    "protocol_sha256": "sha256:adae906d77acfc91a44b042d8ac6d3bccc5f4f796b9695c94ed4c790ae6e73b5"
+  },
+  "base_model": {
+    "repo_id": "lerobot/smolvla_base",
+    "revision": "c83c3163b8ca9b7e67c509fffd9121e66cb96205",
+    "config": {
+      "size_bytes": 2299,
+      "sha256": "sha256:650584b56c104720f7a3c91d1ec6bec9e8de8ac11e60c92ba2fa82d93eda147d"
+    },
+    "weights": {
+      "size_bytes": 906712520,
+      "sha256": "sha256:7cd549ac2351fb069c0ddb3c34ad2d09cfc92b56a15dccdfc2e41467aaca01eb"
+    },
+    "preprocessor_sha256": "sha256:7683d648280a72f0d51e869fb8dd1596beed90b7f84849330cf1bc26634a4bd6",
+    "postprocessor_sha256": "sha256:2b78bb742065288df2ec63b0ee35f97a1f6950171cf2272f7e34b1fe3873b17b"
+  },
+  "nested_vlm": {
+    "repo_id": "HuggingFaceTB/SmolVLM2-500M-Video-Instruct",
+    "revision": "7b375e1b73b11138ff12fe22c8f2822d8fe03467",
+    "config_sha256": "sha256:ea6bc1237e96247f6258de3e202e2e62b93d6f386dc47e7b36b5588bf3a15e17",
+    "weights_sha256": "sha256:b9bfd456c9472c0acd5719d6e514c4b859891af205ee1a736552fd3497b8b0c3"
+  },
+  "construction": {
+    "feature_binding_semantic": "complete_replacement_after_null_v0",
+    "input_features": {
+      "observation.images.base_camera": {
+        "type": "VISUAL",
+        "shape": [3, 256, 256]
+      },
+      "observation.state": {
+        "type": "STATE",
+        "shape": [9]
+      }
+    },
+    "output_features": {
+      "action": {
+        "type": "ACTION",
+        "shape": [8]
+      }
+    },
+    "strict_weight_load": true,
+    "parameter_count": 450046176,
+    "trainable_parameter_count": 99880992,
+    "observed_parameter_dtypes_after_explicit_move": ["bfloat16"],
+    "model_chunk_size": 50,
+    "official_n_action_steps": 50,
+    "peak_cuda_allocated_bytes": 926439936,
+    "strict_weight_load_seconds": 6.303937245160341,
+    "passed": true
+  },
+  "runtime": {
+    "python": "3.12.3",
+    "torch": "2.11.0+cu130",
+    "cuda_runtime": "13.0",
+    "lerobot": "0.6.0",
+    "transformers": "5.4.0",
+    "tokenizers": "0.22.2",
+    "safetensors": "0.8.0",
+    "num2words": "0.5.14",
+    "gpu": "NVIDIA GeForce RTX 5090"
+  },
+  "official_cli_probe": {
+    "feature_binding_semantic": "complete_dataset_metadata_inference_v0",
+    "dictionary_cli_merge_prohibited": true,
+    "audited_local_base_snapshot_used": true,
+    "optimizer_betas_serialized_as_one_json_argument": true,
+    "wrapper_and_lerobot_output_directories_separated": true,
+    "parser_accepted": true,
+    "reached_dataset_stage": true,
+    "expected_missing_data_failure": true,
+    "optimizer_step_executed": false
+  },
+  "external_evidence": {
+    "base_audit_recovery": "${LANGMANI_REMOTE_RUN_ROOT}/phase2c-preflight-842aa99/base_model_audit.json",
+    "base_audit_sha256": "sha256:cc374efc84499dc5d49e1d51803ca94e9453be3d6d52e26c476266734d23c987",
+    "cli_probe_recovery": "${LANGMANI_REMOTE_RUN_ROOT}/phase2c-parser-probe-8ad59da/official_cli_parser_probe.json",
+    "cli_probe_sha256": "sha256:f7eb2a3f2c022879bb177dc3b7efff25e43eeefce02a17310343573646d378cf"
+  },
+  "preflight_passed": true
+}

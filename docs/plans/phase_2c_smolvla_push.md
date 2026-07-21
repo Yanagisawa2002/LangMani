@@ -49,7 +49,9 @@ Phase 1 policy interface in real closed-loop ManiSkill pushing episodes.
 
 ## Current external dependency
 
-The online execution host has an RTX 5090 and LeRobot 0.6.0 but does not contain the accepted Phase
-2B roots. The previously used LangMani data host is currently unreachable. Real data verification
-and all model gates must wait for access to the accepted roots; this is an external-artifact
-availability condition, not a failed data or model gate.
+The online execution host has an RTX 5090 and LeRobot 0.6.0. Pinned base download, nested-VLM
+binding, strict exact-feature CUDA construction, and official CLI parsing through dataset creation
+have passed. The host does not contain the accepted Phase 2B roots, and the previously used
+LangMani data host is currently unreachable. Real data verification, one-batch training, and every
+downstream model gate must wait for those accepted roots; this is an external-artifact availability
+condition, not a failed data or model gate.
