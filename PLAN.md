@@ -1,5 +1,17 @@
 # LangMani roadmap
 
+## LangMani 2.0 Phase 1 - stable evaluation foundation
+
+Phase 1 starts after the immutable `v1.0.0` release. It validates the frozen release manifest,
+audits generated artifacts without claiming reproduction, defines one pick-and-place skill family
+with six task instances, recovers one canonical PerTask ACT baseline, and introduces generic
+policy/action-chunk plus unified evaluation contracts. It does not add a new architecture, router,
+dataset, reward, task, or training run. Native runtime acceptance is a separate real-policy smoke
+over one task and three deterministic seeds; no-GPU checks remain structural only.
+
+The next phase may compare another real policy architecture only after it implements this same
+adapter and evidence contract. It may not modify or relabel the frozen v1 release.
+
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected

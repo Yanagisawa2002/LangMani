@@ -1,0 +1,20 @@
+{
+  "schema_version": "langmani-v2-act-adapter-config-v0",
+  "policy_id": "act-per-task-red-left-v1-accepted",
+  "adapter_name": "act_per_task_v0",
+  "run_root": "outputs/models/act/4e089b39ed36b55cd68a0a8ad00012ed24d0788199c6eb6675ac39d7fad30c53",
+  "selected_checkpoint_relative_path": "checkpoints/step-00095000-01cbd124005e",
+  "expected_run_fingerprint": "sha256:4e089b39ed36b55cd68a0a8ad00012ed24d0788199c6eb6675ac39d7fad30c53",
+  "expected_checkpoint_fingerprint": "sha256:01cbd124005e12c04acc67258a48f19b9327364ab78fa7954a359f03152853d9",
+  "expected_dataset_fingerprint": "sha256:3f4d81471ac7c3ecc034206bc207524c4cbfbd1f7874b25eca894a5b607acfb4",
+  "expected_task_id": "langmani-pick-place-task-v0:red_cube:left_bin:canonical_v0",
+  "execution_horizon": 10,
+  "action_bound_mode": "project",
+  "device": "cuda",
+  "dtype": "float32",
+  "artifact_sha256": {
+    "pretrained_model/model.safetensors": "56a30fda4c0157946fcdad990bad5157f7c2a317c7005aeba9fa36b805608301",
+    "pretrained_model/policy_preprocessor_step_3_normalizer_processor.safetensors": "5cbdf752bf5ac112b1e8188a3bb53964852fa2c6795e644476e96cd70e68758c",
+    "pretrained_model/policy_postprocessor_step_0_unnormalizer_processor.safetensors": "c043c76eab4e1d2ee4040c8892923c1aae0a0c47b4c252a8fb1d1118778bf781"
+  }
+}

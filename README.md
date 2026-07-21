@@ -9,6 +9,18 @@
 [![Quality](https://img.shields.io/badge/final_quality_gate-failed-c2410c)](docs/RESULTS_INDEX.md)
 [![SmolVLA](https://img.shields.io/badge/SmolVLA-not_started-64748b)](docs/RESULTS_INDEX.md)
 
+## LangMani 2.0
+
+Development after `v1.0.0` starts from a stable evaluation foundation rather than a new model.
+Phase 1 freezes and validates the v1 release index, classifies the six object/bin combinations as
+one parameterized pick-and-place skill, recovers one canonical PerTask ACT checkpoint, and exposes
+it through a generic policy/action-chunk adapter and language-independent evaluator. See
+[`docs/langmani_v2/phase_1.md`](docs/langmani_v2/phase_1.md) and
+[`docs/langmani_v2/repository_audit.md`](docs/langmani_v2/repository_audit.md).
+
+The v1 claims and evidence remain immutable. Phase 1 neither retrains a controller nor changes the
+v1 task, action, success, split, checkpoint-selection, language-routing, or safety contracts.
+
 LangMani turns natural-language pick-and-place commands into typed `TaskSpec` decisions, selects
 one of six frozen Panda ACT controllers, bounds every action explicitly, and attributes failures to
 language, control, safety rejection, or infrastructure. The v1 release freezes M0–M5A and the M5B

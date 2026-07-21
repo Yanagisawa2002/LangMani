@@ -1,0 +1,125 @@
+{
+  "schema_version": "langmani-v2-task-taxonomy-v0",
+  "skill_family": {
+    "schema_version": "langmani-v2-task-taxonomy-v0",
+    "skill_family_id": "pick_and_place",
+    "description": "Move one selected cube into one selected destination bin.",
+    "object_attribute_name": "color",
+    "target_attribute_name": "target_region",
+    "future_instance_axes": [
+      "shape",
+      "size",
+      "material"
+    ]
+  },
+  "task_instances": [
+    {
+      "schema_version": "langmani-v2-task-taxonomy-v0",
+      "canonical_task_id": "langmani-pick-place-task-v0:red_cube:left_bin:canonical_v0",
+      "skill_family_id": "pick_and_place",
+      "object_attribute": "red",
+      "target_region": "left_bin",
+      "language_instruction": "Pick up the red cube and place it in the left bin.",
+      "environment_task_spec": {
+        "target_object_id": "red_cube",
+        "target_bin_id": "left_bin",
+        "instruction_template_id": "canonical_v0"
+      },
+      "success_predicate": "m1_conservative_pick_place_success_v0",
+      "maximum_episode_steps": 200,
+      "embodiment": "panda",
+      "camera_setup": "base_camera_v0",
+      "environment_id": "LangMani-PickPlaceByInstruction-v0"
+    },
+    {
+      "schema_version": "langmani-v2-task-taxonomy-v0",
+      "canonical_task_id": "langmani-pick-place-task-v0:red_cube:right_bin:canonical_v0",
+      "skill_family_id": "pick_and_place",
+      "object_attribute": "red",
+      "target_region": "right_bin",
+      "language_instruction": "Pick up the red cube and place it in the right bin.",
+      "environment_task_spec": {
+        "target_object_id": "red_cube",
+        "target_bin_id": "right_bin",
+        "instruction_template_id": "canonical_v0"
+      },
+      "success_predicate": "m1_conservative_pick_place_success_v0",
+      "maximum_episode_steps": 200,
+      "embodiment": "panda",
+      "camera_setup": "base_camera_v0",
+      "environment_id": "LangMani-PickPlaceByInstruction-v0"
+    },
+    {
+      "schema_version": "langmani-v2-task-taxonomy-v0",
+      "canonical_task_id": "langmani-pick-place-task-v0:green_cube:left_bin:canonical_v0",
+      "skill_family_id": "pick_and_place",
+      "object_attribute": "green",
+      "target_region": "left_bin",
+      "language_instruction": "Pick up the green cube and place it in the left bin.",
+      "environment_task_spec": {
+        "target_object_id": "green_cube",
+        "target_bin_id": "left_bin",
+        "instruction_template_id": "canonical_v0"
+      },
+      "success_predicate": "m1_conservative_pick_place_success_v0",
+      "maximum_episode_steps": 200,
+      "embodiment": "panda",
+      "camera_setup": "base_camera_v0",
+      "environment_id": "LangMani-PickPlaceByInstruction-v0"
+    },
+    {
+      "schema_version": "langmani-v2-task-taxonomy-v0",
+      "canonical_task_id": "langmani-pick-place-task-v0:green_cube:right_bin:canonical_v0",
+      "skill_family_id": "pick_and_place",
+      "object_attribute": "green",
+      "target_region": "right_bin",
+      "language_instruction": "Pick up the green cube and place it in the right bin.",
+      "environment_task_spec": {
+        "target_object_id": "green_cube",
+        "target_bin_id": "right_bin",
+        "instruction_template_id": "canonical_v0"
+      },
+      "success_predicate": "m1_conservative_pick_place_success_v0",
+      "maximum_episode_steps": 200,
+      "embodiment": "panda",
+      "camera_setup": "base_camera_v0",
+      "environment_id": "LangMani-PickPlaceByInstruction-v0"
+    },
+    {
+      "schema_version": "langmani-v2-task-taxonomy-v0",
+      "canonical_task_id": "langmani-pick-place-task-v0:blue_cube:left_bin:canonical_v0",
+      "skill_family_id": "pick_and_place",
+      "object_attribute": "blue",
+      "target_region": "left_bin",
+      "language_instruction": "Pick up the blue cube and place it in the left bin.",
+      "environment_task_spec": {
+        "target_object_id": "blue_cube",
+        "target_bin_id": "left_bin",
+        "instruction_template_id": "canonical_v0"
+      },
+      "success_predicate": "m1_conservative_pick_place_success_v0",
+      "maximum_episode_steps": 200,
+      "embodiment": "panda",
+      "camera_setup": "base_camera_v0",
+      "environment_id": "LangMani-PickPlaceByInstruction-v0"
+    },
+    {
+      "schema_version": "langmani-v2-task-taxonomy-v0",
+      "canonical_task_id": "langmani-pick-place-task-v0:blue_cube:right_bin:canonical_v0",
+      "skill_family_id": "pick_and_place",
+      "object_attribute": "blue",
+      "target_region": "right_bin",
+      "language_instruction": "Pick up the blue cube and place it in the right bin.",
+      "environment_task_spec": {
+        "target_object_id": "blue_cube",
+        "target_bin_id": "right_bin",
+        "instruction_template_id": "canonical_v0"
+      },
+      "success_predicate": "m1_conservative_pick_place_success_v0",
+      "maximum_episode_steps": 200,
+      "embodiment": "panda",
+      "camera_setup": "base_camera_v0",
+      "environment_id": "LangMani-PickPlaceByInstruction-v0"
+    }
+  ]
+}

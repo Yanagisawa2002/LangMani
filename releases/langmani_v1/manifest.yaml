@@ -1,0 +1,81 @@
+{
+  "schema_version": "langmani-v1-release-manifest-v0",
+  "release": {
+    "tag": "v1.0.0",
+    "commit": "58434cb17a7234b6d4b2c4fb15aecf8df0621487",
+    "scope": "M0-M5A results, M5B structural bridge, and M6 portfolio freeze",
+    "claims": {
+      "final_pipeline_validated": true,
+      "physical_target_validated": true,
+      "final_quality_gate_passed": false,
+      "smolvla_go": false
+    }
+  },
+  "artifact_identities": {
+    "m3b_export_fingerprint": "sha256:3f4d81471ac7c3ecc034206bc207524c4cbfbd1f7874b25eca894a5b607acfb4",
+    "m3b_split_manifest_digest": "sha256:d86d29374ef7956a4ad8a1d9a111ed0924387b5b456d86e8c9ad5a31752f65e5",
+    "m42_runtime_selection_fingerprint": "sha256:93ca8a1231e1133c70d8a982329f77eeb17b12db379e824c2f800502c1b1efbf",
+    "m5a_sealed_final_run_fingerprint": "sha256:d4d176d43cd9b6602f0a0e6c352e95a950a2fdbe96913ea0b12401f28712d2e5",
+    "m5a_sealed_final_artifact_fingerprint": "sha256:2bfeaefdfb9a4ccb6a6e9a34a57ec053b06c1cb9cfc5ed0e98f5ab67863157c1"
+  },
+  "accepted_per_task_checkpoints": [
+    {
+      "task_id": "langmani-pick-place-task-v0:red_cube:left_bin:canonical_v0",
+      "run_fingerprint": "sha256:4e089b39ed36b55cd68a0a8ad00012ed24d0788199c6eb6675ac39d7fad30c53",
+      "checkpoint_step": 95000,
+      "checkpoint_fingerprint": "sha256:01cbd124005e12c04acc67258a48f19b9327364ab78fa7954a359f03152853d9"
+    },
+    {
+      "task_id": "langmani-pick-place-task-v0:red_cube:right_bin:canonical_v0",
+      "run_fingerprint": "sha256:92b28d0d5052bcdae2eb493d66d1823586e56d719781600c1f2221380305beee",
+      "checkpoint_step": 100000,
+      "checkpoint_fingerprint": "sha256:96971f845d4c7e103ddcb26ac016f221865d56da045e7c5fccd726f68985689a"
+    },
+    {
+      "task_id": "langmani-pick-place-task-v0:green_cube:left_bin:canonical_v0",
+      "run_fingerprint": "sha256:66718d2110b87c3e256fe35e72bff7cdfdafd19ac31fa1d2acdf69cf1edcd40b",
+      "checkpoint_step": 30000,
+      "checkpoint_fingerprint": "sha256:b33fb3cc248ab65e94554edcd0923d6616583cdc18f3fa4edbc896fd5ffe68df"
+    },
+    {
+      "task_id": "langmani-pick-place-task-v0:green_cube:right_bin:canonical_v0",
+      "run_fingerprint": "sha256:b9e32a10a3adda92a86332458406504ef3ea71506c2331eb300fbeac3ce68b25",
+      "checkpoint_step": 100000,
+      "checkpoint_fingerprint": "sha256:f30ddd1eb43e28c45a14579e6f69d4286d5beb8f3c296e4a4c46c6a61678f011"
+    },
+    {
+      "task_id": "langmani-pick-place-task-v0:blue_cube:left_bin:canonical_v0",
+      "run_fingerprint": "sha256:6bd68ce830924792c4b42a42a5df2ebd4a5c04df86ec602514ffa5fa7fac3add",
+      "checkpoint_step": 80000,
+      "checkpoint_fingerprint": "sha256:0aa8add02a8675a802fde163a32e0c3a48dd97113a141d6faede28cc6167f6e4"
+    },
+    {
+      "task_id": "langmani-pick-place-task-v0:blue_cube:right_bin:canonical_v0",
+      "run_fingerprint": "sha256:74f3b5027a65f62bcc08928b49e37a764f003200b698dfa0fe9b800aff7b77ff",
+      "checkpoint_step": 75000,
+      "checkpoint_fingerprint": "sha256:6a2fb8d0fcaab5bcc28fc24f6fd7a89cbebafa4f676211b9b1a6c4a53da5a748"
+    }
+  ],
+  "reported_metrics": {
+    "per_task_locked_test": {"successes": 31, "episodes": 36},
+    "per_task_historical_fresh": {"successes": 143, "episodes": 180},
+    "oracle_sealed_final_control": {"successes": 55, "episodes": 72},
+    "language_routed_sealed_final_control": {"successes": 46, "episodes": 72},
+    "note": "Historical v1 results; not rerun by the release validator."
+  },
+  "evaluation_commands": [
+    "CUDA_VISIBLE_DEVICES=0 python environment/verify_m4.py --target-full --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 --output-root outputs/models/act",
+    "CUDA_VISIBLE_DEVICES=0 python environment/verify_m42.py --target-development",
+    "CUDA_VISIBLE_DEVICES=0 python environment/verify_m5a_full_control.py",
+    "CUDA_VISIBLE_DEVICES=0 python scripts/run_m5a_sealed_final.py --target-final"
+  ],
+  "frozen_files": [
+    {"path": "docs/RESULTS_INDEX.md", "sha256": "34388740fb9ba1acb5d6d81c18c32d5ab725a0b98aeaff85cefcbb61befe46ff"},
+    {"path": "docs/portfolio/TECHNICAL_REPORT.md", "sha256": "26c359e668e90a8e1bc754556f780b22ec763c328c5fd00bf0075d1677262dc4"},
+    {"path": "docs/portfolio/ARCHITECTURE.md", "sha256": "4fb772f3d84be27316dbe70044e92749229f4ccd377c90392961def34432fbb6"},
+    {"path": "docs/portfolio/DEMO_VIDEO_SCRIPT.md", "sha256": "0b806178adf8fae9e9061907cb43415f486ccf351dddf5607703262b4419d854"},
+    {"path": "docs/portfolio/RESUME_AND_INTERVIEW.md", "sha256": "ccbab21d25b434aed24cb2e30d774582285837bff51288d9ae193a11c6119d6c"},
+    {"path": "src/langmani/policies/m42_schedules/m42_dev_v0.json", "sha256": "d5b92f36c88d6ffb93b0440d7fe7eb85557d2f468faebb69e0440d799ed2c30c"},
+    {"path": "src/langmani/policies/m42_schedules/m42_final_v0.json", "sha256": "4c8ed8d7ef9186472558ad27222bc133d24f7be559ddf9ececca5431b1a86b0c"}
+  ]
+}

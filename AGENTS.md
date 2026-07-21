@@ -50,6 +50,13 @@ v1 runtime behavior, datasets, models, checkpoints, schedules, gates, or experim
 The release must preserve `final_pipeline_validated=true`, `physical_target_validated=true`,
 `final_quality_gate_passed=false`, and `smolvla_go=false` as separate claims.
 
+LangMani 2.0 Phase 1 begins after the immutable `v1.0.0` release. It may validate the v1 release
+manifest, audit existing artifacts, wrap one accepted PerTask ACT checkpoint behind a generic
+policy/action-chunk contract, define one `pick_and_place` skill family with six task instances, and
+run a new language-independent smoke evaluation. It must not rewrite v1 evidence, retrain a model,
+introduce a new policy architecture or router, or describe structural/no-GPU checks as real policy
+rollouts. Generated v2 evaluation evidence remains under `outputs/` and is not source-controlled.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
@@ -194,6 +201,10 @@ python environment/verify_m5a_dispatch.py
 python environment/verify_m5a_three_scene.py
 python environment/verify_m5a_full_control.py
 python scripts/analyze_classifier_rejection.py --help
+
+# LangMani 2.0 Phase 1 release and policy-neutral evaluation commands
+python scripts/validate_v1_release.py
+python scripts/evaluate_policy_v2.py --help
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,
@@ -371,6 +382,10 @@ The exact environment creation commands are maintained in `README.md`.
   flags true, calibration false, and no authorization for language development.
 - Do not describe a skipped, metadata-only, structural-only, or CPU-only check as physical GPU or
   rendering validation.
+- LangMani 2.0 Phase 1 runtime configurations must use repository-relative, content-bound artifact
+  paths. Historical absolute paths may be retained only as provenance and must not become runtime
+  dependencies. The unified evaluator accepts canonical task instances directly and must not import
+  or invoke the language router.
 
 ## Definition of done
 
@@ -445,3 +460,9 @@ The separately authorized sealed final additionally requires exactly 600 final-l
 access ledger, atomic compact evidence, and fresh-process recomputation. Its completed pipeline and
 physical-verification flags do not override a false language, taxonomy, control, or combined quality
 gate. A failed final quality gate leaves `smolvla_go=false` and authorizes no automatic next stage.
+LangMani 2.0 Phase 1 implementation completion additionally requires an independently validated v1
+tag/file manifest, an honest artifact audit, one real ACT adapter, the canonical six-instance task
+catalog, policy-neutral evaluator tests, Ruff, CPU-safe regression, and a package build. Runtime
+acceptance is separate and requires the recovered checkpoint to produce real actions in the M1
+environment for at least one task over three deterministic seeds, with an atomically persisted
+runtime manifest, episode JSONL, summary, and completion marker.

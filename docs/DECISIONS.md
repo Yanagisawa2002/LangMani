@@ -2361,3 +2361,21 @@ SmolVLA authorization remain false. M6 cannot retrain, re-evaluate, change thres
 evidence, complete the blocked M5B target probe, or begin a new model. The annotated `v1.0.0` tag
 will identify the validated release source and portfolio materials. Future behavioral work requires
 a new version or explicit milestone.
+
+## D-083 - Start LangMani 2.0 with a policy-neutral evaluation boundary
+
+LangMani 2.0 Phase 1 preserves the `v1.0.0` source and experiment evidence while adding a new,
+project-owned evaluation layer. The six color/bin combinations are one `pick_and_place` skill
+family with six task instances. This prevents task parameters from being misreported as six
+different robotic skills.
+
+The first adapter wraps the existing selected red-to-left PerTask ACT checkpoint through the
+already validated LeRobot preprocessor, policy, postprocessor, and explicit project-mode action
+bound processor. The adapter exposes only the generic `ObservationBatch` to `ActionChunk` contract;
+the unified evaluator has no language-router dependency. Runtime configuration paths are relative
+and content-bound. Absolute paths found in a historical training manifest remain provenance only.
+
+Phase 1 registers no placeholder future models and performs no training. Its three-seed native
+smoke is a new v2 runtime check, not a reproduction of historical v1 metrics. Source validation on
+a machine without a visible NVIDIA/Vulkan target is explicitly structural and cannot set a
+physical-validation claim.
