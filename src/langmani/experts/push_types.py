@@ -107,8 +107,6 @@ class PushExpertConfig:
             "cylinder_push_height",
             "region_goal_margin",
             "tcp_position_tolerance",
-            "lateral_cube_compensation_degrees",
-            "lateral_cylinder_compensation_degrees",
             "minimum_approach_obstacle_clearance",
         ):
             object.__setattr__(self, label, _finite(getattr(self, label), label))
@@ -116,6 +114,11 @@ class PushExpertConfig:
             "lateral_cube_compensation_degrees",
             "lateral_cylinder_compensation_degrees",
         ):
+            object.__setattr__(
+                self,
+                label,
+                _finite(getattr(self, label), label, positive=False),
+            )
             if getattr(self, label) > 25.0:
                 raise ValueError(f"{label} must not exceed 25")
         if not isinstance(self.diagnostic_rendering, bool):

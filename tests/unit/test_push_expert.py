@@ -176,6 +176,9 @@ def test_push_expert_config_rejects_unbounded_correction_search() -> None:
     with pytest.raises(ValueError, match="must not exceed 25"):
         PushExpertConfig(lateral_cylinder_compensation_degrees=30.0)
 
+    with pytest.raises(ValueError, match="finite and non-negative"):
+        PushExpertConfig(lateral_cylinder_compensation_degrees=-1.0)
+
 
 def test_push_endpoint_stops_inside_full_containment_with_geometry_margin() -> None:
     environment = _FakeEnvironment()
