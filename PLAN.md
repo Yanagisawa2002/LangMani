@@ -18,6 +18,20 @@ are infrastructure diagnostics and provide no Phase 1 policy-quality metric.
 The next phase may compare another real policy architecture only after it implements this same
 adapter and evidence contract. It may not modify or relabel the frozen v1 release.
 
+## LangMani 2.0 Phase 2 - multi-skill and SmolVLA (blocked before implementation)
+
+Phase 2 was requested with an explicit prerequisite that at least one real Phase 1 smoke rollout
+already exist. That prerequisite is not met: both bounded local attempts failed during rendering
+before policy loading, inference, or `env.step`, and the current artifact host has no GPU. The
+repository therefore stops at the minimum recovery required by the Phase 2 contract: a standalone,
+fail-closed `environment/verify_v2_phase1.py` verifier that checks the frozen v1 release, canonical
+ACT artifact hashes, the exact four-file runtime evidence contract, three unique deterministic
+seeds, real policy-query counts, and real environment-step counts.
+
+No `push_to_region` environment/expert, pushing dataset, SmolVLA dependency, training run, or Phase
+2 evaluation has been started. Resume Phase 2 only after the verifier reports
+`phase2_authorized=true`; then follow the requested order beginning with the standard push task.
+
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected

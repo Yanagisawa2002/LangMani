@@ -60,6 +60,11 @@ Phase 1 implementation, release validation, and canonical artifact recovery are 
 three-seed runtime smoke remains pending a native Linux NVIDIA/Vulkan target. The bounded local
 Docker and Windows attempts stopped during renderer initialization before policy loading or
 `env.step`; they are invalid infrastructure attempts and must not be reported as policy results.
+LangMani 2.0 Phase 2 is therefore blocked before implementation. `environment/verify_v2_phase1.py`
+is the fail-closed entry gate: Phase 2 may begin only after it independently validates the frozen
+v1 release plus at least three deterministic episodes containing real policy queries and real
+environment steps. Until `phase2_authorized=true`, do not implement `push_to_region`, collect new
+data, install or train SmolVLA, or report Phase 2 metrics.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
@@ -209,6 +214,7 @@ python scripts/analyze_classifier_rejection.py --help
 # LangMani 2.0 Phase 1 release and policy-neutral evaluation commands
 python scripts/validate_v1_release.py
 python scripts/evaluate_policy_v2.py --help
+python environment/verify_v2_phase1.py --help
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,

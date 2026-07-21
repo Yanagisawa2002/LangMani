@@ -63,6 +63,10 @@ python scripts/evaluate_policy_v2.py \
   --task-id langmani-pick-place-task-v0:red_cube:left_bin:canonical_v0 \
   --seeds 41001 41002 41003 \
   --output-root outputs/diagnostics/v2/phase1/act-red-left-three-seed
+
+python environment/verify_v2_phase1.py \
+  --evidence-root outputs/diagnostics/v2/phase1/act-red-left-three-seed \
+  --output outputs/diagnostics/v2/phase1/precondition-verification.json
 ```
 
 The second command is a native-target command. A Windows/CPU run or a cloud instance without a
@@ -103,3 +107,7 @@ The two small, untracked attempt records are retained under
 
 Consequently, the source implementation and artifact recovery are validated, while Phase 1 runtime
 acceptance remains pending the documented three-seed command on a GPU/Vulkan-capable native host.
+The independent verifier currently reports `v1_release_validated=true` but
+`phase1_runtime_evidence_validated=false`, `real_policy_inference_validated=false`,
+`real_environment_steps_validated=false`, and `phase2_authorized=false`. This is the required
+fail-closed state, not a Phase 2 result.

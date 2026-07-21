@@ -2387,3 +2387,21 @@ raised access violation `0xC0000005` at the first camera observation after the U
 was eliminated. Neither attempt loaded the ACT policy, called `env.step`, or completed an episode.
 They are retained only as untracked invalid-infrastructure evidence; the native Linux
 NVIDIA/Vulkan three-seed smoke remains the sole runtime acceptance path.
+
+## D-084 - Gate Phase 2 on independently verified real Phase 1 rollouts
+
+The requested LangMani 2.0 Phase 2 explicitly requires an existing real Phase 1 smoke rollout and
+instructs the implementation to stop at the minimum recovery when a major Phase 1 acceptance item
+is absent. That item is absent: the bounded Docker and Windows attempts both stopped before policy
+inference or an environment step, while the available Linux artifact host had no GPU.
+
+Phase 2 therefore adds only `environment/verify_v2_phase1.py` and its project-owned validation
+module before stopping. The gate revalidates the frozen v1 release, canonical ACT artifacts, exact
+four-file evaluation contract, at least three deterministic seeds, real policy queries, and real
+environment steps. It fails closed and emits `phase2_authorized=false` for missing or incompatible
+evidence. This is a small recovery of the Phase 1 acceptance boundary, not a redesign or a second
+evaluation framework.
+
+No push environment, expert, demonstration archive, multi-skill dataset, SmolVLA dependency,
+training, or evaluation is authorized until this gate passes on native Linux NVIDIA/Vulkan
+hardware. Historical v1 metrics and invalid infrastructure attempts cannot satisfy it.
