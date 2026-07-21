@@ -170,6 +170,9 @@ def test_push_expert_config_rejects_unbounded_correction_search() -> None:
     with pytest.raises(ValueError, match="exactly two"):
         PushExpertConfig(maximum_corrective_pushes=3)
 
+    with pytest.raises(ValueError, match="must not exceed 25"):
+        PushExpertConfig(lateral_compensation_degrees=30.0)
+
 
 def test_push_endpoint_stops_inside_full_containment_with_geometry_margin() -> None:
     environment = _FakeEnvironment()
@@ -215,6 +218,37 @@ def test_push_height_is_geometry_specific() -> None:
     )
     expert._context = environment.context
     assert expert._push_height() == pytest.approx(0.015)
+
+
+def test_forward_strategy_preserves_the_original_contact_formula() -> None:
+    environment = _FakeEnvironment()
+    environment.context = PushExpertTaskContext(
+        environment_id=environment.context.environment_id,
+        episode_spec=PushEpisodeSpec.create(
+            scene_seed=77,
+            task_spec=PushTaskSpec("blue_cube", "forward_left", "standard"),
+        ),
+        agent=environment.context.agent,
+        robot=environment.context.robot,
+        target_object=environment.context.target_object,
+        objects=environment.context.objects,
+        target_region_center=environment.context.target_region_center,
+        target_region_radius=environment.context.target_region_radius,
+        target_object_planar_radius=environment.context.target_object_planar_radius,
+        target_object_resting_height=environment.context.target_object_resting_height,
+        full_containment_center_radius=environment.context.full_containment_center_radius,
+        table_top_z=environment.context.table_top_z,
+    )
+    expert = PushToRegionExpert(
+        environment,
+        planner_factory=lambda _env: _FakePlanner(environment),
+    )
+    expert._context = environment.context
+    position = expert._target_position()
+
+    assert not expert._is_lateral_task()
+    assert expert._motion_direction(position) == pytest.approx(expert._push_direction(position))
+    assert expert._contact_offset() == pytest.approx(expert.config.contact_offset)
 
 
 def test_push_expert_result_is_json_serializable() -> None:

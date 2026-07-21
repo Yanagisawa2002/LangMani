@@ -2507,3 +2507,24 @@ table and assigns one deterministic preceding root cause rather than treating `t
 explanation. The contact point is explicitly a TCP-center phase-boundary proxy because the
 installed public environment contract does not expose a stable contact-manifold point. This
 instrumentation may remain even if all subsequent controller candidates are rejected.
+
+## D-090 - Test one signed 15-degree side-contact compensation candidate
+
+The Phase 2A replay at Git `fab982a` reproduced all 16 previously failed lateral episodes in the
+pinned NumPy 1.26.4/mplib 0.1.1 target runtime. Seven failures lost the TCP-distance contact proxy,
+two were stable containment boundary cases, two exited the workspace during a correction, and the
+remaining five separated into overshoot, primary planning, initial approach, wrong-object sweep,
+and joint-action-bound origins. The primary-push traces expose a systematic signed bias: failed
+left pushes drift roughly 14--18 degrees toward world `+x`, while failed right pushes drift roughly
+14--19 degrees toward the same world `+x` side.
+
+Candidate A therefore changes only `left`/`right` tasks. It rotates the preferred contact normal
+15 degrees away from the observed drift and evaluates a fixed four-candidate sequence (preferred,
+half, ideal, opposite half). Candidates are ranked by desired-direction alignment, a documented
+Panda-base reachability proxy, workspace margin, and distractor swept-segment clearance; unsafe
+candidates are not planned, and planning may fall back only to the remaining fixed safe list. The
+horizontal cylinder uses a 4 cm lateral tangent-contact offset while forward tasks retain the
+original 4.5 cm formula. Stable settling increases from 12 to 16 holds so the two already-contained
+static cases can reach the unchanged five-step success predicate. Target positions, region sizes,
+success/failure predicates, 250-step limit, forward contact strategy, and low-level action handling
+are unchanged. Candidate A remains provisional until the fixed staged experiments accept it.

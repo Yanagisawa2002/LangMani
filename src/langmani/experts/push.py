@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -13,7 +14,11 @@ from langmani.environments.push_expert_state import (
     PushExpertTaskContext,
 )
 from langmani.environments.push_specs import PUSH_OBJECT_IDS, TARGET_REGION_IDS, PushTaskSpec
-from langmani.environments.push_to_region import ENV_ID, WORKSPACE_BOUNDS_XY
+from langmani.environments.push_to_region import (
+    ENV_ID,
+    OBJECT_PLANAR_RADII,
+    WORKSPACE_BOUNDS_XY,
+)
 from langmani.experts.planner import (
     MplibPandaPlannerAdapter,
     PlannerAdapter,
@@ -23,6 +28,11 @@ from langmani.experts.planner import (
     PlannerVersionError,
 )
 from langmani.experts.push_diagnostics import PushDiagnosticSnapshot, planar_diagnostics
+from langmani.experts.push_strategy import (
+    LateralApproachCandidate,
+    build_lateral_approach_candidates,
+    is_lateral_region,
+)
 from langmani.experts.push_types import (
     PUSH_EXPERT_PHASE_SEQUENCE,
     PushExpertConfig,
@@ -88,6 +98,8 @@ class PushToRegionExpert:
         self._initial_push_direction: np.ndarray | None = None
         self._chosen_precontact_point: np.ndarray | None = None
         self._chosen_contact_point: np.ndarray | None = None
+        self._active_push_direction: np.ndarray | None = None
+        self._approach_candidates: tuple[LateralApproachCandidate, ...] = ()
 
     @property
     def action_trace(self) -> tuple[np.ndarray, ...]:
@@ -100,6 +112,10 @@ class PushToRegionExpert:
         """Return immutable phase-boundary privileged telemetry for offline diagnosis."""
 
         return tuple(self._diagnostic_trace)
+
+    @property
+    def approach_candidate_diagnostics(self) -> tuple[dict[str, object], ...]:
+        return tuple(candidate.to_dict() for candidate in self._approach_candidates)
 
     def run(self) -> PushExpertResult:
         self._rollout_started_at = time.perf_counter()
@@ -284,6 +300,9 @@ class PushToRegionExpert:
     def _move_to_precontact(self) -> PushPhaseResult:
         object_position = self._target_position()
         direction = self._push_direction(object_position)
+        if self._is_lateral_task():
+            candidates = self._lateral_approach_candidates(object_position, direction)
+            return self._planned_lateral_approach(candidates)
         pose = self._tcp_pose()
         pose[:2] = object_position[:2] - direction * (
             self.config.contact_offset + self.config.precontact_clearance
@@ -294,9 +313,9 @@ class PushToRegionExpert:
 
     def _establish_contact(self) -> PushPhaseResult:
         object_position = self._target_position()
-        direction = self._push_direction(object_position)
+        direction = self._motion_direction(object_position)
         pose = self._tcp_pose()
-        pose[:2] = object_position[:2] - direction * self.config.contact_offset
+        pose[:2] = object_position[:2] - direction * self._contact_offset()
         pose[2] = self._push_height()
         self._chosen_contact_point = pose[:3].copy()
         return self._planned_motion(PushExpertPhase.ESTABLISH_CONTACT, (pose,))
@@ -310,17 +329,30 @@ class PushToRegionExpert:
         if self._terminal_success or self._evaluation().get("target_inside_region") is True:
             return self._success(phase, "target already reached the region; no correction needed")
         object_position = self._target_position()
-        direction = self._push_direction(object_position)
+        if self._is_lateral_task():
+            candidates = self._lateral_approach_candidates(
+                object_position,
+                self._push_direction(object_position),
+            )
+            safe = next((candidate for candidate in candidates if candidate.safe), None)
+            if safe is None:
+                return self._failure(
+                    phase,
+                    PushExpertStatus.CORRECTION_FAILURE,
+                    "no workspace- and obstacle-safe lateral re-contact candidate",
+                )
+            self._active_push_direction = np.asarray(safe.contact_direction)
+        direction = self._motion_direction(object_position)
         current = self._tcp_pose()
         lift = current.copy()
         lift[2] = self.config.precontact_height
         behind_high = current.copy()
         behind_high[:2] = object_position[:2] - direction * (
-            self.config.contact_offset + self.config.precontact_clearance
+            self._contact_offset() + self.config.precontact_clearance
         )
         behind_high[2] = self.config.precontact_height
         contact = behind_high.copy()
-        contact[:2] = object_position[:2] - direction * self.config.contact_offset
+        contact[:2] = object_position[:2] - direction * self._contact_offset()
         contact[2] = self._push_height()
         push = self._push_endpoint_pose(object_position)
         return self._planned_motion(phase, (lift, behind_high, contact, push))
@@ -334,7 +366,7 @@ class PushToRegionExpert:
         """
 
         context = self._require_context()
-        direction = self._push_direction(object_position)
+        direction = self._motion_direction(object_position)
         object_center_distance = max(
             0.0,
             context.full_containment_center_radius - self.config.region_goal_margin,
@@ -356,6 +388,110 @@ class PushToRegionExpert:
             PushExpertStatus.INVALID_TASK,
             f"push height is undefined for {object_id!r}",
         )
+
+    def _contact_offset(self) -> float:
+        context = self._require_context()
+        if self._is_lateral_task() and context.target_object.object_id == "orange_cylinder":
+            return self.config.lateral_cylinder_contact_offset
+        return self.config.contact_offset
+
+    def _is_lateral_task(self) -> bool:
+        return is_lateral_region(self._require_context().episode_spec.task_spec.target_region_id)
+
+    def _motion_direction(self, object_position: np.ndarray) -> np.ndarray:
+        if self._is_lateral_task() and self._active_push_direction is not None:
+            return self._active_push_direction.copy()
+        return self._push_direction(object_position)
+
+    def _lateral_approach_candidates(
+        self,
+        object_position: np.ndarray,
+        desired_direction: np.ndarray,
+    ) -> tuple[LateralApproachCandidate, ...]:
+        context = self._require_context()
+        distractors = tuple(
+            (
+                _pose7(item.actor.pose.raw_pose)[:2],
+                OBJECT_PLANAR_RADII[PUSH_OBJECT_IDS.index(item.object_id)],
+            )
+            for item in context.objects
+            if item.object_id != context.target_object.object_id
+        )
+        candidates = build_lateral_approach_candidates(
+            desired_direction=desired_direction,
+            object_position=object_position,
+            tcp_position=self._tcp_pose(),
+            distractors=distractors,
+            contact_offset=self._contact_offset(),
+            precontact_clearance=self.config.precontact_clearance,
+            precontact_height=self.config.precontact_height,
+            push_height=self._push_height(),
+            workspace_bounds_xy=WORKSPACE_BOUNDS_XY,
+            compensation_degrees=self.config.lateral_compensation_degrees,
+            minimum_obstacle_clearance=self.config.minimum_approach_obstacle_clearance,
+        )
+        self._approach_candidates = candidates
+        return candidates
+
+    def _planned_lateral_approach(
+        self,
+        candidates: Sequence[LateralApproachCandidate],
+    ) -> PushPhaseResult:
+        planning_calls = 0
+        planning_duration = 0.0
+        execution_duration = 0.0
+        attempts = 0
+        last_result: PushPhaseResult | None = None
+        for candidate in candidates:
+            if not candidate.safe:
+                continue
+            attempts += 1
+            self._chosen_precontact_point = np.asarray(candidate.precontact_point)
+            result = self._planned_motion(
+                PushExpertPhase.MOVE_TO_PRECONTACT,
+                (self._pose_with_position(candidate.precontact_point),),
+            )
+            planning_calls += result.planning_calls
+            planning_duration += result.planning_duration_seconds
+            execution_duration += result.execution_duration_seconds
+            last_result = result
+            if result.success:
+                self._active_push_direction = np.asarray(candidate.contact_direction)
+                return replace(
+                    result,
+                    attempts=attempts,
+                    planning_calls=planning_calls,
+                    planning_duration_seconds=planning_duration,
+                    execution_duration_seconds=execution_duration,
+                    message=(
+                        "executed direction-aware lateral precontact at "
+                        f"{candidate.angle_degrees:+.1f} degrees"
+                    ),
+                )
+            if result.environment_steps or result.status not in {
+                PushExpertStatus.IK_FAILURE,
+                PushExpertStatus.PLANNING_FAILURE,
+            }:
+                return result
+        if last_result is None:
+            return self._failure(
+                PushExpertPhase.MOVE_TO_PRECONTACT,
+                PushExpertStatus.CONTACT_FAILURE,
+                "no workspace- and obstacle-safe lateral approach candidate",
+            )
+        return replace(
+            last_result,
+            attempts=attempts,
+            planning_calls=planning_calls,
+            planning_duration_seconds=planning_duration,
+            execution_duration_seconds=execution_duration,
+            message="all safe lateral approach candidates failed planning",
+        )
+
+    def _pose_with_position(self, position: Sequence[float]) -> np.ndarray:
+        pose = self._tcp_pose()
+        pose[:3] = np.asarray(position, dtype=np.float64)
+        return pose
 
     def _settle(self) -> PushPhaseResult:
         started = time.perf_counter()

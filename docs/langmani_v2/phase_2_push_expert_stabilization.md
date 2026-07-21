@@ -28,7 +28,15 @@ location is clearly labeled as a TCP-center proxy.
 
 | Change | Hypothesis | Lateral replay | Lateral subset | Forward | Smoke | Fixed 50/30 | Decision |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| baseline | geometry-corrected expert | pending instrumented replay | pending | 24/24 standard | 8/8, 5/8 | 41/50, 21/30 | blocked |
+| baseline | geometry-corrected expert | 16/16 reproduced | pending | 24/24 standard | 8/8, 5/8 | 41/50, 21/30 | blocked |
+| A | compensate signed lateral drift by 15 degrees; add safe fixed fallback list | pending | pending | pending | pending | pending | provisional |
+
+The behavior-neutral replay classified the 16 lateral failures as seven contact losses, two
+verification-boundary cases, two workspace-margin violations, and one each of overshoot, primary
+planner failure, unreachable initial approach, premature wrong-object contact, and action-bound
+violation. Failed left pushes deviated toward world `+x` by approximately 14--18 degrees; failed
+right pushes showed the opposite signed angular error but the same world-`+x` bias. Candidate A is
+the single predeclared response to that measured asymmetry, not a parameter sweep.
 
 Earlier uncommitted probes that combined a deeper endpoint with longer settling, or removed the
 separate correction lift, each reached only 10/17 and introduced workspace or forward regressions.

@@ -173,6 +173,7 @@ def main() -> int:
                     "minimum_workspace_margin": min(item.workspace_margin for item in trace),
                     "final_object_to_target_distance": last.target_distance,
                     "result": result.to_dict(),
+                    "approach_candidates": list(expert.approach_candidate_diagnostics),
                     "trace": [item.to_dict() for item in trace],
                     "primary_root_cause": cause,
                 }
