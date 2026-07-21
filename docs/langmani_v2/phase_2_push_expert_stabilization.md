@@ -30,6 +30,7 @@ location is clearly labeled as a TCP-center proxy.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | baseline | geometry-corrected expert | 16/16 reproduced | pending | 24/24 standard | 8/8, 5/8 | 41/50, 21/30 | blocked |
 | A | 15-degree compensation plus 4 cm cylinder contact | 8/16 recovered; 3 new standard workspace exits | Standard 20/26, Hard 11/16; 6 workspace exits | not run | not run | not run | rejected |
+| B | cube-only 15-degree compensation; baseline cylinder contact/direction | pending | pending | protected | pending | pending | provisional |
 
 The behavior-neutral replay classified the 16 lateral failures as seven contact losses, two
 verification-boundary cases, two workspace-margin violations, and one each of overshoot, primary
@@ -47,6 +48,11 @@ lateral seeds, but the complete subset exposed five new standard cylinder worksp
 hard cylinder workspace exit. Its protected forward and official gates were therefore not run.
 The next bounded diagnostic replays only those fixed candidate-A failures to separate the signed
 direction compensation from the newly deeper cylinder contact and correction behavior.
+
+That replay localized all six workspace exits to the cylinder: two occurred during the primary
+push and four during correction. Candidate B therefore retains compensation only for the cube and
+restores the cylinder's original 4.5 cm ideal-direction contact. This is a geometry-specific
+ablation from phase evidence, not a new angle or distance sweep.
 
 ## Gate
 

@@ -92,7 +92,7 @@ def build_lateral_approach_candidates(
     desired = np.asarray(desired_direction, dtype=np.float64)
     side = 1.0 if desired[1] >= 0.0 else -1.0
     preferred = side * float(compensation_degrees)
-    angles = (preferred, preferred * 0.5, 0.0, -preferred * 0.5)
+    angles = tuple(dict.fromkeys((preferred, preferred * 0.5, 0.0, -preferred * 0.5)))
     x_min, x_max, y_min, y_max = workspace_bounds_xy
     candidates: list[LateralApproachCandidate] = []
     for angle in angles:

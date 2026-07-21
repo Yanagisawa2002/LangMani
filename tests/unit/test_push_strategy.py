@@ -65,6 +65,26 @@ def test_candidate_scoring_rejects_a_distractor_swept_path() -> None:
     assert all(candidate.safe for candidate in candidates[: sum(item.safe for item in candidates)])
 
 
+def test_zero_compensation_emits_one_ideal_candidate() -> None:
+    candidates = build_lateral_approach_candidates(
+        desired_direction=np.array([0.8, 0.6]),
+        object_position=np.array([-0.18, 0.0, 0.025]),
+        tcp_position=np.array([0.0, 0.0, 0.18]),
+        distractors=(),
+        contact_offset=0.045,
+        precontact_clearance=0.075,
+        precontact_height=0.12,
+        push_height=0.015,
+        workspace_bounds_xy=(-0.43, 0.43, -0.38, 0.38),
+        compensation_degrees=0.0,
+        minimum_obstacle_clearance=0.015,
+    )
+
+    assert len(candidates) == 1
+    assert candidates[0].angle_degrees == pytest.approx(0.0)
+    assert candidates[0].contact_direction == pytest.approx((0.8, 0.6))
+
+
 def test_point_to_segment_distance_is_bounded_to_the_swept_segment() -> None:
     assert point_to_segment_distance(
         np.array([2.0, 1.0]), np.array([0.0, 0.0]), np.array([1.0, 0.0])

@@ -171,7 +171,10 @@ def test_push_expert_config_rejects_unbounded_correction_search() -> None:
         PushExpertConfig(maximum_corrective_pushes=3)
 
     with pytest.raises(ValueError, match="must not exceed 25"):
-        PushExpertConfig(lateral_compensation_degrees=30.0)
+        PushExpertConfig(lateral_cube_compensation_degrees=30.0)
+
+    with pytest.raises(ValueError, match="must not exceed 25"):
+        PushExpertConfig(lateral_cylinder_compensation_degrees=30.0)
 
 
 def test_push_endpoint_stops_inside_full_containment_with_geometry_margin() -> None:
@@ -218,6 +221,38 @@ def test_push_height_is_geometry_specific() -> None:
     )
     expert._context = environment.context
     assert expert._push_height() == pytest.approx(0.015)
+
+
+def test_lateral_contact_strategy_is_geometry_specific() -> None:
+    environment = _FakeEnvironment()
+    expert = PushToRegionExpert(
+        environment,
+        planner_factory=lambda _env: _FakePlanner(environment),
+    )
+    expert._context = environment.context
+    assert expert._contact_offset() == pytest.approx(0.045)
+    assert expert._lateral_compensation_degrees() == pytest.approx(15.0)
+
+    environment.context = PushExpertTaskContext(
+        environment_id=environment.context.environment_id,
+        episode_spec=PushEpisodeSpec.create(
+            scene_seed=77,
+            task_spec=PushTaskSpec("orange_cylinder", "left", "standard"),
+        ),
+        agent=environment.context.agent,
+        robot=environment.context.robot,
+        target_object=environment.context.objects[1],
+        objects=environment.context.objects,
+        target_region_center=environment.context.target_region_center,
+        target_region_radius=environment.context.target_region_radius,
+        target_object_planar_radius=0.025,
+        target_object_resting_height=0.025,
+        full_containment_center_radius=0.08,
+        table_top_z=environment.context.table_top_z,
+    )
+    expert._context = environment.context
+    assert expert._contact_offset() == pytest.approx(0.045)
+    assert expert._lateral_compensation_degrees() == pytest.approx(0.0)
 
 
 def test_forward_strategy_preserves_the_original_contact_formula() -> None:

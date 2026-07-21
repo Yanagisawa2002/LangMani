@@ -2528,3 +2528,21 @@ original 4.5 cm formula. Stable settling increases from 12 to 16 holds so the tw
 static cases can reach the unchanged five-step success predicate. Target positions, region sizes,
 success/failure predicates, 250-step limit, forward contact strategy, and low-level action handling
 are unchanged. Candidate A remains provisional until the fixed staged experiments accept it.
+
+## D-091 - Reject the shared-geometry candidate and isolate cube compensation
+
+Candidate A recovered eight of the sixteen fixed failed lateral episodes, but its complete
+42-episode lateral subset reached only 20/26 standard and 11/16 hard. More importantly, all six
+new workspace exits involved `orange_cylinder`: two exited during the primary push and four exited
+during a corrective push. The shared 15-degree compensation plus the deeper 4 cm cylinder contact
+therefore introduced a systemic geometry-specific regression. Candidate A is rejected before the
+16-task smoke and the fixed 50/30 gate.
+
+Candidate B is the one bounded evidence-driven separation of Candidate A. Blue-cube lateral tasks
+retain the measured 15-degree compensation, while orange-cylinder lateral tasks restore the
+baseline ideal direction and original 4.5 cm contact offset. A zero-degree cylinder strategy emits
+only the ideal candidate rather than duplicate planner attempts. The independently motivated
+16-step settling change remains because the baseline replay contained two already-contained
+static-boundary failures. No target geometry, success predicate, episode limit, action handling,
+schedule, or forward strategy changes. Candidate B remains provisional until the unchanged staged
+gates accept it.

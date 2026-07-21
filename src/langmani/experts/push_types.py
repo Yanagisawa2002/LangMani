@@ -77,8 +77,8 @@ class PushExpertConfig:
     settle_steps: int = 16
     maximum_corrective_pushes: int = 2
     tcp_position_tolerance: float = 0.025
-    lateral_compensation_degrees: float = 15.0
-    lateral_cylinder_contact_offset: float = 0.04
+    lateral_cube_compensation_degrees: float = 15.0
+    lateral_cylinder_compensation_degrees: float = 0.0
     minimum_approach_obstacle_clearance: float = 0.015
     diagnostic_rendering: bool = False
 
@@ -107,13 +107,17 @@ class PushExpertConfig:
             "cylinder_push_height",
             "region_goal_margin",
             "tcp_position_tolerance",
-            "lateral_compensation_degrees",
-            "lateral_cylinder_contact_offset",
+            "lateral_cube_compensation_degrees",
+            "lateral_cylinder_compensation_degrees",
             "minimum_approach_obstacle_clearance",
         ):
             object.__setattr__(self, label, _finite(getattr(self, label), label))
-        if self.lateral_compensation_degrees > 25.0:
-            raise ValueError("lateral_compensation_degrees must not exceed 25")
+        for label in (
+            "lateral_cube_compensation_degrees",
+            "lateral_cylinder_compensation_degrees",
+        ):
+            if getattr(self, label) > 25.0:
+                raise ValueError(f"{label} must not exceed 25")
         if not isinstance(self.diagnostic_rendering, bool):
             raise TypeError("diagnostic_rendering must be a bool")
 
@@ -132,8 +136,8 @@ class PushExpertConfig:
             "settle_steps": self.settle_steps,
             "maximum_corrective_pushes": self.maximum_corrective_pushes,
             "tcp_position_tolerance": self.tcp_position_tolerance,
-            "lateral_compensation_degrees": self.lateral_compensation_degrees,
-            "lateral_cylinder_contact_offset": self.lateral_cylinder_contact_offset,
+            "lateral_cube_compensation_degrees": self.lateral_cube_compensation_degrees,
+            "lateral_cylinder_compensation_degrees": self.lateral_cylinder_compensation_degrees,
             "minimum_approach_obstacle_clearance": self.minimum_approach_obstacle_clearance,
             "diagnostic_rendering": self.diagnostic_rendering,
         }

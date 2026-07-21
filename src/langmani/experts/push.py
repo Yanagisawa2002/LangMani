@@ -390,10 +390,18 @@ class PushToRegionExpert:
         )
 
     def _contact_offset(self) -> float:
-        context = self._require_context()
-        if self._is_lateral_task() and context.target_object.object_id == "orange_cylinder":
-            return self.config.lateral_cylinder_contact_offset
         return self.config.contact_offset
+
+    def _lateral_compensation_degrees(self) -> float:
+        object_id = self._require_context().target_object.object_id
+        if object_id == "blue_cube":
+            return self.config.lateral_cube_compensation_degrees
+        if object_id == "orange_cylinder":
+            return self.config.lateral_cylinder_compensation_degrees
+        raise _PushAbort(
+            PushExpertStatus.INVALID_TASK,
+            f"lateral compensation is undefined for {object_id!r}",
+        )
 
     def _is_lateral_task(self) -> bool:
         return is_lateral_region(self._require_context().episode_spec.task_spec.target_region_id)
@@ -427,7 +435,7 @@ class PushToRegionExpert:
             precontact_height=self.config.precontact_height,
             push_height=self._push_height(),
             workspace_bounds_xy=WORKSPACE_BOUNDS_XY,
-            compensation_degrees=self.config.lateral_compensation_degrees,
+            compensation_degrees=self._lateral_compensation_degrees(),
             minimum_obstacle_clearance=self.config.minimum_approach_obstacle_clearance,
         )
         self._approach_candidates = candidates
