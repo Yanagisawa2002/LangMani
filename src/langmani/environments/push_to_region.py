@@ -744,6 +744,17 @@ class PushToRegionEnv(BaseEnv):
             raise ValueError(f"push expert requires num_envs=1, got {self.num_envs}")
         return dict(self.evaluate())
 
+    def get_push_expert_action_bounds(self) -> tuple[np.ndarray, np.ndarray]:
+        """Return copied controller bounds for expert-side plan validation."""
+
+        if self.num_envs != 1:
+            raise ValueError(f"push expert requires num_envs=1, got {self.num_envs}")
+        low = np.asarray(self._orig_single_action_space.low, dtype=np.float64)
+        high = np.asarray(self._orig_single_action_space.high, dtype=np.float64)
+        if low.shape != (8,) or high.shape != (8,) or np.any(low > high):
+            raise PushExpertContextError("push expert action bounds are malformed")
+        return low.copy(), high.copy()
+
 
 __all__ = [
     "ENV_ID",

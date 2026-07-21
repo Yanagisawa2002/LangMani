@@ -484,10 +484,15 @@ class PushToRegionExpert:
                         f"{candidate.angle_degrees:+.1f} degrees"
                     ),
                 )
-            if result.environment_steps or result.status not in {
-                PushExpertStatus.IK_FAILURE,
-                PushExpertStatus.PLANNING_FAILURE,
-            }:
+            recoverable_precheck = (
+                result.status is PushExpertStatus.EXECUTION_FAILURE
+                and result.planner_status == "ActionBoundsPrecheck"
+            )
+            if result.environment_steps or (
+                result.status
+                not in {PushExpertStatus.IK_FAILURE, PushExpertStatus.PLANNING_FAILURE}
+                and not recoverable_precheck
+            ):
                 return result
         if last_result is None:
             return self._failure(
@@ -590,10 +595,29 @@ class PushToRegionExpert:
                         execution_duration=time.perf_counter() - started - planning_duration,
                         planner_status=last_status,
                     )
-                for arm_position in plan.positions:
+                planned_actions = tuple(
+                    np.asarray((*arm_position, CLOSED_GRIPPER), dtype=np.float64)
+                    for arm_position in plan.positions
+                )
+                low, high = self._action_bounds()
+                if any(np.any(action < low) or np.any(action > high) for action in planned_actions):
+                    return self._failure(
+                        phase,
+                        PushExpertStatus.EXECUTION_FAILURE,
+                        "planned joint action exceeds controller bounds before execution",
+                        attempts=1,
+                        steps=self._environment_steps - before,
+                        planning_calls=planning_calls,
+                        planning_duration=planning_duration,
+                        execution_duration=max(
+                            0.0, time.perf_counter() - started - planning_duration
+                        ),
+                        planner_status="ActionBoundsPrecheck",
+                    )
+                for action in planned_actions:
                     if self._terminal_success:
                         break
-                    self._step_action(np.asarray((*arm_position, CLOSED_GRIPPER)))
+                    self._step_action(action)
         except _PushAbort as error:
             return self._failure(
                 phase,
@@ -710,6 +734,25 @@ class PushToRegionExpert:
         if not isinstance(raw, Mapping):
             raise RuntimeError("get_push_expert_evaluation() must return a mapping")
         return {str(key): _json_scalar(value, str(key)) for key, value in raw.items()}
+
+    def _action_bounds(self) -> tuple[np.ndarray, np.ndarray]:
+        getter = getattr(self.base, "get_push_expert_action_bounds", None)
+        if not callable(getter):
+            raise RuntimeError("environment lacks get_push_expert_action_bounds()")
+        raw = getter()
+        if not isinstance(raw, tuple) or len(raw) != 2:
+            raise RuntimeError("push expert action bounds must be a (low, high) tuple")
+        low = np.asarray(raw[0], dtype=np.float64)
+        high = np.asarray(raw[1], dtype=np.float64)
+        if (
+            low.shape != (PANDA_ACTION_DOF,)
+            or high.shape != (PANDA_ACTION_DOF,)
+            or not np.isfinite(low).all()
+            or not np.isfinite(high).all()
+            or np.any(low > high)
+        ):
+            raise RuntimeError("push expert action bounds are malformed")
+        return low, high
 
     def _target_position(self) -> np.ndarray:
         return _pose7(self._require_context().target_object.actor.pose.raw_pose)[:3]

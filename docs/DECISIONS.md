@@ -2579,3 +2579,20 @@ success relaxation: an incomplete primary push still fails the unchanged stable 
 verification. Cube lateral corrections, all forward behavior, environment success/failure
 predicates, planner bounds, and action validation remain unchanged. Candidate D must restore the
 workspace-exit count before it can proceed beyond the fixed lateral subset.
+
+## D-094 - Reject unsafe plans before execution and use one bounded approach fallback
+
+Candidate D completed the fixed lateral subset at 22/26 standard and 10/16 hard with zero
+workspace exits, but the unchanged 16-task smoke remained 8/8 standard and 5/8 hard. Seed 45005
+failed while moving to the ideal cylinder precontact because an mplib joint position exceeded the
+environment controller bounds at step 51. The failure occurred before object contact, yet the
+expert could only discover it by stepping the invalid action and therefore could not try another
+already-scored approach.
+
+Candidate E adds an explicit expert-only action-bound accessor and validates every planned joint
+position before the first environment step. An out-of-bounds plan remains a classified failure and
+is never clipped, projected, or executed. Only for this zero-step precheck failure may the existing
+lateral approach loop try the next fixed safe normal. A zero-compensation cylinder now has the
+bounded symmetric set 0, plus or minus 7.5, and plus or minus 15 degrees; all candidates retain the
+same reachability, workspace, and distractor scoring. This is a general origin-layer action-bound
+fix, not a seed exception. Wrong-object and forward paths are otherwise unchanged.

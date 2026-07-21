@@ -65,7 +65,7 @@ def test_candidate_scoring_rejects_a_distractor_swept_path() -> None:
     assert all(candidate.safe for candidate in candidates[: sum(item.safe for item in candidates)])
 
 
-def test_zero_compensation_emits_one_ideal_candidate() -> None:
+def test_zero_compensation_emits_bounded_symmetric_fallbacks() -> None:
     candidates = build_lateral_approach_candidates(
         desired_direction=np.array([0.8, 0.6]),
         object_position=np.array([-0.18, 0.0, 0.025]),
@@ -80,7 +80,14 @@ def test_zero_compensation_emits_one_ideal_candidate() -> None:
         minimum_obstacle_clearance=0.015,
     )
 
-    assert len(candidates) == 1
+    assert len(candidates) == 5
+    assert {candidate.angle_degrees for candidate in candidates} == {
+        -15.0,
+        -7.5,
+        0.0,
+        7.5,
+        15.0,
+    }
     assert candidates[0].angle_degrees == pytest.approx(0.0)
     assert candidates[0].contact_direction == pytest.approx((0.8, 0.6))
 

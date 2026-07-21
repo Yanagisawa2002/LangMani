@@ -167,6 +167,21 @@ def test_push_action_inspection_records_nonfinite_and_bounds_without_silent_proj
     assert prepared[1, 1] == pytest.approx(1.25)
 
 
+def test_push_expert_action_bounds_are_explicit_validated_copies() -> None:
+    env = object.__new__(PushToRegionEnv)
+    env.num_envs = 1
+    env._orig_single_action_space = SimpleNamespace(
+        low=np.full(8, -1.0, dtype=np.float32),
+        high=np.full(8, 1.0, dtype=np.float32),
+    )
+
+    low, high = env.get_push_expert_action_bounds()
+    low[0] = 10.0
+
+    assert high.tolist() == [1.0] * 8
+    assert env._orig_single_action_space.low[0] == pytest.approx(-1.0)
+
+
 def test_push_per_step_paths_do_not_materialize_tensors_on_cpu() -> None:
     for function in (
         PushToRegionEnv.evaluate,

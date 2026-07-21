@@ -70,6 +70,8 @@ class _FakeEnvironment:
             full_containment_center_radius=0.07,
             table_top_z=0.0,
         )
+        self.action_low = np.asarray([-3.0] * 7 + [-1.0])
+        self.action_high = np.asarray([3.0] * 7 + [1.0])
 
     def get_push_expert_task_context(self) -> PushExpertTaskContext:
         return self.context
@@ -92,6 +94,9 @@ class _FakeEnvironment:
             "invalid_action": torch.tensor([False]),
             "action_out_of_bounds": torch.tensor([False]),
         }
+
+    def get_push_expert_action_bounds(self) -> tuple[np.ndarray, np.ndarray]:
+        return self.action_low.copy(), self.action_high.copy()
 
     def step(self, action: np.ndarray):
         assert action.shape == (8,)
@@ -128,6 +133,20 @@ class _FakePlanner:
 
     def close(self) -> None:
         self.closed = True
+
+
+class _ActionBoundFallbackPlanner(_FakePlanner):
+    def plan_pose(self, pose7, *, use_attached: bool = False) -> PlannerPlanResult:
+        del use_attached
+        self.plan_count += 1
+        self.environment.tcp.pose.raw_pose = torch.tensor([pose7], dtype=torch.float32)
+        position = (3.5, *([0.0] * 6)) if self.plan_count == 1 else tuple([0.0] * 7)
+        return PlannerPlanResult(
+            success=True,
+            status="Success",
+            failure=None,
+            positions=(position,),
+        )
 
 
 def test_push_expert_completes_explicit_planar_phase_sequence() -> None:
@@ -288,6 +307,29 @@ def test_unsafe_lateral_cylinder_recontact_is_disabled() -> None:
     assert result.environment_steps == 0
     assert result.planning_calls == 0
     assert "re-contact is disabled" in result.message
+
+
+def test_lateral_approach_falls_back_before_executing_out_of_bounds_plan() -> None:
+    environment = _FakeEnvironment()
+    planner = _ActionBoundFallbackPlanner(environment)
+    expert = PushToRegionExpert(
+        environment,
+        planner_factory=lambda _env: planner,
+    )
+    expert._context = environment.context
+    expert._planner = planner
+    candidates = expert._lateral_approach_candidates(
+        expert._target_position(),
+        expert._push_direction(expert._target_position()),
+    )
+
+    result = expert._planned_lateral_approach(candidates)
+
+    assert result.success
+    assert result.attempts == 2
+    assert result.planning_calls == 2
+    assert result.environment_steps == 1
+    assert environment.step_count == 1
 
 
 def test_forward_strategy_preserves_the_original_contact_formula() -> None:
