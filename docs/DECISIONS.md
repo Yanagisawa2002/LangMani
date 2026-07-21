@@ -2425,3 +2425,18 @@ and zero policy/environment failures. The independent verifier rehashed the cano
 recomputed the four-file evidence contract, and returned `phase2_authorized=true`. Phase 2 may now
 start with the standard pushing task; this decision does not pre-authorize its expert, data, or
 SmolVLA stages.
+
+## D-086 - Define pushing as one parameterized skill family
+
+Phase 2 adds `push_to_region` as one manipulation skill family rather than treating geometry,
+target location, or difficulty as separate skills. The first immutable task product is two contact
+geometries (`blue_cube`, `orange_cylinder`) by four named target regions by two explicit difficulty
+levels, for 16 task instances. A scene seed remains separate from this semantic task identity.
+
+Success is conservative: the complete planar object footprint must fit in the target region, the
+object must remain planar and static, an overshoot cannot be accepted, and the condition must hold
+for consecutive simulator steps. Workspace exit, lift, topple, grasp, invalid action,
+wrong-object contact/displacement, projection, collision, and no-progress stall remain distinct
+events so later expert and learned-policy reports do not infer every failure from one final bit.
+The pure batched Torch contract is accepted before simulator integration; it is not physical task
+evidence.

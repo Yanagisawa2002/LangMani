@@ -6,6 +6,13 @@ Phase 2 is authorized to begin but is not yet implemented. The required Phase 1 
 independent entry gate now pass. This status is not a claim that the multi-skill benchmark or
 SmolVLA baseline already exists.
 
+The first implementation checkpoint defines an immutable `PushTaskSpec` with two contact
+geometries (`blue_cube`, `orange_cylinder`), four parameterized target regions (`left`, `right`,
+`forward_left`, `forward_right`), and explicit `standard`/`hard` difficulty. Its batched evaluation
+logic keeps stable-success count, full-region containment, workspace exit, lift, topple, grasp,
+wrong-object displacement/contact, overshoot, action validity, projection, collision, and stall as
+separate numeric/tensor events. Simulator integration and physical validation remain pending.
+
 ## Minimum recovery implemented
 
 `environment/verify_v2_phase1.py` independently validates:
