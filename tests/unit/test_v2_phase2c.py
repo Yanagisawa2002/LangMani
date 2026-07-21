@@ -580,3 +580,13 @@ def test_training_launcher_replaces_base_camera_mapping_instead_of_merging(tmp_p
     assert not any(item.startswith("--policy.dtype=") for item in command)
     assert not any(item.startswith("--policy.output_features=") for item in command)
     assert not any("observation.images.camera" in item for item in command)
+
+
+def test_training_launcher_enforces_bf16_accelerate_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    launcher = _load_training_launcher()
+    monkeypatch.setenv("ACCELERATE_MIXED_PRECISION", "fp16")
+    environment = launcher._launch_environment()
+    assert environment["ACCELERATE_MIXED_PRECISION"] == "bf16"
+    assert environment["HF_HUB_DISABLE_XET"] == "1"

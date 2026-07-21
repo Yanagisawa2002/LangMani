@@ -18,6 +18,14 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PROTOCOL = PROJECT_ROOT / "configs" / "langmani_v2" / "phase2c_smolvla_push.json"
 
 
+def _launch_environment() -> dict[str, str]:
+    return {
+        **os.environ,
+        "HF_HUB_DISABLE_XET": "1",
+        "ACCELERATE_MIXED_PRECISION": "bf16",
+    }
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stage", choices=("smoke", "micro", "full"), required=True)
@@ -183,10 +191,17 @@ def main(argv: list[str] | None = None) -> int:
     lerobot_output = output / "lerobot"
     if lerobot_output.exists() and args.resume_checkpoint is None:
         raise Phase2CContractError(f"refusing to overwrite LeRobot output: {lerobot_output}")
+    launch_environment = _launch_environment()
     environment = {
-        key: os.environ.get(key)
-        for key in ("CUDA_VISIBLE_DEVICES", "HF_HOME", "HF_HUB_CACHE", "TRANSFORMERS_CACHE")
-        if os.environ.get(key)
+        key: launch_environment.get(key)
+        for key in (
+            "CUDA_VISIBLE_DEVICES",
+            "HF_HOME",
+            "HF_HUB_CACHE",
+            "TRANSFORMERS_CACHE",
+            "ACCELERATE_MIXED_PRECISION",
+        )
+        if launch_environment.get(key)
     }
     manifest = {
         "schema_version": "langmani-v2-phase2c-training-launch-v0",
@@ -223,6 +238,7 @@ def main(argv: list[str] | None = None) -> int:
         "precision": {
             "requested_parameter_dtype": protocol["model"]["dtype"],
             "lerobot_policy_dtype_cli_supported": False,
+            "accelerate_mixed_precision": "bf16",
             "observed_dtype_must_be_recorded_by_training_runtime": True,
         },
     }
@@ -236,7 +252,7 @@ def main(argv: list[str] | None = None) -> int:
         process = subprocess.Popen(
             command,
             cwd=PROJECT_ROOT,
-            env={**os.environ, "HF_HUB_DISABLE_XET": "1"},
+            env=launch_environment,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
