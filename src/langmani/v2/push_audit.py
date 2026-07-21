@@ -9,7 +9,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, cast
 
-from langmani.datasets.lerobot_types import FeatureContract
+from langmani.datasets.lerobot_types import FeatureContract, LeRobotValidationReport
 from langmani.v2.push_archive import sha256_file, validate_push_native_episode
 from langmani.v2.push_dataset import (
     DATASET_SPLITS,
@@ -60,6 +60,44 @@ def validate_phase2b_result_manifest(
     )
 
 
+def validated_pick_place_source_record(pick_place_root: str | Path) -> dict[str, object]:
+    """Bind compatibility evidence to the historical full M3B validation."""
+
+    pick_root = Path(pick_place_root).resolve()
+    validation_path = pick_root / "langmani" / "validation_report.json"
+    stats_path = pick_root / "meta" / "stats.json"
+    if not validation_path.is_file():
+        raise PushDatasetContractError(
+            "historical pick dataset lacks langmani/validation_report.json"
+        )
+    if not stats_path.is_file():
+        raise PushDatasetContractError("historical pick dataset lacks meta/stats.json")
+    validation = LeRobotValidationReport.from_dict(_read_json(validation_path))
+    if validation.mode.value != "full" or not validation.passed:
+        raise PushDatasetContractError(
+            "historical pick dataset must have a passing full validation report"
+        )
+    return {
+        "validation_report_sha256": sha256_file(validation_path),
+        "statistics_sha256": sha256_file(stats_path),
+        "validation": {
+            "mode": validation.mode.value,
+            "dataset_load_validated": validation.dataset_load_validated,
+            "feature_schema_validated": validation.feature_schema_validated,
+            "parquet_validated": validation.parquet_validated,
+            "video_decode_validated": validation.video_decode_validated,
+            "source_alignment_validated": validation.source_alignment_validated,
+            "split_integrity_validated": validation.split_integrity_validated,
+            "privileged_leakage_validated": validation.privileged_leakage_validated,
+            "dataloader_validated": validation.dataloader_validated,
+            "passed": validation.passed,
+        },
+        "action_replay_status": (
+            "content_bound_to_prevalidated_m3a_source_not_replayed_again_in_phase2b"
+        ),
+    }
+
+
 def audit_pick_place_compatibility(
     *,
     pick_place_root: str | Path,
@@ -78,6 +116,7 @@ def audit_pick_place_compatibility(
     pick_summary_path = pick_root / "langmani" / "summary.json"
     pick_manifest = _read_json(pick_manifest_path)
     pick_summary = _read_json(pick_summary_path) if pick_summary_path.is_file() else {}
+    pick_source = validated_pick_place_source_record(pick_root)
     push_manifest = _read_json(push_root / "langmani" / "export_manifest.json")
     push_repo_id_prefix = push_manifest.get("repo_id_prefix")
     if not isinstance(push_repo_id_prefix, str):
@@ -147,6 +186,10 @@ def audit_pick_place_compatibility(
         "pick_place_frame_count": int(pick_dataset.num_frames),
         "pick_place_format_version": str(pick_dataset.meta.info.codebase_version),
         "pick_place_manifest_sha256": sha256_file(pick_manifest_path),
+        "pick_place_validation_report_sha256": pick_source["validation_report_sha256"],
+        "pick_place_statistics_sha256": pick_source["statistics_sha256"],
+        "pick_place_validation": pick_source["validation"],
+        "pick_place_action_replay_status": pick_source["action_replay_status"],
         "pick_place_summary": pick_summary,
         "push_episode_count": int(push_manifest["episode_count"]),
         "push_split_count": len(cast(Mapping[str, object], push_splits["counts"])),

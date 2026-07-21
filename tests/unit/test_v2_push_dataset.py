@@ -10,7 +10,7 @@ import h5py
 import numpy as np
 import pytest
 
-from langmani.datasets.lerobot_types import FeatureContract
+from langmani.datasets.lerobot_types import ExportMode, FeatureContract, LeRobotValidationReport
 from langmani.v2.push_archive import (
     load_native_actions,
     load_native_transition_labels,
@@ -24,6 +24,7 @@ from langmani.v2.push_audit import (
     first_available_push_split,
     validate_phase2b_result_manifest,
     validate_source_validation_report,
+    validated_pick_place_source_record,
 )
 from langmani.v2.push_dataset import (
     PushCollectionConfig,
@@ -297,3 +298,48 @@ def test_pick_compatibility_can_select_pilot_or_canonical_split(tmp_path: Path) 
     assert first_available_push_split(tmp_path) == "pilot"
     (tmp_path / "splits" / "train").mkdir()
     assert first_available_push_split(tmp_path) == "train"
+
+
+def test_pick_compatibility_requires_content_bound_full_validation(tmp_path: Path) -> None:
+    sidecar = tmp_path / "langmani"
+    stats = tmp_path / "meta" / "stats.json"
+    sidecar.mkdir(parents=True)
+    stats.parent.mkdir(parents=True)
+    report = LeRobotValidationReport(
+        export_fingerprint=f"sha256:{'1' * 64}",
+        mode=ExportMode.FULL,
+        dataset_load_validated=True,
+        feature_schema_validated=True,
+        parquet_validated=True,
+        video_decode_validated=True,
+        source_alignment_validated=True,
+        split_integrity_validated=True,
+        privileged_leakage_validated=True,
+        dataloader_validated=True,
+        source_alignments=(),
+        video_results=(),
+        passed=True,
+    )
+    (sidecar / "validation_report.json").write_text(json.dumps(report.to_dict()), encoding="utf-8")
+    stats.write_text("{}", encoding="utf-8")
+
+    record = validated_pick_place_source_record(tmp_path)
+
+    assert record["validation_report_sha256"].startswith("sha256:")
+    assert record["statistics_sha256"].startswith("sha256:")
+    assert record["validation"] == {
+        "mode": "full",
+        "dataset_load_validated": True,
+        "feature_schema_validated": True,
+        "parquet_validated": True,
+        "video_decode_validated": True,
+        "source_alignment_validated": True,
+        "split_integrity_validated": True,
+        "privileged_leakage_validated": True,
+        "dataloader_validated": True,
+        "passed": True,
+    }
+
+    stats.unlink()
+    with pytest.raises(PushDatasetContractError, match="meta/stats.json"):
+        validated_pick_place_source_record(tmp_path)
