@@ -1,0 +1,44 @@
+{
+  "schema_version": "langmani-v2-phase2b-source-validation-v0",
+  "implementation_commit": "f081275478a72aa90b7b6529874c974a02e695dc",
+  "ruff": {
+    "commands": [
+      "python -m ruff format --check .",
+      "python -m ruff check ."
+    ],
+    "formatted_file_count": 310,
+    "passed": true
+  },
+  "cpu_safe_tests": {
+    "command": "python -m pytest -m 'not gpu and not rendering' -q",
+    "passed_count": 1474,
+    "skipped_count": 15,
+    "deselected_count": 16,
+    "passed": true
+  },
+  "push_specific_tests": {
+    "command": "python -m pytest -q tests/unit/test_push_strategy.py tests/unit/test_push_specs.py tests/unit/test_push_logic.py tests/unit/test_push_expert.py tests/unit/test_push_environment_contract.py tests/unit/test_push_diagnostics.py",
+    "passed_count": 50,
+    "passed": true
+  },
+  "dataset_specific_tests": {
+    "command": "python -m pytest -q tests/unit/test_v2_push_dataset.py",
+    "passed_count": 22,
+    "passed": true
+  },
+  "isolated_build": {
+    "command": "python -m build --outdir outputs/build/phase2b-source-f081275",
+    "sdist": "langmani-0.1.0.tar.gz",
+    "wheel": "langmani-0.1.0-py3-none-any.whl",
+    "passed": true
+  },
+  "server_integration": {
+    "command": "python -m pytest -q tests/unit/test_v2_push_dataset.py tests/unit/test_push_strategy.py tests/unit/test_push_specs.py tests/unit/test_push_logic.py tests/unit/test_push_expert.py tests/unit/test_push_environment_contract.py tests/unit/test_push_diagnostics.py",
+    "passed_count": 72,
+    "real_pilot_episode_count": 22,
+    "real_full_replay_episode_count": 397,
+    "real_lerobot_readback_episode_count": 397,
+    "passed": true
+  },
+  "passed": true
+}
