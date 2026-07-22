@@ -56,6 +56,21 @@ optimizer step ran. See the
 [`dataset status report`](docs/langmani_v2/phase_2b2_dataset_report.md), and
 [`v1/v2 comparison`](docs/langmani_v2/phase_2b2_v1_comparison.md).
 
+Phase 2B.3 then tested whether short simulator rollouts could replace further geometric-expert
+tuning. The required state-clone precondition failed: cold sandboxes were mutually deterministic,
+but a target-contact-free restored state differed from the live contact-bearing continuation by
+4.394 mm in object pose. The phase therefore stopped as Result C before implementing the expert or
+accessing development/formal gates. Formal seeds 66300--66399 remain sealed; data production,
+Phase 2C.2, and SmolVLA are still blocked. See the
+[`clone audit`](docs/langmani_v2/phase_2b3_state_clone_audit.md) and
+[`Result C report`](docs/langmani_v2/phase_2b3_expert_report.md).
+
+The compact fail-closed evidence can be rehashed without simulator execution:
+
+```bash
+python environment/verify_v2_phase2b3.py
+```
+
 The completed Phase 2B archive can be independently re-audited without starting training:
 
 ```bash

@@ -3041,3 +3041,25 @@ defines Result B for expert-gate failure. With two failed 100-episode formal gat
 diagnostic candidates G--P, no further bounded repair is justified inside this milestone. Formal
 seeds 66300--66399 and every collection seed remain untouched. Raw collection, LeRobot export,
 archives, replication, SmolVLA loading, optimization, training, and Phase 2D did not start.
+
+## D-123 - Close simulator-backed Phase 2B.3 as Result C at clone precondition
+
+Phase 2B.3 began from exact source `8476a72b3ce7504e7fef0a08114c6c567da77ba7` and audited the
+installed ManiSkill 3.0.1 public state surface before implementing a simulator-MPC runtime. The
+project snapshot covered actor/articulation state, robot joints, empty `pd_joint_pos` controller
+state, task counters, elapsed steps, seeds, and RNG state. It intentionally did not claim access to
+PhysX private solver/contact caches.
+
+Three native RTX 5090 attempts are retained. Two independently cold-restored environments replayed
+the same contact-bearing actions exactly, and all 192 categorical comparisons agreed. However, the
+last audit captured three actions before first target contact and still observed 4.394 mm maximum
+target-pose divergence between live continuation and a fresh reset-plus-restore. The allowed pose
+tolerance was 0.020 mm, and the task's containment clearance is only 5 mm. Configuration and
+environment isolation passed, but simulator transition equivalence failed materially.
+
+The architecture is classified `RESULT_C`. Relaxing tolerance, substituting a hand-written model,
+or running quality gates anyway would violate the authorized research question. No MPC expert,
+development pilot, prediction-agreement evaluation, repair, or formal 100-episode gate ran. Seeds
+66300--66399 remain untouched. `phase2b4_collection_authorized=false`,
+`phase2c2_training_authorized=false`, and `smolvla_started=false`; no raw archive, dataset,
+checkpoint, backward pass, or optimizer step was produced.

@@ -88,6 +88,15 @@ the expert gate. Formal seeds 66300--66399 and all collection seeds remain untou
 episodes, LeRobot export, archive, loader batch, optimizer step, SmolVLA training, or Phase 2D work
 exists.
 
+Phase 2B.3 tested a structurally different simulator-backed receding-horizon expert architecture.
+Its required clone/restore precondition failed on the native RTX 5090 target: independently
+cold-restored sandboxes replayed identically, but a verified target-contact-free snapshot diverged
+from the live contact-bearing continuation by 4.394 mm in target-object pose. The error is material
+beside the task's 5 mm containment clearance and cannot be repaired by widening tolerance. Phase
+2B.3 is therefore Result C, not an expert-quality result. The MPC runtime, development pilot,
+prediction gate, bounded repair, formal seeds 66300--66399, collection, training, and SmolVLA were
+not run. Phase 2B.4 collection and Phase 2C.2 training remain unauthorized.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
@@ -244,6 +253,9 @@ python environment/replay_push_demos.py --help
 python scripts/export_push_lerobot_dataset.py --help
 python scripts/audit_push_pick_compatibility.py --help
 python environment/verify_v2_phase2b.py --help
+
+# Phase 2B.3 compact Result C evidence verification (no simulator execution)
+python environment/verify_v2_phase2b3.py
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,

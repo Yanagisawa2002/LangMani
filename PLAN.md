@@ -48,6 +48,14 @@ mandatory 95%/100-episode gate, so formal collection never started: v2 episodes=
 optimizer steps=0, and Phase 2C.2 is not authorized. Any further work requires a separately
 authorized expert architecture, not another bounded recovery in this milestone.
 
+Phase 2B.3 evaluated that separate simulator-MPC architecture only through its mandatory native
+clone/restore precondition. Three audits preserved 100% categorical agreement and exact cold-to-
+cold replay, but the final target-contact-free snapshot differed from live continuation by 4.394
+mm in object pose. Phase 2B.3 is closed as Result C. Development and formal evaluation did not run,
+formal seeds 66300--66399 remain sealed, and Phase 2B.4 collection, Phase 2C.2 training, and SmolVLA
+remain unauthorized. A future attempt requires a new state/transition architecture rather than
+another configuration adjustment.
+
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected
