@@ -316,7 +316,11 @@ class PushToRegionExpert:
     def _primary_push(self) -> PushPhaseResult:
         phase = PushExpertPhase.PRIMARY_PUSH
         object_position = self._target_position()
-        direct = self._planned_motion(phase, (self._push_endpoint_pose(object_position),))
+        direct = self._planned_motion(
+            phase,
+            (self._push_endpoint_pose(object_position),),
+            stop_on_target_inside_region=True,
+        )
         if (
             direct.success
             or direct.environment_steps
@@ -383,7 +387,11 @@ class PushToRegionExpert:
                     object_position[:2] - direction * self._contact_offset() + direction * increment
                 )
                 pose[2] = self._push_height()
-                result = self._planned_motion(phase, (pose,))
+                result = self._planned_motion(
+                    phase,
+                    (pose,),
+                    stop_on_target_inside_region=True,
+                )
                 planning_calls += result.planning_calls
                 planning_duration += result.planning_duration_seconds
                 execution_duration += result.execution_duration_seconds
@@ -476,7 +484,11 @@ class PushToRegionExpert:
         )
         if not free_space.success:
             return free_space
-        contact_push = self._planned_motion(phase, (contact, push))
+        contact_push = self._planned_motion(
+            phase,
+            (contact, push),
+            stop_on_target_inside_region=True,
+        )
         return replace(
             contact_push,
             attempts=free_space.attempts + contact_push.attempts,
@@ -583,34 +595,63 @@ class PushToRegionExpert:
         self,
         candidates: Sequence[LateralApproachCandidate],
     ) -> PushPhaseResult:
+        before = self._environment_steps
         planning_calls = 0
         planning_duration = 0.0
         execution_duration = 0.0
         attempts = 0
         last_result: PushPhaseResult | None = None
+        lift = self._tcp_pose()
+        lift[2] = self.config.precontact_staging_height
+        lift_result = self._planned_motion(
+            PushExpertPhase.MOVE_TO_PRECONTACT,
+            (lift,),
+        )
+        planning_calls += lift_result.planning_calls
+        planning_duration += lift_result.planning_duration_seconds
+        execution_duration += lift_result.execution_duration_seconds
+        if not lift_result.success:
+            return lift_result
         for candidate in candidates:
             if not candidate.safe:
                 continue
             attempts += 1
             self._chosen_precontact_point = np.asarray(candidate.precontact_point)
-            lift = self._tcp_pose()
-            lift[2] = self.config.precontact_staging_height
             staging = self._pose_with_position(candidate.precontact_point)
             staging[2] = self.config.precontact_staging_height
-            result = self._planned_motion(
+            staging_result = self._planned_motion(
                 PushExpertPhase.MOVE_TO_PRECONTACT,
-                (lift, staging, self._pose_with_position(candidate.precontact_point)),
-                action_stride=self.config.free_space_action_stride,
+                (staging,),
             )
-            planning_calls += result.planning_calls
-            planning_duration += result.planning_duration_seconds
-            execution_duration += result.execution_duration_seconds
-            last_result = result
-            if result.success:
+            planning_calls += staging_result.planning_calls
+            planning_duration += staging_result.planning_duration_seconds
+            execution_duration += staging_result.execution_duration_seconds
+            if not staging_result.success:
+                last_result = staging_result
+                if self._recoverable_zero_step_plan_failure(staging_result):
+                    continue
+                return replace(
+                    staging_result,
+                    attempts=attempts,
+                    environment_steps=self._environment_steps - before,
+                    planning_calls=planning_calls,
+                    planning_duration_seconds=planning_duration,
+                    execution_duration_seconds=execution_duration,
+                )
+            descent_result = self._planned_motion(
+                PushExpertPhase.MOVE_TO_PRECONTACT,
+                (self._pose_with_position(candidate.precontact_point),),
+            )
+            planning_calls += descent_result.planning_calls
+            planning_duration += descent_result.planning_duration_seconds
+            execution_duration += descent_result.execution_duration_seconds
+            last_result = descent_result
+            if descent_result.success:
                 self._active_push_direction = np.asarray(candidate.contact_direction)
                 return replace(
-                    result,
+                    descent_result,
                     attempts=attempts,
+                    environment_steps=self._environment_steps - before,
                     planning_calls=planning_calls,
                     planning_duration_seconds=planning_duration,
                     execution_duration_seconds=execution_duration,
@@ -619,16 +660,16 @@ class PushToRegionExpert:
                         f"{candidate.angle_degrees:+.1f} degrees"
                     ),
                 )
-            recoverable_precheck = (
-                result.status is PushExpertStatus.EXECUTION_FAILURE
-                and result.planner_status == "ActionBoundsPrecheck"
+            if self._recoverable_zero_step_plan_failure(descent_result):
+                continue
+            return replace(
+                descent_result,
+                attempts=attempts,
+                environment_steps=self._environment_steps - before,
+                planning_calls=planning_calls,
+                planning_duration_seconds=planning_duration,
+                execution_duration_seconds=execution_duration,
             )
-            if result.environment_steps or (
-                result.status
-                not in {PushExpertStatus.IK_FAILURE, PushExpertStatus.PLANNING_FAILURE}
-                and not recoverable_precheck
-            ):
-                return result
         if last_result is None:
             return self._failure(
                 PushExpertPhase.MOVE_TO_PRECONTACT,
@@ -638,10 +679,21 @@ class PushToRegionExpert:
         return replace(
             last_result,
             attempts=attempts,
+            environment_steps=self._environment_steps - before,
             planning_calls=planning_calls,
             planning_duration_seconds=planning_duration,
             execution_duration_seconds=execution_duration,
             message="all safe lateral approach candidates failed planning",
+        )
+
+    @staticmethod
+    def _recoverable_zero_step_plan_failure(result: PushPhaseResult) -> bool:
+        return result.environment_steps == 0 and (
+            result.status in {PushExpertStatus.IK_FAILURE, PushExpertStatus.PLANNING_FAILURE}
+            or (
+                result.status is PushExpertStatus.EXECUTION_FAILURE
+                and result.planner_status == "ActionBoundsPrecheck"
+            )
         )
 
     def _pose_with_position(self, position: Sequence[float]) -> np.ndarray:
@@ -695,6 +747,7 @@ class PushToRegionExpert:
         targets: Sequence[np.ndarray],
         *,
         action_stride: int = 1,
+        stop_on_target_inside_region: bool = False,
     ) -> PushPhaseResult:
         if (
             not isinstance(action_stride, int)
@@ -707,9 +760,10 @@ class PushToRegionExpert:
         planning_duration = 0.0
         planning_calls = 0
         last_status: str | None = None
+        target_inside_region = False
         try:
             for target in targets:
-                if self._terminal_success:
+                if self._terminal_success or target_inside_region:
                     break
                 planner = self._require_planner()
                 planner.synchronize()
@@ -766,6 +820,12 @@ class PushToRegionExpert:
                     if self._terminal_success:
                         break
                     self._step_action(action)
+                    if (
+                        stop_on_target_inside_region
+                        and self._evaluation().get("target_inside_region") is True
+                    ):
+                        target_inside_region = True
+                        break
         except _PushAbort as error:
             return self._failure(
                 phase,
@@ -778,7 +838,7 @@ class PushToRegionExpert:
                 execution_duration=max(0.0, time.perf_counter() - started - planning_duration),
                 planner_status=last_status,
             )
-        if not self._terminal_success and targets:
+        if not self._terminal_success and not target_inside_region and targets:
             position_error = float(np.linalg.norm(self._tcp_pose()[:3] - targets[-1][:3]))
             if position_error > self.config.tcp_position_tolerance:
                 return self._failure(

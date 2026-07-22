@@ -1,0 +1,41 @@
+{
+  "schema_version": "langmani-v2-phase2b2-expert-probe-summary-v0",
+  "dataset_id": "langmani/phase2b-push-v2",
+  "candidate_id": "PushToRegionExpert/CandidateG",
+  "candidate_implementation_commit": "24709f1702914e72131245484d4405ac68a6303c",
+  "runtime_source_commit": "3db2c057a4b9be76a76e3ab3eb9f6874a3d1eb6a",
+  "run_id": "20260722T062140Z_phase2b2-candidateg-probe_3db2c05",
+  "evaluation_mode": "diagnostic_probe",
+  "formal_gate_eligible": false,
+  "formal_seed_interval_consumed": false,
+  "probe_seed_start": 66200,
+  "expected_episodes": 32,
+  "completed_episodes": 32,
+  "successes": 22,
+  "failures": 10,
+  "success_rate": 0.6875,
+  "status_counts": {
+    "correction_failure": 1,
+    "planning_failure": 4,
+    "success": 22,
+    "target_outside_workspace": 1,
+    "timeout": 2,
+    "wrong_object_interaction": 2
+  },
+  "failure_phase_counts": {
+    "corrective_push_1": 3,
+    "corrective_push_2": 1,
+    "move_to_precontact": 6
+  },
+  "simulator_errors": 0,
+  "nonfinite_actions": 0,
+  "action_bound_violations": 0,
+  "workspace_violations": 1,
+  "optimizer_steps": 0,
+  "passed": false,
+  "probe_completed": false,
+  "collection_started": false,
+  "full_report_sha256": "e049ec4b5e0a4ab0a6a187fb938fa402759a0a61e79b8a0f3fd54fafa15a6ba9",
+  "generation_audit_sha256": "35cbbb5668cfbd659785ddc475a8de3cbaef1b021f6a7cb2deb59e80fdf8c34f",
+  "collection_fingerprint": "sha256:efbc04fef9d570264931fbd7797402c761e79d78838ff3443b9ebf6fb0af05d4"
+}

@@ -37,12 +37,20 @@ class _Robot:
 
 
 class _FakeEnvironment:
-    def __init__(self, *, wrong_object_after_step: bool = False) -> None:
+    def __init__(
+        self,
+        *,
+        wrong_object_after_step: bool = False,
+        inside_after_step: int = 9,
+        success_after_step: int = 9,
+    ) -> None:
         self.unwrapped = self
         self.num_envs = 1
         self.control_mode = "pd_joint_pos"
         self.step_count = 0
         self.wrong_object_after_step = wrong_object_after_step
+        self.inside_after_step = inside_after_step
+        self.success_after_step = success_after_step
         self.robot = _Robot()
         self.tcp = SimpleNamespace(pose=_Pose([0.0, 0.0, 0.3, 1.0, 0.0, 0.0, 0.0]))
         self.agent = SimpleNamespace(robot=self.robot, tcp=self.tcp)
@@ -77,10 +85,11 @@ class _FakeEnvironment:
         return self.context
 
     def get_push_expert_evaluation(self) -> dict[str, torch.Tensor]:
-        success = self.step_count >= 9
+        success = self.step_count >= self.success_after_step
+        inside = self.step_count >= self.inside_after_step
         return {
             "success": torch.tensor([success]),
-            "target_inside_region": torch.tensor([success]),
+            "target_inside_region": torch.tensor([inside]),
             "target_is_static": torch.tensor([True]),
             "stable_success_steps": torch.tensor([5 if success else 0]),
             "target_distance": torch.tensor([0.0 if success else 0.4]),
@@ -140,7 +149,7 @@ class _ActionBoundFallbackPlanner(_FakePlanner):
         del use_attached
         self.plan_count += 1
         self.environment.tcp.pose.raw_pose = torch.tensor([pose7], dtype=torch.float32)
-        position = (3.5, *([0.0] * 6)) if self.plan_count == 1 else tuple([0.0] * 7)
+        position = (3.5, *([0.0] * 6)) if self.plan_count == 2 else tuple([0.0] * 7)
         return PlannerPlanResult(
             success=True,
             status="Success",
@@ -367,6 +376,37 @@ def test_free_space_stride_preserves_the_exact_final_planner_position() -> None:
 
     assert result.success
     assert [float(action[0]) for action in expert.action_trace] == [0.0, 1.0, 2.0]
+
+
+def test_primary_motion_stops_at_full_containment_before_stable_success() -> None:
+    environment = _FakeEnvironment(inside_after_step=2, success_after_step=99)
+    planner = _FakePlanner(environment)
+    expert = PushToRegionExpert(environment, planner_factory=lambda _env: planner)
+    expert._context = environment.context
+    expert._planner = planner
+    positions = tuple(tuple([float(index) / 2.0] * 7) for index in range(5))
+
+    def plan_pose(pose7, *, use_attached: bool = False):
+        del use_attached
+        environment.tcp.pose.raw_pose = torch.tensor([pose7], dtype=torch.float32)
+        return PlannerPlanResult(
+            success=True,
+            status="Success",
+            failure=None,
+            positions=positions,
+        )
+
+    planner.plan_pose = plan_pose  # type: ignore[method-assign]
+    result = expert._planned_motion(
+        PushExpertPhase.PRIMARY_PUSH,
+        (expert._tcp_pose(),),
+        stop_on_target_inside_region=True,
+    )
+
+    assert result.success
+    assert result.environment_steps == 2
+    assert environment.step_count == 2
+    assert environment.get_push_expert_evaluation()["success"].item() is False
 
 
 def test_adaptive_primary_push_stops_when_the_existing_success_gate_fires() -> None:

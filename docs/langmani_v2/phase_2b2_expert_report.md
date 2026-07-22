@@ -31,10 +31,17 @@ The compact rejection summary is
 `artifacts/langmani_v2/phase_2b2/expert_evaluation_candidate_f_rejected.json`. The immutable full
 remote report SHA-256 is `94975a838063c4e20891cf478bf775127eaf6a04fbcfcd990caef415fad3087d`.
 
-## Candidate G pending gate
+## Candidate G diagnostic rejection
 
-Candidate G is locally validated at `24709f1702914e72131245484d4405ac68a6303c`. A diagnostic-only
-probe is reserved for seeds 66200 through 66231 and cannot produce a formal pass. If its mechanics
-are sound, the untouched formal gate will use seeds 66300 through 66399 under the unchanged 95%
-threshold and zero-tolerance safety contract. Until that exact gate passes, Candidate G remains
-provisional and formal collection remains closed.
+Candidate G was locally validated at `24709f1702914e72131245484d4405ac68a6303c` and ran only the
+diagnostic seed interval 66200 through 66231 from clean source
+`3db2c057a4b9be76a76e3ab3eb9f6874a3d1eb6a`. It achieved 22/32. There were four planning
+failures, two timeouts, two wrong-object interactions, one correction failure, and one target
+workspace exit. Six failures occurred during `move_to_precontact`; four occurred during the two
+corrective phases.
+
+The probe was explicitly `formal_gate_eligible=false` and never consumed the frozen formal seeds
+66300 through 66399. Its full report SHA-256 is
+`e049ec4b5e0a4ab0a6a187fb938fa402759a0a61e79b8a0f3fd54fafa15a6ba9`. Candidate G is rejected
+without a formal gate, and collection remains closed. The compact summary is
+`artifacts/langmani_v2/phase_2b2/expert_probe_candidate_g_rejected.json`.

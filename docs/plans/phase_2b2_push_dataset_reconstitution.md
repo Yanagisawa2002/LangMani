@@ -79,3 +79,13 @@ margin. A diagnostic-only 32-episode probe may use seeds 66200--66231; probe out
 ineligible for formal promotion. The untouched formal gate is frozen at seeds 66300--66399 under
 `PushToRegionExpert/CandidateG`. The threshold, 250-step horizon, task predicate, native action
 bounds, and every zero-tolerance gate remain unchanged.
+
+The Candidate G diagnostic probe completed 32/32 but reached only 22 successes. The ten failures
+comprised four planning failures, two timeouts, two wrong-object interactions, one correction
+failure, and one target workspace exit. Six failures were in `move_to_precontact`; four were in the
+corrective phases. Candidate G is rejected without touching 66300--66399. Candidate H therefore
+splits high staging from candidate-specific descent so a zero-action deterministic screw-planning
+failure may try the next predeclared safe candidate, executes approach plans at full controller
+resolution, and stops a primary or corrective motion as soon as full containment is observed so
+settling occurs without continuing toward an overshooting endpoint. It does not repair actions,
+mutate state, change task success, or extend the horizon.

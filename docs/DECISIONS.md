@@ -2820,3 +2820,21 @@ another full formal gate on an obviously weak path. The untouched Candidate G pr
 frozen at seeds 66300 through 66399 and still requires at least 95/100 with zero simulator errors,
 non-finite actions, action-bound violations, and workspace violations. Formal collection remains
 closed until that exact gate passes.
+
+## D-105 - Reject Candidate G diagnostically and preserve the formal seed lock
+
+Candidate G completed its 32-episode diagnostic-only probe on seeds 66200 through 66231 from clean
+Git `3db2c057a4b9be76a76e3ab3eb9f6874a3d1eb6a`. It achieved 22/32 and is rejected without running
+the formal gate. The full report SHA-256 is
+`e049ec4b5e0a4ab0a6a187fb938fa402759a0a61e79b8a0f3fd54fafa15a6ba9`. There were four planning
+failures, two timeouts, two wrong-object interactions, one correction failure, and one target
+workspace exit. Six failures occurred in `move_to_precontact`; four occurred during correction.
+The report is bound to `formal_gate_eligible=false`, optimizer steps remained zero, and no
+collection began.
+
+Seeds 66300 through 66399 remain untouched. Candidate H addresses only the observed mechanics: it
+separates the initial lift from candidate-specific staging and descent, permits a new predeclared
+safe candidate after a zero-action planning or bounds precheck failure, restores full-resolution
+approach execution, and stops pushing immediately when the unchanged full-containment predicate is
+observed so the existing settle phase can establish stable success. It does not alter the 95% gate,
+the 250-step horizon, the environment predicate, action bounds, or any zero-tolerance check.
