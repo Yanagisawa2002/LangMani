@@ -2894,3 +2894,12 @@ immediately resumes ordinary correction. The cylinder endpoint restores the exis
 containment margin, and the rare failed direct push uses at most six 8 cm state-aware segments
 instead of twelve 4 cm segments. The 250-step horizon, task predicate, action bounds, semantic
 schedule, and zero-tolerance gates remain unchanged.
+
+## D-110 - Freeze Candidate J before an isolated diagnostic probe
+
+Candidate J passed full local implementation validation at Git
+`d757d91fa7c12f8c341f692118d8d45882623834`. Seeds 66600 through 66663 are reserved for its
+diagnostic-only 40-standard/24-hard probe; the unchanged formal range remains 66300--66399 and has
+never been materialized. The contract binds `PushToRegionExpert/CandidateJ` to that exact source.
+The diagnostic early-stop policy from D-107 remains active, cannot promote the expert, and cannot
+alter formal-gate execution. Collection remains closed.

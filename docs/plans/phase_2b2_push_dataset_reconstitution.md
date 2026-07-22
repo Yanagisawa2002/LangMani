@@ -118,3 +118,8 @@ Candidate J addresses only the four recorded failure mechanisms: zero-step lift 
 stabilization with correction after containment drift, stride-two contact establishment with exact
 terminal targets, and six 8 cm fallback segments after a failed direct plan. Cylinder pushes use
 the same 3.5 cm interior margin as the cube. Formal seeds and collection remain sealed.
+
+Candidate J passed local implementation validation at Git
+`d757d91fa7c12f8c341f692118d8d45882623834`. Its diagnostic-only schedule is 66600--66663. The
+formal 66300--66399 range is still untouched, and the v2 contract binds the candidate source without
+changing any acceptance threshold.

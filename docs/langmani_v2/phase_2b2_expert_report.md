@@ -77,3 +77,10 @@ and workspace counts were all zero. The formal 66300--66399 schedule remains unt
 partial report SHA-256 is `c2dd0aa6d07cd91c79b050c8b7f32340f8860b7891eb5fa261108368411538df`,
 and the compact summary is
 `artifacts/langmani_v2/phase_2b2/expert_probe_candidate_i_rejected.json`. Collection remains closed.
+
+## Candidate J pending diagnostic
+
+Candidate J is locally validated at `d757d91fa7c12f8c341f692118d8d45882623834`. Its isolated
+diagnostic range is 66600--66663; it is not eligible for promotion. Formal seeds 66300--66399 and
+all collection seeds remain sealed. Collection cannot start until a later complete formal gate
+reaches at least 95/100 with every zero-tolerance count at zero.
