@@ -1,0 +1,105 @@
+{
+  "schema_version": "langmani-v2-phase2b3-input-manifest-v0",
+  "source_branch": "codex/langmani-v2-phase2b2-push-dataset-v2",
+  "source_commit": "8476a72b3ce7504e7fef0a08114c6c567da77ba7",
+  "phase_branch": "codex/langmani-v2-phase2b3-mpc-push-expert",
+  "dataset_id": "langmani/phase2b-push-v2",
+  "prior_result": "RESULT_B_EXPERT_GATE_FAILED",
+  "prior_evidence": {
+    "dataset_contract_sha256": "9106f13f1b014715f31643247b5f449f8502a63af343ebfc4303c575fc063243",
+    "expert_evaluation_sha256": "aa9e29961b2b67cfac6f3543e7c9d72b846d2ceecfe51889d2ff5067a9a1b7ae",
+    "candidate_p_summary_sha256": "73120f38d7edf481bff76deae35809f3f048fd658dfdc70ba56f4df129739686",
+    "remote_execution_audit_sha256": "28e76dd4a4d7fc1eda40b0a54ab50eb8cbf4e85a31b8dc1cf8fceb3ed5156c2d"
+  },
+  "task_implementation": {
+    "environment_id": "LangMani-PushToRegion-v0",
+    "environment_version": "PushToRegionEnv-v0",
+    "environment_sha256": "14c9d9d2e3fcf37b236b53626f5ab1fdea347920b4739eb4da28f34cddc92ba2",
+    "logic_sha256": "378a0ea95c2ec3f011e7ffd30aabdb89e730380d88f1ca56e2e964b94b603dd5",
+    "specs_sha256": "b617113bb18aafafd0a0047c5641ab03f348607d6a3c384fb76105b913a77e8e"
+  },
+  "existing_experts": {
+    "candidate_e_formal": {"successes": 75, "episodes": 100, "passed": false},
+    "candidate_f_formal": {"successes": 11, "episodes": 100, "passed": false},
+    "candidate_p_diagnostic": {"successes": 2, "episodes": 5, "formal_gate_eligible": false},
+    "candidate_p_implementation_commit": "de9309355f96065aa62823522a0d0ebeab7b903c",
+    "candidate_p_runtime_commit": "d54487d1773d2b76c88039943ed45c0d0ccf21a8"
+  },
+  "development_seed_manifest": {
+    "seed_start": 69000,
+    "episode_count": 24,
+    "standard_episodes": 12,
+    "hard_episodes": 12
+  },
+  "mandatory_qualification_seed_manifest": {
+    "seed_start": 66300,
+    "episode_count": 100,
+    "standard_episodes": 60,
+    "hard_episodes": 40,
+    "minimum_successes": 95,
+    "previously_consumed": false
+  },
+  "action_contract": {
+    "name": "PandaJointPositionActionV0",
+    "control_mode": "pd_joint_pos",
+    "dtype": "float32",
+    "shape": [8],
+    "invalid_action_policy": "reject_before_execution",
+    "clipping_allowed": false,
+    "projection_allowed": false
+  },
+  "observation_contract": {
+    "camera": "observation.images.base_camera",
+    "camera_shape": [256, 256, 3],
+    "state": "PandaPolicyStateV0",
+    "state_shape": [9]
+  },
+  "success_predicates": {
+    "fully_contained": true,
+    "static": true,
+    "upright": true,
+    "ungrasped": true,
+    "required_stable_steps": 5,
+    "maximum_episode_steps": 250
+  },
+  "failure_predicates": [
+    "target_outside_workspace",
+    "target_lifted",
+    "target_toppled",
+    "target_is_grasped",
+    "invalid_action",
+    "time_limit"
+  ],
+  "zero_tolerance_safety_fields": [
+    "simulator_errors",
+    "nonfinite_actions",
+    "action_bound_violations",
+    "workspace_violations",
+    "wrong_object_interactions",
+    "prohibited_object_lifts",
+    "unsafe_collisions"
+  ],
+  "runtime": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu128",
+    "cuda_runtime": "12.8",
+    "mani_skill": "3.0.1",
+    "sapien": "3.0.3",
+    "planner_numpy": "1.26.4",
+    "mplib": "0.1.1",
+    "gpu": "NVIDIA GeForce RTX 5090"
+  },
+  "v2_collection": {
+    "attempted_episodes": 0,
+    "accepted_episodes": 0,
+    "collected_failure_episodes": 0,
+    "frames": 0,
+    "bytes": 0
+  },
+  "authorizations": {
+    "phase2b4_collection_authorized": false,
+    "phase2c2_training_authorized": false,
+    "smolvla_started": false,
+    "optimizer_steps": 0
+  }
+}

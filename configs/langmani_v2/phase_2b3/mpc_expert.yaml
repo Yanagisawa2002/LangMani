@@ -1,0 +1,41 @@
+{
+  "schema_version": "langmani-v2-phase2b3-mpc-expert-v0",
+  "expert_id": "SimulatorMPCPushExpertV1",
+  "source_commit": "8476a72b3ce7504e7fef0a08114c6c567da77ba7",
+  "dataset_id": "langmani/phase2b-push-v2",
+  "control_mode": "pd_joint_pos",
+  "maximum_episode_steps": 250,
+  "candidate_horizon_steps": 12,
+  "executed_prefix_steps": 3,
+  "maximum_mpc_decisions": 40,
+  "maximum_recontact_attempts": 2,
+  "maximum_no_progress_replans": 3,
+  "maximum_planner_retries": 1,
+  "maximum_physically_simulated_candidates": 6,
+  "maximum_bounded_repairs": 1,
+  "development": {
+    "seed_start": 69000,
+    "standard_episodes": 12,
+    "hard_episodes": 12,
+    "minimum_success_rate": 0.85,
+    "minimum_prefix_agreement": 0.99
+  },
+  "formal": {
+    "seed_start": 66300,
+    "standard_episodes": 60,
+    "hard_episodes": 40,
+    "minimum_success_rate": 0.95
+  },
+  "zero_tolerance_fields": [
+    "simulator_errors",
+    "nonfinite_actions",
+    "action_bound_violations",
+    "workspace_violations",
+    "wrong_object_interactions",
+    "prohibited_object_lifts",
+    "unsafe_collisions"
+  ],
+  "collection_started": false,
+  "phase2c2_training_authorized": false,
+  "optimizer_steps": 0
+}
