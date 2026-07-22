@@ -15,10 +15,12 @@ archive, restored replica, or SmolVLA loader claim.
 | Acceptance status | `INCOMPLETE` / Result B |
 
 The first stricter v2 expert gate reached 75/100, and the next complete formal gate reached 11/100.
-Six later candidates were screened on disjoint diagnostic-only seeds; none justified consuming the
-still-untouched 66300--66399 formal range. Candidate K stopped on a zero-tolerance workspace exit.
-The final Candidate L stopped after four timeouts because its best possible 64-episode result fell
-to 60/64 (93.75%). The required `expert_success_rate >= 95%` condition therefore fails.
+Eight later candidates were screened on disjoint diagnostic-only seeds; none justified consuming
+the still-untouched 66300--66399 formal range. Candidate L stopped after four timeouts because its
+best possible 64-episode result fell to 60/64 (93.75%). Candidate M then stopped on a workspace
+exit after 3/5 successes. Candidate N preserved 4/4 cube successes but its first cylinder task also
+left the target workspace, so the zero-tolerance stop rejected it after 5/64 scheduled episodes.
+The required `expert_success_rate >= 95%` condition therefore fails.
 
 This report deliberately does not fabricate dataset manifests with zero episodes and does not mark
 an incomplete directory `ACCEPTED`. The next authorized work is a separately specified expert

@@ -17,12 +17,12 @@
       "passed": false
     }
   ],
-  "diagnostic_probe_candidates": ["CandidateG", "CandidateH", "CandidateI", "CandidateJ", "CandidateK", "CandidateL"],
-  "latest_candidate": "PushToRegionExpert/CandidateL",
-  "latest_runtime_source_commit": "fc478d6364e5264b6bceb188f4497da02ad991fe",
-  "latest_probe_completed_episodes": 4,
-  "latest_probe_successes": 0,
-  "latest_probe_stop_reason": "success_ceiling_below_gate",
+  "diagnostic_probe_candidates": ["CandidateG", "CandidateH", "CandidateI", "CandidateJ", "CandidateK", "CandidateL", "CandidateM", "CandidateN"],
+  "latest_candidate": "PushToRegionExpert/CandidateN",
+  "latest_runtime_source_commit": "48686a57b427ddbf6c99b01b51dc003970e1a5e9",
+  "latest_probe_completed_episodes": 5,
+  "latest_probe_successes": 4,
+  "latest_probe_stop_reason": "zero_tolerance_failure",
   "formal_seed_start": 66300,
   "formal_seed_count": 100,
   "formal_seed_interval_consumed": false,

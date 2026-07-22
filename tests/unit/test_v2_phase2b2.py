@@ -66,8 +66,8 @@ def test_phase2b2_contract_uses_independent_identity_and_exact_features() -> Non
     config = PushCollectionConfig.load(CONFIG)
 
     assert config.payload["dataset_version"] == "v2"
-    assert config.payload["expert_id"] == "PushToRegionExpert/CandidateN"
-    assert config.payload["accepted_expert_commit"] == ("f04cd60952428209f660833af0af21910ca4eead")
+    assert config.payload["expert_id"] == "PushToRegionExpert/CandidateO"
+    assert config.payload["accepted_expert_commit"] == ("e55198ca44d478df584a85357a697ffbecbc8484")
     assert config.payload["supersedes_dataset_id"] == "langmani/phase2b-push-v1"
     assert config.payload["state_names"] == list(PANDA_POLICY_STATE_COMPONENTS)
     assert config.payload["action_names"] == list(PANDA_ACTION_COMPONENTS)
