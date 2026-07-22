@@ -2792,3 +2792,14 @@ commit and freezes seeds 66100 through 66199 for its untouched 100-episode promo
 does not relabel the v1 Candidate E contract or any historical v1 trajectory. Candidate F remains
 unaccepted for formal collection unless the new remote gate reaches at least 95/100 with every
 zero-tolerance runtime and action check still at zero.
+
+## D-103 - Reject Candidate F before Phase 2B.2 collection
+
+Candidate F completed its untouched 100-episode gate on seeds 66100 through 66199 from clean Git
+`f441b1b035007f0876dafd2a54886b26f6350e40`. It achieved 11/100 and is rejected. The immutable
+full report SHA-256 is `94975a838063c4e20891cf478bf775127eaf6a04fbcfcd990caef415fad3087d`.
+There were 74 timeouts, ten wrong-object interactions, four planning failures, and one contact
+failure. Eighty failures occurred during `primary_push`; all 74 timeouts exhausted the unchanged
+250-step limit. The diagnosis is bounded-segment execution cost, not permission to increase the
+horizon or relax acceptance. Simulator errors, non-finite actions, action-bound violations, and
+workspace violations remained zero. Formal collection, dataset export, and training remain closed.

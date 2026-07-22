@@ -61,3 +61,11 @@ Git `6277d77227a51d39d675e328c4df7c233f302484`. The v2 contract now binds that i
 66199. The v1 collection contract remains bound to Candidate E; neither its dataset identity nor
 historical episode provenance is rewritten. Candidate F may open collection only if this newly
 frozen gate reaches the unchanged 95% threshold.
+
+Candidate F then completed the frozen 66100--66199 gate at source
+`f441b1b035007f0876dafd2a54886b26f6350e40` and was rejected at 11/100. Its report SHA-256 is
+`94975a838063c4e20891cf478bf775127eaf6a04fbcfcd990caef415fad3087d`. Formal collection remains
+closed. Any successor must reduce controller-executed primary-push horizon cost while preserving
+the 250-step limit, exact success criterion, obstacle-aware approach constraints, native action
+bounds, and all zero-tolerance safety gates. A successor requires another untouched 100-episode
+schedule and a new versioned identity.

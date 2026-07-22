@@ -1,0 +1,60 @@
+{
+  "schema_version": "langmani-v2-phase2b2-rejected-expert-summary-v0",
+  "candidate_id": "PushToRegionExpert/CandidateF",
+  "implementation_commit": "6277d77227a51d39d675e328c4df7c233f302484",
+  "gate_source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40",
+  "remote_run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b",
+  "seed_start": 66100,
+  "seed_end_inclusive": 66199,
+  "expected_episodes": 100,
+  "completed_episodes": 100,
+  "successes": 11,
+  "failures": 89,
+  "success_rate": 0.11,
+  "minimum_success_rate": 0.95,
+  "passed": false,
+  "status_counts": {
+    "contact_failure": 1,
+    "planning_failure": 4,
+    "success": 11,
+    "timeout": 74,
+    "wrong_object_interaction": 10
+  },
+  "difficulty_status_counts": {
+    "standard": {
+      "contact_failure": 1,
+      "planning_failure": 2,
+      "success": 8,
+      "timeout": 49,
+      "wrong_object_interaction": 0
+    },
+    "hard": {
+      "contact_failure": 0,
+      "planning_failure": 2,
+      "success": 3,
+      "timeout": 25,
+      "wrong_object_interaction": 10
+    }
+  },
+  "failed_phase_counts": {
+    "move_to_precontact": 9,
+    "primary_push": 80
+  },
+  "timeout_step_summary": {
+    "count": 74,
+    "minimum": 250,
+    "maximum": 250,
+    "mean": 250.0
+  },
+  "simulator_errors": 0,
+  "nonfinite_actions": 0,
+  "action_bound_violations": 0,
+  "workspace_violations": 0,
+  "teleport_or_state_mutation_used": false,
+  "success_flag_mutation_used": false,
+  "formal_collection_started": false,
+  "optimizer_steps": 0,
+  "generation_audit_sha256": "8385d2112b6bcc2540ffba5d78e89c69edf5dc7205353b54a48eddb84488a791",
+  "full_expert_evaluation_sha256": "94975a838063c4e20891cf478bf775127eaf6a04fbcfcd990caef415fad3087d",
+  "failure_conclusion": "Candidate F is rejected because bounded 0.04 m primary-push segments exhaust the unchanged 250-step horizon; formal collection remains prohibited."
+}
