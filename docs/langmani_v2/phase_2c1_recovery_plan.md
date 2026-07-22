@@ -86,3 +86,13 @@ promotion. Phase 2D is never launched by this stage.
   for training.
 - No repeated base-model download unless the existing pinned bytes fail their digest check.
 - No training or simulator evaluation before exact dataset recovery.
+
+## Validation exception
+
+The repository-wide `mypy src` baseline remains 573 historical errors in 68 files. Phase 2C.1 does
+not expand scope into those unrelated modules: the full run is recorded unchanged, while all four
+new or changed Python source/CLI files pass a targeted mypy check. Full unit tests, Ruff check,
+Ruff format check, the isolated wheel/sdist build, and targeted remote validation pass. The ten
+full-suite skips are Windows account symbolic-link capability tests; the three warnings are the
+pre-existing optional Pinocchio notice, a test-only tensor construction warning, and inability to
+write pytest cache metadata.

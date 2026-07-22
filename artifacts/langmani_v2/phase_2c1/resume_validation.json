@@ -1,0 +1,10 @@
+{
+  "schema_version": "langmani-v2-phase2c1-resume-validation-v0",
+  "status": "NOT_RUN_DATASET_IDENTITY_UNAVAILABLE",
+  "passed": false,
+  "not_run": true,
+  "checkpoint_save_reload_verified": false,
+  "interrupted_resume_verified": false,
+  "zero_work_resume_verified": false,
+  "optimizer_steps_executed": 0
+}

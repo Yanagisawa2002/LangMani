@@ -1,0 +1,11 @@
+{
+  "schema_version": "langmani-v2-phase2c1-dataset-summary-revalidation-v0",
+  "status": "NOT_RUN_DATASET_IDENTITY_UNAVAILABLE",
+  "passed": false,
+  "not_run": true,
+  "expected_split_episode_counts": [203, 77, 26, 40, 23, 28],
+  "expected_split_frame_counts": [26968, 10425, 3382, 5277, 3210, 4035],
+  "observed_split_episode_counts": null,
+  "observed_split_frame_counts": null,
+  "optimizer_steps_executed": 0
+}

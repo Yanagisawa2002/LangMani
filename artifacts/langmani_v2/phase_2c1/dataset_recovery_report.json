@@ -1,0 +1,35 @@
+{
+  "schema_version": "langmani-v2-phase2c1-dataset-recovery-report-v0",
+  "result": "RESULT_B",
+  "status": "ORIGINAL_ACCEPTED_BYTES_UNAVAILABLE",
+  "expected_identity": {
+    "dataset_id": "langmani/phase2b-push-v1",
+    "root_name": "phase2b-push-lerobot-v1",
+    "lerobot_version": "0.6.0",
+    "layout_version": "v3",
+    "episode_count": 397,
+    "frame_count": 53297,
+    "size_bytes": 141422866
+  },
+  "candidate_audit": {
+    "exact_accepted_dataset_count": 0,
+    "potentially_matching_count": 0,
+    "incomplete_copy_count": 0,
+    "accepted_phase_2b_identity": false
+  },
+  "identity_gates": {
+    "retained_sidecar_hashes_verified": false,
+    "six_meta_info_files_verified": false,
+    "complete_lerobot_readback_verified": false,
+    "independent_phase2b_verifier_passed": false,
+    "accepted_package_created": false,
+    "source_tree_digest_verified": false,
+    "staging_tree_digest_verified": false,
+    "destination_tree_digest_verified": false
+  },
+  "copy_attempted": false,
+  "regeneration_attempted": false,
+  "metadata_repair_attempted": false,
+  "optimizer_steps_executed": 0,
+  "phase_2d_started": false
+}

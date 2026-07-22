@@ -2730,3 +2730,18 @@ If no candidate reaches `EXACT_ACCEPTED_DATASET`, every training gate remains cl
 steps remain zero. Similar, partial, regenerated, or metadata-repaired data cannot substitute for
 the accepted Phase 2B bytes. The honest terminal state is Phase 2C.1 Result B; it does not downgrade
 the historical Phase 2B acceptance, claim a learned policy failure, or authorize Phase 2D.
+
+## D-100 - Close Phase 2C.1 as Result B after exhaustive asset recovery
+
+A read-only search covered the current repository outputs, accessible local storage, Git object and
+LFS history, GitHub releases, the reachable AutoDL workspace/run roots, its persistent-data mount,
+temporary storage, and Hugging Face caches. The old historical endpoint was unreachable. No exact,
+potentially matching, or incomplete accepted Phase 2B export was found; the four explicit roots on
+the reachable server were all absent.
+
+Because the accepted evidence lacks a complete original file inventory, combined tree digest, and
+the six `meta/info.json` byte hashes, no regenerated export can establish byte identity. No package
+was created, no copy was attempted, no metadata was repaired, and no real batch was loaded.
+Optimizer steps remain zero. Training, checkpoint selection, development evaluation, sealed
+evaluation, promotion, and Phase 2D are not run. Phase 2C.1 therefore ends as Result B without
+changing the historical acceptance of Phase 2B.

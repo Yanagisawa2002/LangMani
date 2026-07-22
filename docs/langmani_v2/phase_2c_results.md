@@ -1,16 +1,17 @@
 # Phase 2C results: execution status
 
-This page is intentionally not a performance claim yet. Phase 2C source and experiment contracts
-are implemented, but the accepted external Phase 2B dataset is not currently available on the
-reachable RTX 5090 host. The stop rule therefore prevents model training and closed-loop testing.
+This page is intentionally not a performance claim. Phase 2C.1 exhaustively audited accessible
+asset locations but did not recover the original byte-identical accepted Phase 2B dataset. It
+therefore closes as **Result B** with zero optimizer steps, no checkpoint, no learned-policy
+evaluation, and no Phase 2D entry. See `phase_2c1_dataset_asset_audit.md`.
 
 ## Recruiter-readable status
 
 1. **Model:** the official LeRobot 0.6.0 `lerobot/smolvla_base`, pinned to revision
    `c83c3163b8ca9b7e67c509fffd9121e66cb96205`, with the nested SmolVLM2 dependency pinned to
    `7b375e1b73b11138ff12fe22c8f2822d8fe03467`; fine-tuning has not started.
-2. **Push data:** the accepted training contract is 203 episodes and 26,968 frames, but its external
-   bytes must be reverified before use.
+2. **Push data:** the accepted training contract is 203 episodes and 26,968 frames. The original
+   accepted bytes were not found; equivalent regeneration is prohibited.
 3. **Observation/action:** one RGB 256x256 base camera, 9D Panda joint state, language task string,
    and 8D `pd_joint_pos` action at 20 Hz. No privileged simulator state is allowed.
 4. **Closed-loop result:** not available; no trained checkpoint exists.
@@ -42,5 +43,6 @@ reachable RTX 5090 host. The stop rule therefore prevents model training and clo
 Machine-readable sanitized evidence is in `phase_2c_base_model_manifest.json`. This is a base-model
 and CLI preflight result, not a learned-policy result.
 
-This page must be replaced with measured checkpoint, validation, sealed-test, latency, confidence
-interval, expert-comparison, and quality-level evidence after the external data gate opens.
+Measured checkpoint, validation, sealed-test, latency, confidence-interval, expert-comparison, and
+quality-level claims remain unavailable. They may be added only in a separately authorized stage
+after the exact immutable dataset bytes are recovered and independently reverified.

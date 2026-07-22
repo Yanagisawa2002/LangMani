@@ -1,0 +1,41 @@
+{
+  "schema_version": "langmani-v2-phase2c1-remote-execution-audit-v0",
+  "run_id": "phase2c1-recovery-5cba665",
+  "branch": "codex/langmani-v2-phase2c1-dataset-recovery",
+  "implementation_commit": "5cba665260570bface87c12e809662cffe3cb42d",
+  "tracked_source_clean": true,
+  "tracked_source_exact_commit": true,
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "training_started": false,
+  "optimizer_steps_executed": 0,
+  "candidate_locations": [
+    {
+      "location": "${REMOTE_REPO}/outputs/datasets/langmani_v2/phase2b-push-lerobot-v1",
+      "status": "NOT_FOUND"
+    },
+    {
+      "location": "${REMOTE_REPO}/outputs/datasets/langmani_v2/phase2b-v1",
+      "status": "NOT_FOUND"
+    },
+    {
+      "location": "${AUTODL_FS}/phase2b-push-lerobot-v1",
+      "status": "NOT_FOUND"
+    },
+    {
+      "location": "${HF_CACHE}/datasets--langmani--phase2b-push-v1",
+      "status": "NOT_FOUND"
+    }
+  ],
+  "evidence": {
+    "asset_audit_sha256": "sha256:f021341506fea07624d5306bedcc41aea00d78f7729a5b9f9314cb9bd57fd5b0",
+    "targeted_tests_sha256": "sha256:3a31258411cc01203a069c1ec23e34d2ccd9e3023f53f88df790931a3c2b05fc",
+    "ruff_sha256": "sha256:cd7f41cf1ad5ba8b6263217889865f18d2b85df5ad631a05d6d321f51fd1b7b2",
+    "targeted_mypy_sha256": "sha256:71144743c83babea384888a735db0c4daba3d4d7b7942b6839984bd5c21b52bb"
+  },
+  "remote_validation": {
+    "targeted_tests": "32 passed, 1 skipped",
+    "ruff": "passed",
+    "targeted_mypy": "passed with imported historical modules skipped"
+  },
+  "server_left_online": true
+}

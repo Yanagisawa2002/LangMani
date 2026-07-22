@@ -1,0 +1,13 @@
+{
+  "schema_version": "langmani-v2-phase2c1-accepted-dataset-package-v0",
+  "status": "NOT_CREATED_DATASET_UNAVAILABLE",
+  "result": "RESULT_B",
+  "expected_dataset_id": "langmani/phase2b-push-v1",
+  "expected_root_name": "phase2b-push-lerobot-v1",
+  "package_created": false,
+  "source_candidate": null,
+  "complete_file_inventory": null,
+  "complete_tree_digest": null,
+  "reason": "No accessible candidate contained the original accepted Phase 2B bytes and no candidate passed the complete identity contract.",
+  "optimizer_steps_executed": 0
+}

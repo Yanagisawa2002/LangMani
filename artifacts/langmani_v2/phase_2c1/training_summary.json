@@ -1,0 +1,13 @@
+{
+  "schema_version": "langmani-v2-phase2c1-training-summary-v0",
+  "result": "RESULT_B",
+  "status": "NOT_RUN_DATASET_IDENTITY_UNAVAILABLE",
+  "training_started": false,
+  "seed": 0,
+  "planned_max_steps": 20000,
+  "optimizer_steps_executed": 0,
+  "train_examples_consumed": 0,
+  "checkpoints_created": 0,
+  "peak_gpu_memory_bytes": 0,
+  "phase_2d_started": false
+}

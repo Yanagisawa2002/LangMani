@@ -1,0 +1,52 @@
+{
+  "schema_version": "langmani-v2-phase2c1-source-validation-v0",
+  "implementation_commit": "5cba665260570bface87c12e809662cffe3cb42d",
+  "local": {
+    "full_unit_tests": {
+      "passed_count": 1459,
+      "skipped_count": 10,
+      "warning_count": 3,
+      "passed": true
+    },
+    "targeted_phase2c_tests": {
+      "passed_count": 32,
+      "skipped_count": 1,
+      "passed": true
+    },
+    "recovery_tests": {
+      "passed_count": 10,
+      "passed": true
+    },
+    "ruff_check": {
+      "passed": true
+    },
+    "ruff_format_check": {
+      "formatted_file_count": 331,
+      "passed": true
+    },
+    "targeted_mypy": {
+      "source_file_count": 4,
+      "passed": true
+    },
+    "full_mypy_baseline": {
+      "checked_source_file_count": 146,
+      "error_count": 573,
+      "error_file_count": 68,
+      "passed": false,
+      "new_error_count": 0,
+      "classification": "UNCHANGED_HISTORICAL_BASELINE"
+    },
+    "isolated_build": {
+      "wheel_sha256": "sha256:5bb5436e5bd43def408e78e0eddcaf70769a363968188aa32ddd6595bbc7298e",
+      "sdist_sha256": "sha256:8e9f317c2e2a0f3ae16fa0af83ebdaa438178132fd395f837231135db577f7f3",
+      "passed": true
+    }
+  },
+  "remote": {
+    "targeted_tests": "32 passed, 1 skipped",
+    "ruff": "passed",
+    "targeted_mypy": "passed with imported historical modules skipped",
+    "passed": true
+  },
+  "result_b_evidence_valid": true
+}
