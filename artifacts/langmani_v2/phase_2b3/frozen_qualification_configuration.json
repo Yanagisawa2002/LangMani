@@ -1,0 +1,11 @@
+{
+  "schema_version": "langmani-v2-phase2b3-frozen-qualification-configuration-v0",
+  "status": "not_frozen_development_gate_not_reached",
+  "formal_seed_start": 66300,
+  "formal_episode_count": 100,
+  "standard_episodes": 60,
+  "hard_episodes": 40,
+  "minimum_successes": 95,
+  "all_zero_tolerance_fields_must_equal_zero": true,
+  "formal_seeds_accessed": false
+}

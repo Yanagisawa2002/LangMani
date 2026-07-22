@@ -1,0 +1,10 @@
+{
+  "schema_version": "langmani-v2-phase2b3-result-classification-v0",
+  "result": "RESULT_C",
+  "label": "MPC_ARCHITECTURE_INVALID",
+  "architecture_valid": false,
+  "reason": "simulator_clone_restore_unreliable_for_live_physical_prediction",
+  "formal_gate_completed": false,
+  "expert_quality_claim": false,
+  "phase_completed_correctly": true
+}

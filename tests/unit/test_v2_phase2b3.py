@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -25,6 +26,7 @@ from langmani.v2.phase2b3 import (
     safety_veto_reasons,
     score_mpc_rollout,
     select_best_candidate,
+    verify_phase2b3_result_artifacts,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -289,3 +291,21 @@ def test_result_classification_and_authorization_are_fail_closed() -> None:
     accepted = collection_authorization("RESULT_A")
     assert accepted["phase2b4_collection_authorized"] is True
     assert accepted["phase2c2_training_authorized"] is False
+
+
+def test_result_c_artifacts_verify_and_reject_tampering(tmp_path: Path) -> None:
+    source = PROJECT_ROOT / "artifacts" / "langmani_v2" / "phase_2b3"
+    copied = tmp_path / "phase_2b3"
+    shutil.copytree(source, copied)
+
+    report = verify_phase2b3_result_artifacts(copied)
+    assert report["passed"] is True
+    assert report["result"] == "RESULT_C"
+    assert report["phase2b4_collection_authorized"] is False
+    assert report["phase2c2_training_authorized"] is False
+
+    classification = copied / "result_classification.json"
+    classification.write_text(classification.read_text(encoding="utf-8") + " ", encoding="utf-8")
+    tampered = verify_phase2b3_result_artifacts(copied)
+    assert tampered["passed"] is False
+    assert tampered["artifact_hash_checks"]["result_classification.json"] is False

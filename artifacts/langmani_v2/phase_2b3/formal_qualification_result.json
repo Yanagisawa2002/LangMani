@@ -1,0 +1,13 @@
+{
+  "schema_version": "langmani-v2-phase2b3-formal-qualification-result-v0",
+  "status": "not_run_architecture_invalid",
+  "completed_episodes": 0,
+  "successes": 0,
+  "standard": null,
+  "hard": null,
+  "geometry": null,
+  "direction": null,
+  "zero_tolerance_safety_counts": null,
+  "formal_gate_passed": false,
+  "formal_seed_range_accessed": false
+}

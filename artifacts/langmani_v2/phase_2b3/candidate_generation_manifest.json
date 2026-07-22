@@ -1,0 +1,12 @@
+{
+  "schema_version": "langmani-v2-phase2b3-candidate-generation-manifest-v0",
+  "status": "contract_only_not_executed",
+  "deterministic": true,
+  "cube_angle_offsets_degrees": [-12.0, 0.0, 12.0],
+  "cylinder_angle_offsets_degrees": [-8.0, 0.0, 8.0],
+  "distance_scales": [0.5, 1.0],
+  "maximum_physically_simulated_candidates": 6,
+  "cube_and_cylinder_geometry_distinguished": true,
+  "seed_specific_offsets": false,
+  "physical_candidate_rollouts_executed": 0
+}

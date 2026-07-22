@@ -1,0 +1,27 @@
+{
+  "schema_version": "langmani-v2-phase2b3-artifact-manifest-v0",
+  "result": "RESULT_C",
+  "file_count": 19,
+  "hash_algorithm": "sha256_file_bytes",
+  "files": [
+    {"path": "input_manifest.json", "sha256": "080c2388387b4e09fbb8a4fa00333904aef2ffe55581928d294c1041c165e485"},
+    {"path": "prior_evidence_verification.json", "sha256": "36aac53328b6636929fc1d31f7ec961c5a8f823375002fefad8f5022c3646e8f"},
+    {"path": "simulator_clone_audit.json", "sha256": "50a2edf9ee456bc5f8ec771b9d256d0b7aa2446cec737b74fb88ee1d56380677"},
+    {"path": "sandbox_equivalence_audit.json", "sha256": "2e9c0e04cbcea1627141be15ecba4e410c5cd97f3a418cf34606aa911d720840"},
+    {"path": "expert_configuration.json", "sha256": "79ccf2d169dcca33a4ddcc2216c9f3b6d50cd1ff4a96b4e2fb1d2bb1d4c4f79c"},
+    {"path": "candidate_generation_manifest.json", "sha256": "136c0e4b89462e739f5e68ecda27c3840051ba9fafb7823731e605fb6e5386f2"},
+    {"path": "scoring_manifest.json", "sha256": "1e8eeeb188f9a714280e60f69a5c87a44cfe37be69c848f6a834d8daeab6f960"},
+    {"path": "safety_veto_manifest.json", "sha256": "5962c9258d627e024d9028a7c0da7e5deb21f7f06685d71407e090f434dbbf01"},
+    {"path": "development_seed_manifest.json", "sha256": "7db3d3ccd83a9af0a973bfea6245bad10ace5a39534b70153606beaf9ac6afbe"},
+    {"path": "development_pilot_result.json", "sha256": "2716cdb67b5c23d69391ebcf1cce0aa8e36f300753db720ed18b94ad6dedbec5"},
+    {"path": "prediction_agreement_audit.json", "sha256": "a8070daca252c20e5faa8bb8394f88682eedf5622d0bef9310483932eec7dc4a"},
+    {"path": "frozen_qualification_configuration.json", "sha256": "ed2c9c41cba79b34a232a143ef0df0ad22f6fc5d4dbcbe7f3265ced1e1043fc4"},
+    {"path": "formal_qualification_result.json", "sha256": "a76901f4fce51b92ef78da706f839002516912ca1437d5e76f12b5e2cd7ff6b9"},
+    {"path": "baseline_comparison.json", "sha256": "fea41158a7355de462284421ab3374ae0599ebc7035b668bd315cdcdc8a73ff9"},
+    {"path": "failure_taxonomy.json", "sha256": "eb3936dbf4f5e94994acfa6b2778029c9169bdb361d2112268ae341f21ac3a28"},
+    {"path": "runtime_summary.json", "sha256": "71c1ecdf8d8837d88d48164ee27ed78d819f997128b9b8058a0c07f9fbf2e2a4"},
+    {"path": "result_classification.json", "sha256": "fe143c26903bbfbf3e50152496f1e0cec15aa19254cf4bc592da0f7085bbb605"},
+    {"path": "collection_authorization_decision.json", "sha256": "9496878fec4f85bb836f2ec9c226d03810f9ee6a4deb7c11aa3084b6bdb26909"},
+    {"path": "remote_execution_audit.json", "sha256": "5da7f77b7dc9c71edf448b377e6ebf1be42c672705f75701d02af393e7f316c6"}
+  ]
+}

@@ -8,6 +8,7 @@ import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
+from pathlib import Path
 from typing import Literal
 
 import numpy as np
@@ -402,6 +403,105 @@ def collection_authorization(result: Phase2B3Result) -> dict[str, bool]:
     }
 
 
+def verify_phase2b3_result_artifacts(root: Path) -> dict[str, object]:
+    """Independently rehash and validate the fail-closed Phase 2B.3 result package."""
+
+    root = root.resolve()
+    manifest = _load_json_object(root / "artifact_manifest.json")
+    entries = manifest.get("files")
+    if not isinstance(entries, list):
+        raise ValueError("artifact manifest files must be a list")
+
+    hash_checks: dict[str, bool] = {}
+    for entry in entries:
+        if not isinstance(entry, Mapping):
+            raise ValueError("artifact manifest entries must be objects")
+        relative = entry.get("path")
+        expected = entry.get("sha256")
+        if not isinstance(relative, str) or not relative or Path(relative).name != relative:
+            raise ValueError("artifact manifest paths must be safe basenames")
+        if not isinstance(expected, str) or len(expected) != 64:
+            raise ValueError(f"invalid SHA-256 for artifact {relative!r}")
+        path = (root / relative).resolve()
+        if path.parent != root:
+            raise ValueError("artifact path escapes result root")
+        actual = hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else ""
+        hash_checks[relative] = actual == expected
+
+    classification = _load_json_object(root / "result_classification.json")
+    clone = _load_json_object(root / "simulator_clone_audit.json")
+    sandbox = _load_json_object(root / "sandbox_equivalence_audit.json")
+    development = _load_json_object(root / "development_pilot_result.json")
+    prediction = _load_json_object(root / "prediction_agreement_audit.json")
+    formal = _load_json_object(root / "formal_qualification_result.json")
+    authorization = _load_json_object(root / "collection_authorization_decision.json")
+    prior = _load_json_object(root / "prior_evidence_verification.json")
+    remote = _load_json_object(root / "remote_execution_audit.json")
+
+    attempts = clone.get("attempts")
+    final_attempt = attempts[-1] if isinstance(attempts, list) and attempts else {}
+    checks = {
+        "artifact_manifest_schema_valid": manifest.get("schema_version")
+        == "langmani-v2-phase2b3-artifact-manifest-v0",
+        "artifact_count_matches": manifest.get("file_count") == len(entries),
+        "all_artifact_hashes_valid": bool(hash_checks) and all(hash_checks.values()),
+        "prior_evidence_validated": prior.get("verified") is True,
+        "phase2b2_result_preserved": prior.get("phase2b2_result") == "RESULT_B_EXPERT_GATE_FAILED",
+        "clone_precondition_failed": clone.get("passed") is False
+        and clone.get("architecture_valid") is False,
+        "three_clone_attempts_preserved": isinstance(attempts, list) and len(attempts) == 3,
+        "contact_free_attempt_failed": isinstance(final_attempt, Mapping)
+        and final_attempt.get("snapshot_target_contact") is False
+        and final_attempt.get("passed") is False,
+        "categorical_outcomes_agree": final_attempt.get("categorical_agreement") == 1.0,
+        "material_live_pose_divergence_recorded": float(
+            final_attempt.get("live_continuation_object_pose_max_abs_error_m", 0.0)
+        )
+        > float(final_attempt.get("object_pose_tolerance_m", float("inf"))),
+        "sandbox_configuration_equivalent": sandbox.get("configuration_equivalent") is True,
+        "sandbox_isolation_validated": sandbox.get("main_environment_isolation_validated") is True
+        and sandbox.get("other_sandbox_isolation_validated") is True,
+        "sandbox_physics_not_equivalent": sandbox.get("physics_equivalent_for_mpc_prediction")
+        is False,
+        "development_not_run": development.get("status") == "not_run_clone_precondition_failed"
+        and development.get("completed_episodes") == 0,
+        "prediction_gate_not_run": prediction.get("status") == "not_run_clone_precondition_failed"
+        and prediction.get("development_prefixes") == 0,
+        "formal_gate_not_run": formal.get("status") == "not_run_architecture_invalid"
+        and formal.get("completed_episodes") == 0
+        and formal.get("formal_seed_range_accessed") is False,
+        "result_c_classified": classification.get("result") == "RESULT_C"
+        and classification.get("architecture_valid") is False,
+        "collection_blocked": authorization.get("phase2b4_collection_authorized") is False
+        and authorization.get("accepted_dataset_package_created") is False
+        and authorization.get("raw_episode_archives_created") is False
+        and authorization.get("lerobot_dataset_created") is False,
+        "training_and_smolvla_blocked": authorization.get("phase2c2_training_authorized") is False
+        and authorization.get("smolvla_started") is False
+        and authorization.get("optimizer_steps") == 0,
+        "remote_audit_failed_closed": remote.get("clone_audit_exit_code") == 2
+        and remote.get("development_pilot_started") is False
+        and remote.get("formal_qualification_started") is False,
+    }
+    return {
+        "schema_version": "langmani-v2-phase2b3-independent-verification-v0",
+        "passed": all(checks.values()),
+        "result": "RESULT_C",
+        "checks": checks,
+        "artifact_hash_checks": hash_checks,
+        "phase2b4_collection_authorized": False,
+        "phase2c2_training_authorized": False,
+        "smolvla_started": False,
+    }
+
+
+def _load_json_object(path: Path) -> dict[str, object]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"{path} must contain one JSON object")
+    return payload
+
+
 def _vector(value: Sequence[float], size: int, label: str) -> np.ndarray:
     result = np.asarray(value, dtype=np.float64)
     if result.shape != (size,) or not np.isfinite(result).all():
@@ -445,4 +545,5 @@ __all__ = [
     "safety_veto_reasons",
     "score_mpc_rollout",
     "select_best_candidate",
+    "verify_phase2b3_result_artifacts",
 ]

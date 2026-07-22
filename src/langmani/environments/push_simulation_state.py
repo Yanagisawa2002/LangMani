@@ -84,7 +84,7 @@ class PushSimulationSnapshot:
 def capture_push_simulation_state(environment: object) -> PushSimulationSnapshot:
     """Capture physics, controller, task, counters, and RNG state for one push env."""
 
-    base = getattr(environment, "unwrapped", environment)
+    base: Any = getattr(environment, "unwrapped", environment)
     _validate_environment(base)
     simulation_state = _clone_value(base.get_state_dict())
     controller_state = _clone_value(base.agent.get_controller_state())
@@ -131,7 +131,7 @@ def restore_push_simulation_state(
 ) -> None:
     """Restore a complete checkpoint without resetting or consuming one env step."""
 
-    base = getattr(environment, "unwrapped", environment)
+    base: Any = getattr(environment, "unwrapped", environment)
     _validate_environment(base)
     if snapshot.schema_version != PUSH_SIMULATION_SNAPSHOT_SCHEMA:
         raise PushSimulationStateError("unsupported push simulation snapshot schema")
@@ -158,7 +158,7 @@ def restore_push_simulation_state(
 def push_simulation_configuration(environment: object) -> dict[str, object]:
     """Return the physics-relevant configuration compared by the sandbox audit."""
 
-    base = getattr(environment, "unwrapped", environment)
+    base: Any = getattr(environment, "unwrapped", environment)
     _validate_environment(base)
     low, high = base.get_push_expert_action_bounds()
     return {

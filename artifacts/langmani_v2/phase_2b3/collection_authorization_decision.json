@@ -1,0 +1,11 @@
+{
+  "schema_version": "langmani-v2-phase2b3-collection-authorization-v0",
+  "result": "RESULT_C",
+  "phase2b4_collection_authorized": false,
+  "phase2c2_training_authorized": false,
+  "smolvla_started": false,
+  "optimizer_steps": 0,
+  "accepted_dataset_package_created": false,
+  "raw_episode_archives_created": false,
+  "lerobot_dataset_created": false
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": "langmani-v2-phase2b3-sandbox-equivalence-audit-v0",
+  "configuration_equivalent": true,
+  "action_contract_equivalent": true,
+  "main_environment_isolation_validated": true,
+  "other_sandbox_isolation_validated": true,
+  "main_episode_budget_isolation_validated": true,
+  "cold_sandbox_replay_deterministic": true,
+  "live_continuation_equivalent": false,
+  "physics_equivalent_for_mpc_prediction": false,
+  "passed": false,
+  "blocking_difference": {
+    "field": "target_object_pose",
+    "maximum_absolute_error_m": 0.004394352436065674,
+    "allowed_tolerance_m": 0.00002
+  }
+}

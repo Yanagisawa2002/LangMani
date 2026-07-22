@@ -1,0 +1,13 @@
+{
+  "schema_version": "langmani-v2-phase2b3-baseline-comparison-v0",
+  "candidate_e": {"scope": "formal", "successes": 75, "episodes": 100, "passed": false},
+  "candidate_f": {"scope": "formal", "successes": 11, "episodes": 100, "passed": false},
+  "candidate_p": {"scope": "isolated_diagnostic", "successes": 2, "episodes": 5, "passed": false},
+  "simulator_mpc_push_expert_v1": {
+    "scope": "clone_precondition_only",
+    "successes": null,
+    "episodes": 0,
+    "result": "RESULT_C",
+    "expert_quality_comparison_valid": false
+  }
+}

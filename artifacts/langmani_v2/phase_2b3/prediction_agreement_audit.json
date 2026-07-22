@@ -1,0 +1,9 @@
+{
+  "schema_version": "langmani-v2-phase2b3-prediction-agreement-audit-v0",
+  "status": "not_run_clone_precondition_failed",
+  "development_prefixes": 0,
+  "categorical_agreement": null,
+  "required_categorical_agreement": 0.99,
+  "passed": false,
+  "precondition_evidence": "simulator_clone_audit.json"
+}

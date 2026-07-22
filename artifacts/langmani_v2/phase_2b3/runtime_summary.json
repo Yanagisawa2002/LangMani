@@ -1,0 +1,13 @@
+{
+  "schema_version": "langmani-v2-phase2b3-runtime-summary-v0",
+  "clone_audit_attempts": 3,
+  "clone_action_sequence_steps_per_attempt": 12,
+  "development_episode_wall_time_p50_seconds": null,
+  "development_episode_wall_time_p95_seconds": null,
+  "formal_total_wall_time_seconds": null,
+  "sandbox_environments_per_audit": 2,
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "gpu_idle_after_audit": true,
+  "training_processes": 0,
+  "optimizer_steps": 0
+}

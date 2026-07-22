@@ -1,0 +1,16 @@
+{
+  "schema_version": "langmani-v2-phase2b3-safety-veto-manifest-v0",
+  "status": "contract_only_not_executed",
+  "zero_tolerance_fields": [
+    "simulator_errors",
+    "nonfinite_actions",
+    "action_bound_violations",
+    "workspace_violations",
+    "wrong_object_interactions",
+    "prohibited_object_lifts",
+    "unsafe_collisions"
+  ],
+  "action_clipping_allowed": false,
+  "action_projection_allowed": false,
+  "candidate_rollouts_vetoed": 0
+}

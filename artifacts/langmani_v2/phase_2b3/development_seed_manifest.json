@@ -1,0 +1,11 @@
+{
+  "schema_version": "langmani-v2-phase2b3-development-seed-manifest-v0",
+  "seed_start": 69000,
+  "episode_count": 24,
+  "standard_episodes": 12,
+  "hard_episodes": 12,
+  "disjoint_from_formal": true,
+  "consumed_for_clone_precondition": [69000],
+  "consumed_for_development_pilot": [],
+  "development_pilot_started": false
+}

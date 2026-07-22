@@ -1,0 +1,17 @@
+{
+  "schema_version": "langmani-v2-phase2b3-scoring-manifest-v0",
+  "status": "contract_only_not_executed",
+  "weights": {
+    "progress": 1.0,
+    "alignment": 0.4,
+    "target": 0.6,
+    "contact": 0.15,
+    "lateral": 0.5,
+    "rotation": 0.15,
+    "overshoot": 1.0,
+    "motion": 0.02,
+    "time": 0.01
+  },
+  "safety_is_hard_veto": true,
+  "scores_computed_on_physical_candidates": 0
+}

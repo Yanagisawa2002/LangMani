@@ -1,0 +1,12 @@
+{
+  "schema_version": "langmani-v2-phase2b3-failure-taxonomy-v0",
+  "result": "RESULT_C",
+  "failure_class": "invalid_simulator_mpc_transition_model",
+  "dominant_failure": "public_state_restore_does_not_match_live_continuation",
+  "categorical_clone_mismatches": 0,
+  "maximum_object_pose_divergence_m": 0.004394352436065674,
+  "development_failures": null,
+  "formal_failures": null,
+  "quality_failure": false,
+  "infrastructure_failure": true
+}

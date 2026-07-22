@@ -1,0 +1,15 @@
+{
+  "schema_version": "langmani-v2-phase2b3-expert-configuration-v0",
+  "expert_id": "SimulatorMPCPushExpertV1",
+  "status": "not_implemented_after_clone_precondition_failure",
+  "configuration_source": "configs/langmani_v2/phase_2b3/mpc_expert.yaml",
+  "candidate_horizon_steps": 12,
+  "executed_prefix_steps": 3,
+  "maximum_mpc_decisions": 40,
+  "maximum_recontact_attempts": 2,
+  "maximum_no_progress_replans": 3,
+  "maximum_planner_retries": 1,
+  "maximum_physically_simulated_candidates": 6,
+  "contact_free_replan_snapshots_required": true,
+  "activated": false
+}

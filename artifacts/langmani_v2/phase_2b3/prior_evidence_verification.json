@@ -1,0 +1,19 @@
+{
+  "schema_version": "langmani-v2-phase2b3-prior-evidence-verification-v0",
+  "verified": true,
+  "source_commit": "8476a72b3ce7504e7fef0a08114c6c567da77ba7",
+  "phase2b2_result": "RESULT_B_EXPERT_GATE_FAILED",
+  "candidate_e_formal": {"successes": 75, "episodes": 100, "passed": false},
+  "candidate_f_formal": {"successes": 11, "episodes": 100, "passed": false},
+  "candidate_p_diagnostic": {"successes": 2, "episodes": 5, "formal_gate_eligible": false},
+  "phase2b2_generation_audit_passed": true,
+  "formal_seed_range_66300_66399_previously_consumed": false,
+  "v2_raw_archive_exists": false,
+  "v2_lerobot_dataset_exists": false,
+  "training_processes": 0,
+  "gpu_idle_before_audit": true,
+  "phase2b4_collection_authorized": false,
+  "phase2c2_training_authorized": false,
+  "smolvla_started": false,
+  "optimizer_steps": 0
+}

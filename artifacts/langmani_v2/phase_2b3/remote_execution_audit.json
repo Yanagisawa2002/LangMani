@@ -1,0 +1,22 @@
+{
+  "schema_version": "langmani-v2-phase2b3-remote-execution-audit-v0",
+  "server_repository": "/root/autodl-tmp/langmani",
+  "branch": "codex/langmani-v2-phase2b3-mpc-push-expert",
+  "last_clone_audit_commit": "90cd0da4baf568efd1de509a3cb36930922dfcc3",
+  "python": "3.12.13",
+  "torch": "2.11.0+cu128",
+  "cuda_runtime": "12.8",
+  "mani_skill": "3.0.1",
+  "sapien": "3.0.3",
+  "planner_numpy": "1.26.4",
+  "mplib": "0.1.1",
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "clone_audit_exit_code": 2,
+  "clone_audit_report_sha256": "d17e0c67c8259696ccca26a56b826411c4b9755ec5e10893043550f67a1aee7e",
+  "development_pilot_started": false,
+  "formal_qualification_started": false,
+  "collection_started": false,
+  "training_started": false,
+  "server_power_state": "running",
+  "gpu_workload_state_after_audit": "idle"
+}

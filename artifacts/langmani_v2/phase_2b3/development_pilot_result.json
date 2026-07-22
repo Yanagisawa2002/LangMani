@@ -1,0 +1,10 @@
+{
+  "schema_version": "langmani-v2-phase2b3-development-pilot-result-v0",
+  "status": "not_run_clone_precondition_failed",
+  "completed_episodes": 0,
+  "successes": 0,
+  "success_rate": null,
+  "zero_tolerance_safety_counts": null,
+  "development_gate_passed": false,
+  "bounded_repairs_used": 0
+}

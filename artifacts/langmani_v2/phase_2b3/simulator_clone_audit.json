@@ -1,0 +1,54 @@
+{
+  "schema_version": "langmani-v2-phase2b3-simulator-clone-audit-summary-v0",
+  "passed": false,
+  "architecture_valid": false,
+  "result": "RESULT_C",
+  "stop_rule": "sandbox_and_main_physics_differ_materially",
+  "snapshot_schema": "langmani-v2-push-simulation-snapshot-v0",
+  "captured_public_state": {
+    "robot_joint_position_velocity": true,
+    "gripper_state": true,
+    "actor_pose_velocity": true,
+    "articulation_state": true,
+    "controller_state": true,
+    "elapsed_episode_steps": true,
+    "task_progress_and_latched_events": true,
+    "main_and_episode_rng_state": true,
+    "contact_solver_cache": false
+  },
+  "attempts": [
+    {
+      "implementation_commit": "23319bc",
+      "raw_report_sha256": "0f5b53b0f4829a889c88a75d1260fae453d4493c0a7e139aaf25e0d661316c38",
+      "snapshot_boundary": "two_actions_before_first_target_motion",
+      "cold_sandbox_pair_object_pose_max_abs_error_m": 0.0,
+      "restored_object_pose_max_abs_error_m": 0.004367411136627197,
+      "passed": false
+    },
+    {
+      "implementation_commit": "61c04c6",
+      "raw_report_sha256": "e565dacde14b1dd4a99fddbc6d91a0c97790e97e3f92c9c9125c6be50a0b0882",
+      "snapshot_boundary": "two_actions_before_first_target_motion_with_live_continuation",
+      "categorical_agreement": 1.0,
+      "cold_sandbox_pair_object_pose_max_abs_error_m": 0.0,
+      "live_continuation_object_pose_max_abs_error_m": 0.004373073577880859,
+      "passed": false
+    },
+    {
+      "implementation_commit": "90cd0da",
+      "raw_report_sha256": "d17e0c67c8259696ccca26a56b826411c4b9755ec5e10893043550f67a1aee7e",
+      "snapshot_boundary": "three_actions_before_first_target_contact",
+      "snapshot_target_contact": false,
+      "sequence_contains_target_contact_and_motion": true,
+      "categorical_agreement": 1.0,
+      "cold_sandbox_pair_object_pose_max_abs_error_m": 0.0,
+      "live_continuation_object_pose_max_abs_error_m": 0.004394352436065674,
+      "object_pose_tolerance_m": 0.00002,
+      "passed": false
+    }
+  ],
+  "root_cause": "ManiSkill_3_0_1_public_state_omits_PhysX_solver_history_needed_to_reproduce_live_continuation",
+  "why_material": "4.39_mm_exceeds_the_5_mm_task_containment_clearance_scale_and_the_documented_clone_tolerance",
+  "threshold_relaxed": false,
+  "hand_written_transition_model_substituted": false
+}
