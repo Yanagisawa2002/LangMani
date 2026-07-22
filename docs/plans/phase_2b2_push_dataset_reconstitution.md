@@ -187,3 +187,7 @@ Candidate O stopped after 5/64 diagnostic episodes on a cylinder workspace exit 
 had left the TCP 9.2 cm from the rolling cylinder. Candidate P adds a bounded low local-contact
 waypoint before the same nudge only for that separated, near-target lateral-cylinder branch. No
 formal seed, collection seed, model, or optimizer is used.
+
+Candidate P is content-bound to implementation commit
+`de9309355f96065aa62823522a0d0ebeab7b903c`. Its isolated diagnostic seeds are 68200--68263;
+collection remains closed and the formal 66300--66399 range remains untouched.

@@ -3031,3 +3031,11 @@ therefore moved in free space while cylinder momentum increased lateral error fr
 whose TCP-to-object distance exceeds the existing contact proxy. It then executes the same bounded
 nudge. It does not change cube paths, high free-space recovery, task geometry, horizon, action
 bounds, thresholds, or zero-tolerance gates.
+
+## D-121 - Bind Candidate P before isolated diagnostic screening
+
+Candidate P passed focused local unit, Ruff, format, and changed-module mypy validation at
+implementation commit `de9309355f96065aa62823522a0d0ebeab7b903c`. The v2 contract binds that
+exact implementation. Seeds 68200--68263 are diagnostic only, disjoint from every previous probe,
+the untouched formal gate, and all collection/top-up ranges. The diagnostic probe remains
+ineligible for promotion by itself.

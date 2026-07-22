@@ -193,3 +193,7 @@ The same-seed phase trace showed that the new target-directed TCP correction was
 correct but occurred 9.2 cm away from the cylinder. Candidate P inserts one low local contact pose
 for that separated lateral-cylinder branch before applying the unchanged bounded nudge. Cube
 behavior, formal gates, and all collection ranges remain unchanged.
+
+Candidate P passed focused local validation at implementation commit
+`de9309355f96065aa62823522a0d0ebeab7b903c`. Its diagnostic-only seed range is 68200--68263. It
+cannot accept the expert or open collection without a later complete formal-gate pass.
