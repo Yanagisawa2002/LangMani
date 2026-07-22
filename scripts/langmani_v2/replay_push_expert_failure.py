@@ -670,6 +670,27 @@ def _main(args: argparse.Namespace) -> int:
         raise ValueError("main replay mode requires registry/config/git-repo/output-root/summary")
     registry = _load(args.registry)
     config = _load(args.config)
+    git_repo = args.git_repo.resolve()
+    runner_source_commit = subprocess.run(
+        ["git", "-C", str(git_repo), "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    runner_branch = subprocess.run(
+        ["git", "-C", str(git_repo), "branch", "--show-current"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    tracked_status = subprocess.run(
+        ["git", "-C", str(git_repo), "status", "--porcelain", "--untracked-files=no"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    if tracked_status:
+        raise RuntimeError("replay runner tracked source is dirty")
     output_root = args.output_root.resolve()
     output_root.mkdir(parents=True, exist_ok=True)
     cases = _selected_cases(registry, config)
@@ -684,7 +705,7 @@ def _main(args: argparse.Namespace) -> int:
         commit = str(case["source_commit"])
         if commit not in worktrees:
             worktrees[commit] = _ensure_worktree(
-                git_repo=args.git_repo.resolve(),
+                git_repo=git_repo,
                 root=output_root / "source_worktrees",
                 commit=commit,
             )
@@ -726,6 +747,10 @@ def _main(args: argparse.Namespace) -> int:
     )
     report = {
         "schema_version": "langmani-v2-phase2b3-replay-validation-v0",
+        "runner_branch": runner_branch,
+        "runner_source_commit": runner_source_commit,
+        "runner_tracked_source_clean": True,
+        "historical_source_commits": sorted({str(case["source_commit"]) for case in cases}),
         "registry_digest": registry.get("records_digest"),
         "config_digest": f"sha256:{_digest_json(config)}",
         "repeats": repeats,
