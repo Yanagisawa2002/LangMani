@@ -48,10 +48,10 @@ adapter, trained model, or learned Phase 2 policy metric exists yet. See the
 
 The later Phase 2B.2 reconstruction uses a new `langmani/phase2b-push-v2` identity because the v1
 bytes were unavailable. The two complete formal candidates reached 75/100 and 11/100, and none of
-the isolated G--N diagnostic candidates qualified for a fresh formal gate. Candidate N stopped on
-a zero-tolerance cylinder workspace exit after four cube successes; Candidate O is the active
-locally validated repair and remains diagnostic-only. No v2 episode or frame has been collected,
-no archive or dataset package has been accepted, and no SmolVLA optimizer step has run. See the
+the isolated G--P diagnostic candidates qualified for a fresh formal gate. Candidate P stopped at
+2/5 after one timeout, one planning failure, and a zero-tolerance cylinder workspace exit. No v2
+episode or frame was collected, no archive or dataset package was accepted, and no SmolVLA
+optimizer step ran. See the
 [`Phase 2B.2 expert report`](docs/langmani_v2/phase_2b2_expert_report.md),
 [`dataset status report`](docs/langmani_v2/phase_2b2_dataset_report.md), and
 [`v1/v2 comparison`](docs/langmani_v2/phase_2b2_v1_comparison.md).

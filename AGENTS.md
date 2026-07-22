@@ -80,13 +80,13 @@ training run, or learned pushing result exists yet. Rejected probes and invalid 
 attempts remain diagnostics, not quality evidence.
 
 Phase 2B.2 separately reconstitutes the unavailable push bytes under the new identity
-`langmani/phase2b-push-v2`. Its two complete formal expert gates reached 75/100 and 11/100. Eight
-subsequent G--N candidates ran only on disjoint diagnostic seeds. Candidate N preserved 4/4 cube
-successes but its first cylinder task left the target workspace, so the zero-tolerance stop rejected
-it after 5/64 episodes. Candidate O is the active, locally validated diagnostic candidate; it
-retargets only a drifting lateral-cylinder in-contact correction. Formal seeds 66300--66399 and all
-collection seeds remain untouched; no v2 raw episodes, LeRobot export, archive, loader batch,
-optimizer step, SmolVLA training, or Phase 2D work exists.
+`langmani/phase2b-push-v2`. Its two complete formal expert gates reached 75/100 and 11/100. Ten
+subsequent G--P candidates ran only on disjoint diagnostic seeds. Candidate P added a bounded local
+cylinder re-contact but reached only 2/5 before a zero-tolerance workspace exit stopped its probe;
+the other failures were one timeout and one planning failure. Phase 2B.2 is therefore Result B at
+the expert gate. Formal seeds 66300--66399 and all collection seeds remain untouched; no v2 raw
+episodes, LeRobot export, archive, loader batch, optimizer step, SmolVLA training, or Phase 2D work
+exists.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level

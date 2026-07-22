@@ -169,19 +169,6 @@ changed-module mypy validation, at implementation commit
 formal and collection ranges. A passing diagnostic can only authorize spending the untouched
 100-episode formal schedule; it cannot itself accept the expert or open collection.
 
-## Candidate O diagnostic rejection and final Result B
-
-Candidate O ran from clean runtime commit `4ebc10882fe02def4eb555a6192c90a901f5891a` on its fixed
-68100--68163 diagnostic schedule. The four cube tasks succeeded, but the first cylinder/left task
-left the workspace. The zero-tolerance rule stopped the run after 5/64 episodes. Simulator errors,
-nonfinite actions, and action-bound violations were zero; workspace violations were one. The full
-report SHA-256 is `18d25ffa52796035b2d59e879adaf4e5f2b38cf8142394f15b669fe6f280756a`; the generation-audit
-SHA-256 is `db712c3356675c5e0f7839773d1568a05389d4092c52754908a204f8fa503bf0`.
-
-No diagnostic candidate G--O qualified for another formal gate. Formal seeds 66300--66399 and all
-collection seeds remain untouched. Phase 2B.2 ends as Result B: collection, export, archive,
-replication, loader preflight, optimizer work, SmolVLA, and Phase 2D did not start.
-
 ## Candidate O diagnostic rejection and Candidate P repair
 
 Candidate O ran from clean source `e167852affe047c3e10eb87b8580bc07ba885513`. Its four cube
@@ -197,3 +184,15 @@ behavior, formal gates, and all collection ranges remain unchanged.
 Candidate P passed focused local validation at implementation commit
 `de9309355f96065aa62823522a0d0ebeab7b903c`. Its diagnostic-only seed range is 68200--68263. It
 cannot accept the expert or open collection without a later complete formal-gate pass.
+
+## Candidate P diagnostic rejection and final Result B
+
+Candidate P ran from clean source `d54487d1773d2b76c88039943ed45c0d0ccf21a8`. It completed five
+diagnostic episodes with two successes, one timeout, one precontact planning failure, and one
+cylinder workspace exit. The zero-tolerance stop fired at 5/64. The full report SHA-256 is
+`6c2eea259b0afeb140dba81b281b05bc8516e3ccffeb24ae9d4071a7db2c21ec`, and the generation-audit
+SHA-256 is `d82fdb63f780e8fc1863442a00cafbcd1080e569f87ba1427fa2f4a23f2c97a1`.
+
+Phase 2B.2 is Result B. Formal seeds 66300--66399 and all collection seeds remain untouched. No raw
+episode, frame, export, accepted package, archive, restored copy, loader batch, optimizer step,
+training run, or Phase 2D execution was produced.

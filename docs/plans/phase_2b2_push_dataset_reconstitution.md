@@ -177,11 +177,6 @@ Candidate O passed focused local validation at implementation commit
 from the untouched formal gate, every prior diagnostic range, and the reserved collection/top-up
 schedule. Diagnostic evidence remains ineligible for promotion by itself.
 
-Candidate O stopped after 5/64 diagnostic episodes: four cube successes followed by one
-zero-tolerance cylinder workspace exit. No G--O diagnostic candidate qualified for a fresh formal
-gate. The formal and collection ranges remain untouched, and Phase 2B.2 closes as Result B. Further
-expert work requires a separately authorized architecture rather than another parameter-only edit.
-
 Candidate O stopped after 5/64 diagnostic episodes on a cylinder workspace exit while retaining
 4/4 cube successes. Its target-directed 15 mm correction was ineffective because the primary push
 had left the TCP 9.2 cm from the rolling cylinder. Candidate P adds a bounded low local-contact
@@ -191,3 +186,8 @@ formal seed, collection seed, model, or optimizer is used.
 Candidate P is content-bound to implementation commit
 `de9309355f96065aa62823522a0d0ebeab7b903c`. Its isolated diagnostic seeds are 68200--68263;
 collection remains closed and the formal 66300--66399 range remains untouched.
+
+Candidate P stopped after 5/64 diagnostic episodes with two successes, one timeout, one planning
+failure, and one zero-tolerance cylinder workspace exit. Under the milestone's explicit unstable
+generator stop rule, Phase 2B.2 closes as Result B at the expert gate. Formal collection attempts,
+accepted episodes, frames, exports, archives, loader batches, and optimizer steps all remain zero.
