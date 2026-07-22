@@ -237,6 +237,8 @@ def test_push_expert_config_rejects_unbounded_correction_search() -> None:
     assert config.cylinder_region_goal_margin == pytest.approx(0.02)
     assert config.precontainment_braking_margin == pytest.approx(0.025)
     assert config.cylinder_precontainment_braking_margin == pytest.approx(0.035)
+    assert config.minimum_in_contact_nudge == pytest.approx(0.008)
+    assert config.maximum_in_contact_nudge == pytest.approx(0.025)
 
 
 def test_push_endpoint_stops_inside_full_containment_with_geometry_margin() -> None:
@@ -542,6 +544,38 @@ def test_corrective_phase_waits_for_contained_target_to_become_stable() -> None:
     assert result.success
     assert result.environment_steps == 3
     assert result.planning_calls == 0
+    assert expert._terminal_success
+
+
+def test_corrective_phase_uses_short_in_contact_nudge_near_containment() -> None:
+    environment = _FakeEnvironment(
+        near_region_after_step=0,
+        inside_after_step=2,
+        success_after_step=5,
+    )
+    planner = _FakePlanner(environment)
+    expert = PushToRegionExpert(environment, planner_factory=lambda _env: planner)
+    expert._context = environment.context
+    expert._planner = planner
+    positions = tuple(tuple([float(index) / 4.0] * 7) for index in range(5))
+
+    def plan_pose(pose7, *, use_attached: bool = False):
+        del use_attached
+        environment.tcp.pose.raw_pose = torch.tensor([pose7], dtype=torch.float32)
+        return PlannerPlanResult(
+            success=True,
+            status="Success",
+            failure=None,
+            positions=positions,
+        )
+
+    planner.plan_pose = plan_pose  # type: ignore[method-assign]
+    result = expert._corrective_push(PushExpertPhase.CORRECTIVE_PUSH_1)
+
+    assert result.success
+    assert result.environment_steps == 5
+    assert result.planning_calls == 1
+    assert "without re-contact" in result.message
     assert expert._terminal_success
 
 

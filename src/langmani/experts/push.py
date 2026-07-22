@@ -502,6 +502,38 @@ class PushToRegionExpert:
                     execution_duration=stabilization_duration,
                 )
         object_position = self._target_position()
+        evaluation = self._evaluation()
+        target_distance = evaluation.get("target_distance")
+        containment_radius = self._require_context().full_containment_center_radius
+        if isinstance(target_distance, (int, float)) and target_distance <= (
+            containment_radius + self._precontainment_braking_margin()
+        ):
+            direction = self._motion_direction(object_position)
+            advance = min(
+                self.config.maximum_in_contact_nudge,
+                max(
+                    self.config.minimum_in_contact_nudge,
+                    target_distance - containment_radius + self.config.minimum_in_contact_nudge,
+                ),
+            )
+            nudge = self._tcp_pose()
+            nudge[:2] += direction * advance
+            nudge[2] = self._push_height()
+            result = self._planned_motion(
+                phase,
+                (nudge,),
+                stop_on_target_inside_region=True,
+                brake_before_containment=False,
+            )
+            return replace(
+                result,
+                attempts=result.attempts + (1 if stabilization_duration else 0),
+                environment_steps=self._environment_steps - before,
+                execution_duration_seconds=(
+                    stabilization_duration + result.execution_duration_seconds
+                ),
+                message="executed bounded in-contact correction without re-contact",
+            )
         if self._is_lateral_task():
             candidates = self._lateral_approach_candidates(
                 object_position,
@@ -851,6 +883,7 @@ class PushToRegionExpert:
         *,
         action_stride: int = 1,
         stop_on_target_inside_region: bool = False,
+        brake_before_containment: bool = True,
     ) -> PushPhaseResult:
         if (
             not isinstance(action_stride, int)
@@ -930,9 +963,14 @@ class PushToRegionExpert:
                             target_inside_region = True
                             break
                         target_distance = evaluation.get("target_distance")
-                        if isinstance(target_distance, (int, float)) and target_distance <= (
-                            self._require_context().full_containment_center_radius
-                            + self._precontainment_braking_margin()
+                        if (
+                            brake_before_containment
+                            and isinstance(target_distance, (int, float))
+                            and target_distance
+                            <= (
+                                self._require_context().full_containment_center_radius
+                                + self._precontainment_braking_margin()
+                            )
                         ):
                             precontainment_brake = True
                             break

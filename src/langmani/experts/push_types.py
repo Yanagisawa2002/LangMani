@@ -78,6 +78,8 @@ class PushExpertConfig:
     cylinder_region_goal_margin: float = 0.02
     precontainment_braking_margin: float = 0.025
     cylinder_precontainment_braking_margin: float = 0.035
+    minimum_in_contact_nudge: float = 0.008
+    maximum_in_contact_nudge: float = 0.025
     primary_push_increment: float = 0.06
     minimum_primary_push_increment: float = 0.015
     maximum_primary_push_segments: int = 8
@@ -120,6 +122,8 @@ class PushExpertConfig:
             "cylinder_region_goal_margin",
             "precontainment_braking_margin",
             "cylinder_precontainment_braking_margin",
+            "minimum_in_contact_nudge",
+            "maximum_in_contact_nudge",
             "primary_push_increment",
             "minimum_primary_push_increment",
             "tcp_position_tolerance",
@@ -132,6 +136,8 @@ class PushExpertConfig:
             raise ValueError(
                 "minimum_primary_push_increment must not exceed primary_push_increment"
             )
+        if self.minimum_in_contact_nudge > self.maximum_in_contact_nudge:
+            raise ValueError("minimum_in_contact_nudge must not exceed maximum_in_contact_nudge")
         for label in (
             "lateral_cube_compensation_degrees",
             "lateral_cylinder_compensation_degrees",
@@ -162,6 +168,8 @@ class PushExpertConfig:
             "cylinder_region_goal_margin": self.cylinder_region_goal_margin,
             "precontainment_braking_margin": self.precontainment_braking_margin,
             "cylinder_precontainment_braking_margin": (self.cylinder_precontainment_braking_margin),
+            "minimum_in_contact_nudge": self.minimum_in_contact_nudge,
+            "maximum_in_contact_nudge": self.maximum_in_contact_nudge,
             "primary_push_increment": self.primary_push_increment,
             "minimum_primary_push_increment": self.minimum_primary_push_increment,
             "maximum_primary_push_segments": self.maximum_primary_push_segments,
