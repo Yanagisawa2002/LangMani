@@ -25,8 +25,8 @@ current step, distance, recovery count, replan count, and observable reason.
 | `MOVE_TO_STAGING` | Accepted plan | Elevated safe staging pose | TCP reaches tolerance | 4 visits | `REPLAN` or `SAFE_ABORT` |
 | `MOVE_TO_PRECONTACT` | Staging reached | Support-aware precontact pose | TCP reaches tolerance | 4 visits | `REPLAN` or `SAFE_ABORT` |
 | `ESTABLISH_CONTACT` | Precontact reached | Shape-aware contact pose | Contact pose reached safely | 4 visits | recovery, replan, or abort |
-| `PUSH_CLOSED_LOOP` | Contact or verified segment | One current-state segment | Segment or containment | 8 segments | recovery, replan, or abort |
-| `VERIFY_PROGRESS` | Segment completed | Read-only feedback check | Native success or sufficient improvement | 8 checks | continue, recovery, replan, or abort |
+| `PUSH_CLOSED_LOOP` | Contact or verified segment | One current-state segment | Segment or containment | 12 segments | recovery, replan, or abort |
+| `VERIFY_PROGRESS` | Segment completed | Read-only feedback check | Native success or sufficient improvement | 12 checks | continue, recovery, replan, or abort |
 | `RECOVER_CONTACT` | Observed loss/stagnation/rollout | Retreat and fresh plan | Revalidated plan | 2 recoveries | replan or abort |
 | `REPLAN` | Recoverable rejection/drift | Fresh current-state plan | All geometry gates pass | 3 replans | abort |
 | `SUCCESS` | Native stable success | None | Terminal | 1 visit | None |
@@ -52,7 +52,10 @@ non-positive geometry are rejected.
 
 The final object center lies inside the native full-containment radius by a
 fixed goal margin. The path is divided into bounded segments; near the region,
-the maximum segment length is halved. There are no per-seed values.
+the maximum segment length is reduced to 60%. Far from containment, the native
+joint path is executed at a fixed stride of two; dense execution resumes near
+the goal. This keeps the closed-loop verification cadence within the unchanged
+250-step environment horizon. There are no per-seed values.
 
 ## Workspace and collision feasibility
 

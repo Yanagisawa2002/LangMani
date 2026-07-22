@@ -143,7 +143,7 @@ GEOMETRY_PUSH_STATE_CONTRACTS: Mapping[GeometryPushState, GeometryPushStateContr
                 "contact pose or verified prior segment",
                 "next bounded segment from current object state",
                 "one short segment executes or native containment is reached",
-                "eight total segments",
+                "twelve total segments",
                 "planning, execution, or safety-event failure",
                 ALLOWED_GEOMETRY_PUSH_TRANSITIONS[GeometryPushState.PUSH_CLOSED_LOOP],
             ),
@@ -151,7 +151,7 @@ GEOMETRY_PUSH_STATE_CONTRACTS: Mapping[GeometryPushState, GeometryPushStateContr
                 "one bounded segment completed",
                 "no action; inspect native state, contact, drift, and progress",
                 "native success or sufficient distance improvement",
-                "eight verifications",
+                "twelve verifications",
                 "contact loss, rollout, drift, stagnation, or unresolved task",
                 ALLOWED_GEOMETRY_PUSH_TRANSITIONS[GeometryPushState.VERIFY_PROGRESS],
             ),
@@ -201,8 +201,8 @@ class GeometryPushExpertConfig:
     maximum_contact_recoveries: int = 2
     maximum_replans: int = 3
     maximum_state_visits: int = 48
-    maximum_push_segments: int = 8
-    maximum_segment_distance: float = 0.065
+    maximum_push_segments: int = 12
+    maximum_segment_distance: float = 0.100
     minimum_segment_distance: float = 0.012
     minimum_progress: float = 0.003
     maximum_stagnant_verifications: int = 2
@@ -215,7 +215,7 @@ class GeometryPushExpertConfig:
     cube_push_height: float = 0.025
     cylinder_push_height: float = 0.025
     goal_margin: float = 0.012
-    near_goal_step_scale: float = 0.50
+    near_goal_step_scale: float = 0.60
     object_clearance: float = 0.002
     tcp_clearance: float = 0.015
     tracking_margin: float = 0.002

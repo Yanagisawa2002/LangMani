@@ -279,7 +279,7 @@ def test_geometry_config_has_bounded_recovery_and_replan_limits() -> None:
     config = GeometryPushExpertConfig()
     assert config.maximum_contact_recoveries == 2
     assert config.maximum_replans == 3
-    assert config.maximum_push_segments == 8
+    assert config.maximum_push_segments == 12
     with pytest.raises(ValueError, match="non-negative"):
         GeometryPushExpertConfig(maximum_replans=-1)
 

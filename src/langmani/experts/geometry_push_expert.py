@@ -42,8 +42,8 @@ _STATE_VISIT_LIMITS: Mapping[GeometryPushState, int] = {
     GeometryPushState.MOVE_TO_STAGING: 4,
     GeometryPushState.MOVE_TO_PRECONTACT: 4,
     GeometryPushState.ESTABLISH_CONTACT: 4,
-    GeometryPushState.PUSH_CLOSED_LOOP: 8,
-    GeometryPushState.VERIFY_PROGRESS: 8,
+    GeometryPushState.PUSH_CLOSED_LOOP: 12,
+    GeometryPushState.VERIFY_PROGRESS: 12,
     GeometryPushState.RECOVER_CONTACT: 2,
     GeometryPushState.REPLAN: 3,
     GeometryPushState.SUCCESS: 1,
@@ -98,7 +98,7 @@ class GeometryConstrainedPushExpert(PushToRegionExpert):
         try:
             for _ in range(self.geometry_config.maximum_state_visits):
                 self._state_visits[self._state] += 1
-                if self._state_visits[self._state] > _STATE_VISIT_LIMITS[self._state]:
+                if self._state_visits[self._state] > self._state_visit_limit(self._state):
                     self._terminal_status = PushExpertStatus.TIMEOUT
                     self._transition(GeometryPushState.SAFE_ABORT, "state visit limit exhausted")
                 if self._state is GeometryPushState.SUCCESS:
@@ -214,6 +214,7 @@ class GeometryConstrainedPushExpert(PushToRegionExpert):
         result = self._planned_motion(
             PushExpertPhase.PRIMARY_PUSH,
             (target,),
+            action_stride=self._closed_loop_action_stride(),
             stop_on_target_inside_region=True,
             brake_before_containment=False,
         )
@@ -420,6 +421,18 @@ class GeometryConstrainedPushExpert(PushToRegionExpert):
         force = self._finite_scalar(raw.get("target_contact_force"), "target_contact_force")
         angular = self._finite_vector(raw.get("target_angular_velocity"), "target_angular_velocity")
         return force, float(np.linalg.norm(angular))
+
+    def _closed_loop_action_stride(self) -> int:
+        """Use sparse far-field execution and restore dense control near containment."""
+
+        distance = self._target_distance()
+        near_goal = 2.0 * self._require_context().full_containment_center_radius
+        return 1 if distance <= near_goal else self.geometry_config.free_space_action_stride
+
+    def _state_visit_limit(self, state: GeometryPushState) -> int:
+        if state in {GeometryPushState.PUSH_CLOSED_LOOP, GeometryPushState.VERIFY_PROGRESS}:
+            return self.geometry_config.maximum_push_segments
+        return _STATE_VISIT_LIMITS[state]
 
     def _lateral_error(
         self, previous_position: np.ndarray | None, current_position: np.ndarray
