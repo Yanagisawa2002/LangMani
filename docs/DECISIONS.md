@@ -2903,3 +2903,18 @@ diagnostic-only 40-standard/24-hard probe; the unchanged formal range remains 66
 never been materialized. The contract binds `PushToRegionExpert/CandidateJ` to that exact source.
 The diagnostic early-stop policy from D-107 remains active, cannot promote the expert, and cannot
 alter formal-gate execution. Collection remains closed.
+
+## D-111 - Reject Candidate J on a zero-tolerance workspace exit
+
+Candidate J ran from clean Git `50d28767539237e094657dda1a69798b75392526` and stopped after
+14 diagnostic episodes with ten successes. A rightward cylinder correction moved the target outside
+the workspace, which triggered the predeclared zero-tolerance early stop. The other failures were a
+cube contact event, corrective TCP tracking error, and zero-step contact-planning failure. The full
+report SHA-256 is `647e5509490f30211acf2e9aa960cdbc2de94f9b98387230243bf2f2660790ad`.
+Formal seeds and collection remain untouched.
+
+Candidate K responds only to those mechanics: all contact paths execute densely; a failed zero-step
+direct contact plan may use one fixed midpoint before the same final contact pose; the cylinder
+interior margin is fixed at 2 cm; and direct-push planning fallback is bounded to eight 6 cm
+segments. The horizon, controller, success predicate, action bounds, formal threshold, and
+zero-tolerance checks do not change. Seeds 66700--66763 are diagnostic only.

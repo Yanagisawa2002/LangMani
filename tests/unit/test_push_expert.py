@@ -218,10 +218,10 @@ def test_push_expert_config_rejects_unbounded_correction_search() -> None:
         PushExpertConfig(primary_push_increment=0.02, minimum_primary_push_increment=0.03)
 
     config = PushExpertConfig()
-    assert config.primary_push_increment == pytest.approx(0.08)
-    assert config.minimum_primary_push_increment == pytest.approx(0.02)
-    assert config.maximum_primary_push_segments == 6
-    assert config.cylinder_region_goal_margin == pytest.approx(0.035)
+    assert config.primary_push_increment == pytest.approx(0.06)
+    assert config.minimum_primary_push_increment == pytest.approx(0.015)
+    assert config.maximum_primary_push_segments == 8
+    assert config.cylinder_region_goal_margin == pytest.approx(0.02)
 
 
 def test_push_endpoint_stops_inside_full_containment_with_geometry_margin() -> None:
@@ -418,6 +418,35 @@ def test_free_space_stride_preserves_the_exact_final_planner_position() -> None:
 
     assert result.success
     assert [float(action[0]) for action in expert.action_trace] == [0.0, 1.0, 2.0]
+
+
+def test_establish_contact_uses_dense_two_waypoint_fallback_after_zero_step_failure() -> None:
+    environment = _FakeEnvironment(inside_after_step=99, success_after_step=99)
+    planner = _FakePlanner(environment)
+    expert = PushToRegionExpert(environment, planner_factory=lambda _env: planner)
+    expert._context = environment.context
+    expert._planner = planner
+    original = planner.plan_pose
+
+    def fail_direct_contact(pose7, *, use_attached: bool = False):
+        if planner.plan_count == 0:
+            planner.plan_count += 1
+            return PlannerPlanResult(
+                success=False,
+                status="screw plan failed",
+                failure=PlannerFailure.PLANNING_FAILURE,
+                positions=(),
+            )
+        return original(pose7, use_attached=use_attached)
+
+    planner.plan_pose = fail_direct_contact  # type: ignore[method-assign]
+    result = expert._establish_contact()
+
+    assert result.success
+    assert result.attempts == 2
+    assert result.planning_calls == 3
+    assert result.environment_steps == 2
+    assert "direct contact planning failed" in result.message
 
 
 def test_primary_motion_brakes_at_full_containment_until_stable_success() -> None:

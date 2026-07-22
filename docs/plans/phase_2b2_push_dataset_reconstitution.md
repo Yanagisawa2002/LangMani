@@ -123,3 +123,10 @@ Candidate J passed local implementation validation at Git
 `d757d91fa7c12f8c341f692118d8d45882623834`. Its diagnostic-only schedule is 66600--66663. The
 formal 66300--66399 range is still untouched, and the v2 contract binds the candidate source without
 changing any acceptance threshold.
+
+Candidate J stopped after 14 diagnostic episodes because a target-workspace exit triggered the
+zero-tolerance rule. Its ten successes and three other failures are retained as rejected evidence.
+Candidate K removes stride sampling from both contact motions, adds a deterministic intermediate
+contact waypoint after a zero-action screw-plan failure, sets the fixed cylinder goal margin to
+2 cm, and uses eight 6 cm maximum fallback segments. Diagnostic seeds 66700--66763 remain isolated;
+formal and collection schedules remain sealed.

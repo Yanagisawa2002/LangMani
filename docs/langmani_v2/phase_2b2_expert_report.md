@@ -84,3 +84,20 @@ Candidate J is locally validated at `d757d91fa7c12f8c341f692118d8d45882623834`. 
 diagnostic range is 66600--66663; it is not eligible for promotion. Formal seeds 66300--66399 and
 all collection seeds remain sealed. Collection cannot start until a later complete formal gate
 reaches at least 95/100 with every zero-tolerance count at zero.
+
+## Candidate J diagnostic rejection
+
+Candidate J ran from clean source `50d28767539237e094657dda1a69798b75392526` on diagnostic
+seeds beginning at 66600. It stopped after 14/64 episodes with 10 successes and four failures. One
+rightward cylinder correction pushed the target outside the workspace, so the predeclared
+zero-tolerance rule stopped the probe immediately. The other failures were one cube contact event,
+one corrective TCP tracking failure, and one zero-step contact-planning failure. The full report
+SHA-256 is `647e5509490f30211acf2e9aa960cdbc2de94f9b98387230243bf2f2660790ad`.
+Formal seeds and collection remain untouched.
+
+## Candidate K pending gate
+
+Candidate K restores dense controller execution for contact establishment and correction re-contact,
+adds a fixed two-waypoint contact fallback only after a zero-step direct plan failure, uses a 2 cm
+cylinder interior margin, and bounds the rare segmented fallback to eight 6 cm advances. It changes
+neither the 250-step limit nor any task, action, or acceptance gate.

@@ -305,16 +305,31 @@ class PushToRegionExpert:
         return self._planned_lateral_approach(candidates)
 
     def _establish_contact(self) -> PushPhaseResult:
+        phase = PushExpertPhase.ESTABLISH_CONTACT
         object_position = self._target_position()
         direction = self._motion_direction(object_position)
         pose = self._tcp_pose()
         pose[:2] = object_position[:2] - direction * self._contact_offset()
         pose[2] = self._push_height()
         self._chosen_contact_point = pose[:3].copy()
-        return self._planned_motion(
-            PushExpertPhase.ESTABLISH_CONTACT,
-            (pose,),
-            action_stride=self.config.free_space_action_stride,
+        direct = self._planned_motion(phase, (pose,))
+        if direct.success or not self._recoverable_zero_step_plan_failure(direct):
+            return direct
+        intermediate = pose.copy()
+        intermediate[:3] = (self._tcp_pose()[:3] + pose[:3]) * 0.5
+        fallback = self._planned_motion(phase, (intermediate, pose))
+        return replace(
+            fallback,
+            attempts=direct.attempts + fallback.attempts,
+            environment_steps=direct.environment_steps + fallback.environment_steps,
+            planning_calls=direct.planning_calls + fallback.planning_calls,
+            planning_duration_seconds=(
+                direct.planning_duration_seconds + fallback.planning_duration_seconds
+            ),
+            execution_duration_seconds=(
+                direct.execution_duration_seconds + fallback.execution_duration_seconds
+            ),
+            message="direct contact planning failed before execution; " + fallback.message,
         )
 
     def _primary_push(self) -> PushPhaseResult:
@@ -532,7 +547,6 @@ class PushToRegionExpert:
         contact_result = self._planned_motion(
             phase,
             (contact,),
-            action_stride=self.config.free_space_action_stride,
         )
         if not contact_result.success:
             return replace(

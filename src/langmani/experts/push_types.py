@@ -75,10 +75,10 @@ class PushExpertConfig:
     push_height: float = 0.025
     cylinder_push_height: float = 0.015
     region_goal_margin: float = 0.035
-    cylinder_region_goal_margin: float = 0.035
-    primary_push_increment: float = 0.08
-    minimum_primary_push_increment: float = 0.02
-    maximum_primary_push_segments: int = 6
+    cylinder_region_goal_margin: float = 0.02
+    primary_push_increment: float = 0.06
+    minimum_primary_push_increment: float = 0.015
+    maximum_primary_push_segments: int = 8
     free_space_action_stride: int = 2
     settle_steps: int = 16
     maximum_corrective_pushes: int = 2
