@@ -6,6 +6,7 @@ import importlib.metadata
 import json
 import os
 import platform
+import shutil
 import subprocess
 import time
 from collections.abc import Mapping, Sequence
@@ -104,6 +105,8 @@ def collect_push_attempts(
     output_root: str | Path,
     stage: str,
     sim_backend: str = "physx_cuda",
+    resume: bool = False,
+    validate_only: bool = False,
 ) -> dict[str, object]:
     """Collect one immutable pilot or full schedule into closed native shards."""
 
@@ -134,9 +137,20 @@ def collect_push_attempts(
     attempts_root = root / "attempts" / stage
     stage_manifest = manifests / f"{stage}_collection.json"
     if stage_manifest.exists():
-        return _read_json(stage_manifest)
+        report = _read_json(stage_manifest)
+        if report.get("completed") is not True:
+            raise PushDatasetContractError("completed stage manifest is not complete")
+        return report
+    atomic_episode_commits = config.payload.get("atomic_episode_commits") is True
+    if validate_only:
+        raise PushDatasetContractError("validate-only requires a completed collection manifest")
     if attempts_root.exists():
-        raise FileExistsError(f"incomplete immutable {stage} collection exists: {attempts_root}")
+        if not resume:
+            raise FileExistsError(
+                f"incomplete immutable {stage} collection exists: {attempts_root}"
+            )
+        if not atomic_episode_commits:
+            raise PushDatasetContractError("legacy collection roots are not resumable")
     for directory in (
         manifests,
         attempts_root,
@@ -171,6 +185,7 @@ def collect_push_attempts(
             }
         ).removeprefix("sha256:")[:24]
     )
+    owner_path = manifests / f"{stage}_owner.json"
     owner = {
         "schema_version": COLLECTION_RUN_SCHEMA,
         "collection_run_id": run_id,
@@ -180,19 +195,35 @@ def collect_push_attempts(
         "runtime": runtime,
         "created_unix_seconds": time.time(),
     }
-    _write_or_verify_json(manifests / f"{stage}_owner.json", owner)
+    if owner_path.exists():
+        existing_owner = _read_json(owner_path)
+        for key in (
+            "schema_version",
+            "collection_run_id",
+            "stage",
+            "collection_fingerprint",
+            "schedule_fingerprint",
+            "runtime",
+        ):
+            if existing_owner.get(key) != owner.get(key):
+                raise PushDatasetContractError(f"resumed collection owner changed field {key}")
+        owner = existing_owner
+    else:
+        _write_new_json(owner_path, owner)
 
     records: list[dict[str, object]] = []
     shard_size = config.integer("shard_size")
     for shard_index, start in enumerate(range(0, len(schedule), shard_size)):
         shard_schedule = schedule[start : start + shard_size]
+        collector = _collect_shard_atomic if atomic_episode_commits else _collect_shard
         records.extend(
-            _collect_shard(
+            collector(
                 shard_schedule,
                 shard_index=shard_index,
                 attempts_root=attempts_root,
                 run_id=run_id,
                 sim_backend=sim_backend,
+                resume=resume,
             )
         )
     generation_accepted = sum(record["generation_accepted"] is True for record in records)
@@ -234,9 +265,11 @@ def _collect_shard(
     attempts_root: Path,
     run_id: str,
     sim_backend: str,
+    resume: bool = False,
 ) -> list[dict[str, object]]:
+    del resume
     import gymnasium as gym
-    from mani_skill.utils.wrappers.record import RecordEpisode
+    from mani_skill.utils.wrappers.record import RecordEpisode  # type: ignore[import-untyped]
 
     import langmani.environments  # noqa: F401
 
@@ -335,6 +368,232 @@ def _collect_shard(
     return records
 
 
+def _collect_shard_atomic(
+    schedule: Sequence[PushScheduledAttempt],
+    *,
+    shard_index: int,
+    attempts_root: Path,
+    run_id: str,
+    sim_backend: str,
+    resume: bool,
+) -> list[dict[str, object]]:
+    """Collect one shard with one atomic directory commit per simulator episode."""
+
+    shard = attempts_root / f"shard-{shard_index:04d}"
+    shard_manifest_path = shard / "manifest.json"
+    if shard_manifest_path.exists():
+        manifest = _read_json(shard_manifest_path)
+        values = manifest.get("attempt_records")
+        if manifest.get("completed") is not True or not isinstance(values, list):
+            raise PushDatasetContractError("completed atomic shard manifest is malformed")
+        completed_records = cast(list[dict[str, object]], values)
+        if [item.get("episode_id") for item in completed_records] != [
+            item.episode_id for item in schedule
+        ]:
+            raise PushDatasetContractError("completed atomic shard schedule identity changed")
+        reloaded = [
+            _load_atomic_attempt(shard / f"attempt-{scheduled.attempt_index:04d}", scheduled)[0]
+            for scheduled in schedule
+        ]
+        if reloaded != completed_records:
+            raise PushDatasetContractError("completed atomic shard records changed")
+        return reloaded
+    shard.mkdir(parents=True, exist_ok=True)
+    records: list[dict[str, object]] = []
+    archives: list[dict[str, object]] = []
+    for scheduled in schedule:
+        final_directory = shard / f"attempt-{scheduled.attempt_index:04d}"
+        staging = shard / f".attempt-{scheduled.attempt_index:04d}.partial"
+        if staging.exists():
+            if not resume:
+                raise FileExistsError(f"owned partial episode exists: {staging}")
+            _remove_owned_partial(staging, shard)
+        if final_directory.exists():
+            record, archive = _load_atomic_attempt(final_directory, scheduled)
+        else:
+            record, archive = _collect_atomic_attempt(
+                scheduled,
+                staging=staging,
+                final_directory=final_directory,
+                run_id=run_id,
+                sim_backend=sim_backend,
+            )
+        records.append(record)
+        archives.append(archive)
+    shard_manifest = {
+        "schema_version": "langmani-v2-phase2b2-atomic-shard-v0",
+        "collection_run_id": run_id,
+        "shard_index": shard_index,
+        "fresh_environment_per_attempt": True,
+        "atomic_episode_commits": True,
+        "archives": archives,
+        "attempt_records": records,
+        "completed": True,
+    }
+    _write_new_json(shard_manifest_path, shard_manifest)
+    return records
+
+
+def _collect_atomic_attempt(
+    scheduled: PushScheduledAttempt,
+    *,
+    staging: Path,
+    final_directory: Path,
+    run_id: str,
+    sim_backend: str,
+) -> tuple[dict[str, object], dict[str, object]]:
+    import gymnasium as gym
+    from mani_skill.utils.wrappers.record import RecordEpisode  # type: ignore[import-untyped]
+
+    import langmani.environments  # noqa: F401
+
+    staging.mkdir(parents=False, exist_ok=False)
+    stem = "trajectory"
+    staging_h5 = staging / f"{stem}.h5"
+    staging_json = staging / f"{stem}.json"
+    final_h5 = final_directory / f"{stem}.h5"
+    final_json = final_directory / f"{stem}.json"
+    raw_root = next(
+        (parent.parent for parent in final_directory.parents if parent.name == "attempts"),
+        None,
+    )
+    if raw_root is None:
+        raise PushDatasetContractError("atomic episode directory is outside an attempts root")
+    relative_h5 = final_h5.relative_to(raw_root)
+    relative_json = final_json.relative_to(raw_root)
+    started = time.perf_counter()
+    environment: Any = gym.make(
+        ENV_ID,
+        num_envs=1,
+        obs_mode="state_dict",
+        reward_mode="none",
+        control_mode="pd_joint_pos",
+        render_mode=None,
+        sim_backend=sim_backend,
+    )
+    recorder = RecordEpisode(
+        environment,
+        output_dir=str(staging),
+        trajectory_name=stem,
+        save_trajectory=True,
+        save_video=False,
+        save_on_reset=False,
+        clean_on_close=True,
+        record_reward=False,
+        record_env_state=True,
+        source_type="motionplanning",
+        source_desc="LangMani 2.0 Phase 2B.2 Candidate E push demonstrations",
+    )
+    try:
+        recorder.reset(seed=scheduled.seed, options={"task_spec": scheduled.task_spec.to_dict()})
+        base = recorder.unwrapped
+        episode = base.get_episode_specs()[0]
+        initial_pose = _target_pose(base, scheduled.task_spec)
+        expert = PushToRegionExpert(recorder, config=PushExpertConfig())
+        try:
+            result = expert.run()
+        except Exception as error:  # noqa: BLE001 - attempt boundary preserves evidence
+            result = expert.unexpected_exception_result(error)
+        final_pose = _target_pose(base, scheduled.task_spec)
+        diagnostics = {
+            "episode_spec": episode.to_dict(),
+            "initial_target_pose": initial_pose,
+            "final_target_pose": final_pose,
+            "expert_action_count": len(expert.action_trace),
+            "expert_diagnostic_trace": [item.to_dict() for item in expert.diagnostic_trace],
+            "approach_candidates": list(expert.approach_candidate_diagnostics),
+            "wall_clock_seconds": time.perf_counter() - started,
+        }
+        recorder.flush_trajectory(save=True)
+    finally:
+        recorder.close()
+    native_id = 0 if _native_episode_count(staging_json) == 1 else None
+    validation = (
+        validate_push_native_episode(staging_h5, staging_json, native_episode_id=0)
+        if native_id is not None
+        else None
+    )
+    record = _attempt_record(
+        scheduled,
+        result,
+        diagnostics,
+        validation=validation.to_dict() if validation is not None else None,
+        run_id=run_id,
+        h5_path=relative_h5,
+        json_path=relative_json,
+    )
+    archive: dict[str, object] = {
+        "episode_id": scheduled.episode_id,
+        "h5_path": relative_h5.as_posix(),
+        "json_path": relative_json.as_posix(),
+        "h5_sha256": sha256_file(staging_h5),
+        "json_sha256": sha256_file(staging_json),
+    }
+    episode_manifest = {
+        "schema_version": "langmani-v2-phase2b2-atomic-episode-v0",
+        "episode_id": scheduled.episode_id,
+        "schedule": scheduled.to_dict(),
+        "record": record,
+        "archive": archive,
+        "completed": True,
+    }
+    _write_new_json(staging / "manifest.json", episode_manifest)
+    _fsync_directory_files(staging)
+    os.replace(staging, final_directory)
+    return record, archive
+
+
+def _load_atomic_attempt(
+    directory: Path,
+    scheduled: PushScheduledAttempt,
+) -> tuple[dict[str, object], dict[str, object]]:
+    manifest = _read_json(directory / "manifest.json")
+    if (
+        manifest.get("schema_version") != "langmani-v2-phase2b2-atomic-episode-v0"
+        or manifest.get("completed") is not True
+        or manifest.get("episode_id") != scheduled.episode_id
+        or manifest.get("schedule") != scheduled.to_dict()
+    ):
+        raise PushDatasetContractError(f"atomic episode manifest changed: {directory}")
+    record = manifest.get("record")
+    archive = manifest.get("archive")
+    if not isinstance(record, dict) or not isinstance(archive, dict):
+        raise PushDatasetContractError("atomic episode record/archive is malformed")
+    raw_root = next(
+        (parent.parent for parent in directory.parents if parent.name == "attempts"),
+        None,
+    )
+    if raw_root is None:
+        raise PushDatasetContractError("atomic episode directory is outside an attempts root")
+    for digest_key, path_key in (("h5_sha256", "h5_path"), ("json_sha256", "json_path")):
+        path = Path(str(archive[path_key]))
+        if not path.is_absolute():
+            path = raw_root / path
+        if not path.is_file() or sha256_file(path) != archive.get(digest_key):
+            raise PushDatasetContractError(f"atomic episode byte identity changed: {path}")
+    return cast(dict[str, object], record), cast(dict[str, object], archive)
+
+
+def _remove_owned_partial(path: Path, parent: Path) -> None:
+    if (
+        path.parent != parent
+        or path.is_symlink()
+        or path.resolve().parent != parent.resolve()
+        or not path.name.startswith(".attempt-")
+        or not path.name.endswith(".partial")
+    ):
+        raise PushDatasetContractError(f"refusing to remove unowned partial path: {path}")
+    shutil.rmtree(path)
+
+
+def _fsync_directory_files(root: Path) -> None:
+    for path in root.rglob("*"):
+        if path.is_file():
+            with path.open("r+b") as stream:
+                stream.flush()
+                os.fsync(stream.fileno())
+
+
 def _attempt_record(
     scheduled: PushScheduledAttempt,
     result: PushExpertResult,
@@ -370,7 +629,9 @@ def _attempt_record(
         "final_evaluation": evaluation,
         "success_agreement": result.success is bool(evaluation.get("success", False)),
         "failure_category": None if result.success else result.status.value,
-        "episode_length": int(native.get("action_count", result.total_environment_steps)),
+        "episode_length": _nonnegative_int(
+            native.get("action_count", result.total_environment_steps), "episode_length"
+        ),
         "final_object_to_target_distance": evaluation.get("target_distance"),
         "stable_success_steps": evaluation.get("stable_success_steps"),
         "wrong_object_interaction": bool(
@@ -426,7 +687,9 @@ def _attempt_record(
 
 
 def _target_pose(base: object, task: PushTaskSpec) -> list[float]:
-    actor = base.push_objects[("blue_cube", "orange_cylinder").index(task.target_object_id)]
+    actor = cast(Any, base).push_objects[
+        ("blue_cube", "orange_cylinder").index(task.target_object_id)
+    ]
     value = actor.pose.raw_pose.detach().cpu().numpy()
     array = np.asarray(value, dtype=np.float64)
     if array.shape != (1, 7) or not np.all(np.isfinite(array)):
@@ -442,6 +705,12 @@ def _native_episode_count(path: Path) -> int:
     if not isinstance(episodes, list):
         raise PushDatasetContractError("native JSON episodes must be a list")
     return len(episodes)
+
+
+def _nonnegative_int(value: object, label: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise PushDatasetContractError(f"{label} must be a non-negative integer")
+    return value
 
 
 def _ensure_root_matches_config(config: PushCollectionConfig, root: Path) -> None:

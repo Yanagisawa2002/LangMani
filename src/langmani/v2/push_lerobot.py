@@ -47,8 +47,8 @@ def export_push_lerobot_dataset(
     source = Path(source_root).resolve()
     destination = Path(output_root).resolve()
     if destination.exists():
-        complete = destination / "langmani" / "complete.json"
-        if complete.is_file():
+        complete_path = destination / "langmani" / "complete.json"
+        if complete_path.is_file():
             return _read_json(destination / "langmani" / "export_manifest.json")
         raise FileExistsError(f"incomplete export destination exists: {destination}")
     records = _load_accepted_records(source, stages)
@@ -74,7 +74,7 @@ def export_push_lerobot_dataset(
             "errors": [],
             "accepted_episode_count": len(records),
         }
-        split_names = ("pilot",)
+        split_names: Sequence[str] = ("pilot",)
     else:
         split_manifest = build_split_manifest(records)
         leakage = audit_split_leakage(records, split_manifest)
@@ -122,13 +122,13 @@ def export_push_lerobot_dataset(
                     seed = _integer(record.get("seed"), "seed")
                     native_id = _integer(record.get("native_episode_id"), "native_episode_id")
                     actions = load_native_actions(
-                        str(record["raw_h5_path"]), native_episode_id=native_id
+                        _source_path(source, record["raw_h5_path"]), native_episode_id=native_id
                     )
                     reconstructor.begin_episode(seed=seed, task=task)
                     rendered_hash = _RenderedFrameHash()
                     for frame_index, action in enumerate(actions):
                         state_dict = load_native_state(
-                            str(record["raw_h5_path"]),
+                            _source_path(source, record["raw_h5_path"]),
                             native_episode_id=native_id,
                             state_index=frame_index,
                         )
@@ -201,12 +201,17 @@ def export_push_lerobot_dataset(
         )
         stats = statistics.to_dict()
         _write_json(sidecar / "dataset_statistics.json", stats)
+        phase2b2 = config.payload.get("contract_schema_version") == (
+            "langmani-v2-phase2b2-dataset-contract-v0"
+        )
         export_manifest = {
             "schema_version": PUSH_LEROBOT_SCHEMA,
             "export_fingerprint": export_fingerprint,
             "collection_fingerprint": config.fingerprint,
             "repo_id_prefix": repo_id_prefix,
-            "source_root": source.as_posix(),
+            "source_root": (
+                "${LANGMANI_PHASE2B2_RAW_EPISODE_ROOT}" if phase2b2 else source.as_posix()
+            ),
             "stages": list(stages),
             "episode_count": len(records),
             "frame_count": statistics.frame_count,
@@ -263,7 +268,7 @@ class PushObservationReconstructor:
             render_backend="sapien_cuda",
         )
         self._base = self._environment.unwrapped
-        if self._base.control_freq != 20:
+        if cast(Any, self._base).control_freq != 20:
             raise PushDatasetContractError("push reconstruction requires 20Hz control")
         return self
 
@@ -377,12 +382,12 @@ def _validate_real_readback(
     *,
     repo_id_prefix: str,
 ) -> dict[str, object]:
-    from lerobot.datasets import LeRobotDataset
+    from lerobot.datasets import LeRobotDataset  # type: ignore[import-untyped]
 
     expected = Counter(str(item["split"]) for item in episodes)
-    expected_frames = Counter()
+    expected_frames: Counter[str] = Counter()
     for item in episodes:
-        expected_frames[str(item["split"])] += int(item["frame_count"])
+        expected_frames[str(item["split"])] += _integer(item["frame_count"], "frame_count")
     reports: dict[str, object] = {}
     for split in split_names:
         dataset = LeRobotDataset(
@@ -422,6 +427,18 @@ def _integer(value: object, label: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
         raise PushDatasetContractError(f"{label} must be a non-negative integer")
     return value
+
+
+def _source_path(root: Path, value: object) -> str:
+    path = Path(str(value))
+    if path.is_absolute():
+        return str(path)
+    resolved = (root / path).resolve()
+    try:
+        resolved.relative_to(root.resolve())
+    except ValueError as error:
+        raise PushDatasetContractError("relative raw episode path escapes source root") from error
+    return str(resolved)
 
 
 def _moments(

@@ -2745,3 +2745,24 @@ was created, no copy was attempted, no metadata was repaired, and no real batch 
 Optimizer steps remain zero. Training, checkpoint selection, development evaluation, sealed
 evaluation, promotion, and Phase 2D are not run. Phase 2C.1 therefore ends as Result B without
 changing the historical acceptance of Phase 2B.
+
+## D-101 - Reconstitute pushing data under a new v2 identity
+
+The missing Phase 2B v1 bytes remain a historical asset loss. Their accepted conclusions are not
+withdrawn, but their dataset ID, digests, manifests, counts, and acceptance status cannot authorize
+a new runtime dataset. Phase 2B.2 therefore performs a new simulator collection under the distinct
+identity `langmani/phase2b-push-v2` with disjoint seeds and newly computed content identities.
+
+The frozen gate first requires at least 95 successes in 100 independently executed expert episodes,
+with zero simulator errors, non-finite actions, native action-bound violations, or workspace exits.
+Formal collection cannot start if that gate fails. Completed native episodes use an atomic
+per-episode commit and verified resume; failed attempts remain evidence but do not enter the default
+imitation-learning view. Every generation-accepted episode must independently action-replay in a
+fresh environment before LeRobot export.
+
+Acceptance requires at least 400 replay-accepted episodes and 50,000 frames, complete six-split
+LeRobot 0.6 readback, zero finite/action/leakage failures, complete raw and export manifests,
+content-addressed raw and LeRobot archives, successful restored-copy validation, and one real
+SmolVLA batch processed with zero optimizer steps. Two independently restored replicas plus an
+explicit pending third copy are a temporary dataset gate; a true third copy is mandatory before any
+future 20,000-step training. This milestone cannot start Phase 2C.2 or Phase 2D.

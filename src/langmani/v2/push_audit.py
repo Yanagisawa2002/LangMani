@@ -173,7 +173,7 @@ def audit_pick_place_compatibility(
 ) -> dict[str, object]:
     """Classify actual immutable pick/push fields without concatenating either source."""
 
-    from lerobot.datasets import LeRobotDataset
+    from lerobot.datasets import LeRobotDataset  # type: ignore[import-untyped]
 
     pick_root = Path(pick_place_root).resolve()
     push_root = Path(push_export_root).resolve()
@@ -206,7 +206,7 @@ def audit_pick_place_compatibility(
     push_sample = push_dataset[0]
     pick_sample = pick_dataset[0]
     contract = FeatureContract()
-    fields = {
+    fields: dict[str, dict[str, object]] = {
         "observation.images.base_camera": _classify_shape_dtype(
             pick_sample[contract.image_feature_key], push_sample[contract.image_feature_key]
         ),
@@ -324,7 +324,7 @@ def verify_phase2b_evidence(
 ) -> dict[str, object]:
     """Recompute manifests, native references, splits, quotas, and exact release gates."""
 
-    from lerobot.datasets import LeRobotDataset
+    from lerobot.datasets import LeRobotDataset  # type: ignore[import-untyped]
 
     source = Path(source_root).resolve()
     exported = Path(export_root).resolve()
@@ -351,8 +351,8 @@ def verify_phase2b_evidence(
                 native_failures.append(f"missing_native:{record.get('episode_id')}")
             continue
         validation = validate_push_native_episode(
-            str(record["raw_h5_path"]),
-            str(record["raw_json_path"]),
+            _source_path(source, record["raw_h5_path"]),
+            _source_path(source, record["raw_json_path"]),
             native_episode_id=native_id,
         )
         if validation.trajectory_sha256 != record.get("trajectory_sha256"):
@@ -362,7 +362,7 @@ def verify_phase2b_evidence(
     if full:
         split_manifest = build_split_manifest(accepted)
         leakage = audit_split_leakage(accepted, split_manifest)
-        split_names = DATASET_SPLITS
+        split_names: Sequence[str] = DATASET_SPLITS
     else:
         leakage = _read_json(exported / "langmani" / "leakage_audit.json")
         split_names = ("pilot",)
@@ -398,8 +398,8 @@ def verify_phase2b_evidence(
     quota_results = {
         key: {
             "observed": counts[str(key)],
-            "required": int(value),
-            "passed": counts[str(key)] >= int(value),
+            "required": _nonnegative_int(value, f"minimum_quotas.{key}"),
+            "passed": counts[str(key)] >= _nonnegative_int(value, f"minimum_quotas.{key}"),
         }
         for key, value in quotas.items()
     }
@@ -428,13 +428,17 @@ def verify_phase2b_evidence(
             sha256_file(Path(source_validation)) if source_validation is not None else None
         ),
     }
-    final_metadata_report = _read_json(Path(final_metadata)) if final_metadata is not None else None
+    final_metadata_path = Path(final_metadata) if final_metadata is not None else None
+    final_metadata_report = (
+        _read_json(final_metadata_path) if final_metadata_path is not None else None
+    )
     final_metadata_valid = bool(
         final_metadata_report
         and validate_phase2b_result_manifest(
             final_metadata_report, expected=expected_final_metadata
         )
-        and _git_tracks(Path(final_metadata))
+        and final_metadata_path is not None
+        and _git_tracks(final_metadata_path)
     )
     preferred_shortfall_justified = bool(
         final_metadata_report and final_metadata_report.get("preferred_shortfall_justified") is True
@@ -449,15 +453,27 @@ def verify_phase2b_evidence(
         "minimum_accepted": len(accepted) >= config.integer("minimum_accepted_episodes"),
         "preferred_accepted": preferred_accepted,
         "preferred_or_justified": preferred_accepted or preferred_shortfall_justified,
-        "categorical_replay_match": float(replay["categorical_outcome_match_rate"])
-        >= float(
-            cast(Mapping[str, object], config.payload["replay"])["minimum_categorical_match_rate"]
+        "categorical_replay_match": _number(
+            replay["categorical_outcome_match_rate"], "categorical_outcome_match_rate"
+        )
+        >= _number(
+            cast(Mapping[str, object], config.payload["replay"])["minimum_categorical_match_rate"],
+            "minimum_categorical_match_rate",
         ),
-        "transition_labels_match": float(replay.get("transition_label_match_rate", 0.0)) == 1.0,
-        "frame_counts_match": float(replay["frame_count_match_rate"]) == 1.0,
-        "all_replayed_episodes_passed": int(replay["replay_passed_count"]) == len(accepted),
-        "all_generation_accepted_replayed": int(replay["replayed_count"])
-        == int(replay["generation_accepted_count"]),
+        "transition_labels_match": _number(
+            replay.get("transition_label_match_rate"), "transition_label_match_rate"
+        )
+        == 1.0,
+        "frame_counts_match": _number(replay["frame_count_match_rate"], "frame_count_match_rate")
+        == 1.0,
+        "all_replayed_episodes_passed": _nonnegative_int(
+            replay["replay_passed_count"], "replay_passed_count"
+        )
+        == len(accepted),
+        "all_generation_accepted_replayed": _nonnegative_int(
+            replay["replayed_count"], "replayed_count"
+        )
+        == _nonnegative_int(replay["generation_accepted_count"], "generation_accepted_count"),
         "accepted_manifest_integrity": accepted_manifest_integrity,
         "rejected_manifest_integrity": rejected_manifest_integrity,
         "export_metadata_integrity": export_metadata_integrity,
@@ -524,6 +540,30 @@ def _records_fingerprint(records: Sequence[Mapping[str, object]]) -> str:
     from langmani.v2.push_dataset import sha256_json
 
     return sha256_json(records)
+
+
+def _source_path(root: Path, value: object) -> Path:
+    path = Path(str(value))
+    if path.is_absolute():
+        return path
+    resolved = (root / path).resolve()
+    try:
+        resolved.relative_to(root.resolve())
+    except ValueError as error:
+        raise PushDatasetContractError("relative raw episode path escapes source root") from error
+    return resolved
+
+
+def _nonnegative_int(value: object, label: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise PushDatasetContractError(f"{label} must be a non-negative integer")
+    return value
+
+
+def _number(value: object, label: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        raise PushDatasetContractError(f"{label} must be numeric")
+    return float(value)
 
 
 def _export_metadata_integrity(root: Path, manifest: Mapping[str, object]) -> bool:

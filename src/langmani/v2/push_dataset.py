@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Self, cast
 
+from langmani.datasets.lerobot_types import PANDA_ACTION_COMPONENTS
+from langmani.datasets.policy_state import PANDA_POLICY_STATE_COMPONENTS
 from langmani.environments.push_specs import (
     PUSH_DIFFICULTIES,
     PUSH_OBJECT_IDS,
@@ -202,6 +204,80 @@ class PushCollectionConfig:
         }
         if dict(runtime) != required:
             raise PushDatasetContractError("required runtime pins changed")
+        contract_schema = payload.get("contract_schema_version")
+        if contract_schema is not None:
+            PushCollectionConfig._validate_phase2b2(payload, contract_schema)
+
+    @staticmethod
+    def _validate_phase2b2(payload: Mapping[str, object], contract_schema: object) -> None:
+        if contract_schema != "langmani-v2-phase2b2-dataset-contract-v0":
+            raise PushDatasetContractError("unsupported Phase 2B.2 contract schema")
+        if payload.get("dataset_version") != "v2":
+            raise PushDatasetContractError("Phase 2B.2 dataset_version must be v2")
+        if payload.get("source_commit_policy") != "exact_clean_runtime_head":
+            raise PushDatasetContractError(
+                "Phase 2B.2 source commit must bind the clean runtime HEAD"
+            )
+        if payload.get("atomic_episode_commits") is not True:
+            raise PushDatasetContractError("Phase 2B.2 requires atomic episode commits")
+        dataset = _mapping(payload.get("dataset"), "dataset")
+        if dataset.get("repo_id") != "langmani/phase2b-push-v2":
+            raise PushDatasetContractError("Phase 2B.2 must use its independent v2 dataset ID")
+        forbidden = ("phase2b-push-v1", "phase2b-v1")
+        if any(token in str(dataset.get("output_directory", "")) for token in forbidden):
+            raise PushDatasetContractError("Phase 2B.2 cannot write into a v1 dataset root")
+        if payload.get("supersedes_dataset_id") != "langmani/phase2b-push-v1":
+            raise PushDatasetContractError("Phase 2B.2 must record the retired v1 dataset")
+        if tuple(_string_tuple(payload.get("state_names"), "state_names")) != (
+            PANDA_POLICY_STATE_COMPONENTS
+        ):
+            raise PushDatasetContractError("Phase 2B.2 state names changed from PandaPolicyStateV0")
+        if tuple(_string_tuple(payload.get("action_names"), "action_names")) != (
+            PANDA_ACTION_COMPONENTS
+        ):
+            raise PushDatasetContractError("Phase 2B.2 action names changed")
+        if payload.get("state_shape") != [9] or payload.get("action_shape") != [8]:
+            raise PushDatasetContractError("Phase 2B.2 must preserve 9D state and 8D action")
+        bounds = _mapping(payload.get("action_bounds"), "action_bounds")
+        for name in ("low", "high"):
+            values = bounds.get(name)
+            if not isinstance(values, list) or len(values) != 8:
+                raise PushDatasetContractError(f"action_bounds.{name} must contain eight values")
+            if not all(
+                isinstance(item, int | float) and not isinstance(item, bool) for item in values
+            ):
+                raise PushDatasetContractError(f"action_bounds.{name} must be numeric")
+        low = cast(list[int | float], bounds["low"])
+        high = cast(list[int | float], bounds["high"])
+        if any(float(left) > float(right) for left, right in zip(low, high, strict=True)):
+            raise PushDatasetContractError("Phase 2B.2 action bounds are inverted")
+        if _integer(payload.get("minimum_accepted_episodes"), "minimum_accepted_episodes") < 400:
+            raise PushDatasetContractError("Phase 2B.2 requires at least 400 accepted episodes")
+        if (
+            _integer(payload.get("preferred_accepted_episodes"), "preferred_accepted_episodes")
+            < 500
+        ):
+            raise PushDatasetContractError("Phase 2B.2 preferred target must be at least 500")
+        if _integer(payload.get("minimum_total_frames"), "minimum_total_frames") < 50_000:
+            raise PushDatasetContractError("Phase 2B.2 requires at least 50,000 frames")
+        expert = _mapping(payload.get("expert_evaluation"), "expert_evaluation")
+        standard = _integer(expert.get("standard_episodes"), "expert standard episodes")
+        hard = _integer(expert.get("hard_episodes"), "expert hard episodes")
+        minimum_rate = expert.get("minimum_success_rate")
+        if not isinstance(minimum_rate, int | float) or isinstance(minimum_rate, bool):
+            raise PushDatasetContractError("expert minimum_success_rate must be numeric")
+        if standard + hard < 100 or float(minimum_rate) < 0.95:
+            raise PushDatasetContractError("Phase 2B.2 expert gate must cover 100 episodes at 95%")
+        expert_start = _integer(expert.get("seed_start"), "expert seed_start")
+        expert_seeds = set(range(expert_start, expert_start + standard + hard))
+        full_start = _integer(payload.get("full_seed_start"), "full_seed_start")
+        full_count = _integer(payload.get("full_standard_attempts"), "full_standard_attempts") + (
+            _integer(payload.get("full_hard_attempts"), "full_hard_attempts")
+        )
+        top_up_count = _integer(payload.get("maximum_top_up_attempts"), "maximum_top_up_attempts")
+        collection_seeds = set(range(full_start, full_start + full_count + top_up_count))
+        if expert_seeds.intersection(collection_seeds):
+            raise PushDatasetContractError("expert evaluation and collection seeds overlap")
 
     def integer(self, key: str) -> int:
         return _integer(self.payload.get(key), key)

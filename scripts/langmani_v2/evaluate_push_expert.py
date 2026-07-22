@@ -1,0 +1,182 @@
+"""Run the disjoint 100-episode Phase 2B.2 Push expert gate."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import traceback
+from collections import Counter
+from pathlib import Path
+from typing import Any
+
+from langmani.environments.push_specs import PUSH_OBJECT_IDS, TARGET_REGION_IDS, PushTaskSpec
+from langmani.environments.push_to_region import ENV_ID
+from langmani.experts.push import PushToRegionExpert
+from langmani.experts.push_types import PushExpertConfig, PushExpertResult, PushExpertStatus
+from langmani.v2.phase2b2 import write_json_once
+from langmani.v2.push_collection import inspect_phase2b_runtime
+from langmani.v2.push_dataset import PushCollectionConfig
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_CONFIG = PROJECT_ROOT / "configs" / "langmani_v2" / "phase_2b2" / "dataset_contract.yaml"
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    parser.add_argument("--output", type=Path, required=True)
+    return parser.parse_args()
+
+
+def _schedule(config: PushCollectionConfig) -> tuple[tuple[int, PushTaskSpec], ...]:
+    gate = config.payload["expert_evaluation"]
+    assert isinstance(gate, dict)
+    start = int(gate["seed_start"])
+    values: list[tuple[int, PushTaskSpec]] = []
+    index = 0
+    combinations = tuple(
+        (object_id, region_id) for object_id in PUSH_OBJECT_IDS for region_id in TARGET_REGION_IDS
+    )
+    for difficulty, count in (
+        ("standard", int(gate["standard_episodes"])),
+        ("hard", int(gate["hard_episodes"])),
+    ):
+        for offset in range(count):
+            object_id, region_id = combinations[offset % len(combinations)]
+            values.append((start + index, PushTaskSpec(object_id, region_id, difficulty)))
+            index += 1
+    return tuple(values)
+
+
+def _environment() -> object:
+    import gymnasium as gym
+
+    import langmani.environments  # noqa: F401
+
+    return gym.make(
+        ENV_ID,
+        num_envs=1,
+        obs_mode="state_dict",
+        reward_mode="none",
+        control_mode="pd_joint_pos",
+        render_mode=None,
+        sim_backend="physx_cuda",
+    )
+
+
+def _sanitized_runtime(runtime: dict[str, object]) -> dict[str, object]:
+    gpu_values = runtime.get("gpu")
+    gpus: list[dict[str, object]] = []
+    if isinstance(gpu_values, list):
+        for value in gpu_values:
+            if isinstance(value, dict):
+                gpus.append({key: value.get(key) for key in ("name", "driver", "memory_mib")})
+    return {
+        key: runtime.get(key)
+        for key in (
+            "python",
+            "cuda_runtime",
+            "torch",
+            "numpy",
+            "mplib",
+            "mani_skill",
+            "lerobot",
+            "git_commit",
+            "git_clean",
+            "accepted_expert_commit",
+        )
+    } | {"gpu": gpus}
+
+
+def main() -> int:
+    args = parse_args()
+    config = PushCollectionConfig.load(args.config)
+    runtime = inspect_phase2b_runtime()
+    schedule = _schedule(config)
+    results: list[PushExpertResult] = []
+    command_errors: list[dict[str, object]] = []
+    for index, (seed, task) in enumerate(schedule):
+        environment: Any | None = None
+        expert: PushToRegionExpert | None = None
+        try:
+            environment = _environment()
+            environment.reset(seed=seed, options={"task_spec": task.to_dict()})
+            expert = PushToRegionExpert(environment, config=PushExpertConfig())
+            try:
+                result = expert.run()
+            except Exception as error:  # noqa: BLE001 - gate preserves classified failure
+                result = expert.unexpected_exception_result(error)
+            results.append(result)
+            print(
+                f"[{index + 1}/{len(schedule)}] seed={seed} "
+                f"task={task.target_object_id}/{task.target_region_id}/{task.difficulty} "
+                f"status={result.status.value} steps={result.total_environment_steps}",
+                flush=True,
+            )
+        except Exception as error:  # noqa: BLE001 - simulator construction is evidence
+            traceback.print_exc()
+            command_errors.append(
+                {"seed": seed, "type": type(error).__name__, "message": str(error)}
+            )
+            break
+        finally:
+            if environment is not None:
+                environment.close()
+    successes = sum(result.success for result in results)
+    evaluations = [result.final_environment_evaluation for result in results]
+    simulator_errors = len(command_errors) + sum(
+        result.status is PushExpertStatus.UNEXPECTED_EXCEPTION for result in results
+    )
+    nonfinite_actions = sum(bool(value.get("invalid_action", False)) for value in evaluations)
+    action_bound_violations = sum(
+        bool(value.get("action_out_of_bounds", False)) for value in evaluations
+    )
+    workspace_violations = sum(
+        bool(value.get("target_outside_workspace", False)) for value in evaluations
+    )
+    timeouts = sum(result.status is PushExpertStatus.TIMEOUT for result in results)
+    success_rate = successes / len(schedule)
+    passed = bool(
+        len(results) == len(schedule)
+        and success_rate >= 0.95
+        and simulator_errors == 0
+        and nonfinite_actions == 0
+        and action_bound_violations == 0
+        and workspace_violations == 0
+    )
+    report = {
+        "schema_version": "langmani-v2-phase2b2-expert-evaluation-v0",
+        "dataset_id": "langmani/phase2b-push-v2",
+        "runtime": _sanitized_runtime(runtime),
+        "schedule": [{"seed": seed, "task_spec": task.to_dict()} for seed, task in schedule],
+        "expected_episodes": len(schedule),
+        "completed_episodes": len(results),
+        "successes": successes,
+        "failures": len(results) - successes,
+        "success_rate": success_rate,
+        "status_counts": dict(sorted(Counter(result.status.value for result in results).items())),
+        "simulator_errors": simulator_errors,
+        "nonfinite_actions": nonfinite_actions,
+        "action_bound_violations": action_bound_violations,
+        "workspace_violations": workspace_violations,
+        "timeouts": timeouts,
+        "teleport_or_state_mutation_used": False,
+        "success_flag_mutation_used": False,
+        "controller_execution_only": True,
+        "command_errors": command_errors,
+        "results": [result.to_dict() for result in results],
+        "optimizer_steps": 0,
+        "passed": passed,
+    }
+    write_json_once(args.output, report)
+    print(
+        json.dumps(
+            {key: report[key] for key in ("successes", "failures", "success_rate", "passed")},
+            sort_keys=True,
+        )
+    )
+    return 0 if passed else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

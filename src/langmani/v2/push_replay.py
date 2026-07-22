@@ -9,7 +9,7 @@ import time
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 
@@ -67,6 +67,7 @@ def replay_push_attempts(
                 config=config,
                 sim_backend=sim_backend,
                 replay_index=index,
+                source_root=root,
             )
         )
     by_episode = {str(item["episode_id"]): item for item in results}
@@ -121,10 +122,19 @@ def replay_push_attempts(
             else 0.0
         ),
         "terminal_position_error": _distribution(
-            [float(item["terminal_position_error"]) for item in results]
+            [
+                _number(item["terminal_position_error"], "terminal_position_error")
+                for item in results
+            ]
         ),
         "terminal_orientation_error_radians": _distribution(
-            [float(item["terminal_orientation_error_radians"]) for item in results]
+            [
+                _number(
+                    item["terminal_orientation_error_radians"],
+                    "terminal_orientation_error_radians",
+                )
+                for item in results
+            ]
         ),
         "failure_categories": dict(sorted(failure_counts.items())),
         "results": results,
@@ -171,6 +181,7 @@ def _replay_one(
     config: PushCollectionConfig,
     sim_backend: str,
     replay_index: int,
+    source_root: Path,
 ) -> dict[str, object]:
     import gymnasium as gym
 
@@ -187,7 +198,7 @@ def _replay_one(
         raise PushDatasetContractError("attempt seed is malformed")
     if isinstance(native_id, bool) or not isinstance(native_id, int):
         raise PushDatasetContractError("accepted attempt lacks a native episode ID")
-    h5_path = Path(str(record["raw_h5_path"]))
+    h5_path = _source_path(source_root, record["raw_h5_path"])
     actions = load_native_actions(h5_path, native_episode_id=native_id)
     recorded_labels = load_native_transition_labels(h5_path, native_episode_id=native_id)
     environment: Any = gym.make(
@@ -296,11 +307,31 @@ def _replay_one(
 
 
 def _target_pose(base: object, task: PushTaskSpec) -> list[float]:
-    actor = base.push_objects[("blue_cube", "orange_cylinder").index(task.target_object_id)]
+    actor = cast(Any, base).push_objects[
+        ("blue_cube", "orange_cylinder").index(task.target_object_id)
+    ]
     array = np.asarray(actor.pose.raw_pose.detach().cpu().numpy(), dtype=np.float64)
     if array.shape != (1, 7) or not np.all(np.isfinite(array)):
         raise PushDatasetContractError("replay target pose is malformed")
     return [float(item) for item in array[0]]
+
+
+def _number(value: object, label: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        raise PushDatasetContractError(f"{label} must be numeric")
+    return float(value)
+
+
+def _source_path(root: Path, value: object) -> Path:
+    path = Path(str(value))
+    if path.is_absolute():
+        return path
+    resolved = (root / path).resolve()
+    try:
+        resolved.relative_to(root.resolve())
+    except ValueError as error:
+        raise PushDatasetContractError("relative raw episode path escapes source root") from error
+    return resolved
 
 
 def _quaternion_angle(left: np.ndarray, right: np.ndarray) -> float:
