@@ -89,3 +89,10 @@ failure may try the next predeclared safe candidate, executes approach plans at 
 resolution, and stops a primary or corrective motion as soon as full containment is observed so
 settling occurs without continuing toward an overshooting endpoint. It does not repair actions,
 mutate state, change task success, or extend the horizon.
+
+Candidate H passed local implementation validation at Git
+`62db322a6954a362078badcb5f298501cb533bcf`. A 64-episode diagnostic-only probe is reserved at
+66400--66463, disjoint from the untouched 66300--66399 formal gate and from all collection ranges.
+Probe evidence cannot promote the expert. It only determines whether spending the formal schedule
+is justified. The v2 contract now binds `PushToRegionExpert/CandidateH` to the implementation
+commit while leaving every acceptance threshold unchanged.

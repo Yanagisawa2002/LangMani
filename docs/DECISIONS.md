@@ -2838,3 +2838,12 @@ safe candidate after a zero-action planning or bounds precheck failure, restores
 approach execution, and stops pushing immediately when the unchanged full-containment predicate is
 observed so the existing settle phase can establish stable success. It does not alter the 95% gate,
 the 250-step horizon, the environment predicate, action bounds, or any zero-tolerance check.
+
+## D-106 - Freeze Candidate H before a larger diagnostic probe
+
+Candidate H passed full local implementation validation at Git
+`62db322a6954a362078badcb5f298501cb533bcf`. Its 64-episode diagnostic-only range is 66400 through
+66463; these seeds are disjoint from the untouched 66300--66399 formal gate and the collection
+ranges. Diagnostic success cannot promote the expert, and a diagnostic failure cancels the formal
+gate rather than consuming it. The v2 contract binds `PushToRegionExpert/CandidateH` to that exact
+implementation commit. Formal collection remains closed.

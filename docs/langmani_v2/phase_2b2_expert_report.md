@@ -45,3 +45,11 @@ The probe was explicitly `formal_gate_eligible=false` and never consumed the fro
 `e049ec4b5e0a4ab0a6a187fb938fa402759a0a61e79b8a0f3fd54fafa15a6ba9`. Candidate G is rejected
 without a formal gate, and collection remains closed. The compact summary is
 `artifacts/langmani_v2/phase_2b2/expert_probe_candidate_g_rejected.json`.
+
+## Candidate H pending gate
+
+Candidate H is locally validated at `62db322a6954a362078badcb5f298501cb533bcf`. Its development
+probe is reserved for seeds 66400 through 66463 and is ineligible for formal promotion. The
+untouched formal gate remains seeds 66300 through 66399. Until the exact formal gate reaches at
+least 95/100 with every zero-tolerance check clean, Candidate H remains provisional and collection
+remains closed.
