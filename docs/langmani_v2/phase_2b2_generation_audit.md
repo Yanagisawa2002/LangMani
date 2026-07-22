@@ -21,7 +21,7 @@ lost v1 bytes. Phase 2B.2 stopped at the expert gate before any recording or exp
    Rendered instructions bind object and region; canonical TaskSpec remains in sidecars.
 7. Expert: each candidate plans and executes native controller actions. No candidate teleports an
    object, writes success, or mutates task state. Candidates E and F ran complete formal gates;
-   G--L ran only disjoint diagnostic probes.
+   G--P ran only disjoint diagnostic probes.
 8. Success: the target is fully contained, static, upright, ungrasped, stably successful, and has
    no latched failure.
 9. Termination: canonical success, canonical failure, or the 250-step limit. Runtime exceptions
@@ -40,9 +40,11 @@ lost v1 bytes. Phase 2B.2 stopped at the expert gate before any recording or exp
 
 ## Result
 
-The final clean Candidate L generation audit at
-`fc478d6364e5264b6bceb188f4497da02ad991fe` passed with collection fingerprint
-`sha256:615102a337041b642a92e818f7e6c7776bd0acecf4b72ad959962cced7f861e9`. Candidate L then
-failed its isolated diagnostic success ceiling. The mandatory formal expert gate remains false, so
-the atomic collector, replay, exporter, archive, replication, and SmolVLA loader paths were not
-executed.
+The final clean Candidate P generation audit at
+`d54487d1773d2b76c88039943ed45c0d0ccf21a8` passed with report SHA-256
+`d82fdb63f780e8fc1863442a00cafbcd1080e569f87ba1427fa2f4a23f2c97a1` and collection
+fingerprint `sha256:b6ced7901c48d146f87d91b124c32d4d4e8ec95dd6363eb2e02b03f8df9a32ac`.
+Candidate P then stopped after five isolated diagnostic episodes with two successes, one timeout,
+one planning failure, and one zero-tolerance workspace violation. The mandatory formal expert gate
+remains false, so the atomic collector, replay, exporter, archive, replication, and SmolVLA loader
+paths were not executed.
