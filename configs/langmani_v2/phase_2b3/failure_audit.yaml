@@ -1,0 +1,17 @@
+{
+  "schema_version": "langmani-v2-phase2b3-failure-audit-config-v0",
+  "runs": [
+    {"candidate_id": "CandidateE", "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f", "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075", "report": "expert_evaluation.json", "sha256": "a6a8296a9df7c716698920d782c8e6f0aead6f61f18c228dcadba0a13a1c9489"},
+    {"candidate_id": "CandidateF", "run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b", "source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40", "report": "expert_evaluation.json", "sha256": "94975a838063c4e20891cf478bf775127eaf6a04fbcfcd990caef415fad3087d"},
+    {"candidate_id": "CandidateG", "run_id": "20260722T062140Z_phase2b2-candidateg-probe_3db2c05", "source_commit": "3db2c057a4b9be76a76e3ab3eb9f6874a3d1eb6a", "report": "expert_probe.json", "sha256": "e049ec4b5e0a4ab0a6a187fb938fa402759a0a61e79b8a0f3fd54fafa15a6ba9"},
+    {"candidate_id": "CandidateH", "run_id": "20260722T064141Z_phase2b2-candidateh-probe_48ab184", "source_commit": "48ab184cb172a5d4533dcff8e2effb16006c2dbd", "report": "expert_probe.json", "sha256": "a896a8e5645b7e9c63237c94f9cc56359d2b5db9e703eed0cb815c2d3eadbc4c"},
+    {"candidate_id": "CandidateI", "run_id": "20260722T065811Z_phase2b2-candidatei-probe_c38fcef", "source_commit": "c38fcef94504b390f961556221b33ce4ab349f2d", "report": "expert_probe.json", "sha256": "599ff261a1e05c6cd5c5405586fa3e4e0484c7a3bda3154a13bf40a637dd519a"},
+    {"candidate_id": "CandidateJ", "run_id": "20260722T071156Z_phase2b2-candidatej-probe_750d71b", "source_commit": "750d71bc00ba0c5db3d67cc15e0391b125df03d0", "report": "expert_probe.json", "sha256": "246b77dfd380a32562afaf53345aba3a8e1612257117373770fcfd60dcead6b3"},
+    {"candidate_id": "CandidateK", "run_id": "20260722T072749Z_phase2b2-candidatek-probe_1ec0001", "source_commit": "1ec0001f505e33686af01e1d013c1db0aa3881bd", "report": "expert_probe.json", "sha256": "9502be405b1cbb7839392e16136ce56401ce7c75df5aa9ff13e55ad6c4e104ea"},
+    {"candidate_id": "CandidateL", "run_id": "20260722T073753Z_phase2b2-candidatel-probe_fc478d6", "source_commit": "fc478d6364e5264b6bceb188f4497da02ad991fe", "report": "expert_probe.json", "sha256": "fc40d2bb044b9aa245feb4979fbe1a0495d1378b8261086452a629aa792e1a9c"},
+    {"candidate_id": "CandidateM", "run_id": "20260722T074830Z_phase2b2-candidatem-probe_ef12836", "source_commit": "ef12836072473d868f3c319db5a35aa9945ac325", "report": "expert_probe.json", "sha256": "4fb593d8493ea0abd8d24175d8546a41aef3bce76234f5cc2fc66f809f0d84e3"},
+    {"candidate_id": "CandidateN", "run_id": "20260722T075435Z_phase2b2-candidaten-probe_48686a5", "source_commit": "48686a57b427ddbf6c99b01b51dc003970e1a5e9", "report": "expert_probe.json", "sha256": "9e88c4fcbdfbb60609597c1747e56baacf6d473aab2bbda3fd84f330b8068f30"},
+    {"candidate_id": "CandidateO", "run_id": "20260722T081126Z_phase2b2-candidateo-probe_e167852", "source_commit": "e167852affe047c3e10eb87b8580bc07ba885513", "report": "expert_probe.json", "sha256": "8d738c9e1bd0866a76fbff1d9900b4e1b2947417bac861a9ec108b1eab714a27"},
+    {"candidate_id": "CandidateP", "run_id": "20260722T081826Z_phase2b2-candidatep-probe_d54487d", "source_commit": "d54487d1773d2b76c88039943ed45c0d0ccf21a8", "report": "expert_probe.json", "sha256": "6c2eea259b0afeb140dba81b281b05bc8516e3ccffeb24ae9d4071a7db2c21ec"}
+  ]
+}

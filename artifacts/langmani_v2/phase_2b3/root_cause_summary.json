@@ -1,0 +1,49 @@
+{
+  "failure_category_counts": {
+    "IK_OR_MOTION_PLANNING_FAILURE": 5,
+    "LOSS_OF_CONTACT": 4,
+    "MISSED_CONTACT": 2,
+    "OBJECT_WORKSPACE_VIOLATION": 8,
+    "PREAPPROACH_PLANNING_FAILURE": 14,
+    "PUSH_DIRECTION_ERROR": 6,
+    "STALLED_PROGRESS": 107,
+    "UNKNOWN": 25
+  },
+  "failure_phase_counts": {
+    "corrective_push_1": 35,
+    "corrective_push_2": 4,
+    "establish_contact": 1,
+    "move_to_precontact": 27,
+    "primary_push": 87,
+    "settle": 4,
+    "verify_task": 13
+  },
+  "historical_failure_count": 171,
+  "observed_minimum_workspace_margin": -0.0020981621742248505,
+  "official_collection_episodes": 0,
+  "phase_and_trace_count": 2,
+  "phase_boundary_only_count": 169,
+  "planning_failure_interpretation": "phase evidence distinguishes preapproach from later planning failure; deterministic replay is required for finer IK/target-pose attribution",
+  "requires_deterministic_replay": true,
+  "schema_version": "langmani-v2-phase2b3-root-cause-summary-v0",
+  "shape_failure_counts": {
+    "box": {
+      "IK_OR_MOTION_PLANNING_FAILURE": 2,
+      "MISSED_CONTACT": 2,
+      "PREAPPROACH_PLANNING_FAILURE": 4,
+      "STALLED_PROGRESS": 58,
+      "UNKNOWN": 17
+    },
+    "cylinder": {
+      "IK_OR_MOTION_PLANNING_FAILURE": 3,
+      "LOSS_OF_CONTACT": 4,
+      "OBJECT_WORKSPACE_VIOLATION": 8,
+      "PREAPPROACH_PLANNING_FAILURE": 10,
+      "PUSH_DIRECTION_ERROR": 6,
+      "STALLED_PROGRESS": 49,
+      "UNKNOWN": 8
+    }
+  },
+  "timeout_interpretation": "no_progress_stall timeouts are STALLED_PROGRESS; contact-loss and rollout attribution requires step telemetry",
+  "workspace_violation_interpretation": "target object footprint crossed the native environment boundary; historical reports contain no robot-link workspace violation flag"
+}

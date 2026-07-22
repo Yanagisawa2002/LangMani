@@ -1,0 +1,136 @@
+{
+  "acceptance": {
+    "access": "SEALED_UNTIL_DEVELOPMENT_PASSES",
+    "count": 100,
+    "name": "acceptance",
+    "seed_end_inclusive": 69299,
+    "seed_start": 69200,
+    "seeds_digest": "sha256:277059b375a7f5313e1f7bfb71339a52e1b6bbd2fa4219eb2ced8c8efdfc3508"
+  },
+  "development": {
+    "access": "REPEATABLE_AFTER_FREEZE",
+    "count": 100,
+    "name": "development",
+    "seed_end_inclusive": 69099,
+    "seed_start": 69000,
+    "seeds_digest": "sha256:4ecc8c33963960aa9672542b8327686cf519d95534036890f92b29ab9b5b8fe1"
+  },
+  "exclusions": [
+    {
+      "access": "HISTORICAL",
+      "count": 100,
+      "name": "candidate_e",
+      "seed_end_inclusive": 66099,
+      "seed_start": 66000,
+      "seeds_digest": "sha256:bca93add72c76359b2d17879a40375ef62d2f5572cf935705a1b1cecc2004299"
+    },
+    {
+      "access": "HISTORICAL",
+      "count": 100,
+      "name": "candidate_f",
+      "seed_end_inclusive": 66199,
+      "seed_start": 66100,
+      "seeds_digest": "sha256:83095ff95fdbb5e46aa485f1174a1fb8592ddc36034c2d7664f67088e3309d2a"
+    },
+    {
+      "access": "HISTORICAL",
+      "count": 32,
+      "name": "candidate_g",
+      "seed_end_inclusive": 66231,
+      "seed_start": 66200,
+      "seeds_digest": "sha256:951b6573b765de5555749b0d818c55dc80c9f4e2de6a86e9794a162c68fd2161"
+    },
+    {
+      "access": "RESERVED_UNTOUCHED",
+      "count": 100,
+      "name": "phase2b2_formal",
+      "seed_end_inclusive": 66399,
+      "seed_start": 66300,
+      "seeds_digest": "sha256:65e8ec59372af215e99a7e1a11db6e8b3e06d3faeb9088b221394531428c54b1"
+    },
+    {
+      "access": "HISTORICAL",
+      "count": 64,
+      "name": "candidate_h",
+      "seed_end_inclusive": 66463,
+      "seed_start": 66400,
+      "seeds_digest": "sha256:291a8327877c27d6936855497e35818cf8c355ba41f452338c907e86bd42597a"
+    },
+    {
+      "access": "HISTORICAL",
+      "count": 64,
+      "name": "candidate_i",
+      "seed_end_inclusive": 66563,
+      "seed_start": 66500,
+      "seeds_digest": "sha256:297fad2ee760ffdd79eb60b6cbf5f18028ccf2cd6b0b40ad49352ca4145b6a1f"
+    },
+    {
+      "access": "HISTORICAL",
+      "count": 64,
+      "name": "candidate_j",
+      "seed_end_inclusive": 66663,
+      "seed_start": 66600,
+      "seeds_digest": "sha256:c9379ef14cd1fb65e401017d1ebb2c98a1d0fe2b440bec641e6f85b34262e988"
+    },
+    {
+      "access": "HISTORICAL",
+      "count": 64,
+      "name": "candidate_k",
+      "seed_end_inclusive": 66763,
+      "seed_start": 66700,
+      "seeds_digest": "sha256:c9f32cd15a8c6005d7c472806484d4b2f6d36fe47e11ad8fd3a7933817c1c158"
+    },
+    {
+      "access": "HISTORICAL",
+      "count": 64,
+      "name": "candidate_l",
+      "seed_end_inclusive": 66863,
+      "seed_start": 66800,
+      "seeds_digest": "sha256:e0b73260c30fa037b47277e7f27f67f8890534780c96697c9cd564a6925ac833"
+    },
+    {
+      "access": "HISTORICAL",
+      "count": 64,
+      "name": "candidate_m",
+      "seed_end_inclusive": 66963,
+      "seed_start": 66900,
+      "seeds_digest": "sha256:75859e1dc39368adbb8765b71ac71367733a5624ffafbabb315a1bfb27e08585"
+    },
+    {
+      "access": "RESERVED_UNTOUCHED",
+      "count": 810,
+      "name": "phase2b2_collection",
+      "seed_end_inclusive": 67809,
+      "seed_start": 67000,
+      "seeds_digest": "sha256:b9e09e6d1c9875c9ae26c1901a81b2ff24809b673b95d6cd28e0b0c6efb50097"
+    },
+    {
+      "access": "HISTORICAL",
+      "count": 64,
+      "name": "candidate_n",
+      "seed_end_inclusive": 68063,
+      "seed_start": 68000,
+      "seeds_digest": "sha256:4242a5e7782ac2332f02902f3d0a8c5ba5f133d91617fb2a3f1223af049e1e94"
+    },
+    {
+      "access": "HISTORICAL",
+      "count": 64,
+      "name": "candidate_o",
+      "seed_end_inclusive": 68163,
+      "seed_start": 68100,
+      "seeds_digest": "sha256:1084068a02ba5922e137d318175bec10a44925d1aedb3748c9aa7d66d6383597"
+    },
+    {
+      "access": "HISTORICAL",
+      "count": 64,
+      "name": "candidate_p",
+      "seed_end_inclusive": 68263,
+      "seed_start": 68200,
+      "seeds_digest": "sha256:122aae849632363f4b492ccb59b6d288a947a6493763eb83551b89b66e280c03"
+    }
+  ],
+  "failure_regression_semantic": "historical_failures_only_v0",
+  "official_collection_episodes": 0,
+  "registry_digest": "sha256:c1319b7936daadb1e1ba9e9862d0be02bb6ea22576402bd55210797cb1216ace",
+  "schema_version": "langmani-v2-phase2b3-seed-registry-v0"
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": "langmani-v2-phase2b3-replay-config-v0",
+  "repeats": 2,
+  "per_failure_category": 5,
+  "capture_keyframes": true,
+  "trace_stride": 1,
+  "maximum_pose_absolute_error": 0.00001,
+  "selection": {
+    "all_candidate_e_failures": true,
+    "all_candidate_p_results": true,
+    "candidate_f_per_category": 5,
+    "fill_each_available_category": 5
+  },
+  "official_collection_episodes": 0,
+  "optimizer_steps": 0
+}
