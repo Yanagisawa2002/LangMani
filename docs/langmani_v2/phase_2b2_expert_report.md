@@ -67,3 +67,13 @@ range is 66500 through 66563 and cannot promote the expert. The untouched formal
 66300 through 66399. A diagnostic run writes an explicit partial report and stops once a
 zero-tolerance failure or an arithmetic success ceiling below 95% makes formal promotion
 impossible. Collection remains closed.
+
+## Candidate I diagnostic rejection
+
+Candidate I stopped after 16/64 diagnostic episodes as predeclared: 12 successes plus all 48
+remaining episodes could reach only 60/64, below 95%. Its two timeouts, one verification failure,
+and one initial-lift planning failure were preserved; simulator, non-finite action, action-bound,
+and workspace counts were all zero. The formal 66300--66399 schedule remains untouched. The full
+partial report SHA-256 is `c2dd0aa6d07cd91c79b050c8b7f32340f8860b7891eb5fa261108368411538df`,
+and the compact summary is
+`artifacts/langmani_v2/phase_2b2/expert_probe_candidate_i_rejected.json`. Collection remains closed.

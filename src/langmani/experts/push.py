@@ -311,7 +311,11 @@ class PushToRegionExpert:
         pose[:2] = object_position[:2] - direction * self._contact_offset()
         pose[2] = self._push_height()
         self._chosen_contact_point = pose[:3].copy()
-        return self._planned_motion(PushExpertPhase.ESTABLISH_CONTACT, (pose,))
+        return self._planned_motion(
+            PushExpertPhase.ESTABLISH_CONTACT,
+            (pose,),
+            action_stride=self.config.free_space_action_stride,
+        )
 
     def _primary_push(self) -> PushPhaseResult:
         phase = PushExpertPhase.PRIMARY_PUSH
@@ -448,8 +452,40 @@ class PushToRegionExpert:
         )
 
     def _corrective_push(self, phase: PushExpertPhase) -> PushPhaseResult:
-        if self._terminal_success or self._evaluation().get("target_inside_region") is True:
-            return self._success(phase, "target already reached the region; no correction needed")
+        before = self._environment_steps
+        stabilization_duration = 0.0
+        if self._terminal_success:
+            return self._success(phase, "target already reached stable success")
+        if self._evaluation().get("target_inside_region") is True:
+            started = time.perf_counter()
+            try:
+                self._hold_while_contained(self.config.settle_steps)
+            except _PushAbort as error:
+                return self._failure(
+                    phase,
+                    error.status,
+                    str(error),
+                    attempts=1,
+                    steps=self._environment_steps - before,
+                    execution_duration=time.perf_counter() - started,
+                )
+            stabilization_duration = time.perf_counter() - started
+            if self._terminal_success:
+                return self._success(
+                    phase,
+                    "held contained target until stable success",
+                    attempts=1,
+                    steps=self._environment_steps - before,
+                    execution_duration=stabilization_duration,
+                )
+            if self._evaluation().get("target_inside_region") is True:
+                return self._success(
+                    phase,
+                    "target remained contained for the bounded stabilization window",
+                    attempts=1,
+                    steps=self._environment_steps - before,
+                    execution_duration=stabilization_duration,
+                )
         object_position = self._target_position()
         if self._is_lateral_task():
             candidates = self._lateral_approach_candidates(
@@ -462,6 +498,9 @@ class PushToRegionExpert:
                     phase,
                     PushExpertStatus.CORRECTION_FAILURE,
                     "no workspace- and obstacle-safe lateral re-contact candidate",
+                    attempts=1 if stabilization_duration else 0,
+                    steps=self._environment_steps - before,
+                    execution_duration=stabilization_duration,
                 )
             self._active_push_direction = np.asarray(safe.contact_direction)
         direction = self._motion_direction(object_position)
@@ -483,22 +522,57 @@ class PushToRegionExpert:
             action_stride=self.config.free_space_action_stride,
         )
         if not free_space.success:
-            return free_space
-        contact_push = self._planned_motion(
+            return replace(
+                free_space,
+                environment_steps=self._environment_steps - before,
+                execution_duration_seconds=(
+                    stabilization_duration + free_space.execution_duration_seconds
+                ),
+            )
+        contact_result = self._planned_motion(
             phase,
-            (contact, push),
+            (contact,),
+            action_stride=self.config.free_space_action_stride,
+        )
+        if not contact_result.success:
+            return replace(
+                contact_result,
+                attempts=free_space.attempts + contact_result.attempts,
+                environment_steps=self._environment_steps - before,
+                planning_calls=free_space.planning_calls + contact_result.planning_calls,
+                planning_duration_seconds=(
+                    free_space.planning_duration_seconds + contact_result.planning_duration_seconds
+                ),
+                execution_duration_seconds=(
+                    stabilization_duration
+                    + free_space.execution_duration_seconds
+                    + contact_result.execution_duration_seconds
+                ),
+            )
+        push_result = self._planned_motion(
+            phase,
+            (push,),
             stop_on_target_inside_region=True,
         )
         return replace(
-            contact_push,
-            attempts=free_space.attempts + contact_push.attempts,
-            environment_steps=free_space.environment_steps + contact_push.environment_steps,
-            planning_calls=free_space.planning_calls + contact_push.planning_calls,
+            push_result,
+            attempts=free_space.attempts + contact_result.attempts + push_result.attempts,
+            environment_steps=self._environment_steps - before,
+            planning_calls=(
+                free_space.planning_calls
+                + contact_result.planning_calls
+                + push_result.planning_calls
+            ),
             planning_duration_seconds=(
-                free_space.planning_duration_seconds + contact_push.planning_duration_seconds
+                free_space.planning_duration_seconds
+                + contact_result.planning_duration_seconds
+                + push_result.planning_duration_seconds
             ),
             execution_duration_seconds=(
-                free_space.execution_duration_seconds + contact_push.execution_duration_seconds
+                stabilization_duration
+                + free_space.execution_duration_seconds
+                + contact_result.execution_duration_seconds
+                + push_result.execution_duration_seconds
             ),
             message="executed sparse free-space re-contact and dense corrective push",
         )
@@ -611,8 +685,10 @@ class PushToRegionExpert:
         planning_calls += lift_result.planning_calls
         planning_duration += lift_result.planning_duration_seconds
         execution_duration += lift_result.execution_duration_seconds
-        if not lift_result.success:
+        if not lift_result.success and not self._recoverable_zero_step_plan_failure(lift_result):
             return lift_result
+        if not lift_result.success:
+            last_result = lift_result
         for candidate in candidates:
             if not candidate.safe:
                 continue
@@ -829,7 +905,7 @@ class PushToRegionExpert:
                         target_inside_region = True
                         break
             if target_inside_region and not self._terminal_success:
-                self._hold(self.config.settle_steps)
+                self._hold_while_contained(self.config.settle_steps)
         except _PushAbort as error:
             return self._failure(
                 phase,
@@ -871,6 +947,15 @@ class PushToRegionExpert:
         arm = self._arm_qpos()
         for _ in range(steps):
             if self._terminal_success:
+                break
+            self._step_action(np.asarray((*arm, CLOSED_GRIPPER)))
+
+    def _hold_while_contained(self, steps: int) -> None:
+        arm = self._arm_qpos()
+        for _ in range(steps):
+            if self._terminal_success:
+                break
+            if self._evaluation().get("target_inside_region") is not True:
                 break
             self._step_action(np.asarray((*arm, CLOSED_GRIPPER)))
 

@@ -112,3 +112,9 @@ Candidate I passed full local implementation validation at Git
 untouched formal range remains 66300--66399, and all collection seeds remain disjoint. The v2
 contract binds `PushToRegionExpert/CandidateI` to the implementation commit without changing the
 formal threshold or zero-tolerance criteria.
+
+Candidate I stopped honestly at 12/16 once its best possible 64-episode result fell to 60/64.
+Candidate J addresses only the four recorded failure mechanisms: zero-step lift fallback, bounded
+stabilization with correction after containment drift, stride-two contact establishment with exact
+terminal targets, and six 8 cm fallback segments after a failed direct plan. Cylinder pushes use
+the same 3.5 cm interior margin as the cube. Formal seeds and collection remain sealed.

@@ -2875,3 +2875,22 @@ zero-tolerance failure occurs or its exact best-case success count can no longer
 rule never applies to the formal 66300--66399 gate, which remains untouched and complete by
 contract. The v2 configuration now binds `PushToRegionExpert/CandidateI` to the implementation
 commit. Formal collection remains closed.
+
+## D-109 - Reject Candidate I and bound Candidate J by four observed failures
+
+Candidate I ran from clean Git `c38fcef94504b390f961556221b33ce4ab349f2d` on the disjoint
+diagnostic range beginning at seed 66500. After 16 episodes it had 12 successes and four failures,
+so even 48 further successes could reach only 60/64, below the unchanged 95% gate. The predeclared
+early-stop rule wrote the partial report and stopped. The four failures were two timeouts, one final
+verification failure, and one zero-action initial-lift planning failure; all simulator, finite,
+action-bound, and workspace checks stayed clean. The report SHA-256 is
+`c2dd0aa6d07cd91c79b050c8b7f32340f8860b7891eb5fa261108368411538df`.
+
+Candidate J is limited to those mechanisms. A recoverable zero-step vertical lift may proceed to
+the already ranked safe staging poses. Contact establishment and correction re-contact use the
+existing content-bound stride while preserving every exact terminal joint target. A contained
+target is held only while it remains contained; stable success ends the phase, while drift outside
+immediately resumes ordinary correction. The cylinder endpoint restores the existing 3.5 cm
+containment margin, and the rare failed direct push uses at most six 8 cm state-aware segments
+instead of twelve 4 cm segments. The 250-step horizon, task predicate, action bounds, semantic
+schedule, and zero-tolerance gates remain unchanged.

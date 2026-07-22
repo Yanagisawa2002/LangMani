@@ -13,7 +13,7 @@ from langmani.environments.push_expert_state import (
 )
 from langmani.environments.push_specs import PushEpisodeSpec, PushTaskSpec
 from langmani.environments.push_to_region import ENV_ID
-from langmani.experts.planner import PlannerPlanResult
+from langmani.experts.planner import PlannerFailure, PlannerPlanResult
 from langmani.experts.push import PushToRegionExpert
 from langmani.experts.push_types import (
     PUSH_EXPERT_PHASE_SEQUENCE,
@@ -42,6 +42,7 @@ class _FakeEnvironment:
         *,
         wrong_object_after_step: bool = False,
         inside_after_step: int = 9,
+        inside_until_step: int | None = None,
         success_after_step: int = 9,
     ) -> None:
         self.unwrapped = self
@@ -50,6 +51,7 @@ class _FakeEnvironment:
         self.step_count = 0
         self.wrong_object_after_step = wrong_object_after_step
         self.inside_after_step = inside_after_step
+        self.inside_until_step = inside_until_step
         self.success_after_step = success_after_step
         self.robot = _Robot()
         self.tcp = SimpleNamespace(pose=_Pose([0.0, 0.0, 0.3, 1.0, 0.0, 0.0, 0.0]))
@@ -86,7 +88,9 @@ class _FakeEnvironment:
 
     def get_push_expert_evaluation(self) -> dict[str, torch.Tensor]:
         success = self.step_count >= self.success_after_step
-        inside = self.step_count >= self.inside_after_step
+        inside = self.step_count >= self.inside_after_step and (
+            self.inside_until_step is None or self.step_count < self.inside_until_step
+        )
         return {
             "success": torch.tensor([success]),
             "target_inside_region": torch.tensor([inside]),
@@ -212,6 +216,12 @@ def test_push_expert_config_rejects_unbounded_correction_search() -> None:
 
     with pytest.raises(ValueError, match="must not exceed primary_push_increment"):
         PushExpertConfig(primary_push_increment=0.02, minimum_primary_push_increment=0.03)
+
+    config = PushExpertConfig()
+    assert config.primary_push_increment == pytest.approx(0.08)
+    assert config.minimum_primary_push_increment == pytest.approx(0.02)
+    assert config.maximum_primary_push_segments == 6
+    assert config.cylinder_region_goal_margin == pytest.approx(0.035)
 
 
 def test_push_endpoint_stops_inside_full_containment_with_geometry_margin() -> None:
@@ -346,6 +356,38 @@ def test_lateral_approach_falls_back_before_executing_out_of_bounds_plan() -> No
     assert environment.step_count == 3
 
 
+def test_lateral_approach_falls_back_when_initial_lift_has_zero_step_failure() -> None:
+    environment = _FakeEnvironment()
+    planner = _FakePlanner(environment)
+    expert = PushToRegionExpert(environment, planner_factory=lambda _env: planner)
+    expert._context = environment.context
+    expert._planner = planner
+    candidates = expert._lateral_approach_candidates(
+        expert._target_position(),
+        expert._push_direction(expert._target_position()),
+    )
+    original = planner.plan_pose
+
+    def fail_initial_lift(pose7, *, use_attached: bool = False):
+        if planner.plan_count == 0:
+            planner.plan_count += 1
+            return PlannerPlanResult(
+                success=False,
+                status="screw plan failed",
+                failure=PlannerFailure.PLANNING_FAILURE,
+                positions=(),
+            )
+        return original(pose7, use_attached=use_attached)
+
+    planner.plan_pose = fail_initial_lift  # type: ignore[method-assign]
+    result = expert._planned_lateral_approach(candidates)
+
+    assert result.success
+    assert result.attempts == 1
+    assert result.planning_calls == 3
+    assert result.environment_steps == 2
+
+
 def test_free_space_stride_preserves_the_exact_final_planner_position() -> None:
     environment = _FakeEnvironment()
     planner = _FakePlanner(environment)
@@ -409,8 +451,42 @@ def test_primary_motion_brakes_at_full_containment_until_stable_success() -> Non
     assert environment.get_push_expert_evaluation()["success"].item() is True
 
 
+def test_corrective_phase_waits_for_contained_target_to_become_stable() -> None:
+    environment = _FakeEnvironment(inside_after_step=0, success_after_step=3)
+    planner = _FakePlanner(environment)
+    expert = PushToRegionExpert(environment, planner_factory=lambda _env: planner)
+    expert._context = environment.context
+    expert._planner = planner
+
+    result = expert._corrective_push(PushExpertPhase.CORRECTIVE_PUSH_1)
+
+    assert result.success
+    assert result.environment_steps == 3
+    assert result.planning_calls == 0
+    assert expert._terminal_success
+
+
+def test_corrective_phase_recontacts_when_contained_target_drifts_out() -> None:
+    environment = _FakeEnvironment(
+        inside_after_step=0,
+        inside_until_step=2,
+        success_after_step=99,
+    )
+    planner = _FakePlanner(environment)
+    expert = PushToRegionExpert(environment, planner_factory=lambda _env: planner)
+    expert._context = environment.context
+    expert._planner = planner
+
+    result = expert._corrective_push(PushExpertPhase.CORRECTIVE_PUSH_1)
+
+    assert result.success
+    assert result.environment_steps > 2
+    assert result.planning_calls > 0
+    assert not expert._terminal_success
+
+
 def test_adaptive_primary_push_stops_when_the_existing_success_gate_fires() -> None:
-    environment = _FakeEnvironment()
+    environment = _FakeEnvironment(inside_after_step=5, success_after_step=5)
     planner = _FakePlanner(environment)
     expert = PushToRegionExpert(
         environment,
@@ -423,9 +499,9 @@ def test_adaptive_primary_push_stops_when_the_existing_success_gate_fires() -> N
 
     assert result.success
     assert result.phase is PushExpertPhase.PRIMARY_PUSH
-    assert result.environment_steps == 9
-    assert environment.step_count == 9
-    assert len(expert.action_trace) == 9
+    assert result.environment_steps == 5
+    assert environment.step_count == 5
+    assert len(expert.action_trace) == 5
 
 
 def test_primary_push_uses_one_direct_plan_before_bounded_fallback() -> None:
