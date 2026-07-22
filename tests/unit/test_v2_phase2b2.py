@@ -66,8 +66,8 @@ def test_phase2b2_contract_uses_independent_identity_and_exact_features() -> Non
     config = PushCollectionConfig.load(CONFIG)
 
     assert config.payload["dataset_version"] == "v2"
-    assert config.payload["expert_id"] == "PushToRegionExpert/CandidateL"
-    assert config.payload["accepted_expert_commit"] == ("c7361c60daeaa50740bccee213de9485a4c078ef")
+    assert config.payload["expert_id"] == "PushToRegionExpert/CandidateM"
+    assert config.payload["accepted_expert_commit"] == ("1210976e0b926f913504cc8875dc6033d1926224")
     assert config.payload["supersedes_dataset_id"] == "langmani/phase2b-push-v1"
     assert config.payload["state_names"] == list(PANDA_POLICY_STATE_COMPONENTS)
     assert config.payload["action_names"] == list(PANDA_ACTION_COMPONENTS)
@@ -369,7 +369,7 @@ def test_atomic_shard_resume_reuses_verified_episode_and_rejects_tampering(
         run_id="run",
         sim_backend="physx_cuda",
         resume=True,
-        expert_identity="PushToRegionExpert/CandidateL@c7361c6",
+        expert_identity="PushToRegionExpert/CandidateM@1210976",
     )
     assert resumed == [record]
 
@@ -382,7 +382,7 @@ def test_atomic_shard_resume_reuses_verified_episode_and_rejects_tampering(
             run_id="run",
             sim_backend="physx_cuda",
             resume=True,
-            expert_identity="PushToRegionExpert/CandidateL@c7361c6",
+            expert_identity="PushToRegionExpert/CandidateM@1210976",
         )
 
 

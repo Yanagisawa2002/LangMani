@@ -139,3 +139,12 @@ action-bound, and workspace counts were all zero. The full report SHA-256 is
 The expert gate is therefore closed as Result B. The formal 66300--66399 range and all collection
 seeds remain untouched. No raw episode collection, export, archive, loader preflight, optimizer
 step, SmolVLA training, or Phase 2D work started.
+
+## Candidate M authorized continuation
+
+The original Phase 2B.2 task requires repair before collection when the expert is below 95%.
+Candidate M therefore preserves the Result B snapshot while continuing diagnostic-only screening.
+It keeps Candidate L braking and replaces a nearby target's expensive re-contact with one bounded
+8--25 mm in-contact correction. Implementation commit
+`1210976e0b926f913504cc8875dc6033d1926224` is bound to diagnostic seeds 66900--66963; formal and
+collection seeds remain untouched.

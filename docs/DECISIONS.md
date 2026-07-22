@@ -2961,3 +2961,12 @@ The two complete formal candidate gates remain 75/100 and 11/100. Later G--L pro
 only and cannot replace formal evidence. Phase 2B.2 is Result B: the expert gate failed, the formal
 66300--66399 range was never consumed, and collection/export/archive/replication/SmolVLA loading,
 training, and Phase 2D remain closed. Another expert architecture requires separate authorization.
+
+## D-116 - Continue the already-authorized expert repair with Candidate M
+
+The Phase 2B.2 request explicitly requires repairing an expert below 95% before collection. The
+Result B snapshot at `a7e348a` remains preserved, but Candidate M continues that existing scope
+without training or formal-seed access. Candidate M retains precontainment braking and replaces the
+full high re-contact path for a nearby target with one bounded 8--25 mm controller-executed nudge.
+It is bound to implementation commit `1210976e0b926f913504cc8875dc6033d1926224`; seeds
+66900--66963 are diagnostic only.

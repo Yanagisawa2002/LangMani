@@ -153,3 +153,8 @@ Candidate L stopped after four standard timeouts because its best possible full-
 to 60/64 (93.75%). With the two complete formal gates at 75/100 and 11/100 and all G--L probes
 rejected, Phase 2B.2 closes as Result B at the mandatory expert gate. Formal seeds 66300--66399,
 collection seeds, export, archives, SmolVLA loading, training, and Phase 2D remain untouched.
+
+The original task authorization also requires expert repair before declaring the data path terminal.
+Candidate M therefore resumes diagnostic screening after the Result B snapshot: it preserves the
+safe precontainment brake and replaces expensive high re-contact with one bounded 8--25 mm
+in-contact correction. Seeds 66900--66963 are diagnostic only and formal collection stays closed.
