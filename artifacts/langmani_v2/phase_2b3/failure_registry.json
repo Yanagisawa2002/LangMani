@@ -1,4 +1,5 @@
 {
+  "deterministically_replayed_record_count": 55,
   "failure_category_counts": {
     "IK_OR_MOTION_PLANNING_FAILURE": 5,
     "LOSS_OF_CONTACT": 4,
@@ -10,6 +11,7 @@
     "UNKNOWN": 25
   },
   "failure_count": 171,
+  "historical_records_digest": "sha256:6553d4c2202c6d4a82bc24c3fcc53e1ad19d4d79d0cde075f063e43a36b761f1",
   "historical_result_count": 355,
   "official_collection_episodes": 0,
   "optimizer_steps": 0,
@@ -412,25 +414,54 @@
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 6,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "PREAPPROACH_PLANNING_FAILURE",
       "final_object_target_distance": 0.42990636825561523,
       "first_irrecoverable_step": 6,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.0024147249986869804,
+      "maximum_workspace_margin": 0.2051263290643692,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.20487435042858124,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "move_to_precontact",
       "planning_attempts": 3,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.0033826190046966076,
+          0.38419049978256226,
+          0.005807677749544382,
+          -1.9648005962371826,
+          0.0018363441340625286,
+          2.3821706771850586,
+          0.8005805015563965,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.006222005933523178,
+          0.005935390014201403,
+          0.1768713891506195
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66014,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.21933533251285553,
+        0.14987991750240326,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_left",
       "termination_reason": "planning_failure"
     },
@@ -636,25 +667,54 @@
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 85,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "IK_OR_MOTION_PLANNING_FAILURE",
       "final_object_target_distance": 0.4450947344303131,
       "first_irrecoverable_step": 85,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.0021607079116550583,
+      "maximum_workspace_margin": 0.21588127195835113,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.21577612936496735,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "primary_push",
       "planning_attempts": 5,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.01827065274119377,
+          0.4022972881793976,
+          0.006200842559337616,
+          -1.9413855075836182,
+          0.0032178538385778666,
+          2.3633110523223877,
+          0.7827537655830383,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.009217801503837109,
+          -0.007183138746768236,
+          0.1737949550151825
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66022,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.23099114000797272,
+        0.13552656769752502,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_left",
       "termination_reason": "planning_failure"
     },
@@ -772,57 +832,165 @@
     },
     {
       "candidate_id": "CandidateE",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 84
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 86
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 87
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 91
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 100
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 101
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 241
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 247
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 250,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "STALLED_PROGRESS",
       "final_object_target_distance": 0.16831965744495392,
-      "first_irrecoverable_step": 146,
+      "first_irrecoverable_step": 50,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_STALL",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.26788266728766913,
+      "maximum_workspace_margin": 0.3356927166416304,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.2291187626033084,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "corrective_push_1",
       "planning_attempts": 6,
       "recovery_attempts": 1,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.0005760750500485301,
+          0.3830862045288086,
+          -0.002959880046546459,
+          -1.9639426469802856,
+          0.0078094410710036755,
+          2.3553810119628906,
+          0.7835132479667664,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.0011961152777075768,
+          -0.0015434480737894773,
+          0.17544211447238922
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66027,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.231147900223732,
+        -0.1428847312927246,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_right",
       "termination_reason": "timeout"
     },
     {
       "candidate_id": "CandidateE",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 83
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 86
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 87
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 90
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 142,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "PUSH_DIRECTION_ERROR",
       "final_object_target_distance": 0.14336749911308289,
       "first_irrecoverable_step": 142,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.5414850388294059,
+      "maximum_workspace_margin": 0.3431196238100529,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.13384824573993684,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "verify_task",
       "planning_attempts": 7,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.006339371670037508,
+          0.39477062225341797,
+          -0.0016370960511267185,
+          -1.965895652770996,
+          -0.01872142031788826,
+          2.344672203063965,
+          0.7838516235351562,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.003767973743379116,
+          0.0011809864081442356,
+          0.16653208434581757
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66028,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.12124810367822647,
+        0.2139330804347992,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "verification_failure"
     },
@@ -1192,57 +1360,185 @@
     },
     {
       "candidate_id": "CandidateE",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 87
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 88
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 89
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 90
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 237
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 239
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 240
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 241
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 250,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "STALLED_PROGRESS",
       "final_object_target_distance": 0.15245923399925232,
-      "first_irrecoverable_step": 138,
+      "first_irrecoverable_step": 50,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_STALL",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.2676951946500117,
+      "maximum_workspace_margin": 0.3156629212855356,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.22630591510822937,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "corrective_push_1",
       "planning_attempts": 6,
       "recovery_attempts": 1,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.007454836741089821,
+          0.382941335439682,
+          0.019708197563886642,
+          -1.9603462219238281,
+          0.005589765030890703,
+          2.3457655906677246,
+          0.7798978686332703,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.0006660427898168564,
+          0.008316310122609138,
+          0.17623761296272278
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66042,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.22322411835193634,
+        0.1482391357421875,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_left",
       "termination_reason": "timeout"
     },
     {
       "candidate_id": "CandidateE",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 85
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 90
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 229
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 235
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 244
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 245
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 246
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 248
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 249
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 250,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "STALLED_PROGRESS",
       "final_object_target_distance": 0.05697857216000557,
-      "first_irrecoverable_step": 137,
+      "first_irrecoverable_step": 50,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_STALL",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.3246686297953418,
+      "maximum_workspace_margin": 0.3010929253607051,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.2282238137631671,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "corrective_push_1",
       "planning_attempts": 6,
       "recovery_attempts": 1,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.012830296531319618,
+          0.3985172510147095,
+          0.014108812436461449,
+          -1.9558041095733643,
+          -0.004614592995494604,
+          2.348864793777466,
+          0.7809086441993713,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.000562598928809166,
+          0.016398541629314423,
+          0.1687946915626526
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66043,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.2091238647699356,
+        -0.14186732470989227,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_right",
       "termination_reason": "timeout"
     },
@@ -1416,29 +1712,127 @@
     },
     {
       "candidate_id": "CandidateE",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 79
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 84
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 85
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 87
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 94
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 95
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 215
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 218
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 219
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 229
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 239
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 240
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 241
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 244
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 245
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 247
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 248
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 250,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "STALLED_PROGRESS",
       "final_object_target_distance": 0.08112634718418121,
-      "first_irrecoverable_step": 126,
+      "first_irrecoverable_step": 50,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_STALL",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.32627087817435907,
+      "maximum_workspace_margin": 0.3277298350541847,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.21367500542690918,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "corrective_push_1",
       "planning_attempts": 6,
       "recovery_attempts": 1,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.004433857277035713,
+          0.39082127809524536,
+          -0.0064667281694710255,
+          -1.9638460874557495,
+          0.0005921798292547464,
+          2.3693830966949463,
+          0.7755473852157593,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.002935715951025486,
+          -0.0013019684702157974,
+          0.17197838425636292
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66050,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.20841868221759796,
+        0.1346861869096756,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_left",
       "termination_reason": "timeout"
     },
@@ -1560,25 +1954,54 @@
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 6,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "PREAPPROACH_PLANNING_FAILURE",
       "final_object_target_distance": 0.44036850333213806,
       "first_irrecoverable_step": 6,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.0020417076588974833,
+      "maximum_workspace_margin": 0.19520176827907562,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.19507571935653686,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "move_to_precontact",
       "planning_attempts": 3,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.0034257532097399235,
+          0.3738887906074524,
+          -0.01366566214710474,
+          -1.9434928894042969,
+          -0.012364017777144909,
+          2.337681293487549,
+          0.781993567943573,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.007256157696247101,
+          -0.01188928633928299,
+          0.18826629221439362
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66055,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.2169162929058075,
+        -0.14482562243938446,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_right",
       "termination_reason": "planning_failure"
     },
@@ -1784,53 +2207,152 @@
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 72,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "IK_OR_MOTION_PLANNING_FAILURE",
       "final_object_target_distance": 0.38613638281822205,
       "first_irrecoverable_step": 72,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.00032013008524694103,
+      "maximum_workspace_margin": 0.2712375056653278,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.2711233404188411,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "primary_push",
       "planning_attempts": 5,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.0007129861623980105,
+          0.3650362491607666,
+          0.0016490708803758025,
+          -1.9581780433654785,
+          -0.007803131826221943,
+          2.3593881130218506,
+          0.7879135012626648,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.0071398476138710976,
+          0.0008162645390257239,
+          0.18945056200027466
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66063,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.22338145971298218,
+        -0.14711591601371765,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_right",
       "termination_reason": "planning_failure"
     },
     {
       "candidate_id": "CandidateE",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 63
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 69
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 76
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 78
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 79
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 80
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 83
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 85
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 87
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 89
+        }
+      ],
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 133,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "UNKNOWN",
       "final_object_target_distance": 0.25849759578704834,
       "first_irrecoverable_step": 133,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.4508305079185739,
+      "maximum_workspace_margin": 0.35272832519374786,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.10573115825653076,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "verify_task",
       "planning_attempts": 7,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.000503166054841131,
+          0.3905443251132965,
+          0.0036284381058067083,
+          -1.9762628078460693,
+          0.009518423117697239,
+          2.338649272918701,
+          0.7695298790931702,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.008793491870164871,
+          0.003430843586102128,
+          0.16432872414588928
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66064,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.12059643119573593,
+        0.22315165400505066,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "verification_failure"
     },
@@ -1868,25 +2390,54 @@
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 6,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "PREAPPROACH_PLANNING_FAILURE",
       "final_object_target_distance": 0.44752559065818787,
       "first_irrecoverable_step": 6,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.0028467799302350693,
+      "maximum_workspace_margin": 0.19163912415504455,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.19135214269161224,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "move_to_precontact",
       "planning_attempts": 3,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.005259762983769178,
+          0.39372795820236206,
+          -6.435020623030141e-05,
+          -1.962107539176941,
+          -0.004429972730576992,
+          2.3578121662139893,
+          0.7982715964317322,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.0007675886154174805,
+          0.0028165930416435003,
+          0.1698724627494812
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66066,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.2263743132352829,
+        0.1371624618768692,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_left",
       "termination_reason": "planning_failure"
     },
@@ -1980,109 +2531,364 @@
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 25,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "UNKNOWN",
       "final_object_target_distance": 0.4259590208530426,
       "first_irrecoverable_step": 6,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.000318577609930984,
+      "maximum_workspace_margin": 0.20806789218475982,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.20806266187718078,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "move_to_precontact",
       "planning_attempts": 3,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.0017833288293331861,
+          0.380592942237854,
+          0.00022217883088160306,
+          -1.9586539268493652,
+          0.00921427458524704,
+          2.344014883041382,
+          0.7813063859939575,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.001417660154402256,
+          -0.0001381409529130906,
+          0.1781950443983078
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66070,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.21794778108596802,
+        0.1497817039489746,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_left",
       "termination_reason": "wrong_object_interaction"
     },
     {
       "candidate_id": "CandidateE",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 73
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 80
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 81
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 91
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 97
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 98
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 231
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 232
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 233
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 234
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 235
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 238
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 241
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 242
+        }
+      ],
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 250,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "STALLED_PROGRESS",
       "final_object_target_distance": 0.10909900814294815,
-      "first_irrecoverable_step": 137,
+      "first_irrecoverable_step": 50,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_STALL",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.32047606438493026,
+      "maximum_workspace_margin": 0.33878158067380953,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.2296821606068866,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "corrective_push_1",
       "planning_attempts": 6,
       "recovery_attempts": 1,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.006493385415524244,
+          0.3841642737388611,
+          0.005545370746403933,
+          -1.9613051414489746,
+          -0.000577315513510257,
+          2.3611204624176025,
+          0.7772812247276306,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.003333943895995617,
+          -0.0005598266143351793,
+          0.17641180753707886
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66071,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.20844796299934387,
+        -0.1343158632516861,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_right",
       "termination_reason": "timeout"
     },
     {
       "candidate_id": "CandidateE",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 71
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 73
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 74
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 80
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 81
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 83
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 90
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 91
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 93
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 94
+        }
+      ],
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 134,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "PUSH_DIRECTION_ERROR",
       "final_object_target_distance": 0.22883524000644684,
       "first_irrecoverable_step": 134,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.5864811455388336,
+      "maximum_workspace_margin": 0.34078247725963595,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.00542790770530701,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "verify_task",
       "planning_attempts": 7,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.012172526679933071,
+          0.3903728425502777,
+          0.006759014446288347,
+          -1.9683012962341309,
+          -0.022126270458102226,
+          2.3537657260894775,
+          0.7787559628486633,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.0021597053855657578,
+          -0.005133528728038073,
+          0.16900864243507385
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66072,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.12829524278640747,
+        0.2265005260705948,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "verification_failure"
     },
     {
       "candidate_id": "CandidateE",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 69
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 72
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 78
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 86
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 88
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 90
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 91
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 93
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 99
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 100
+        }
+      ],
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 140,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "PUSH_DIRECTION_ERROR",
       "final_object_target_distance": 0.11105542629957199,
       "first_irrecoverable_step": 140,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.43066398805557526,
+      "maximum_workspace_margin": 0.3529922333732247,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.16238885700702668,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "verify_task",
       "planning_attempts": 7,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.0007433615392073989,
+          0.3916301727294922,
+          -0.008372430689632893,
+          -1.96672785282135,
+          -0.0025971815921366215,
+          2.3465046882629395,
+          0.7678709626197815,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.0032533202320337296,
+          -0.00594507809728384,
+          0.16826042532920837
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66073,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.12420269846916199,
+        -0.21752546727657318,
+        0.0010000000474974513
+      ],
       "target_region_id": "right",
       "termination_reason": "verification_failure"
     },
@@ -2204,53 +3010,136 @@
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 20,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "UNKNOWN",
       "final_object_target_distance": 0.41416168212890625,
       "first_irrecoverable_step": 6,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.00032128496593840936,
+      "maximum_workspace_margin": 0.22416272579720184,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.22408887564232513,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "move_to_precontact",
       "planning_attempts": 3,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.020718110725283623,
+          0.4003104865550995,
+          -0.008841830305755138,
+          -1.9784386157989502,
+          0.0054490515030920506,
+          2.340130090713501,
+          0.7747834920883179,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.011343161575496197,
+          -0.01754121668636799,
+          0.15765661001205444
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66078,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.21010670065879822,
+        0.13058410584926605,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_left",
       "termination_reason": "wrong_object_interaction"
     },
     {
       "candidate_id": "CandidateE",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 92
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 94
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 95
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 96
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 99
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 101
+        }
+      ],
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 250,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "STALLED_PROGRESS",
       "final_object_target_distance": 0.29872632026672363,
-      "first_irrecoverable_step": 153,
+      "first_irrecoverable_step": 50,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_STALL",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.19455607692698032,
+      "maximum_workspace_margin": 0.3193446145116346,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.17642700492432284,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "corrective_push_1",
       "planning_attempts": 6,
       "recovery_attempts": 1,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.0014169060159474611,
+          0.4200218617916107,
+          0.0004225224256515503,
+          -1.953380823135376,
+          0.014649256132543087,
+          2.366898775100708,
+          0.7925680875778198,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.0019686035811901093,
+          0.002377157798036933,
+          0.15809276700019836
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66079,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.22226667404174805,
+        -0.1400446742773056,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_right",
       "termination_reason": "timeout"
     },
@@ -2284,29 +3173,99 @@
     },
     {
       "candidate_id": "CandidateE",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 72
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 77
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 80
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 82
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 87
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 88
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 90
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 91
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 99
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 100
+        }
+      ],
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 133,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "UNKNOWN",
       "final_object_target_distance": 0.13226085901260376,
       "first_irrecoverable_step": 133,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.2567586287131113,
+      "maximum_workspace_margin": 0.3343831214308739,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.24284465193748475,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "verify_task",
       "planning_attempts": 7,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.005449341144412756,
+          0.3865613043308258,
+          0.0040208143182098866,
+          -1.9586858749389648,
+          0.005172279197722673,
+          2.3470094203948975,
+          0.7745503783226013,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.0010650083422660828,
+          0.006349168252199888,
+          0.17476974427700043
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66081,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.11492554098367691,
+        -0.22777511179447174,
+        0.0010000000474974513
+      ],
       "target_region_id": "right",
       "termination_reason": "verification_failure"
     },
@@ -2316,25 +3275,54 @@
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 6,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "PREAPPROACH_PLANNING_FAILURE",
       "final_object_target_distance": 0.4582197070121765,
       "first_irrecoverable_step": 6,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.002221209774976801,
+      "maximum_workspace_margin": 0.19363373398780823,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.1934541004896164,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "move_to_precontact",
       "planning_attempts": 3,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.010054992511868477,
+          0.38992708921432495,
+          -0.01421082392334938,
+          -1.9686965942382812,
+          0.00873412936925888,
+          2.3525502681732178,
+          0.7853628993034363,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.002502748742699623,
+          -0.0020153061486780643,
+          0.16901859641075134
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66082,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.2303067147731781,
+        0.1325037032365799,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_left",
       "termination_reason": "planning_failure"
     },
@@ -2372,25 +3360,54 @@
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 28,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "UNKNOWN",
       "final_object_target_distance": 0.39826029539108276,
       "first_irrecoverable_step": 6,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.000324349002970044,
+      "maximum_workspace_margin": 0.19898478507092163,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.19891029416611358,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "move_to_precontact",
       "planning_attempts": 3,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.0058543686755001545,
+          0.3997722864151001,
+          -0.00930735282599926,
+          -1.9508099555969238,
+          -0.0050164093263447285,
+          2.3547234535217285,
+          0.7802024483680725,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.003910008817911148,
+          -0.0027067940682172775,
+          0.17061501741409302
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66084,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.1163635179400444,
+        0.22973234951496124,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "wrong_object_interaction"
     },
@@ -2428,81 +3445,234 @@
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 25,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "UNKNOWN",
       "final_object_target_distance": 0.4604073166847229,
       "first_irrecoverable_step": 6,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.0003170742799430483,
+      "maximum_workspace_margin": 0.190105198016669,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.18989457010319397,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "move_to_precontact",
       "planning_attempts": 3,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.004112929571419954,
+          0.4071965515613556,
+          0.008030703291296959,
+          -1.9654998779296875,
+          0.001118912361562252,
+          2.3668606281280518,
+          0.7850099205970764,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.0010708412155508995,
+          0.00769411213696003,
+          0.16098099946975708
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66086,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.2302079051733017,
+        0.13288798928260803,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_left",
       "termination_reason": "wrong_object_interaction"
     },
     {
       "candidate_id": "CandidateE",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 91
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 93
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 95
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 96
+        }
+      ],
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 250,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "STALLED_PROGRESS",
       "final_object_target_distance": 0.24490946531295776,
-      "first_irrecoverable_step": 152,
+      "first_irrecoverable_step": 50,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_STALL",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.2172305279612202,
+      "maximum_workspace_margin": 0.3439951104184607,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.19337969838669464,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "corrective_push_1",
       "planning_attempts": 6,
       "recovery_attempts": 1,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.008011311292648315,
+          0.3837983012199402,
+          -0.01083801407366991,
+          -1.9640673398971558,
+          -0.0015116994036361575,
+          2.3512392044067383,
+          0.7838634848594666,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.00016181264072656631,
+          -0.00202898564748466,
+          0.1745939701795578
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66087,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.21486574411392212,
+        -0.14265213906764984,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_right",
       "termination_reason": "timeout"
     },
     {
       "candidate_id": "CandidateE",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 84
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 87
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 92
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 95
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 101
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 102
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 115
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 117
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 124
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 125
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 126
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 127
+        }
+      ],
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 159,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "PUSH_DIRECTION_ERROR",
       "final_object_target_distance": 0.11248985677957535,
       "first_irrecoverable_step": 159,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.4819786693782126,
+      "maximum_workspace_margin": 0.3076911899447441,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.1722760456800461,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "verify_task",
       "planning_attempts": 7,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.009075518697500229,
+          0.42612481117248535,
+          0.004215416498482227,
+          -1.9508098363876343,
+          0.008815922774374485,
+          2.350919485092163,
+          0.7971394062042236,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.0013900138437747955,
+          -0.002128832507878542,
+          0.15404102206230164
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66088,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.12063072621822357,
+        0.21840162575244904,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "verification_failure"
     },
@@ -2540,25 +3710,54 @@
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 83,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "IK_OR_MOTION_PLANNING_FAILURE",
       "final_object_target_distance": 0.41219088435173035,
       "first_irrecoverable_step": 83,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.0019392264751592584,
+      "maximum_workspace_margin": 0.23575754344463348,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.2356095451116562,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "primary_push",
       "planning_attempts": 5,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.00226589129306376,
+          0.4067893624305725,
+          0.0147577915340662,
+          -1.9654511213302612,
+          0.005353875923901796,
+          2.353870391845703,
+          0.7736188173294067,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.0037725409492850304,
+          0.01114539336413145,
+          0.16016289591789246
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66090,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.22946709394454956,
+        0.14670905470848083,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_left",
       "termination_reason": "planning_failure"
     },
@@ -2704,29 +3903,83 @@
     },
     {
       "candidate_id": "CandidateE",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 82
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 86
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 87
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 89
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 98
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 99
+        }
+      ],
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 144,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "PUSH_DIRECTION_ERROR",
       "final_object_target_distance": 0.23905479907989502,
       "first_irrecoverable_step": 144,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.5360214323997639,
+      "maximum_workspace_margin": 0.3454285296797752,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.0989673125743866,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "verify_task",
       "planning_attempts": 7,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.00012363526911940426,
+          0.40393972396850586,
+          -0.01304189395159483,
+          -1.9597506523132324,
+          -0.003936734516173601,
+          2.365288019180298,
+          0.7874218225479126,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.0016041779890656471,
+          -0.008511693216860294,
+          0.16524705290794373
+        ]
+      },
       "run_id": "20260722T045416Z_phase2b2-expert-gate_cd97c4f",
       "seed": 66096,
       "source_commit": "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
-      "target_pose": null,
+      "target_pose": [
+        0.11341758072376251,
+        0.21929283440113068,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "verification_failure"
     },
@@ -2816,141 +4069,1263 @@
     },
     {
       "candidate_id": "CandidateF",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 70
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 88
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 89
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 102
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 103
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 116
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 117
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 130
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 131
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 144
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 145
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 158
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 159
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 172
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 173
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 187
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 188
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 202
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 203
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 218
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 219
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 238
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 239
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 250,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "STALLED_PROGRESS",
       "final_object_target_distance": 0.19600427150726318,
-      "first_irrecoverable_step": 73,
+      "first_irrecoverable_step": 50,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_STALL",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.3636942399279358,
+      "maximum_workspace_margin": 0.30942807613899875,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.19993854879429504,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "primary_push",
       "planning_attempts": 16,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.01212076935917139,
+          0.3826490342617035,
+          7.15471978764981e-05,
+          -1.9525305032730103,
+          -0.0011371023720130324,
+          2.362342119216919,
+          0.7692336440086365,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.007430549710988998,
+          0.007493313867598772,
+          0.18119686841964722
+        ]
+      },
       "run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b",
       "seed": 66100,
       "source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40",
-      "target_pose": null,
+      "target_pose": [
+        0.11659222096204758,
+        0.21274758875370026,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "timeout"
     },
     {
       "candidate_id": "CandidateF",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 78
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 81
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 88
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 90
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 94
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 96
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 98
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 102
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 108
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 110
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 111
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 116
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 117
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 118
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 120
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 124
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 125
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 128
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 130
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 131
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 135
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 138
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 139
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 142
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 144
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 145
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 147
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 149
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 150
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 152
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 153
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 156
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 161
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 164
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 165
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 166
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 167
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 171
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 173
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 174
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 175
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 180
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 181
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 188
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 189
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 191
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 192
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 195
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 196
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 205
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 206
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 211
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 212
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 227
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 228
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 250,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "STALLED_PROGRESS",
       "final_object_target_distance": 0.0703517496585846,
-      "first_irrecoverable_step": 83,
+      "first_irrecoverable_step": 50,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_STALL",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.34283338018165244,
+      "maximum_workspace_margin": 0.24882511316826508,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.18055065988590882,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "primary_push",
       "planning_attempts": 16,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.006127671338617802,
+          0.3917645215988159,
+          0.007269083987921476,
+          -1.9546222686767578,
+          -0.019630219787359238,
+          2.3657479286193848,
+          0.776000440120697,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.0059153838083148,
+          -0.0008537841495126486,
+          0.1749681532382965
+        ]
+      },
       "run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b",
       "seed": 66101,
       "source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40",
-      "target_pose": null,
+      "target_pose": [
+        0.10917004942893982,
+        -0.23161309957504272,
+        0.0010000000474974513
+      ],
       "target_region_id": "right",
       "termination_reason": "timeout"
     },
     {
       "candidate_id": "CandidateF",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 89
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 90
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 97
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 101
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 104
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 107
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 108
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 109
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 110
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 114
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 115
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 117
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 119
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 123
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 124
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 131
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 132
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 133
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 134
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 137
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 138
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 141
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 142
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 144
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 147
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 151
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 152
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 157
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 158
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 160
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 162
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 165
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 166
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 170
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 171
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 178
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 179
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 180
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 181
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 188
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 189
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 191
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 192
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 195
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 196
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 202
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 203
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 204
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 205
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 211
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 212
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 231
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 238
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 242
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 243
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 250,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "STALLED_PROGRESS",
       "final_object_target_distance": 0.16677595674991608,
-      "first_irrecoverable_step": 80,
+      "first_irrecoverable_step": 50,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_STALL",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.33039910650829474,
+      "maximum_workspace_margin": 0.3361047711878078,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.21800876974156067,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "primary_push",
       "planning_attempts": 15,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -9.09808004507795e-05,
+          0.3900099992752075,
+          0.014945005998015404,
+          -1.9745714664459229,
+          -0.00017912917246576399,
+          2.357548713684082,
+          0.7890780568122864,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.0040330421179533005,
+          0.009318538010120392,
+          0.16696497797966003
+        ]
+      },
       "run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b",
       "seed": 66102,
       "source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40",
-      "target_pose": null,
+      "target_pose": [
+        0.21096175909042358,
+        0.1511017382144928,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_left",
       "termination_reason": "timeout"
     },
     {
       "candidate_id": "CandidateF",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 80
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 81
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 82
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 83
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 90
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 92
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 97
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 98
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 99
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 101
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 102
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 105
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 111
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 114
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 115
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 119
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 125
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 126
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 128
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 134
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 138
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 139
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 141
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 146
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 147
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 148
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 152
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 153
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 156
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 160
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 162
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 167
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 171
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 178
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 179
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 183
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 184
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 185
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 186
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 193
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 194
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 212
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 213
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 215
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 217
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 220
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 226
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 228
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 229
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 230
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 231
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 250,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "STALLED_PROGRESS",
       "final_object_target_distance": 0.10189544409513474,
-      "first_irrecoverable_step": 74,
+      "first_irrecoverable_step": 50,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_STALL",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.3496589561344853,
+      "maximum_workspace_margin": 0.3442728749025142,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.2183022630124347,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "primary_push",
       "planning_attempts": 16,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.013727370649576187,
+          0.377634733915329,
+          0.0015751597238704562,
+          -1.9715485572814941,
+          0.0028395175468176603,
+          2.3621249198913574,
+          0.770458459854126,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.00022884923964738846,
+          -0.007211726158857346,
+          0.17619743943214417
+        ]
+      },
       "run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b",
       "seed": 66103,
       "source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40",
-      "target_pose": null,
+      "target_pose": [
+        0.22121025621891022,
+        -0.1341726928949356,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_right",
       "termination_reason": "timeout"
     },
     {
       "candidate_id": "CandidateF",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 81
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 82
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 85
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 86
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 87
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 88
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 90
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 94
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 95
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 96
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 98
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 99
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 100
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 102
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 103
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 106
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 113
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 114
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 115
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 116
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 117
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 122
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 124
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 125
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 127
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 128
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 129
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 130
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 131
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 133
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 134
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 135
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 141
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 144
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 145
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 152
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 154
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 155
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 156
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 159
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 160
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 166
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 167
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 168
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 170
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 174
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 175
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 181
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 183
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 190
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 191
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 198
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 199
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 200
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 202
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 210
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 215
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 231
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 232
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 250,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "STALLED_PROGRESS",
       "final_object_target_distance": 0.1718388944864273,
-      "first_irrecoverable_step": 74,
+      "first_irrecoverable_step": 50,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_STALL",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.3524448379923629,
+      "maximum_workspace_margin": 0.31735176473855975,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.22364966452121735,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "primary_push",
       "planning_attempts": 15,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.01078366581350565,
+          0.40529149770736694,
+          0.008185016922652721,
+          -1.980682373046875,
+          0.013947568833827972,
+          2.358139991760254,
+          0.7868234515190125,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.009233160875737667,
+          0.012865623459219933,
+          0.15520191192626953
+        ]
+      },
       "run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b",
       "seed": 66104,
       "source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40",
-      "target_pose": null,
+      "target_pose": [
+        0.11977732181549072,
+        0.22049567103385925,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "timeout"
     },
@@ -3600,29 +5975,199 @@
     },
     {
       "candidate_id": "CandidateF",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 76
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 77
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 78
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 79
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 86
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 90
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 100
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 103
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 110
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 111
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 114
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 116
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 124
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 125
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 126
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 127
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 128
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 132
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 139
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 140
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 141
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 142
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 143
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 147
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 152
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 157
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 158
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 166
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 167
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 173
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 174
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 192
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 198
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 214
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 215
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 235,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "IK_OR_MOTION_PLANNING_FAILURE",
       "final_object_target_distance": 0.14096947014331818,
       "first_irrecoverable_step": 70,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.31299398319518396,
+      "maximum_workspace_margin": 0.29129419058561323,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.21841777741909027,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "primary_push",
       "planning_attempts": 17,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.005641552619636059,
+          0.3784789741039276,
+          0.0017626771004870534,
+          -1.9730703830718994,
+          0.011505856178700924,
+          2.358876943588257,
+          0.8015695214271545,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.001203020103275776,
+          0.005560659803450108,
+          0.1747491955757141
+        ]
+      },
       "run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b",
       "seed": 66128,
       "source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40",
-      "target_pose": null,
+      "target_pose": [
+        0.12334975600242615,
+        0.22247862815856934,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "planning_failure"
     },
@@ -3796,29 +6341,239 @@
     },
     {
       "candidate_id": "CandidateF",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 72
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 73
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 75
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 76
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 77
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 78
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 79
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 81
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 82
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 86
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 92
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 94
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 95
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 99
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 103
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 104
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 109
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 111
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 112
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 113
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 120
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 122
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 123
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 128
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 132
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 135
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 136
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 137
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 138
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 140
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 141
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 144
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 149
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 152
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 153
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 155
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 156
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 159
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 167
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 168
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 169
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 176
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 177
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 187
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 190
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 207,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "MISSED_CONTACT",
       "final_object_target_distance": 0.07859348505735397,
       "first_irrecoverable_step": 66,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.3224708321288562,
+      "maximum_workspace_margin": 0.3444544930491125,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.23804908811142608,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "primary_push",
       "planning_attempts": 13,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.011573899537324905,
+          0.39021506905555725,
+          0.007054685615003109,
+          -1.9494620561599731,
+          0.011480938643217087,
+          2.3427469730377197,
+          0.7836710810661316,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.0033656181767582893,
+          0.012640247121453285,
+          0.17603221535682678
+        ]
+      },
       "run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b",
       "seed": 66135,
       "source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40",
-      "target_pose": null,
+      "target_pose": [
+        0.22084669768810272,
+        -0.12866750359535217,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_right",
       "termination_reason": "contact_failure"
     },
@@ -4332,25 +7087,54 @@
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 33,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "PREAPPROACH_PLANNING_FAILURE",
       "final_object_target_distance": 0.45987096428871155,
       "first_irrecoverable_step": 6,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.002444669668518489,
+      "maximum_workspace_margin": 0.1856779444217682,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.1854727703332901,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "move_to_precontact",
       "planning_attempts": 3,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.015383085235953331,
+          0.3896075189113617,
+          0.0005550456698983908,
+          -1.9598102569580078,
+          -0.019595419988036156,
+          2.3418939113616943,
+          0.7911922335624695,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.0010222606360912323,
+          -0.01085122860968113,
+          0.17198660969734192
+        ]
+      },
       "run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b",
       "seed": 66154,
       "source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40",
-      "target_pose": null,
+      "target_pose": [
+        0.22272217273712158,
+        0.13233385980129242,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_left",
       "termination_reason": "planning_failure"
     },
@@ -4500,53 +7284,304 @@
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 26,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "UNKNOWN",
       "final_object_target_distance": 0.3742420971393585,
       "first_irrecoverable_step": 6,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.00031744829493313923,
+      "maximum_workspace_margin": 0.2642523181348102,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.26395186602165865,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "move_to_precontact",
       "planning_attempts": 3,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.008428256958723068,
+          0.3908724784851074,
+          -0.016363563016057014,
+          -1.9575165510177612,
+          -0.009244948625564575,
+          2.3682119846343994,
+          0.7900957465171814,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.005140857771039009,
+          -0.016376517713069916,
+          0.1745481938123703
+        ]
+      },
       "run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b",
       "seed": 66160,
       "source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40",
-      "target_pose": null,
+      "target_pose": [
+        0.12427564710378647,
+        0.21944892406463623,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "wrong_object_interaction"
     },
     {
       "candidate_id": "CandidateF",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 77
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 80
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 82
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 85
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 90
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 91
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 93
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 94
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 95
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 99
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 106
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 107
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 109
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 112
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 119
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 122
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 123
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 126
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 134
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 135
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 137
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 141
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 148
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 151
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 152
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 156
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 164
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 166
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 167
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 171
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 172
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 173
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 177
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 178
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 179
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 182
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 183
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 188
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 193
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 194
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 195
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 198
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 199
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 204
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 210
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 211
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 213
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 217
+        }
+      ],
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 217,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "UNKNOWN",
       "final_object_target_distance": 0.04738263413310051,
       "first_irrecoverable_step": 80,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.3204540607514996,
+      "maximum_workspace_margin": 0.24702010571053193,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.12317957996418644,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "primary_push",
       "planning_attempts": 13,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.0010174778290092945,
+          0.39389729499816895,
+          0.009668655693531036,
+          -1.9583410024642944,
+          0.005756020545959473,
+          2.350703001022339,
+          0.7948484420776367,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.0008185179904103279,
+          0.005979154258966446,
+          0.17073173820972443
+        ]
+      },
       "run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b",
       "seed": 66161,
       "source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40",
-      "target_pose": null,
+      "target_pose": [
+        0.12210667133331299,
+        -0.216571643948555,
+        0.0010000000474974513
+      ],
       "target_region_id": "right",
       "termination_reason": "wrong_object_interaction"
     },
@@ -4640,25 +7675,54 @@
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 31,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "PREAPPROACH_PLANNING_FAILURE",
       "final_object_target_distance": 0.37317752838134766,
       "first_irrecoverable_step": 6,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.0020445965799911316,
+      "maximum_workspace_margin": 0.18623854100704193,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.18611259639263153,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "move_to_precontact",
       "planning_attempts": 3,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.020697632804512978,
+          0.39954474568367004,
+          -0.012084977701306343,
+          -1.9710187911987305,
+          0.003071094863116741,
+          2.37178635597229,
+          0.7840912342071533,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.001372622326016426,
+          -0.0200787466019392,
+          0.16383317112922668
+        ]
+      },
       "run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b",
       "seed": 66165,
       "source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40",
-      "target_pose": null,
+      "target_pose": [
+        0.12485005706548691,
+        -0.21595588326454163,
+        0.0010000000474974513
+      ],
       "target_region_id": "right",
       "termination_reason": "planning_failure"
     },
@@ -4720,29 +7784,119 @@
     },
     {
       "candidate_id": "CandidateF",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 61
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 70
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 72
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 82
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 84
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 95
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 97
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 109
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 111
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 123
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 125
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 138
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 139
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 153
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 154
+        }
+      ],
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 164,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "UNKNOWN",
       "final_object_target_distance": 0.06302330642938614,
       "first_irrecoverable_step": 69,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.27592847976774293,
+      "maximum_workspace_margin": 0.2988965046315448,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.15156790136387513,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "primary_push",
       "planning_attempts": 11,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.016779115423560143,
+          0.3915213346481323,
+          -0.0023826330434530973,
+          -1.9795349836349487,
+          -0.0077216909267008305,
+          2.3640098571777344,
+          0.7905815839767456,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.0051062339916825294,
+          -0.012386824935674667,
+          0.16452333331108093
+        ]
+      },
       "run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b",
       "seed": 66168,
       "source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40",
-      "target_pose": null,
+      "target_pose": [
+        0.10973287373781204,
+        0.22244639694690704,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "wrong_object_interaction"
     },
@@ -4780,25 +7934,54 @@
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 23,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "UNKNOWN",
       "final_object_target_distance": 0.3806747794151306,
       "first_irrecoverable_step": 6,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.00031990235700188384,
+      "maximum_workspace_margin": 0.22887772141983673,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.22886174737503692,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "move_to_precontact",
       "planning_attempts": 3,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.0010436736047267914,
+          0.3815159201622009,
+          0.0011625980259850621,
+          -1.9795246124267578,
+          -0.012710961513221264,
+          2.3790526390075684,
+          0.7756569981575012,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.00016786810010671616,
+          -0.0009468706557527184,
+          0.17199811339378357
+        ]
+      },
       "run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b",
       "seed": 66170,
       "source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40",
-      "target_pose": null,
+      "target_pose": [
+        0.20858103036880493,
+        0.1383969932794571,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_left",
       "termination_reason": "wrong_object_interaction"
     },
@@ -5004,25 +8187,54 @@
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 24,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "UNKNOWN",
       "final_object_target_distance": 0.3958200514316559,
       "first_irrecoverable_step": 6,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.00015110638600902482,
+      "maximum_workspace_margin": 0.27386964677860903,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.27371940582087206,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "move_to_precontact",
       "planning_attempts": 3,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.0008816810441203415,
+          0.4029332399368286,
+          0.003310650819912553,
+          -1.9635778665542603,
+          -0.006595516577363014,
+          2.3687803745269775,
+          0.780631422996521,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.0009263884276151657,
+          0.002084285719320178,
+          0.16456149518489838
+        ]
+      },
       "run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b",
       "seed": 66178,
       "source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40",
-      "target_pose": null,
+      "target_pose": [
+        0.22069209814071655,
+        0.1517007201910019,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_left",
       "termination_reason": "wrong_object_interaction"
     },
@@ -5144,25 +8356,54 @@
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 31,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "PREAPPROACH_PLANNING_FAILURE",
       "final_object_target_distance": 0.4635449945926666,
       "first_irrecoverable_step": 6,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.00229682702274893,
+      "maximum_workspace_margin": 0.19395460069179535,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.19378843784332275,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "move_to_precontact",
       "planning_attempts": 3,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.011415545828640461,
+          0.400136798620224,
+          -0.0023946468718349934,
+          -1.9496023654937744,
+          0.029421832412481308,
+          2.3627028465270996,
+          0.7694002389907837,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.006012069061398506,
+          0.00807495228946209,
+          0.171625554561615
+        ]
+      },
       "run_id": "20260722T054304Z_phase2b2-candidatef-expert_f441b1b",
       "seed": 66183,
       "source_commit": "f441b1b035007f0876dafd2a54886b26f6350e40",
-      "target_pose": null,
+      "target_pose": [
+        0.2318725436925888,
+        -0.14293310046195984,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_right",
       "termination_reason": "planning_failure"
     },
@@ -5952,29 +9193,136 @@
     },
     {
       "candidate_id": "CandidateG",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 97
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 101
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 181,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "OBJECT_WORKSPACE_VIOLATION",
       "final_object_target_distance": 0.25408661365509033,
-      "first_irrecoverable_step": 140,
+      "first_irrecoverable_step": 181,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_WORKSPACE_VIOLATION",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.6741406244837392,
+      "maximum_workspace_margin": 0.32711202532052996,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": -0.003142167329788205,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "corrective_push_1",
       "planning_attempts": 7,
       "recovery_attempts": 2,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": {
+          "all_signed_workspace_margins": {
+            "x_max": 0.07389989376068115,
+            "x_min": 0.7361001062393189,
+            "y_max": -0.003142167329788205,
+            "y_min": 0.7131421673297882
+          },
+          "environment_planar_radius": 0.025,
+          "executed_pose": [
+            0.10174011439085007,
+            -0.033090703189373016,
+            0.3121677041053772
+          ],
+          "nearest_workspace_boundary": "y_max",
+          "object_pose": [
+            0.33110010623931885,
+            0.3581421673297882,
+            0.025033481419086456,
+            0.36457765102386475,
+            -0.8497532606124878,
+            0.3498364984989166,
+            -0.15038913488388062
+          ],
+          "object_support_extent_in_push_direction": 0.025,
+          "planned_pose": [
+            0.11072818325260929,
+            0.04614437571710226,
+            0.015,
+            0.00426282174885273,
+            0.9998669624328613,
+            0.014374447055161,
+            -0.006417179014533758
+          ],
+          "planner_call": {
+            "action_end_index": 181,
+            "action_start_index": 175,
+            "planned_pose": [
+              0.11072818325260929,
+              0.04614437571710226,
+              0.015,
+              0.00426282174885273,
+              0.9998669624328613,
+              0.014374447055161,
+              -0.006417179014533758
+            ],
+            "result": {
+              "duration_seconds": 1.716517474841131,
+              "failure": null,
+              "position_count": 34,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.10160420835018158,
+              -0.03467340022325516,
+              0.31883007287979126,
+              0.0054071759805083275,
+              0.999890148639679,
+              0.012031249701976776,
+              -0.006757233291864395
+            ],
+            "use_attached": false
+          },
+          "push_direction": [
+            -0.8535052155572704,
+            -0.5210842993379644
+          ],
+          "signed_workspace_margin": -0.003142167329788205,
+          "violation_step": 181
+        }
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.015662718564271927,
+          0.38663628697395325,
+          -0.00037388328928500414,
+          -1.9703956842422485,
+          -0.009568724781274796,
+          2.3497135639190674,
+          0.7799603343009949,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.0033455118536949158,
+          0.008505183272063732,
+          0.170060932636261
+        ]
+      },
       "run_id": "20260722T062140Z_phase2b2-candidateg-probe_3db2c05",
       "seed": 66212,
       "source_commit": "3db2c057a4b9be76a76e3ab3eb9f6874a3d1eb6a",
-      "target_pose": null,
+      "target_pose": [
+        0.11596542596817017,
+        0.22294944524765015,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "target_outside_workspace"
     },
@@ -6316,29 +9664,99 @@
     },
     {
       "candidate_id": "CandidateG",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 79
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 82
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 83
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 84
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 85
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 91
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 96
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 97
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 98
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 99
+        }
+      ],
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 121,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "LOSS_OF_CONTACT",
       "final_object_target_distance": 0.10507883876562119,
-      "first_irrecoverable_step": 121,
+      "first_irrecoverable_step": 82,
+      "first_irrecoverable_step_semantic": "FIRST_REPLAYED_CONTACT_LOSS",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.31603869845269533,
+      "maximum_workspace_margin": 0.3480826718918979,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.23548987090587617,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "corrective_push_1",
       "planning_attempts": 5,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.009006734937429428,
+          0.40931183099746704,
+          0.010235048830509186,
+          -1.969124436378479,
+          -0.0027960683219134808,
+          2.375464916229248,
+          0.7956436276435852,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.0012462688609957695,
+          0.011770623736083508,
+          0.15893951058387756
+        ]
+      },
       "run_id": "20260722T062140Z_phase2b2-candidateg-probe_3db2c05",
       "seed": 66225,
       "source_commit": "3db2c057a4b9be76a76e3ab3eb9f6874a3d1eb6a",
-      "target_pose": null,
+      "target_pose": [
+        0.1105474978685379,
+        -0.218912735581398,
+        0.0010000000474974513
+      ],
       "target_region_id": "right",
       "termination_reason": "correction_failure"
     },
@@ -7296,29 +10714,160 @@
     },
     {
       "candidate_id": "CandidateH",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 136
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 142
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 143
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 144
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 150
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 152
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 158
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 159
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 218,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "OBJECT_WORKSPACE_VIOLATION",
       "final_object_target_distance": 0.2767837643623352,
-      "first_irrecoverable_step": 176,
+      "first_irrecoverable_step": 218,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_WORKSPACE_VIOLATION",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.6526054911495308,
+      "maximum_workspace_margin": 0.3468768808245659,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": -0.009075988531112668,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "corrective_push_1",
       "planning_attempts": 7,
       "recovery_attempts": 2,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": {
+          "all_signed_workspace_margins": {
+            "x_max": 0.04393410563468932,
+            "x_min": 0.7660658943653107,
+            "y_max": -0.009075988531112668,
+            "y_min": 0.7190759885311127
+          },
+          "environment_planar_radius": 0.025,
+          "executed_pose": [
+            0.11255865544080734,
+            -0.045809052884578705,
+            0.29684457182884216
+          ],
+          "nearest_workspace_boundary": "y_max",
+          "object_pose": [
+            0.36106589436531067,
+            0.36407598853111267,
+            0.025062186643481255,
+            0.009297175332903862,
+            -0.9261491894721985,
+            0.3770228624343872,
+            -0.003881934331730008
+          ],
+          "object_support_extent_in_push_direction": 0.025,
+          "planned_pose": [
+            0.12290649283525558,
+            0.025547322467903207,
+            0.015,
+            -0.0070762718096375465,
+            0.9999058246612549,
+            -0.010990322567522526,
+            -0.004164500627666712
+          ],
+          "planner_call": {
+            "action_end_index": 218,
+            "action_start_index": 209,
+            "planned_pose": [
+              0.12290649283525558,
+              0.025547322467903207,
+              0.015,
+              -0.0070762718096375465,
+              0.9999058246612549,
+              -0.010990322567522526,
+              -0.004164500627666712
+            ],
+            "result": {
+              "duration_seconds": 1.726477766586275,
+              "failure": null,
+              "position_count": 34,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.11222802102565765,
+              -0.05115602910518646,
+              0.3184460401535034,
+              -0.005744199268519878,
+              0.9998614192008972,
+              -0.014961106702685356,
+              -0.004503725562244654
+            ],
+            "use_attached": false
+          },
+          "push_direction": [
+            -0.8526539034042873,
+            -0.5224761439620307
+          ],
+          "signed_workspace_margin": -0.009075988531112668,
+          "violation_step": 218
+        }
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.011646728962659836,
+          0.3986346125602722,
+          -0.001893747365102172,
+          -1.9483011960983276,
+          0.016268040984869003,
+          2.341294288635254,
+          0.7832110524177551,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.00229781586676836,
+          -0.006926989648491144,
+          0.17118535935878754
+        ]
+      },
       "run_id": "20260722T064141Z_phase2b2-candidateh-probe_48ab184",
       "seed": 66428,
       "source_commit": "48ab184cb172a5d4533dcff8e2effb16006c2dbd",
-      "target_pose": null,
+      "target_pose": [
+        0.12696541845798492,
+        0.2164067178964615,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "target_outside_workspace"
     },
@@ -7744,29 +11293,83 @@
     },
     {
       "candidate_id": "CandidateH",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 139
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 140
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 141
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 142
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 157
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 158
+        }
+      ],
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 179,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "LOSS_OF_CONTACT",
       "final_object_target_distance": 0.09323645383119583,
-      "first_irrecoverable_step": 179,
+      "first_irrecoverable_step": 140,
+      "first_irrecoverable_step_semantic": "FIRST_REPLAYED_CONTACT_LOSS",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.3372547118264293,
+      "maximum_workspace_margin": 0.3115274223685265,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.2175074625015259,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "corrective_push_1",
       "planning_attempts": 5,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.0011490880278870463,
+          0.37344953417778015,
+          0.006795963272452354,
+          -1.9705395698547363,
+          0.0026591464411467314,
+          2.352264165878296,
+          0.7995543479919434,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.0007294584065675735,
+          0.003797183046117425,
+          0.17831197381019592
+        ]
+      },
       "run_id": "20260722T064141Z_phase2b2-candidateh-probe_48ab184",
       "seed": 66444,
       "source_commit": "48ab184cb172a5d4533dcff8e2effb16006c2dbd",
-      "target_pose": null,
+      "target_pose": [
+        0.12684902548789978,
+        0.23009827733039856,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "correction_failure"
     },
@@ -7968,29 +11571,115 @@
     },
     {
       "candidate_id": "CandidateH",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 128
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 133
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 135
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 136
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 140
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 142
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 145
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 146
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 148
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 149
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 153
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 154
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 163
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 165
+        }
+      ],
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 166,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "LOSS_OF_CONTACT",
       "final_object_target_distance": 0.10180574655532837,
-      "first_irrecoverable_step": 166,
+      "first_irrecoverable_step": 133,
+      "first_irrecoverable_step_semantic": "FIRST_REPLAYED_CONTACT_LOSS",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.27024107741534176,
+      "maximum_workspace_margin": 0.33835023783147333,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.22739363789558412,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "corrective_push_1",
       "planning_attempts": 5,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.004192395135760307,
+          0.38242828845977783,
+          -0.010195811279118061,
+          -1.9677542448043823,
+          -0.0020038841757923365,
+          2.348437786102295,
+          0.775932788848877,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.001772507093846798,
+          -0.00401283847168088,
+          0.17364008724689484
+        ]
+      },
       "run_id": "20260722T064141Z_phase2b2-candidateh-probe_48ab184",
       "seed": 66452,
       "source_commit": "48ab184cb172a5d4533dcff8e2effb16006c2dbd",
-      "target_pose": null,
+      "target_pose": [
+        0.12829776108264923,
+        0.2247340828180313,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "correction_failure"
     },
@@ -8192,29 +11881,91 @@
     },
     {
       "candidate_id": "CandidateH",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 139
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 140
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 146
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 151
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 155
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 156
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 162
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 163
+        }
+      ],
       "difficulty": "hard",
       "episode_result": "FAILURE",
       "episode_steps": 186,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "LOSS_OF_CONTACT",
       "final_object_target_distance": 0.05990448594093323,
-      "first_irrecoverable_step": 186,
+      "first_irrecoverable_step": 140,
+      "first_irrecoverable_step_semantic": "FIRST_REPLAYED_CONTACT_LOSS",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.39414123081251207,
+      "maximum_workspace_margin": 0.34561619024723766,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.1835149931907654,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "corrective_push_1",
       "planning_attempts": 5,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.0016229924513027072,
+          0.39227116107940674,
+          0.007272705901414156,
+          -1.9633525609970093,
+          0.009760175831615925,
+          2.357002019882202,
+          0.7797139883041382,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.0002855481579899788,
+          0.006429136730730534,
+          0.17018769681453705
+        ]
+      },
       "run_id": "20260722T064141Z_phase2b2-candidateh-probe_48ab184",
       "seed": 66460,
       "source_commit": "48ab184cb172a5d4533dcff8e2effb16006c2dbd",
-      "target_pose": null,
+      "target_pose": [
+        0.12298040837049484,
+        0.21186169981956482,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "correction_failure"
     },
@@ -8780,29 +12531,79 @@
     },
     {
       "candidate_id": "CandidateJ",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 89
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 92
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 101
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 107
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 108
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 111,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "MISSED_CONTACT",
       "final_object_target_distance": 0.11220559477806091,
       "first_irrecoverable_step": 84,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.22979607746400071,
+      "maximum_workspace_margin": 0.32187664403608013,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.2194293689637439,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "primary_push",
       "planning_attempts": 5,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.009913239628076553,
+          0.3849867582321167,
+          0.007237398065626621,
+          -1.9703129529953003,
+          0.006467217579483986,
+          2.34668231010437,
+          0.7874943017959595,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.0037248339504003525,
+          0.011174794286489487,
+          0.17084865272045135
+        ]
+      },
       "run_id": "20260722T071156Z_phase2b2-candidatej-probe_750d71b",
       "seed": 66601,
       "source_commit": "750d71bc00ba0c5db3d67cc15e0391b125df03d0",
-      "target_pose": null,
+      "target_pose": [
+        0.12160496413707733,
+        -0.21211852133274078,
+        0.0010000000474974513
+      ],
       "target_region_id": "right",
       "termination_reason": "contact_failure"
     },
@@ -9064,25 +12865,54 @@
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 79,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "IK_OR_MOTION_PLANNING_FAILURE",
       "final_object_target_distance": 0.3821110725402832,
       "first_irrecoverable_step": 79,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.0001302581603389288,
+      "maximum_workspace_margin": 0.23695772706558868,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.2368314844279544,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "establish_contact",
       "planning_attempts": 4,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.006954857148230076,
+          0.3837757706642151,
+          -0.0008775487076491117,
+          -1.9706859588623047,
+          0.0018517725402489305,
+          2.367250442504883,
+          0.7917797565460205,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.00071682408452034,
+          -0.004679715260863304,
+          0.17324528098106384
+        ]
+      },
       "run_id": "20260722T071156Z_phase2b2-candidatej-probe_750d71b",
       "seed": 66611,
       "source_commit": "750d71bc00ba0c5db3d67cc15e0391b125df03d0",
-      "target_pose": null,
+      "target_pose": [
+        0.20976968109607697,
+        -0.14154818654060364,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_right",
       "termination_reason": "planning_failure"
     },
@@ -9116,29 +12946,160 @@
     },
     {
       "candidate_id": "CandidateJ",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 105
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 108
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 114
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 115
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 122
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 123
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 127
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 129
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 174,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "OBJECT_WORKSPACE_VIOLATION",
       "final_object_target_distance": 0.23891805112361908,
-      "first_irrecoverable_step": 141,
+      "first_irrecoverable_step": 174,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_WORKSPACE_VIOLATION",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.6150108786295361,
+      "maximum_workspace_margin": 0.32654434770345686,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": -0.0022324514389038264,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "corrective_push_1",
       "planning_attempts": 7,
       "recovery_attempts": 2,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": {
+          "all_signed_workspace_margins": {
+            "x_max": 0.08894303321838379,
+            "x_min": 0.7210569667816162,
+            "y_max": 0.7122324514389038,
+            "y_min": -0.0022324514389038264
+          },
+          "environment_planar_radius": 0.025,
+          "executed_pose": [
+            0.09772902727127075,
+            -0.011040480807423592,
+            0.3196004331111908
+          ],
+          "nearest_workspace_boundary": "y_min",
+          "object_pose": [
+            0.3160569667816162,
+            -0.3572324514389038,
+            0.02442239411175251,
+            0.8312798738479614,
+            -0.4429333209991455,
+            -0.15360625088214874,
+            0.2986450493335724
+          ],
+          "object_support_extent_in_push_direction": 0.025,
+          "planned_pose": [
+            0.10947916662326625,
+            -0.0918419377579715,
+            0.015,
+            0.004398583434522152,
+            0.9998512864112854,
+            -0.015610682778060436,
+            -0.005850282497704029
+          ],
+          "planner_call": {
+            "action_end_index": 174,
+            "action_start_index": 173,
+            "planned_pose": [
+              0.10947916662326625,
+              -0.0918419377579715,
+              0.015,
+              0.004398583434522152,
+              0.9998512864112854,
+              -0.015610682778060436,
+              -0.005850282497704029
+            ],
+            "result": {
+              "duration_seconds": 1.7251589274721282,
+              "failure": null,
+              "position_count": 34,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.09771852940320969,
+              -0.010758436284959316,
+              0.31963735818862915,
+              0.0032950914464890957,
+              0.9999210238456726,
+              -0.010661125183105469,
+              -0.005780865903943777
+            ],
+            "use_attached": false
+          },
+          "push_direction": [
+            -0.8318404040540244,
+            0.555014902667701
+          ],
+          "signed_workspace_margin": -0.0022324514389038264,
+          "violation_step": 174
+        }
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.01774352416396141,
+          0.4022405445575714,
+          -0.01196337677538395,
+          -1.9625188112258911,
+          1.0113698181157815e-06,
+          2.35334849357605,
+          0.7827721834182739,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.0020279977470636368,
+          -0.01842028833925724,
+          0.16409865021705627
+        ]
+      },
       "run_id": "20260722T071156Z_phase2b2-candidatej-probe_750d71b",
       "seed": 66613,
       "source_commit": "750d71bc00ba0c5db3d67cc15e0391b125df03d0",
-      "target_pose": null,
+      "target_pose": [
+        0.11969476193189621,
+        -0.2211305797100067,
+        0.0010000000474974513
+      ],
       "target_region_id": "right",
       "termination_reason": "target_outside_workspace"
     },
@@ -9256,29 +13217,144 @@
     },
     {
       "candidate_id": "CandidateK",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 110
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 114
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 119
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 128
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 187,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "OBJECT_WORKSPACE_VIOLATION",
       "final_object_target_distance": 0.3216809034347534,
-      "first_irrecoverable_step": 165,
+      "first_irrecoverable_step": 187,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_WORKSPACE_VIOLATION",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.644026896079771,
+      "maximum_workspace_margin": 0.34367141921073197,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": -0.002077878713607796,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "corrective_push_1",
       "planning_attempts": 6,
       "recovery_attempts": 1,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": {
+          "all_signed_workspace_margins": {
+            "x_max": -0.002077878713607796,
+            "x_min": 0.8120778787136078,
+            "y_max": 0.24757752895355226,
+            "y_min": 0.46242247104644774
+          },
+          "environment_planar_radius": 0.025,
+          "executed_pose": [
+            0.04174298793077469,
+            0.16022196412086487,
+            0.3140178322792053
+          ],
+          "nearest_workspace_boundary": "x_max",
+          "object_pose": [
+            0.4070778787136078,
+            0.10742247104644775,
+            0.02472524531185627,
+            -0.15906351804733276,
+            -0.9192322492599487,
+            0.3543306291103363,
+            0.06450267881155014
+          ],
+          "object_support_extent_in_push_direction": 0.025,
+          "planned_pose": [
+            0.18976770731643186,
+            -0.09908461618594058,
+            0.32,
+            0.0009596660966053605,
+            0.9999377131462097,
+            0.004143225960433483,
+            -0.01032124925404787
+          ],
+          "planner_call": {
+            "action_end_index": 187,
+            "action_start_index": 182,
+            "planned_pose": [
+              0.18976770731643186,
+              -0.09908461618594058,
+              0.32,
+              0.0009596660966053605,
+              0.9999377131462097,
+              0.004143225960433483,
+              -0.01032124925404787
+            ],
+            "result": {
+              "duration_seconds": 27.654095552266153,
+              "failure": null,
+              "position_count": 553,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.03142601251602173,
+              0.17566992342472076,
+              0.31284379959106445,
+              -0.0008563333540223539,
+              0.9999845623970032,
+              0.002380792051553726,
+              -0.004941559862345457
+            ],
+            "use_attached": false
+          },
+          "push_direction": [
+            -0.9091466134583435,
+            0.41647621209046887
+          ],
+          "signed_workspace_margin": -0.002077878713607796,
+          "violation_step": 187
+        }
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.0022337823174893856,
+          0.3980036973953247,
+          -0.0002294678706675768,
+          -1.9706004858016968,
+          -0.01021607220172882,
+          2.342621326446533,
+          0.7895430326461792,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.00677138939499855,
+          0.0003017911221832037,
+          0.162443608045578
+        ]
+      },
       "run_id": "20260722T072749Z_phase2b2-candidatek-probe_1ec0001",
       "seed": 66704,
       "source_commit": "1ec0001f505e33686af01e1d013c1db0aa3881bd",
-      "target_pose": null,
+      "target_pose": [
+        0.10928788036108017,
+        0.2290765643119812,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "target_outside_workspace"
     },
@@ -9884,85 +13960,279 @@
     },
     {
       "candidate_id": "CandidateP",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 92
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 101
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 103
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 115
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 131
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 132
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 150
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 163
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 164
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 168
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "SUCCESS",
       "episode_steps": 172,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": null,
       "final_object_target_distance": 0.06814684718847275,
       "first_irrecoverable_step": null,
+      "first_irrecoverable_step_semantic": "UNAVAILABLE",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.2884457258678882,
+      "maximum_workspace_margin": 0.3058243152408855,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.1715882521777408,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": null,
       "planning_attempts": 9,
       "recovery_attempts": 2,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.005200798623263836,
+          0.39972224831581116,
+          -0.01702198013663292,
+          -1.9818894863128662,
+          -0.008056164719164371,
+          2.350667953491211,
+          0.779895007610321,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.010281024500727654,
+          -0.008206363767385483,
+          0.15749619901180267
+        ]
+      },
       "run_id": "20260722T081826Z_phase2b2-candidatep-probe_d54487d",
       "seed": 68200,
       "source_commit": "d54487d1773d2b76c88039943ed45c0d0ccf21a8",
-      "target_pose": null,
+      "target_pose": [
+        0.12874601781368256,
+        0.2315445989370346,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "success"
     },
     {
       "candidate_id": "CandidateP",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 95
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 101
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 102
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 115
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 147
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 155
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 157
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 161
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "SUCCESS",
       "episode_steps": 165,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": null,
       "final_object_target_distance": 0.06897653639316559,
       "first_irrecoverable_step": null,
+      "first_irrecoverable_step_semantic": "UNAVAILABLE",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.2315061238306228,
+      "maximum_workspace_margin": 0.28458054184010195,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.16852429031422303,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": null,
       "planning_attempts": 9,
       "recovery_attempts": 2,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.00983956828713417,
+          0.4141067862510681,
+          0.0013960761716589332,
+          -1.9606939554214478,
+          -0.01109167467802763,
+          2.345492362976074,
+          0.7965486645698547,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          -0.004709094762802124,
+          0.005899237468838692,
+          0.1569170206785202
+        ]
+      },
       "run_id": "20260722T081826Z_phase2b2-candidatep-probe_d54487d",
       "seed": 68201,
       "source_commit": "d54487d1773d2b76c88039943ed45c0d0ccf21a8",
-      "target_pose": null,
+      "target_pose": [
+        0.11879850178956985,
+        -0.22830413281917572,
+        0.0010000000474974513
+      ],
       "target_region_id": "right",
       "termination_reason": "success"
     },
     {
       "candidate_id": "CandidateP",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 112
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 113
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 114
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 115
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 117
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 120
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 248
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 249
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 250,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "STALLED_PROGRESS",
       "final_object_target_distance": 0.18882615864276886,
-      "first_irrecoverable_step": 162,
+      "first_irrecoverable_step": 50,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_STALL",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.22927458646610266,
+      "maximum_workspace_margin": 0.34415814454695154,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.26471122919609713,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "corrective_push_1",
       "planning_attempts": 8,
       "recovery_attempts": 3,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.016065705567598343,
+          0.378086119890213,
+          -0.0017103157006204128,
+          -1.9607681035995483,
+          0.0004360815219115466,
+          2.363523483276367,
+          0.783794105052948,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.0049001360312104225,
+          -0.011004496365785599,
+          0.1806221455335617
+        ]
+      },
       "run_id": "20260722T081826Z_phase2b2-candidatep-probe_d54487d",
       "seed": 68202,
       "source_commit": "d54487d1773d2b76c88039943ed45c0d0ccf21a8",
-      "target_pose": null,
+      "target_pose": [
+        0.22466231882572174,
+        0.1457023173570633,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_left",
       "termination_reason": "timeout"
     },
@@ -9972,59 +14242,211 @@
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 121,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "PREAPPROACH_PLANNING_FAILURE",
       "final_object_target_distance": 0.44583094120025635,
       "first_irrecoverable_step": 6,
+      "first_irrecoverable_step_semantic": "FAILED_PHASE_ENTRY_BOUNDARY",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.00031508261479637034,
+      "maximum_workspace_margin": 0.18249438523342773,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": 0.18239600776722595,
       "object_id": "blue_cube",
       "object_initial_pose": null,
       "object_shape": "box",
       "phase_at_failure": "move_to_precontact",
       "planning_attempts": 7,
       "recovery_attempts": 0,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": null
+      },
+      "robot_initial_state": {
+        "qpos": [
+          0.017029693350195885,
+          0.3804093301296234,
+          0.0017264779889956117,
+          -1.9633654356002808,
+          0.0025962325744330883,
+          2.354602336883545,
+          0.7846877574920654,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.001580878160893917,
+          0.011815500445663929,
+          0.17726436257362366
+        ]
+      },
       "run_id": "20260722T081826Z_phase2b2-candidatep-probe_d54487d",
       "seed": 68203,
       "source_commit": "d54487d1773d2b76c88039943ed45c0d0ccf21a8",
-      "target_pose": null,
+      "target_pose": [
+        0.22139929234981537,
+        -0.14649395644664764,
+        0.0010000000474974513
+      ],
       "target_region_id": "forward_right",
       "termination_reason": "planning_failure"
     },
     {
       "candidate_id": "CandidateP",
-      "contact_events": [],
+      "contact_events": [
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 102
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 108
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 109
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 110
+        },
+        {
+          "event": "CONTACT_ESTABLISHED",
+          "step": 111
+        },
+        {
+          "event": "CONTACT_LOST",
+          "step": 112
+        }
+      ],
       "difficulty": "standard",
       "episode_result": "FAILURE",
       "episode_steps": 178,
-      "evidence_completeness": "PHASE_BOUNDARY_ONLY",
+      "evidence_completeness": "DETERMINISTIC_STEP_REPLAY",
       "failure_category": "OBJECT_WORKSPACE_VIOLATION",
       "final_object_target_distance": 0.23470327258110046,
-      "first_irrecoverable_step": 160,
+      "first_irrecoverable_step": 178,
+      "first_irrecoverable_step_semantic": "FIRST_LATCHED_WORKSPACE_VIOLATION",
       "maximum_action_bound_margin": null,
-      "maximum_object_displacement": null,
-      "maximum_workspace_margin": null,
-      "minimum_workspace_margin": null,
+      "maximum_object_displacement": 0.5761117273649994,
+      "maximum_workspace_margin": 0.33554212629795077,
+      "minimum_action_bound_margin": 0.0,
+      "minimum_workspace_margin": -0.002784062623977658,
       "object_id": "orange_cylinder",
       "object_initial_pose": null,
       "object_shape": "cylinder",
       "phase_at_failure": "corrective_push_2",
       "planning_attempts": 8,
       "recovery_attempts": 3,
-      "robot_initial_state": null,
+      "replay_evidence": {
+        "maximum_target_pose_repeat_error": 0.0,
+        "original_outcome_reproduced": true,
+        "repeat_semantics_identical": true,
+        "workspace_violation_detail": {
+          "all_signed_workspace_margins": {
+            "x_max": 0.10644501328468323,
+            "x_min": 0.7035549867153168,
+            "y_max": -0.002784062623977658,
+            "y_min": 0.7127840626239776
+          },
+          "environment_planar_radius": 0.025,
+          "executed_pose": [
+            0.05976567044854164,
+            0.15638823807239532,
+            0.016105063259601593
+          ],
+          "nearest_workspace_boundary": "y_max",
+          "object_pose": [
+            0.2985549867153168,
+            0.35778406262397766,
+            0.02459036558866501,
+            0.835541844367981,
+            0.41783270239830017,
+            -0.16618245840072632,
+            -0.3157039284706116
+          ],
+          "object_support_extent_in_push_direction": 0.025,
+          "planned_pose": [
+            0.23509816224019625,
+            0.2440549446300654,
+            0.015,
+            0.0005697357119061053,
+            0.999907374382019,
+            -0.010290748439729214,
+            0.008884874172508717
+          ],
+          "planner_call": {
+            "action_end_index": 178,
+            "action_start_index": 161,
+            "planned_pose": [
+              0.23509816224019625,
+              0.2440549446300654,
+              0.015,
+              0.0005697357119061053,
+              0.999907374382019,
+              -0.010290748439729214,
+              0.008884874172508717
+            ],
+            "result": {
+              "duration_seconds": 77.41604527661643,
+              "failure": null,
+              "position_count": 1548,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.013540472835302353,
+              0.1325298547744751,
+              0.016080327332019806,
+              0.0005697357119061053,
+              0.999907374382019,
+              -0.010290748439729214,
+              0.008884874172508717
+            ],
+            "use_attached": false
+          },
+          "push_direction": [
+            -0.8091814392501571,
+            -0.5875588467320056
+          ],
+          "signed_workspace_margin": -0.002784062623977658,
+          "violation_step": 178
+        }
+      },
+      "robot_initial_state": {
+        "qpos": [
+          -0.004302079789340496,
+          0.38760483264923096,
+          -0.015105157159268856,
+          -1.9623874425888062,
+          -0.001266073202714324,
+          2.3650708198547363,
+          0.7898790836334229,
+          0.03999999910593033,
+          0.03999999910593033
+        ],
+        "tcp_position": [
+          0.0030472008511424065,
+          -0.012317187152802944,
+          0.17421162128448486
+        ]
+      },
       "run_id": "20260722T081826Z_phase2b2-candidatep-probe_d54487d",
       "seed": 68204,
       "source_commit": "d54487d1773d2b76c88039943ed45c0d0ccf21a8",
-      "target_pose": null,
+      "target_pose": [
+        0.11020350456237793,
+        0.217750683426857,
+        0.0010000000474974513
+      ],
       "target_region_id": "left",
       "termination_reason": "target_outside_workspace"
     }
   ],
-  "records_digest": "sha256:6553d4c2202c6d4a82bc24c3fcc53e1ad19d4d79d0cde075f063e43a36b761f1",
-  "schema_version": "langmani-v2-phase2b3-failure-registry-v0",
+  "records_digest": "sha256:2878490ca941a303a7cc421d581dbc8263f8d8074580c2eb4ff752be73ea838b",
+  "schema_version": "langmani-v2-phase2b3-failure-registry-v1",
   "source_reports": [
     {
       "candidate_id": "CandidateE",

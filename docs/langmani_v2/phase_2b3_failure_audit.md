@@ -67,8 +67,71 @@ Each case must reproduce the historical outcome and step count, repeat the same
 semantic result twice, and keep maximum target-pose repeat error at or below
 `1e-5`.
 
-No new expert behavior is authorized until this replay gate has run on the
-pinned native Linux GPU stack and the resulting evidence has been reviewed.
+The gate ran on the pinned native Linux GPU stack at source commit
+`e63931c8ff66c271c67e8208f982d449bdf41fbf`. It selected 55 frozen cases and
+executed each case in two fresh workers (110 replay episodes). Every original
+outcome was reproduced, every repeat had identical semantic results, and the
+maximum target-pose repeat error was zero. The compact validation report digest
+is `sha256:0a50d9724298b792eaa570b3f32ac457c20f23742e86db70baaf3425e4f0b60d`.
+Raw traces and keyframes remain outside Git.
+
+## Replay-supported root causes
+
+The replay evidence narrows the historical symptoms to the following earliest
+supported failure mechanisms. It does not manufacture a lower-level planner
+reason where the native planner API exposes only a terminal status.
+
+### Workspace violations
+
+All five replayed workspace violations were target-object footprint violations,
+not TCP, robot-link, planned-waypoint, or validator-definition failures. All
+five involved cylinders. The violation was latched from the executed simulator
+state at steps 174--218, at the nearest native boundary (`x_max`, `y_min`, or
+`y_max`), with signed support-aware margins from `-0.009075988531112668` to
+`-0.002077878713607796`. The recorded planned and executed TCP poses remained
+distinct from the violating entity. The replacement architecture therefore
+must validate the predicted full object path in a support-shrunken workspace;
+expanding the native workspace would hide rather than fix this failure.
+
+### Planning failures
+
+All 13 replayed planning failures were deterministic native screw-planner
+rejections. Eight occurred on entry to `move_to_precontact`, four on entry to
+`primary_push`, and one on entry to `establish_contact`; nine failed before a
+single environment step in the failed phase. Ten involved cylinders and three
+boxes. The recorder proves that the requested contact or push target was not
+reachable through the native screw-planning call from the recorded TCP state.
+The planner interface does not expose separate IK, collision-constraint, and
+trajectory-search diagnostics, so attributing these rejections more narrowly
+would be unsupported. Staged approach feasibility and bounded alternative
+contact replanning are therefore architecture requirements rather than
+seed-specific target offsets.
+
+### Timeouts and contact loss
+
+All 13 replayed timeouts first made material progress (mean target-distance
+improvement `0.25005357741163325`) and then both lost contact and latched a
+no-progress stall. Twelve involved boxes and one a cylinder. Eight ended in
+`corrective_push_1` and five in `primary_push`; none is explained by merely
+spending too long reaching the object. The replacement controller therefore
+requires contact-aware short push segments, progress verification, and bounded
+retreat/recontact instead of another open-loop corrective push.
+
+### Shape dependence
+
+The 55-case replay bank contains 28 box and 27 cylinder cases. Planning
+rejection is cylinder-heavy (10/13), every replayed object-workspace violation
+is a cylinder (5/5), while timeout after contact loss is box-heavy (12/13).
+This is consistent with the historical evidence that all explicit
+push-direction, loss-of-contact, and workspace categories were cylinders, but
+it also shows that contact maintenance cannot be treated as cylinder-only.
+Support extent, contact side, push height, and rollout monitoring must be
+shape-aware while recovery remains available to both shapes.
+
+The resulting first-irrecoverable-step inventory is 31 failed-phase entry
+boundaries, 13 first latched stalls, five first latched workspace violations,
+four first replayed contact losses, and two unavailable cases. This completes
+the evidence review required before expert-control changes.
 
 ## Seed isolation
 

@@ -1,49 +1,2312 @@
 {
-  "failure_category_counts": {
-    "IK_OR_MOTION_PLANNING_FAILURE": 5,
-    "LOSS_OF_CONTACT": 4,
-    "MISSED_CONTACT": 2,
-    "OBJECT_WORKSPACE_VIOLATION": 8,
-    "PREAPPROACH_PLANNING_FAILURE": 14,
-    "PUSH_DIRECTION_ERROR": 6,
-    "STALLED_PROGRESS": 107,
-    "UNKNOWN": 25
+  "deterministic_replay_contract": {
+    "all_original_outcomes_reproduced": true,
+    "all_pose_repeats_within_tolerance": true,
+    "all_repeat_semantics_identical": true
   },
-  "failure_phase_counts": {
-    "corrective_push_1": 35,
-    "corrective_push_2": 4,
-    "establish_contact": 1,
-    "move_to_precontact": 27,
-    "primary_push": 87,
-    "settle": 4,
-    "verify_task": 13
+  "failure_registry_digest": "sha256:2878490ca941a303a7cc421d581dbc8263f8d8074580c2eb4ff752be73ea838b",
+  "first_irrecoverable_step_semantics": {
+    "FAILED_PHASE_ENTRY_BOUNDARY": 31,
+    "FIRST_LATCHED_STALL": 13,
+    "FIRST_LATCHED_WORKSPACE_VIOLATION": 5,
+    "FIRST_REPLAYED_CONTACT_LOSS": 4,
+    "UNAVAILABLE": 2
   },
-  "historical_failure_count": 171,
-  "observed_minimum_workspace_margin": -0.0020981621742248505,
+  "historical_source_commits": [
+    "1ec0001f505e33686af01e1d013c1db0aa3881bd",
+    "3db2c057a4b9be76a76e3ab3eb9f6874a3d1eb6a",
+    "48ab184cb172a5d4533dcff8e2effb16006c2dbd",
+    "750d71bc00ba0c5db3d67cc15e0391b125df03d0",
+    "cd97c4f7cb48be5d45569a5729926fe7ddaa3075",
+    "d54487d1773d2b76c88039943ed45c0d0ccf21a8",
+    "f441b1b035007f0876dafd2a54886b26f6350e40"
+  ],
   "official_collection_episodes": 0,
-  "phase_and_trace_count": 2,
-  "phase_boundary_only_count": 169,
-  "planning_failure_interpretation": "phase evidence distinguishes preapproach from later planning failure; deterministic replay is required for finer IK/target-pose attribution",
-  "requires_deterministic_replay": true,
-  "schema_version": "langmani-v2-phase2b3-root-cause-summary-v0",
+  "optimizer_steps": 0,
+  "planning_failure_analysis": {
+    "count": 13,
+    "failed_phase_counts": {
+      "establish_contact": 1,
+      "move_to_precontact": 8,
+      "primary_push": 4
+    },
+    "planner_status_counts": {
+      "screw plan failed": 13
+    },
+    "records": [
+      {
+        "candidate_id": "CandidateE",
+        "failed_phase": "move_to_precontact",
+        "object_shape": "cylinder",
+        "phase_environment_steps": 0,
+        "planner_calls": [
+          {
+            "action_end_index": 6,
+            "action_start_index": 6,
+            "planned_pose": [
+              -0.3169144877238308,
+              0.028088488966247712,
+              0.12,
+              -0.0019300656858831644,
+              0.9998533129692078,
+              -0.003880333388224244,
+              0.016569627448916435
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              0.00622214563190937,
+              0.005935694556683302,
+              0.17687152326107025,
+              -0.0019300656858831644,
+              0.9998533129692078,
+              -0.003880333388224244,
+              0.016569627448916435
+            ],
+            "use_attached": false
+          }
+        ],
+        "planner_status": "screw plan failed",
+        "seed": 66014,
+        "status": "planning_failure",
+        "zero_step_failure": true
+      },
+      {
+        "candidate_id": "CandidateE",
+        "failed_phase": "primary_push",
+        "object_shape": "cylinder",
+        "phase_environment_steps": 0,
+        "planner_calls": [
+          {
+            "action_end_index": 52,
+            "action_start_index": 6,
+            "planned_pose": [
+              -0.30238448237974264,
+              -0.051137423145583845,
+              0.12,
+              -0.0022800948936492205,
+              0.9999303221702576,
+              -0.006106239277869463,
+              0.009833910502493382
+            ],
+            "result": {
+              "duration_seconds": 2.311142106906968,
+              "failure": null,
+              "position_count": 46,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.009217841550707817,
+              -0.007182749453932047,
+              0.17379507422447205,
+              -0.0022800948936492205,
+              0.9999303221702576,
+              -0.006106239277869463,
+              0.009833910502493382
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 85,
+            "action_start_index": 52,
+            "planned_pose": [
+              -0.23159382305992968,
+              -0.02636225144656395,
+              0.015,
+              -0.003815921489149332,
+              0.9999260902404785,
+              -0.006113727111369371,
+              0.009790523909032345
+            ],
+            "result": {
+              "duration_seconds": 1.6787723557288172,
+              "failure": null,
+              "position_count": 33,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.3058619797229767,
+              -0.04677834361791611,
+              0.11771544814109802,
+              -0.003815921489149332,
+              0.9999260902404785,
+              -0.006113727111369371,
+              0.009790523909032345
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 85,
+            "action_start_index": 85,
+            "planned_pose": [
+              0.16492034625151555,
+              0.11240406504436921,
+              0.015,
+              -0.003906442318111658,
+              0.9999278783798218,
+              -0.006424744613468647,
+              0.009358735755085945
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              -0.23574607074260712,
+              -0.024871790781617165,
+              0.011013150215148926,
+              -0.003906442318111658,
+              0.9999278783798218,
+              -0.006424744613468647,
+              0.009358735755085945
+            ],
+            "use_attached": false
+          }
+        ],
+        "planner_status": "screw plan failed",
+        "seed": 66022,
+        "status": "planning_failure",
+        "zero_step_failure": true
+      },
+      {
+        "candidate_id": "CandidateE",
+        "failed_phase": "move_to_precontact",
+        "object_shape": "cylinder",
+        "phase_environment_steps": 0,
+        "planner_calls": [
+          {
+            "action_end_index": 6,
+            "action_start_index": 6,
+            "planned_pose": [
+              -0.3261294655577625,
+              -0.006571547100454534,
+              0.12,
+              0.0070889787748456,
+              0.9999217987060547,
+              -0.0021011463832110167,
+              0.010085987858474255
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              0.007256248965859413,
+              -0.011889035813510418,
+              0.18826638162136078,
+              0.0070889787748456,
+              0.9999217987060547,
+              -0.0021011463832110167,
+              0.010085987858474255
+            ],
+            "use_attached": false
+          }
+        ],
+        "planner_status": "screw plan failed",
+        "seed": 66055,
+        "status": "planning_failure",
+        "zero_step_failure": true
+      },
+      {
+        "candidate_id": "CandidateE",
+        "failed_phase": "primary_push",
+        "object_shape": "box",
+        "phase_environment_steps": 0,
+        "planner_calls": [
+          {
+            "action_end_index": 44,
+            "action_start_index": 6,
+            "planned_pose": [
+              -0.23132866012999342,
+              0.07517380748869223,
+              0.12,
+              0.0024619698524475098,
+              0.9998299479484558,
+              0.0025810012593865395,
+              0.01809299923479557
+            ],
+            "result": {
+              "duration_seconds": 1.9436689360230208,
+              "failure": null,
+              "position_count": 38,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.00713987834751606,
+              0.000816497253254056,
+              0.18945056200027466,
+              0.0024619698524475098,
+              0.9998299479484558,
+              0.0025810012593865395,
+              0.01809299923479557
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 72,
+            "action_start_index": 44,
+            "planned_pose": [
+              -0.1639490727035948,
+              0.04223460663572498,
+              0.025,
+              0.0033742128871381283,
+              0.9998294115066528,
+              0.0033901629503816366,
+              0.01783936284482479
+            ],
+            "result": {
+              "duration_seconds": 1.417730003441701,
+              "failure": null,
+              "position_count": 28,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.2331460863351822,
+              0.07034149020910263,
+              0.12052372097969055,
+              0.0033742128871381283,
+              0.9998294115066528,
+              0.0033901629503816366,
+              0.01783936284482479
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 72,
+            "action_start_index": 72,
+            "planned_pose": [
+              0.18295370655669418,
+              -0.12735239266385623,
+              0.025,
+              0.004426093772053719,
+              0.9998326897621155,
+              0.003430209355428815,
+              0.017413601279258728
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              -0.16850553452968597,
+              0.04050975292921066,
+              0.022551022469997406,
+              0.004426093772053719,
+              0.9998326897621155,
+              0.003430209355428815,
+              0.017413601279258728
+            ],
+            "use_attached": false
+          }
+        ],
+        "planner_status": "screw plan failed",
+        "seed": 66063,
+        "status": "planning_failure",
+        "zero_step_failure": true
+      },
+      {
+        "candidate_id": "CandidateE",
+        "failed_phase": "move_to_precontact",
+        "object_shape": "cylinder",
+        "phase_environment_steps": 0,
+        "planner_calls": [
+          {
+            "action_end_index": 6,
+            "action_start_index": 6,
+            "planned_pose": [
+              -0.33129598173280167,
+              0.031857402464048196,
+              0.12,
+              0.00156825699377805,
+              0.9999956488609314,
+              -0.002269209362566471,
+              0.001002700999379158
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              0.0007677199319005013,
+              0.002816873136907816,
+              0.1698724925518036,
+              0.00156825699377805,
+              0.9999956488609314,
+              -0.002269209362566471,
+              0.001002700999379158
+            ],
+            "use_attached": false
+          }
+        ],
+        "planner_status": "screw plan failed",
+        "seed": 66066,
+        "status": "planning_failure",
+        "zero_step_failure": true
+      },
+      {
+        "candidate_id": "CandidateE",
+        "failed_phase": "move_to_precontact",
+        "object_shape": "cylinder",
+        "phase_environment_steps": 0,
+        "planner_calls": [
+          {
+            "action_end_index": 6,
+            "action_start_index": 6,
+            "planned_pose": [
+              -0.32706523775504454,
+              -0.021361701979197893,
+              0.12,
+              -0.00039399118395522237,
+              0.9999846816062927,
+              -0.004620763938874006,
+              -0.003010072745382786
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              -0.0025026705116033554,
+              -0.002014752244576812,
+              0.16901850700378418,
+              -0.00039399118395522237,
+              0.9999846816062927,
+              -0.004620763938874006,
+              -0.003010072745382786
+            ],
+            "use_attached": false
+          }
+        ],
+        "planner_status": "screw plan failed",
+        "seed": 66082,
+        "status": "planning_failure",
+        "zero_step_failure": true
+      },
+      {
+        "candidate_id": "CandidateE",
+        "failed_phase": "primary_push",
+        "object_shape": "cylinder",
+        "phase_environment_steps": 0,
+        "planner_calls": [
+          {
+            "action_end_index": 52,
+            "action_start_index": 6,
+            "planned_pose": [
+              -0.28545959898098316,
+              0.01221563903376702,
+              0.12,
+              -0.004780732095241547,
+              0.9998753666877747,
+              0.011919780634343624,
+              -0.009180309250950813
+            ],
+            "result": {
+              "duration_seconds": 2.345408975818249,
+              "failure": null,
+              "position_count": 46,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.003772662952542305,
+              0.011146007105708122,
+              0.1601627767086029,
+              -0.004780732095241547,
+              0.9998753666877747,
+              0.011919780634343624,
+              -0.009180309250950813
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 83,
+            "action_start_index": 52,
+            "planned_pose": [
+              -0.2128920915965658,
+              0.03120202865388958,
+              0.015,
+              -0.004074119031429291,
+              0.9998812675476074,
+              0.011638376861810684,
+              -0.009242917411029339
+            ],
+            "result": {
+              "duration_seconds": 1.5763985528895912,
+              "failure": null,
+              "position_count": 31,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.28983667492866516,
+              0.011177174746990204,
+              0.11753302812576294,
+              -0.004074119031429291,
+              0.9998812675476074,
+              0.011638376861810684,
+              -0.009242917411029339
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 83,
+            "action_start_index": 83,
+            "planned_pose": [
+              0.18592693548215297,
+              0.13534003181574,
+              0.015,
+              -0.004468763247132301,
+              0.9998759627342224,
+              0.011645019054412842,
+              -0.009611784480512142
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              -0.2176511138677597,
+              0.03130362182855606,
+              0.011592045426368713,
+              -0.004468763247132301,
+              0.9998759627342224,
+              0.011645019054412842,
+              -0.009611784480512142
+            ],
+            "use_attached": false
+          }
+        ],
+        "planner_status": "screw plan failed",
+        "seed": 66090,
+        "status": "planning_failure",
+        "zero_step_failure": true
+      },
+      {
+        "candidate_id": "CandidateF",
+        "failed_phase": "primary_push",
+        "object_shape": "cylinder",
+        "phase_environment_steps": 0,
+        "planner_calls": [
+          {
+            "action_end_index": 26,
+            "action_start_index": 6,
+            "planned_pose": [
+              -0.22475257388056766,
+              -0.00808866249303955,
+              0.24,
+              -0.004440339282155037,
+              0.9999473690986633,
+              -0.008510800078511238,
+              0.0036111031658947468
+            ],
+            "result": {
+              "duration_seconds": 1.920887581317992,
+              "failure": null,
+              "position_count": 38,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.0012029921635985374,
+              0.005561087746173143,
+              0.17474937438964844,
+              -0.004440339282155037,
+              0.9999473690986633,
+              -0.008510800078511238,
+              0.0036111031658947468
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 39,
+            "action_start_index": 26,
+            "planned_pose": [
+              -0.22475257388056766,
+              -0.00808866249303955,
+              0.12,
+              -0.004440339282155037,
+              0.9999473690986633,
+              -0.008510800078511238,
+              0.0036111031658947468
+            ],
+            "result": {
+              "duration_seconds": 1.2925826682899586,
+              "failure": null,
+              "position_count": 25,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.2212267965078354,
+              -0.0071132006123661995,
+              0.23229652643203735,
+              -0.0048026773147284985,
+              0.999941885471344,
+              -0.008548105135560036,
+              0.004487066529691219
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 70,
+            "action_start_index": 39,
+            "planned_pose": [
+              -0.162225109976908,
+              0.033914852694493014,
+              0.015,
+              -0.004439772572368383,
+              0.9999490976333618,
+              -0.00875138957053423,
+              0.002336659003049135
+            ],
+            "result": {
+              "duration_seconds": 1.5799311980775423,
+              "failure": null,
+              "position_count": 31,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.22955313324928284,
+              -0.008346695452928543,
+              0.12855932116508484,
+              -0.004439772572368383,
+              0.9999490976333618,
+              -0.00875138957053423,
+              0.002336659003049135
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 84,
+            "action_start_index": 70,
+            "planned_pose": [
+              -0.12888143229764049,
+              0.056010092149992134,
+              0.015,
+              -0.005400098394602537,
+              0.9999458193778992,
+              -0.008702960796654224,
+              0.0018486501649022102
+            ],
+            "result": {
+              "duration_seconds": 0.7446591067718182,
+              "failure": null,
+              "position_count": 14,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.16693304479122162,
+              0.03508837893605232,
+              0.011321917176246643,
+              -0.005400098394602537,
+              0.9999458193778992,
+              -0.008702960796654224,
+              0.0018486501649022102
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 98,
+            "action_start_index": 84,
+            "planned_pose": [
+              -0.09981998005308268,
+              0.06676502949961603,
+              0.015,
+              -0.0054183281026780605,
+              0.9999492764472961,
+              -0.008241012692451477,
+              0.0020247395150363445
+            ],
+            "result": {
+              "duration_seconds": 0.7098081568191027,
+              "failure": null,
+              "position_count": 14,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.13185346126556396,
+              0.05577272176742554,
+              0.015310406684875488,
+              -0.0054183281026780605,
+              0.9999492764472961,
+              -0.008241012692451477,
+              0.0020247395150363445
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 112,
+            "action_start_index": 98,
+            "planned_pose": [
+              -0.07012100939709265,
+              0.07271580043565831,
+              0.015,
+              -0.005384597461670637,
+              0.9999508261680603,
+              -0.008053186349570751,
+              0.0020987894386053085
+            ],
+            "result": {
+              "duration_seconds": 0.7196206591700369,
+              "failure": null,
+              "position_count": 14,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.1022549644112587,
+              0.0664733424782753,
+              0.015227943658828735,
+              -0.005384597461670637,
+              0.9999508261680603,
+              -0.008053186349570751,
+              0.0020987894386053085
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 126,
+            "action_start_index": 112,
+            "planned_pose": [
+              -0.040325192204627075,
+              0.07746058445658595,
+              0.015,
+              -0.005342014133930206,
+              0.9999514818191528,
+              -0.007995068095624447,
+              0.0021537397988140583
+            ],
+            "result": {
+              "duration_seconds": 0.7351666077190516,
+              "failure": null,
+              "position_count": 14,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.07256239652633667,
+              0.07237828522920609,
+              0.015188142657279968,
+              -0.005342014133930206,
+              0.9999514818191528,
+              -0.007995068095624447,
+              0.0021537397988140583
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 141,
+            "action_start_index": 126,
+            "planned_pose": [
+              -0.010391884420426833,
+              0.08095935144931295,
+              0.015,
+              -0.005303589627146721,
+              0.9999517202377319,
+              -0.007969539612531662,
+              0.0021882650908082724
+            ],
+            "result": {
+              "duration_seconds": 0.7548046515143626,
+              "failure": null,
+              "position_count": 15,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.042840175330638885,
+              0.07710816711187363,
+              0.015151135623455048,
+              -0.005303589627146721,
+              0.9999517202377319,
+              -0.007969539612531662,
+              0.0021882650908082724
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 156,
+            "action_start_index": 141,
+            "planned_pose": [
+              0.020085596292126286,
+              0.08339457933976865,
+              0.015,
+              -0.0052640680223703384,
+              0.999951958656311,
+              -0.007971555925905704,
+              0.0021918551065027714
+            ],
+            "result": {
+              "duration_seconds": 0.7811651050367393,
+              "failure": null,
+              "position_count": 15,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.012749267742037773,
+              0.08063594996929169,
+              0.015114016830921173,
+              -0.0052640680223703384,
+              0.999951958656311,
+              -0.007971555925905704,
+              0.0021918551065027714
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 172,
+            "action_start_index": 156,
+            "planned_pose": [
+              0.051117553181885725,
+              0.08534309035586157,
+              0.015,
+              -0.005227901041507721,
+              0.9999518394470215,
+              -0.007997127249836922,
+              0.0022248460445553064
+            ],
+            "result": {
+              "duration_seconds": 0.8182008491409768,
+              "failure": null,
+              "position_count": 16,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.017640171572566032,
+              0.083067387342453,
+              0.015136316418647766,
+              -0.005227901041507721,
+              0.9999518394470215,
+              -0.007997127249836922,
+              0.0022248460445553064
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 194,
+            "action_start_index": 172,
+            "planned_pose": [
+              0.08308630344535509,
+              0.08693734471397119,
+              0.015,
+              -0.005191323347389698,
+              0.9999518394470215,
+              -0.008024672977626324,
+              0.0022430589888244867
+            ],
+            "result": {
+              "duration_seconds": 1.1248485735818217,
+              "failure": null,
+              "position_count": 22,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.048702627420425415,
+              0.08502845466136932,
+              0.015131436288356781,
+              -0.005191323347389698,
+              0.9999518394470215,
+              -0.008024672977626324,
+              0.0022430589888244867
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 213,
+            "action_start_index": 194,
+            "planned_pose": [
+              0.11872326186593725,
+              0.08848020432679879,
+              0.015,
+              -0.005154830869287252,
+              0.9999518394470215,
+              -0.008035409264266491,
+              0.0022479670587927103
+            ],
+            "result": {
+              "duration_seconds": 0.9826046912417385,
+              "failure": null,
+              "position_count": 19,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.08251405507326126,
+              0.08674301952123642,
+              0.015152327716350555,
+              -0.005154830869287252,
+              0.9999518394470215,
+              -0.008035409264266491,
+              0.0022479670587927103
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 235,
+            "action_start_index": 213,
+            "planned_pose": [
+              0.15323970325593694,
+              0.09003564023272118,
+              0.015,
+              -0.005119129549711943,
+              0.9999520182609558,
+              -0.008054903708398342,
+              0.002214683685451746
+            ],
+            "result": {
+              "duration_seconds": 1.1476874700327018,
+              "failure": null,
+              "position_count": 22,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.11633159965276718,
+              0.08818633109331131,
+              0.015107512474060059,
+              -0.005119129549711943,
+              0.9999520182609558,
+              -0.008054903708398342,
+              0.002214683685451746
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 235,
+            "action_start_index": 235,
+            "planned_pose": [
+              0.18882499438518072,
+              0.09201761188083155,
+              0.015,
+              -0.0050802044570446014,
+              0.9999523758888245,
+              -0.008061357773840427,
+              0.0021070605143904686
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              0.15076944231987,
+              0.08973690867424011,
+              0.015075795352458954,
+              -0.0050802044570446014,
+              0.9999523758888245,
+              -0.008061357773840427,
+              0.0021070605143904686
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 235,
+            "action_start_index": 235,
+            "planned_pose": [
+              0.1977960816022647,
+              0.0741425008561841,
+              0.015,
+              -0.0050802044570446014,
+              0.9999523758888245,
+              -0.008061357773840427,
+              0.0021070605143904686
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              0.15076944231987,
+              0.08973690867424011,
+              0.015075795352458954,
+              -0.0050802044570446014,
+              0.9999523758888245,
+              -0.008061357773840427,
+              0.0021070605143904686
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 235,
+            "action_start_index": 235,
+            "planned_pose": [
+              0.20228162521080667,
+              0.06520494534386037,
+              0.015,
+              -0.0050802044570446014,
+              0.9999523758888245,
+              -0.008061357773840427,
+              0.0021070605143904686
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              0.15076944231987,
+              0.08973690867424011,
+              0.015075795352458954,
+              -0.0050802044570446014,
+              0.9999523758888245,
+              -0.008061357773840427,
+              0.0021070605143904686
+            ],
+            "use_attached": false
+          }
+        ],
+        "planner_status": "screw plan failed",
+        "seed": 66128,
+        "status": "planning_failure",
+        "zero_step_failure": true
+      },
+      {
+        "candidate_id": "CandidateF",
+        "failed_phase": "move_to_precontact",
+        "object_shape": "cylinder",
+        "phase_environment_steps": 27,
+        "planner_calls": [
+          {
+            "action_end_index": 33,
+            "action_start_index": 6,
+            "planned_pose": [
+              -0.33472899068705897,
+              -0.026982393570557733,
+              0.24,
+              0.006877966225147247,
+              0.999963104724884,
+              -0.0034766101744025946,
+              -0.003792044473811984
+            ],
+            "result": {
+              "duration_seconds": 2.6534803177986066,
+              "failure": null,
+              "position_count": 53,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.0010222233831882477,
+              -0.010851025581359863,
+              0.17198660969734192,
+              0.006877966225147247,
+              0.999963104724884,
+              -0.0034766101744025946,
+              -0.003792044473811984
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 33,
+            "action_start_index": 33,
+            "planned_pose": [
+              -0.33472899068705897,
+              -0.026982393570557733,
+              0.12,
+              0.006877966225147247,
+              0.999963104724884,
+              -0.0034766101744025946,
+              -0.003792044473811984
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              -0.3355770409107208,
+              -0.025097528472542763,
+              0.22840404510498047,
+              0.0060888901352882385,
+              0.9999709725379944,
+              -0.003197847865521908,
+              -0.0032465492840856314
+            ],
+            "use_attached": false
+          }
+        ],
+        "planner_status": "screw plan failed",
+        "seed": 66154,
+        "status": "planning_failure",
+        "zero_step_failure": false
+      },
+      {
+        "candidate_id": "CandidateF",
+        "failed_phase": "move_to_precontact",
+        "object_shape": "cylinder",
+        "phase_environment_steps": 25,
+        "planner_calls": [
+          {
+            "action_end_index": 31,
+            "action_start_index": 6,
+            "planned_pose": [
+              -0.3293233955655177,
+              -0.023859684557855573,
+              0.24,
+              0.0012911963276565075,
+              0.9998651146888733,
+              -0.01636148802936077,
+              0.0006056154961697757
+            ],
+            "result": {
+              "duration_seconds": 2.400816489140001,
+              "failure": null,
+              "position_count": 48,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.0013726670295000076,
+              -0.020078325644135475,
+              0.16383320093154907,
+              0.0012911963276565075,
+              0.9998651146888733,
+              -0.01636148802936077,
+              0.0006056154961697757
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 31,
+            "action_start_index": 31,
+            "planned_pose": [
+              -0.3293233955655177,
+              -0.023859684557855573,
+              0.12,
+              0.0012911963276565075,
+              0.9998651146888733,
+              -0.01636148802936077,
+              0.0006056154961697757
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              -0.3267430365085602,
+              -0.022493373602628708,
+              0.22818517684936523,
+              0.0009160520858131349,
+              0.9998697638511658,
+              -0.016057241708040237,
+              0.001344302436336875
+            ],
+            "use_attached": false
+          }
+        ],
+        "planner_status": "screw plan failed",
+        "seed": 66165,
+        "status": "planning_failure",
+        "zero_step_failure": false
+      },
+      {
+        "candidate_id": "CandidateF",
+        "failed_phase": "move_to_precontact",
+        "object_shape": "cylinder",
+        "phase_environment_steps": 25,
+        "planner_calls": [
+          {
+            "action_end_index": 31,
+            "action_start_index": 6,
+            "planned_pose": [
+              -0.3257576746707302,
+              0.02895470948890049,
+              0.24,
+              -0.009913218207657337,
+              0.9999271631240845,
+              0.002204352058470249,
+              0.006520609371364117
+            ],
+            "result": {
+              "duration_seconds": 2.401591202490068,
+              "failure": null,
+              "position_count": 48,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.006012138910591602,
+              0.008075430057942867,
+              0.17162568867206573,
+              -0.009913218207657337,
+              0.9999271631240845,
+              0.002204352058470249,
+              0.006520609371364117
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 31,
+            "action_start_index": 31,
+            "planned_pose": [
+              -0.3257576746707302,
+              0.02895470948890049,
+              0.12,
+              -0.009913218207657337,
+              0.9999271631240845,
+              0.002204352058470249,
+              0.006520609371364117
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              -0.32303792238235474,
+              0.026790471747517586,
+              0.22839024662971497,
+              -0.008936204016208649,
+              0.9999314546585083,
+              0.002139476127922535,
+              0.007256286684423685
+            ],
+            "use_attached": false
+          }
+        ],
+        "planner_status": "screw plan failed",
+        "seed": 66183,
+        "status": "planning_failure",
+        "zero_step_failure": false
+      },
+      {
+        "candidate_id": "CandidateJ",
+        "failed_phase": "establish_contact",
+        "object_shape": "box",
+        "phase_environment_steps": 0,
+        "planner_calls": [
+          {
+            "action_end_index": 18,
+            "action_start_index": 6,
+            "planned_pose": [
+              0.0007168129086494446,
+              -0.004679197445511818,
+              0.32,
+              -0.00048314654850400984,
+              0.99994957447052,
+              -0.007731352932751179,
+              0.0063949525356292725
+            ],
+            "result": {
+              "duration_seconds": 1.1914237658299747,
+              "failure": null,
+              "position_count": 23,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.0007168129086494446,
+              -0.004679197445511818,
+              0.17324551939964294,
+              -0.00048314654850400984,
+              0.99994957447052,
+              -0.007731352932751179,
+              0.0063949525356292725
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 61,
+            "action_start_index": 18,
+            "planned_pose": [
+              -0.27325042591778403,
+              -0.0044100737669050954,
+              0.32,
+              -0.00046191367437131703,
+              0.9999158382415771,
+              -0.007692406419664621,
+              0.01042852271348238
+            ],
+            "result": {
+              "duration_seconds": 2.1758016688475417,
+              "failure": null,
+              "position_count": 43,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.002437260001897812,
+              -0.004621624480932951,
+              0.311911404132843,
+              -0.00046191367437131703,
+              0.9999158382415771,
+              -0.007692406419664621,
+              0.01042852271348238
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 79,
+            "action_start_index": 61,
+            "planned_pose": [
+              -0.27325042591778403,
+              -0.0044100737669050954,
+              0.12,
+              -0.0005173518438823521,
+              0.9999143481254578,
+              -0.007635722868144512,
+              0.010612888261675835
+            ],
+            "result": {
+              "duration_seconds": 1.7710500839761618,
+              "failure": null,
+              "position_count": 35,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.2733134925365448,
+              -0.004253130406141281,
+              0.31106626987457275,
+              -0.0005173518438823521,
+              0.9999143481254578,
+              -0.007635722868144512,
+              0.010612888261675835
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 79,
+            "action_start_index": 79,
+            "planned_pose": [
+              -0.20110223444658504,
+              -0.02489427592970357,
+              0.025,
+              -0.0004768594226334244,
+              0.9999339580535889,
+              -0.007728452328592539,
+              0.008493440225720406
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              -0.2815271019935608,
+              -0.004360522609204054,
+              0.12739714980125427,
+              -0.0004768594226334244,
+              0.9999339580535889,
+              -0.007728452328592539,
+              0.008493440225720406
+            ],
+            "use_attached": false
+          }
+        ],
+        "planner_status": "screw plan failed",
+        "seed": 66611,
+        "status": "planning_failure",
+        "zero_step_failure": true
+      },
+      {
+        "candidate_id": "CandidateP",
+        "failed_phase": "move_to_precontact",
+        "object_shape": "box",
+        "phase_environment_steps": 115,
+        "planner_calls": [
+          {
+            "action_end_index": 18,
+            "action_start_index": 6,
+            "planned_pose": [
+              0.001580926589667797,
+              0.011815754696726799,
+              0.32,
+              -0.0012933341786265373,
+              0.9999461770057678,
+              0.008758237585425377,
+              0.005402501672506332
+            ],
+            "result": {
+              "duration_seconds": 1.1783145122489536,
+              "failure": null,
+              "position_count": 23,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.001580926589667797,
+              0.011815754696726799,
+              0.17726433277130127,
+              -0.0012933341786265373,
+              0.9999461770057678,
+              0.008758237585425377,
+              0.005402501672506332
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 68,
+            "action_start_index": 18,
+            "planned_pose": [
+              -0.3288446859081383,
+              -0.01460004544315575,
+              0.32,
+              -0.0013049418339505792,
+              0.9999166131019592,
+              0.008807330392301083,
+              0.009345323778688908
+            ],
+            "result": {
+              "duration_seconds": 2.5320741448453603,
+              "failure": null,
+              "position_count": 50,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.0014384100213646889,
+              0.011803707107901573,
+              0.3122473955154419,
+              -0.0013049418339505792,
+              0.9999166131019592,
+              0.008807330392301083,
+              0.009345323778688908
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 68,
+            "action_start_index": 68,
+            "planned_pose": [
+              -0.3288446859081383,
+              -0.01460004544315575,
+              0.12,
+              -0.0020582065917551517,
+              0.9999106526374817,
+              0.009210574440658092,
+              0.0094644445925951
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              -0.32902607321739197,
+              -0.01299731433391571,
+              0.30852383375167847,
+              -0.0020582065917551517,
+              0.9999106526374817,
+              0.009210574440658092,
+              0.0094644445925951
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 76,
+            "action_start_index": 68,
+            "planned_pose": [
+              -0.33149739358111135,
+              -0.030071022608028377,
+              0.32,
+              -0.0020582065917551517,
+              0.9999106526374817,
+              0.009210574440658092,
+              0.0094644445925951
+            ],
+            "result": {
+              "duration_seconds": 0.4197304477867266,
+              "failure": null,
+              "position_count": 8,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.32902607321739197,
+              -0.01299731433391571,
+              0.30852383375167847,
+              -0.0020582065917551517,
+              0.9999106526374817,
+              0.009210574440658092,
+              0.0094644445925951
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 76,
+            "action_start_index": 76,
+            "planned_pose": [
+              -0.33149739358111135,
+              -0.030071022608028377,
+              0.12,
+              -0.002108511049300432,
+              0.9999118447303772,
+              0.008876118808984756,
+              0.009648488834500313
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              -0.33151543140411377,
+              -0.02729371003806591,
+              0.3180639147758484,
+              -0.002108511049300432,
+              0.9999118447303772,
+              0.008876118808984756,
+              0.009648488834500313
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 90,
+            "action_start_index": 76,
+            "planned_pose": [
+              -0.3241953047777882,
+              0.0003923275357627029,
+              0.32,
+              -0.002108511049300432,
+              0.9999118447303772,
+              0.008876118808984756,
+              0.009648488834500313
+            ],
+            "result": {
+              "duration_seconds": 0.7002761586767271,
+              "failure": null,
+              "position_count": 14,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.33151543140411377,
+              -0.02729371003806591,
+              0.3180639147758484,
+              -0.002108511049300432,
+              0.9999118447303772,
+              0.008876118808984756,
+              0.009648488834500313
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 90,
+            "action_start_index": 90,
+            "planned_pose": [
+              -0.3241953047777882,
+              0.0003923275357627029,
+              0.12,
+              -0.002294328762218356,
+              0.9999083280563354,
+              0.009379602037370205,
+              0.00948332343250513
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              -0.3252858817577362,
+              0.0014608445344492793,
+              0.31964173913002014,
+              -0.002294328762218356,
+              0.9999083280563354,
+              0.009379602037370205,
+              0.00948332343250513
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 103,
+            "action_start_index": 90,
+            "planned_pose": [
+              -0.3321080392329531,
+              -0.045755891250198986,
+              0.32,
+              -0.002294328762218356,
+              0.9999083280563354,
+              0.009379602037370205,
+              0.00948332343250513
+            ],
+            "result": {
+              "duration_seconds": 0.6700976134267284,
+              "failure": null,
+              "position_count": 13,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.3252858817577362,
+              0.0014608445344492793,
+              0.31964173913002014,
+              -0.002294328762218356,
+              0.9999083280563354,
+              0.009379602037370205,
+              0.00948332343250513
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 103,
+            "action_start_index": 103,
+            "planned_pose": [
+              -0.3321080392329531,
+              -0.045755891250198986,
+              0.12,
+              -0.0027315535116940737,
+              0.9999100565910339,
+              0.009184849448502064,
+              0.00938225444406271
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              -0.3332010805606842,
+              -0.04168979451060295,
+              0.3195343613624573,
+              -0.0027315535116940737,
+              0.9999100565910339,
+              0.009184849448502064,
+              0.00938225444406271
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 121,
+            "action_start_index": 103,
+            "planned_pose": [
+              -0.31762880239025315,
+              0.014649572670386593,
+              0.32,
+              -0.0027315535116940737,
+              0.9999100565910339,
+              0.009184849448502064,
+              0.00938225444406271
+            ],
+            "result": {
+              "duration_seconds": 0.9253870016537309,
+              "failure": null,
+              "position_count": 18,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              -0.3332010805606842,
+              -0.04168979451060295,
+              0.3195343613624573,
+              -0.0027315535116940737,
+              0.9999100565910339,
+              0.009184849448502064,
+              0.00938225444406271
+            ],
+            "use_attached": false
+          },
+          {
+            "action_end_index": 121,
+            "action_start_index": 121,
+            "planned_pose": [
+              -0.31762880239025315,
+              0.014649572670386593,
+              0.12,
+              -0.0031766602769494057,
+              0.9999054670333862,
+              0.009874727576971054,
+              0.00902661681175232
+            ],
+            "result": {
+              "duration_seconds": null,
+              "failure": "planning_failure",
+              "position_count": 0,
+              "status": "screw plan failed",
+              "success": false
+            },
+            "tcp_pose_before": [
+              -0.31986162066459656,
+              0.016327835619449615,
+              0.31921306252479553,
+              -0.0031766602769494057,
+              0.9999054670333862,
+              0.009874727576971054,
+              0.00902661681175232
+            ],
+            "use_attached": false
+          }
+        ],
+        "planner_status": "screw plan failed",
+        "seed": 68203,
+        "status": "planning_failure",
+        "zero_step_failure": false
+      }
+    ],
+    "zero_step_failure_count": 9
+  },
+  "replay_passed": true,
+  "replay_runner_source_commit": "e63931c8ff66c271c67e8208f982d449bdf41fbf",
+  "replay_validation_sha256": "sha256:0a50d9724298b792eaa570b3f32ac457c20f23742e86db70baaf3425e4f0b60d",
+  "replayed_case_count": 55,
+  "replayed_worker_episode_count": 110,
+  "schema_version": "langmani-v2-phase2b3-root-cause-summary-v1",
   "shape_failure_counts": {
     "box": {
       "IK_OR_MOTION_PLANNING_FAILURE": 2,
       "MISSED_CONTACT": 2,
-      "PREAPPROACH_PLANNING_FAILURE": 4,
-      "STALLED_PROGRESS": 58,
-      "UNKNOWN": 17
+      "None": 2,
+      "PREAPPROACH_PLANNING_FAILURE": 1,
+      "STALLED_PROGRESS": 12,
+      "UNKNOWN": 9
     },
     "cylinder": {
       "IK_OR_MOTION_PLANNING_FAILURE": 3,
       "LOSS_OF_CONTACT": 4,
-      "OBJECT_WORKSPACE_VIOLATION": 8,
-      "PREAPPROACH_PLANNING_FAILURE": 10,
-      "PUSH_DIRECTION_ERROR": 6,
-      "STALLED_PROGRESS": 49,
-      "UNKNOWN": 8
+      "OBJECT_WORKSPACE_VIOLATION": 5,
+      "PREAPPROACH_PLANNING_FAILURE": 7,
+      "PUSH_DIRECTION_ERROR": 5,
+      "STALLED_PROGRESS": 1,
+      "UNKNOWN": 2
     }
   },
-  "timeout_interpretation": "no_progress_stall timeouts are STALLED_PROGRESS; contact-loss and rollout attribution requires step telemetry",
-  "workspace_violation_interpretation": "target object footprint crossed the native environment boundary; historical reports contain no robot-link workspace violation flag"
+  "timeout_analysis": {
+    "contact_loss_count": 13,
+    "count": 13,
+    "latched_no_progress_stall_count": 13,
+    "mean_distance_improvement": 0.25005357741163325,
+    "records": [
+      {
+        "candidate_id": "CandidateE",
+        "contact_event_count": 8,
+        "contact_lost": true,
+        "distance_improvement": 0.25546588003635406,
+        "episode_steps": 250,
+        "failed_phase": "corrective_push_1",
+        "final_target_distance": 0.16831965744495392,
+        "initial_target_distance": 0.423785537481308,
+        "latched_no_progress_stall": true,
+        "maximum_object_displacement": 0.26788266728766913,
+        "minimum_target_distance": 0.16831965744495392,
+        "object_shape": "box",
+        "seed": 66027
+      },
+      {
+        "candidate_id": "CandidateE",
+        "contact_event_count": 8,
+        "contact_lost": true,
+        "distance_improvement": 0.258140504360199,
+        "episode_steps": 250,
+        "failed_phase": "corrective_push_1",
+        "final_target_distance": 0.15245923399925232,
+        "initial_target_distance": 0.4105997383594513,
+        "latched_no_progress_stall": true,
+        "maximum_object_displacement": 0.2676951946500117,
+        "minimum_target_distance": 0.15245923399925232,
+        "object_shape": "box",
+        "seed": 66042
+      },
+      {
+        "candidate_id": "CandidateE",
+        "contact_event_count": 9,
+        "contact_lost": true,
+        "distance_improvement": 0.3179549388587475,
+        "episode_steps": 250,
+        "failed_phase": "corrective_push_1",
+        "final_target_distance": 0.05697857216000557,
+        "initial_target_distance": 0.37493351101875305,
+        "latched_no_progress_stall": true,
+        "maximum_object_displacement": 0.3246686297953418,
+        "minimum_target_distance": 0.05697857216000557,
+        "object_shape": "box",
+        "seed": 66043
+      },
+      {
+        "candidate_id": "CandidateE",
+        "contact_event_count": 17,
+        "contact_lost": true,
+        "distance_improvement": 0.3042107969522476,
+        "episode_steps": 250,
+        "failed_phase": "corrective_push_1",
+        "final_target_distance": 0.08112634718418121,
+        "initial_target_distance": 0.38533714413642883,
+        "latched_no_progress_stall": true,
+        "maximum_object_displacement": 0.32627087817435907,
+        "minimum_target_distance": 0.08112634718418121,
+        "object_shape": "box",
+        "seed": 66050
+      },
+      {
+        "candidate_id": "CandidateE",
+        "contact_event_count": 14,
+        "contact_lost": true,
+        "distance_improvement": 0.31284209340810776,
+        "episode_steps": 250,
+        "failed_phase": "corrective_push_1",
+        "final_target_distance": 0.10909900814294815,
+        "initial_target_distance": 0.4219411015510559,
+        "latched_no_progress_stall": true,
+        "maximum_object_displacement": 0.32047606438493026,
+        "minimum_target_distance": 0.10909900814294815,
+        "object_shape": "box",
+        "seed": 66071
+      },
+      {
+        "candidate_id": "CandidateE",
+        "contact_event_count": 6,
+        "contact_lost": true,
+        "distance_improvement": 0.18446537852287292,
+        "episode_steps": 250,
+        "failed_phase": "corrective_push_1",
+        "final_target_distance": 0.29872632026672363,
+        "initial_target_distance": 0.48319169878959656,
+        "latched_no_progress_stall": true,
+        "maximum_object_displacement": 0.19455607692698032,
+        "minimum_target_distance": 0.2987262010574341,
+        "object_shape": "box",
+        "seed": 66079
+      },
+      {
+        "candidate_id": "CandidateE",
+        "contact_event_count": 4,
+        "contact_lost": true,
+        "distance_improvement": 0.2060137689113617,
+        "episode_steps": 250,
+        "failed_phase": "corrective_push_1",
+        "final_target_distance": 0.24490946531295776,
+        "initial_target_distance": 0.45092323422431946,
+        "latched_no_progress_stall": true,
+        "maximum_object_displacement": 0.2172305279612202,
+        "minimum_target_distance": 0.2449088990688324,
+        "object_shape": "box",
+        "seed": 66087
+      },
+      {
+        "candidate_id": "CandidateF",
+        "contact_event_count": 23,
+        "contact_lost": true,
+        "distance_improvement": 0.1670561134815216,
+        "episode_steps": 250,
+        "failed_phase": "primary_push",
+        "final_target_distance": 0.19600427150726318,
+        "initial_target_distance": 0.3630603849887848,
+        "latched_no_progress_stall": true,
+        "maximum_object_displacement": 0.3636942399279358,
+        "minimum_target_distance": 0.18006405234336853,
+        "object_shape": "box",
+        "seed": 66100
+      },
+      {
+        "candidate_id": "CandidateF",
+        "contact_event_count": 55,
+        "contact_lost": true,
+        "distance_improvement": 0.2783273756504059,
+        "episode_steps": 250,
+        "failed_phase": "primary_push",
+        "final_target_distance": 0.0703517496585846,
+        "initial_target_distance": 0.3486791253089905,
+        "latched_no_progress_stall": true,
+        "maximum_object_displacement": 0.34283338018165244,
+        "minimum_target_distance": 0.06998502463102341,
+        "object_shape": "box",
+        "seed": 66101
+      },
+      {
+        "candidate_id": "CandidateF",
+        "contact_event_count": 55,
+        "contact_lost": true,
+        "distance_improvement": 0.24531500041484833,
+        "episode_steps": 250,
+        "failed_phase": "primary_push",
+        "final_target_distance": 0.16677595674991608,
+        "initial_target_distance": 0.4120909571647644,
+        "latched_no_progress_stall": true,
+        "maximum_object_displacement": 0.33039910650829474,
+        "minimum_target_distance": 0.16677595674991608,
+        "object_shape": "box",
+        "seed": 66102
+      },
+      {
+        "candidate_id": "CandidateF",
+        "contact_event_count": 51,
+        "contact_lost": true,
+        "distance_improvement": 0.3246848061680794,
+        "episode_steps": 250,
+        "failed_phase": "primary_push",
+        "final_target_distance": 0.10189544409513474,
+        "initial_target_distance": 0.4265802502632141,
+        "latched_no_progress_stall": true,
+        "maximum_object_displacement": 0.3496589561344853,
+        "minimum_target_distance": 0.10189544409513474,
+        "object_shape": "box",
+        "seed": 66103
+      },
+      {
+        "candidate_id": "CandidateF",
+        "contact_event_count": 59,
+        "contact_lost": true,
+        "distance_improvement": 0.18029113113880157,
+        "episode_steps": 250,
+        "failed_phase": "primary_push",
+        "final_target_distance": 0.1718388944864273,
+        "initial_target_distance": 0.3521300256252289,
+        "latched_no_progress_stall": true,
+        "maximum_object_displacement": 0.3524448379923629,
+        "minimum_target_distance": 0.16364693641662598,
+        "object_shape": "cylinder",
+        "seed": 66104
+      },
+      {
+        "candidate_id": "CandidateP",
+        "contact_event_count": 8,
+        "contact_lost": true,
+        "distance_improvement": 0.21592871844768524,
+        "episode_steps": 250,
+        "failed_phase": "corrective_push_1",
+        "final_target_distance": 0.18882615864276886,
+        "initial_target_distance": 0.4047548770904541,
+        "latched_no_progress_stall": true,
+        "maximum_object_displacement": 0.22927458646610266,
+        "minimum_target_distance": 0.18882615864276886,
+        "object_shape": "box",
+        "seed": 68202
+      }
+    ]
+  },
+  "workspace_violation_analysis": {
+    "count": 5,
+    "entity_counts": {
+      "TARGET_OBJECT": 5
+    },
+    "records": [
+      {
+        "candidate_id": "CandidateG",
+        "detail": {
+          "all_signed_workspace_margins": {
+            "x_max": 0.07389989376068115,
+            "x_min": 0.7361001062393189,
+            "y_max": -0.003142167329788205,
+            "y_min": 0.7131421673297882
+          },
+          "environment_planar_radius": 0.025,
+          "executed_pose": [
+            0.10174011439085007,
+            -0.033090703189373016,
+            0.3121677041053772
+          ],
+          "nearest_workspace_boundary": "y_max",
+          "object_pose": [
+            0.33110010623931885,
+            0.3581421673297882,
+            0.025033481419086456,
+            0.36457765102386475,
+            -0.8497532606124878,
+            0.3498364984989166,
+            -0.15038913488388062
+          ],
+          "object_support_extent_in_push_direction": 0.025,
+          "planned_pose": [
+            0.11072818325260929,
+            0.04614437571710226,
+            0.015,
+            0.00426282174885273,
+            0.9998669624328613,
+            0.014374447055161,
+            -0.006417179014533758
+          ],
+          "planner_call": {
+            "action_end_index": 181,
+            "action_start_index": 175,
+            "planned_pose": [
+              0.11072818325260929,
+              0.04614437571710226,
+              0.015,
+              0.00426282174885273,
+              0.9998669624328613,
+              0.014374447055161,
+              -0.006417179014533758
+            ],
+            "result": {
+              "duration_seconds": 1.716517474841131,
+              "failure": null,
+              "position_count": 34,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.10160420835018158,
+              -0.03467340022325516,
+              0.31883007287979126,
+              0.0054071759805083275,
+              0.999890148639679,
+              0.012031249701976776,
+              -0.006757233291864395
+            ],
+            "use_attached": false
+          },
+          "push_direction": [
+            -0.8535052155572704,
+            -0.5210842993379644
+          ],
+          "signed_workspace_margin": -0.003142167329788205,
+          "violation_step": 181
+        },
+        "entity": "TARGET_OBJECT",
+        "object_shape": "cylinder",
+        "seed": 66212
+      },
+      {
+        "candidate_id": "CandidateH",
+        "detail": {
+          "all_signed_workspace_margins": {
+            "x_max": 0.04393410563468932,
+            "x_min": 0.7660658943653107,
+            "y_max": -0.009075988531112668,
+            "y_min": 0.7190759885311127
+          },
+          "environment_planar_radius": 0.025,
+          "executed_pose": [
+            0.11255865544080734,
+            -0.045809052884578705,
+            0.29684457182884216
+          ],
+          "nearest_workspace_boundary": "y_max",
+          "object_pose": [
+            0.36106589436531067,
+            0.36407598853111267,
+            0.025062186643481255,
+            0.009297175332903862,
+            -0.9261491894721985,
+            0.3770228624343872,
+            -0.003881934331730008
+          ],
+          "object_support_extent_in_push_direction": 0.025,
+          "planned_pose": [
+            0.12290649283525558,
+            0.025547322467903207,
+            0.015,
+            -0.0070762718096375465,
+            0.9999058246612549,
+            -0.010990322567522526,
+            -0.004164500627666712
+          ],
+          "planner_call": {
+            "action_end_index": 218,
+            "action_start_index": 209,
+            "planned_pose": [
+              0.12290649283525558,
+              0.025547322467903207,
+              0.015,
+              -0.0070762718096375465,
+              0.9999058246612549,
+              -0.010990322567522526,
+              -0.004164500627666712
+            ],
+            "result": {
+              "duration_seconds": 1.726477766586275,
+              "failure": null,
+              "position_count": 34,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.11222802102565765,
+              -0.05115602910518646,
+              0.3184460401535034,
+              -0.005744199268519878,
+              0.9998614192008972,
+              -0.014961106702685356,
+              -0.004503725562244654
+            ],
+            "use_attached": false
+          },
+          "push_direction": [
+            -0.8526539034042873,
+            -0.5224761439620307
+          ],
+          "signed_workspace_margin": -0.009075988531112668,
+          "violation_step": 218
+        },
+        "entity": "TARGET_OBJECT",
+        "object_shape": "cylinder",
+        "seed": 66428
+      },
+      {
+        "candidate_id": "CandidateJ",
+        "detail": {
+          "all_signed_workspace_margins": {
+            "x_max": 0.08894303321838379,
+            "x_min": 0.7210569667816162,
+            "y_max": 0.7122324514389038,
+            "y_min": -0.0022324514389038264
+          },
+          "environment_planar_radius": 0.025,
+          "executed_pose": [
+            0.09772902727127075,
+            -0.011040480807423592,
+            0.3196004331111908
+          ],
+          "nearest_workspace_boundary": "y_min",
+          "object_pose": [
+            0.3160569667816162,
+            -0.3572324514389038,
+            0.02442239411175251,
+            0.8312798738479614,
+            -0.4429333209991455,
+            -0.15360625088214874,
+            0.2986450493335724
+          ],
+          "object_support_extent_in_push_direction": 0.025,
+          "planned_pose": [
+            0.10947916662326625,
+            -0.0918419377579715,
+            0.015,
+            0.004398583434522152,
+            0.9998512864112854,
+            -0.015610682778060436,
+            -0.005850282497704029
+          ],
+          "planner_call": {
+            "action_end_index": 174,
+            "action_start_index": 173,
+            "planned_pose": [
+              0.10947916662326625,
+              -0.0918419377579715,
+              0.015,
+              0.004398583434522152,
+              0.9998512864112854,
+              -0.015610682778060436,
+              -0.005850282497704029
+            ],
+            "result": {
+              "duration_seconds": 1.7251589274721282,
+              "failure": null,
+              "position_count": 34,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.09771852940320969,
+              -0.010758436284959316,
+              0.31963735818862915,
+              0.0032950914464890957,
+              0.9999210238456726,
+              -0.010661125183105469,
+              -0.005780865903943777
+            ],
+            "use_attached": false
+          },
+          "push_direction": [
+            -0.8318404040540244,
+            0.555014902667701
+          ],
+          "signed_workspace_margin": -0.0022324514389038264,
+          "violation_step": 174
+        },
+        "entity": "TARGET_OBJECT",
+        "object_shape": "cylinder",
+        "seed": 66613
+      },
+      {
+        "candidate_id": "CandidateK",
+        "detail": {
+          "all_signed_workspace_margins": {
+            "x_max": -0.002077878713607796,
+            "x_min": 0.8120778787136078,
+            "y_max": 0.24757752895355226,
+            "y_min": 0.46242247104644774
+          },
+          "environment_planar_radius": 0.025,
+          "executed_pose": [
+            0.04174298793077469,
+            0.16022196412086487,
+            0.3140178322792053
+          ],
+          "nearest_workspace_boundary": "x_max",
+          "object_pose": [
+            0.4070778787136078,
+            0.10742247104644775,
+            0.02472524531185627,
+            -0.15906351804733276,
+            -0.9192322492599487,
+            0.3543306291103363,
+            0.06450267881155014
+          ],
+          "object_support_extent_in_push_direction": 0.025,
+          "planned_pose": [
+            0.18976770731643186,
+            -0.09908461618594058,
+            0.32,
+            0.0009596660966053605,
+            0.9999377131462097,
+            0.004143225960433483,
+            -0.01032124925404787
+          ],
+          "planner_call": {
+            "action_end_index": 187,
+            "action_start_index": 182,
+            "planned_pose": [
+              0.18976770731643186,
+              -0.09908461618594058,
+              0.32,
+              0.0009596660966053605,
+              0.9999377131462097,
+              0.004143225960433483,
+              -0.01032124925404787
+            ],
+            "result": {
+              "duration_seconds": 27.654095552266153,
+              "failure": null,
+              "position_count": 553,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.03142601251602173,
+              0.17566992342472076,
+              0.31284379959106445,
+              -0.0008563333540223539,
+              0.9999845623970032,
+              0.002380792051553726,
+              -0.004941559862345457
+            ],
+            "use_attached": false
+          },
+          "push_direction": [
+            -0.9091466134583435,
+            0.41647621209046887
+          ],
+          "signed_workspace_margin": -0.002077878713607796,
+          "violation_step": 187
+        },
+        "entity": "TARGET_OBJECT",
+        "object_shape": "cylinder",
+        "seed": 66704
+      },
+      {
+        "candidate_id": "CandidateP",
+        "detail": {
+          "all_signed_workspace_margins": {
+            "x_max": 0.10644501328468323,
+            "x_min": 0.7035549867153168,
+            "y_max": -0.002784062623977658,
+            "y_min": 0.7127840626239776
+          },
+          "environment_planar_radius": 0.025,
+          "executed_pose": [
+            0.05976567044854164,
+            0.15638823807239532,
+            0.016105063259601593
+          ],
+          "nearest_workspace_boundary": "y_max",
+          "object_pose": [
+            0.2985549867153168,
+            0.35778406262397766,
+            0.02459036558866501,
+            0.835541844367981,
+            0.41783270239830017,
+            -0.16618245840072632,
+            -0.3157039284706116
+          ],
+          "object_support_extent_in_push_direction": 0.025,
+          "planned_pose": [
+            0.23509816224019625,
+            0.2440549446300654,
+            0.015,
+            0.0005697357119061053,
+            0.999907374382019,
+            -0.010290748439729214,
+            0.008884874172508717
+          ],
+          "planner_call": {
+            "action_end_index": 178,
+            "action_start_index": 161,
+            "planned_pose": [
+              0.23509816224019625,
+              0.2440549446300654,
+              0.015,
+              0.0005697357119061053,
+              0.999907374382019,
+              -0.010290748439729214,
+              0.008884874172508717
+            ],
+            "result": {
+              "duration_seconds": 77.41604527661643,
+              "failure": null,
+              "position_count": 1548,
+              "status": "Success",
+              "success": true
+            },
+            "tcp_pose_before": [
+              0.013540472835302353,
+              0.1325298547744751,
+              0.016080327332019806,
+              0.0005697357119061053,
+              0.999907374382019,
+              -0.010290748439729214,
+              0.008884874172508717
+            ],
+            "use_attached": false
+          },
+          "push_direction": [
+            -0.8091814392501571,
+            -0.5875588467320056
+          ],
+          "signed_workspace_margin": -0.002784062623977658,
+          "violation_step": 178
+        },
+        "entity": "TARGET_OBJECT",
+        "object_shape": "cylinder",
+        "seed": 68204
+      }
+    ]
+  }
 }
