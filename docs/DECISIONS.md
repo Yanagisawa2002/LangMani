@@ -2884,7 +2884,7 @@ so even 48 further successes could reach only 60/64, below the unchanged 95% gat
 early-stop rule wrote the partial report and stopped. The four failures were two timeouts, one final
 verification failure, and one zero-action initial-lift planning failure; all simulator, finite,
 action-bound, and workspace checks stayed clean. The report SHA-256 is
-`c2dd0aa6d07cd91c79b050c8b7f32340f8860b7891eb5fa261108368411538df`.
+`599ff261a1e05c6cd5c5405586fa3e4e0484c7a3bda3154a13bf40a637dd519a`.
 
 Candidate J is limited to those mechanisms. A recoverable zero-step vertical lift may proceed to
 the already ranked safe staging poses. Contact establishment and correction re-contact use the

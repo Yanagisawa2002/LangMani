@@ -4,6 +4,7 @@
   "candidate_id": "PushToRegionExpert/CandidateI",
   "candidate_implementation_commit": "3da6ecf5afccc09eae5fe69ece9170647a3357a0",
   "runtime_source_commit": "c38fcef94504b390f961556221b33ce4ab349f2d",
+  "run_id": "20260722T065811Z_phase2b2-candidatei-probe_c38fcef",
   "evaluation_mode": "diagnostic_probe",
   "formal_gate_eligible": false,
   "formal_seed_interval_consumed": false,
@@ -30,7 +31,7 @@
   "optimizer_steps": 0,
   "passed": false,
   "collection_started": false,
-  "full_report_sha256": "c2dd0aa6d07cd91c79b050c8b7f32340f8860b7891eb5fa261108368411538df",
+  "full_report_sha256": "599ff261a1e05c6cd5c5405586fa3e4e0484c7a3bda3154a13bf40a637dd519a",
   "generation_audit_sha256": "57fcc9c17e711969dc3933215d0422d8e66ad16943ed5a3e9cd08fc04a38e544",
   "collection_fingerprint": "sha256:c83a392b87ffef63203a49d970dfbf6cd7a16dee2a9b94fcbc106f65138af6ab"
 }

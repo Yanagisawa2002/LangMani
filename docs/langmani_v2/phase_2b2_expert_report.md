@@ -74,7 +74,7 @@ Candidate I stopped after 16/64 diagnostic episodes as predeclared: 12 successes
 remaining episodes could reach only 60/64, below 95%. Its two timeouts, one verification failure,
 and one initial-lift planning failure were preserved; simulator, non-finite action, action-bound,
 and workspace counts were all zero. The formal 66300--66399 schedule remains untouched. The full
-partial report SHA-256 is `c2dd0aa6d07cd91c79b050c8b7f32340f8860b7891eb5fa261108368411538df`,
+partial report SHA-256 is `599ff261a1e05c6cd5c5405586fa3e4e0484c7a3bda3154a13bf40a637dd519a`,
 and the compact summary is
 `artifacts/langmani_v2/phase_2b2/expert_probe_candidate_i_rejected.json`. Collection remains closed.
 
