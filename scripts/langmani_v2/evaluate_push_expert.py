@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import traceback
 from collections import Counter
 from pathlib import Path
@@ -86,6 +87,26 @@ def _environment() -> Any:
     )
 
 
+def _probe_stop_reason(
+    *,
+    completed: int,
+    total: int,
+    successes: int,
+    minimum_success_rate: float,
+    zero_tolerance_failure: bool,
+) -> str | None:
+    if not 0 <= successes <= completed <= total or total < 1:
+        raise ValueError("probe progress counters are inconsistent")
+    if not 0.0 <= minimum_success_rate <= 1.0:
+        raise ValueError("probe minimum_success_rate must be in [0, 1]")
+    if zero_tolerance_failure:
+        return "zero_tolerance_failure"
+    required_successes = math.ceil(minimum_success_rate * total)
+    if successes + (total - completed) < required_successes:
+        return "success_ceiling_below_gate"
+    return None
+
+
 def _sanitized_runtime(runtime: dict[str, object]) -> dict[str, object]:
     gpu_values = runtime.get("gpu")
     gpus: list[dict[str, object]] = []
@@ -132,6 +153,11 @@ def main() -> int:
     )
     results: list[PushExpertResult] = []
     command_errors: list[dict[str, object]] = []
+    probe_stopped_early = False
+    probe_stop_reason: str | None = None
+    gate = config.payload["expert_evaluation"]
+    assert isinstance(gate, dict)
+    minimum_success_rate = float(gate["minimum_success_rate"])
     for index, (seed, task) in enumerate(schedule):
         environment: Any | None = None
         expert: PushToRegionExpert | None = None
@@ -150,6 +176,28 @@ def main() -> int:
                 f"status={result.status.value} steps={result.total_environment_steps}",
                 flush=True,
             )
+            if probe_mode:
+                evaluation = result.final_environment_evaluation
+                zero_tolerance_failure = bool(
+                    result.status is PushExpertStatus.UNEXPECTED_EXCEPTION
+                    or evaluation.get("invalid_action", False)
+                    or evaluation.get("action_out_of_bounds", False)
+                    or evaluation.get("target_outside_workspace", False)
+                )
+                probe_stop_reason = _probe_stop_reason(
+                    completed=len(results),
+                    total=len(schedule),
+                    successes=sum(item.success for item in results),
+                    minimum_success_rate=minimum_success_rate,
+                    zero_tolerance_failure=zero_tolerance_failure,
+                )
+                if probe_stop_reason is not None:
+                    probe_stopped_early = True
+                    print(
+                        f"diagnostic probe stopped early: {probe_stop_reason}",
+                        flush=True,
+                    )
+                    break
         except Exception as error:  # noqa: BLE001 - simulator construction is evidence
             traceback.print_exc()
             command_errors.append(
@@ -215,6 +263,8 @@ def main() -> int:
             and action_bound_violations == 0
             and workspace_violations == 0
         ),
+        "probe_stopped_early": probe_stopped_early,
+        "probe_stop_reason": probe_stop_reason,
     }
     write_json_once(args.output, report)
     print(

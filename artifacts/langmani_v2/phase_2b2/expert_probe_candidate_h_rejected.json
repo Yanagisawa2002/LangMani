@@ -1,0 +1,49 @@
+{
+  "schema_version": "langmani-v2-phase2b2-expert-probe-summary-v0",
+  "dataset_id": "langmani/phase2b-push-v2",
+  "candidate_id": "PushToRegionExpert/CandidateH",
+  "candidate_implementation_commit": "62db322a6954a362078badcb5f298501cb533bcf",
+  "runtime_source_commit": "48ab184cb172a5d4533dcff8e2effb16006c2dbd",
+  "run_id": "20260722T064141Z_phase2b2-candidateh-probe_48ab184",
+  "evaluation_mode": "diagnostic_probe",
+  "formal_gate_eligible": false,
+  "formal_seed_interval_consumed": false,
+  "probe_seed_start": 66400,
+  "expected_episodes": 64,
+  "completed_episodes": 64,
+  "successes": 38,
+  "failures": 26,
+  "success_rate": 0.59375,
+  "status_counts": {
+    "correction_failure": 3,
+    "planning_failure": 1,
+    "success": 38,
+    "target_outside_workspace": 1,
+    "timeout": 15,
+    "verification_failure": 5,
+    "wrong_object_interaction": 1
+  },
+  "failure_phase_counts": {
+    "corrective_push_1": 15,
+    "move_to_precontact": 2,
+    "primary_push": 2,
+    "settle": 2,
+    "verify_task": 5
+  },
+  "successful_precontact_steps": {
+    "minimum": 92,
+    "median": 104.0,
+    "maximum": 145,
+    "mean": 104.89473684210526
+  },
+  "simulator_errors": 0,
+  "nonfinite_actions": 0,
+  "action_bound_violations": 0,
+  "workspace_violations": 1,
+  "optimizer_steps": 0,
+  "passed": false,
+  "collection_started": false,
+  "full_report_sha256": "a896a8e5645b7e9c63237c94f9cc56359d2b5db9e703eed0cb815c2d3eadbc4c",
+  "generation_audit_sha256": "191eb5e20b2f5bdbc5a1d5b86eeac76271e9bd031967a61c1f9c4224ad170f13",
+  "collection_fingerprint": "sha256:5c65bf0994d8a982665caf087136610dc14d41b9d0271246e5141afeb2c70106"
+}

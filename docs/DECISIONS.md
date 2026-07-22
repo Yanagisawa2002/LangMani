@@ -2847,3 +2847,21 @@ Candidate H passed full local implementation validation at Git
 ranges. Diagnostic success cannot promote the expert, and a diagnostic failure cancels the formal
 gate rather than consuming it. The v2 contract binds `PushToRegionExpert/CandidateH` to that exact
 implementation commit. Formal collection remains closed.
+
+## D-107 - Reject Candidate H and bound Candidate I by phase cost
+
+Candidate H completed all 64 diagnostic episodes on seeds 66400 through 66463 from clean Git
+`48ab184cb172a5d4533dcff8e2effb16006c2dbd`. It achieved 38/64 and is rejected without touching
+the formal gate. The full report SHA-256 is
+`a896a8e5645b7e9c63237c94f9cc56359d2b5db9e703eed0cb815c2d3eadbc4c`. Fifteen timeouts dominated
+the 26 failures, and successful precontact execution averaged 104.9 of the fixed 250 steps.
+Simulator errors, non-finite actions, and action-bound violations remained zero; one target workspace
+exit was preserved. No collection or optimization started.
+
+Candidate I keeps the proven candidate-retry structure, restores the frozen free-space stride only
+for the initial lift and final descent, and retains full resolution for the high staging sweep where
+wrong-object risk was observed. First containment now triggers a bounded controller hold using the
+existing settle count, allowing the unchanged stable-success predicate to complete before further
+motion. Diagnostic runs may stop early only when a zero-tolerance failure already makes promotion
+invalid or the exact arithmetic success ceiling falls below 95%; formal evaluation remains complete
+and unchanged.

@@ -96,3 +96,13 @@ Candidate H passed local implementation validation at Git
 Probe evidence cannot promote the expert. It only determines whether spending the formal schedule
 is justified. The v2 contract now binds `PushToRegionExpert/CandidateH` to the implementation
 commit while leaving every acceptance threshold unchanged.
+
+Candidate H completed 64/64 diagnostic episodes but reached only 38 successes. Full-resolution
+precontact execution averaged 104.9 steps and caused fifteen timeouts, primarily in the first
+correction. Candidate I retains candidate-specific retry but samples only the initial vertical lift
+and final descent at the already content-bound free-space stride; the obstacle-sensitive high
+staging motion remains full resolution. When containment is first observed, the controller now
+holds its current joint position for the existing bounded settle window so stable success can form
+before any endpoint overshoot or later verification. Diagnostic probes also stop and write evidence
+as soon as a zero-tolerance failure occurs or their mathematical success ceiling falls below 95%;
+formal gates never early-stop under this rule.

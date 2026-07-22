@@ -606,6 +606,7 @@ class PushToRegionExpert:
         lift_result = self._planned_motion(
             PushExpertPhase.MOVE_TO_PRECONTACT,
             (lift,),
+            action_stride=self.config.free_space_action_stride,
         )
         planning_calls += lift_result.planning_calls
         planning_duration += lift_result.planning_duration_seconds
@@ -641,6 +642,7 @@ class PushToRegionExpert:
             descent_result = self._planned_motion(
                 PushExpertPhase.MOVE_TO_PRECONTACT,
                 (self._pose_with_position(candidate.precontact_point),),
+                action_stride=self.config.free_space_action_stride,
             )
             planning_calls += descent_result.planning_calls
             planning_duration += descent_result.planning_duration_seconds
@@ -826,6 +828,8 @@ class PushToRegionExpert:
                     ):
                         target_inside_region = True
                         break
+            if target_inside_region and not self._terminal_success:
+                self._hold(self.config.settle_steps)
         except _PushAbort as error:
             return self._failure(
                 phase,

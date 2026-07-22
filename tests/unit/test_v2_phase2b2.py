@@ -23,7 +23,12 @@ from langmani.v2.push_dataset import (
     PushDatasetContractError,
     build_collection_schedule,
 )
-from scripts.langmani_v2.evaluate_push_expert import _schedule as build_expert_probe_schedule
+from scripts.langmani_v2.evaluate_push_expert import (
+    _probe_stop_reason,
+)
+from scripts.langmani_v2.evaluate_push_expert import (
+    _schedule as build_expert_probe_schedule,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CONFIG = PROJECT_ROOT / "configs" / "langmani_v2" / "phase_2b2" / "dataset_contract.yaml"
@@ -123,6 +128,39 @@ def test_expert_probe_schedule_rejects_invalid_bounds(
             standard_episodes=standard_episodes,
             hard_episodes=hard_episodes,
         )
+
+
+def test_diagnostic_probe_stops_only_when_formal_success_is_impossible() -> None:
+    assert (
+        _probe_stop_reason(
+            completed=20,
+            total=64,
+            successes=17,
+            minimum_success_rate=0.95,
+            zero_tolerance_failure=False,
+        )
+        is None
+    )
+    assert (
+        _probe_stop_reason(
+            completed=20,
+            total=64,
+            successes=16,
+            minimum_success_rate=0.95,
+            zero_tolerance_failure=False,
+        )
+        == "success_ceiling_below_gate"
+    )
+    assert (
+        _probe_stop_reason(
+            completed=1,
+            total=64,
+            successes=1,
+            minimum_success_rate=0.95,
+            zero_tolerance_failure=True,
+        )
+        == "zero_tolerance_failure"
+    )
 
 
 def test_accepted_package_rejects_v1_and_undersized_data() -> None:

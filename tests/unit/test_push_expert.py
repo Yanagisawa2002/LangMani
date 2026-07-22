@@ -378,8 +378,8 @@ def test_free_space_stride_preserves_the_exact_final_planner_position() -> None:
     assert [float(action[0]) for action in expert.action_trace] == [0.0, 1.0, 2.0]
 
 
-def test_primary_motion_stops_at_full_containment_before_stable_success() -> None:
-    environment = _FakeEnvironment(inside_after_step=2, success_after_step=99)
+def test_primary_motion_brakes_at_full_containment_until_stable_success() -> None:
+    environment = _FakeEnvironment(inside_after_step=2, success_after_step=5)
     planner = _FakePlanner(environment)
     expert = PushToRegionExpert(environment, planner_factory=lambda _env: planner)
     expert._context = environment.context
@@ -404,9 +404,9 @@ def test_primary_motion_stops_at_full_containment_before_stable_success() -> Non
     )
 
     assert result.success
-    assert result.environment_steps == 2
-    assert environment.step_count == 2
-    assert environment.get_push_expert_evaluation()["success"].item() is False
+    assert result.environment_steps == 5
+    assert environment.step_count == 5
+    assert environment.get_push_expert_evaluation()["success"].item() is True
 
 
 def test_adaptive_primary_push_stops_when_the_existing_success_gate_fires() -> None:

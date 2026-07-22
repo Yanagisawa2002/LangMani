@@ -46,10 +46,16 @@ The probe was explicitly `formal_gate_eligible=false` and never consumed the fro
 without a formal gate, and collection remains closed. The compact summary is
 `artifacts/langmani_v2/phase_2b2/expert_probe_candidate_g_rejected.json`.
 
-## Candidate H pending gate
+## Candidate H diagnostic rejection
 
-Candidate H is locally validated at `62db322a6954a362078badcb5f298501cb533bcf`. Its development
-probe is reserved for seeds 66400 through 66463 and is ineligible for formal promotion. The
-untouched formal gate remains seeds 66300 through 66399. Until the exact formal gate reaches at
-least 95/100 with every zero-tolerance check clean, Candidate H remains provisional and collection
-remains closed.
+Candidate H was locally validated at `62db322a6954a362078badcb5f298501cb533bcf` and ran only the
+diagnostic seeds 66400 through 66463 from clean source
+`48ab184cb172a5d4533dcff8e2effb16006c2dbd`. It achieved 38/64. Fifteen timeouts and three
+correction failures exposed the cost of full-resolution free-space approach execution: successful
+precontact phases averaged 104.9 steps. Five verification failures, one planning failure, one
+wrong-object interaction, and one target workspace exit were also preserved.
+
+Candidate H is rejected without using formal seeds 66300 through 66399. The full report SHA-256 is
+`a896a8e5645b7e9c63237c94f9cc56359d2b5db9e703eed0cb815c2d3eadbc4c`; the compact summary is
+`artifacts/langmani_v2/phase_2b2/expert_probe_candidate_h_rejected.json`. Formal collection remains
+closed.
