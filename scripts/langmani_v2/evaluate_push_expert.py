@@ -9,7 +9,12 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from langmani.environments.push_specs import PUSH_OBJECT_IDS, TARGET_REGION_IDS, PushTaskSpec
+from langmani.environments.push_specs import (
+    PUSH_OBJECT_IDS,
+    TARGET_REGION_IDS,
+    PushDifficulty,
+    PushTaskSpec,
+)
 from langmani.environments.push_to_region import ENV_ID
 from langmani.experts.push import PushToRegionExpert
 from langmani.experts.push_types import PushExpertConfig, PushExpertResult, PushExpertStatus
@@ -37,10 +42,11 @@ def _schedule(config: PushCollectionConfig) -> tuple[tuple[int, PushTaskSpec], .
     combinations = tuple(
         (object_id, region_id) for object_id in PUSH_OBJECT_IDS for region_id in TARGET_REGION_IDS
     )
-    for difficulty, count in (
+    difficulty_counts: tuple[tuple[PushDifficulty, int], ...] = (
         ("standard", int(gate["standard_episodes"])),
         ("hard", int(gate["hard_episodes"])),
-    ):
+    )
+    for difficulty, count in difficulty_counts:
         for offset in range(count):
             object_id, region_id = combinations[offset % len(combinations)]
             values.append((start + index, PushTaskSpec(object_id, region_id, difficulty)))
@@ -48,7 +54,7 @@ def _schedule(config: PushCollectionConfig) -> tuple[tuple[int, PushTaskSpec], .
     return tuple(values)
 
 
-def _environment() -> object:
+def _environment() -> Any:
     import gymnasium as gym
 
     import langmani.environments  # noqa: F401
@@ -91,7 +97,7 @@ def _sanitized_runtime(runtime: dict[str, object]) -> dict[str, object]:
 def main() -> int:
     args = parse_args()
     config = PushCollectionConfig.load(args.config)
-    runtime = inspect_phase2b_runtime()
+    runtime = inspect_phase2b_runtime(config)
     schedule = _schedule(config)
     results: list[PushExpertResult] = []
     command_errors: list[dict[str, object]] = []

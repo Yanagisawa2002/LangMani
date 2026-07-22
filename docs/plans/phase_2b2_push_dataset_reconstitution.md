@@ -54,3 +54,10 @@ the long primary push with at most twelve state-aware 4 cm segments with one det
 planning fallback. The environment, task geometry, success predicate, controller, 250-step limit,
 action-bound rejection, seeds, and 95% threshold remain unchanged. The rejected gate is diagnostic
 evidence only; a successful promotion must use a new untouched 100-episode schedule.
+
+Local unit, repository, lint, format, and changed-module type validation passed for Candidate F at
+Git `6277d77227a51d39d675e328c4df7c233f302484`. The v2 contract now binds that implementation as
+`PushToRegionExpert/CandidateF` and freezes the untouched expert-gate seed interval 66100 through
+66199. The v1 collection contract remains bound to Candidate E; neither its dataset identity nor
+historical episode provenance is rewritten. Candidate F may open collection only if this newly
+frozen gate reaches the unchanged 95% threshold.

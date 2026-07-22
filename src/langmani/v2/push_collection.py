@@ -38,9 +38,20 @@ from langmani.v2.push_dataset import (
 
 COLLECTION_RUN_SCHEMA = "langmani-v2-phase2b-run-v0"
 ATTEMPT_RECORD_SCHEMA = "langmani-v2-phase2b-attempt-record-v0"
+_CANDIDATE_E_COMMIT = "59ca88e9f0514187252a6286ab1b8e06c4318fb4"
 
 
-def inspect_phase2b_runtime() -> dict[str, object]:
+def _accepted_expert(config: PushCollectionConfig | None) -> tuple[str, str]:
+    if config is None:
+        return "PushToRegionExpert/CandidateE", _CANDIDATE_E_COMMIT
+    expert_id = cast(str, config.payload["expert_id"])
+    commit = cast(str, config.payload["accepted_expert_commit"])
+    return expert_id, commit
+
+
+def inspect_phase2b_runtime(
+    config: PushCollectionConfig | None = None,
+) -> dict[str, object]:
     """Inspect exact software/hardware identity before simulator construction."""
 
     import torch
@@ -55,13 +66,14 @@ def inspect_phase2b_runtime() -> dict[str, object]:
             ) from error
     commit = _git("rev-parse", "HEAD")
     status = _git("status", "--porcelain")
+    expert_id, accepted_expert_commit = _accepted_expert(config)
     try:
         subprocess.run(
             [
                 "git",
                 "merge-base",
                 "--is-ancestor",
-                "59ca88e9f0514187252a6286ab1b8e06c4318fb4",
+                accepted_expert_commit,
                 commit,
             ],
             check=True,
@@ -69,7 +81,9 @@ def inspect_phase2b_runtime() -> dict[str, object]:
             text=True,
         )
     except subprocess.CalledProcessError as error:
-        raise PushDatasetContractError("accepted Candidate E is not an ancestor of HEAD") from error
+        raise PushDatasetContractError(
+            f"accepted expert {expert_id} is not an ancestor of HEAD"
+        ) from error
     gpu = _nvidia_query()
     result: dict[str, object] = {
         "python": platform.python_version(),
@@ -82,7 +96,7 @@ def inspect_phase2b_runtime() -> dict[str, object]:
         "lerobot": versions["lerobot"],
         "git_commit": commit,
         "git_clean": status == "",
-        "accepted_expert_commit": "59ca88e9f0514187252a6286ab1b8e06c4318fb4",
+        "accepted_expert_commit": accepted_expert_commit,
         "gpu": gpu,
     }
     if (result["numpy"], result["mplib"], result["mani_skill"], result["lerobot"]) != (
@@ -114,7 +128,9 @@ def collect_push_attempts(
         raise PushDatasetContractError("collector stage must be pilot, full, or top_up")
     if sim_backend != "physx_cuda":
         raise PushDatasetContractError("Phase 2B real collection requires physx_cuda")
-    runtime = inspect_phase2b_runtime()
+    runtime = inspect_phase2b_runtime(config)
+    expert_id, accepted_expert_commit = _accepted_expert(config)
+    expert_identity = f"{expert_id}@{accepted_expert_commit[:8]}"
     root = Path(output_root).resolve()
     _ensure_root_matches_config(config, root)
     if stage == "top_up":
@@ -224,6 +240,7 @@ def collect_push_attempts(
                 run_id=run_id,
                 sim_backend=sim_backend,
                 resume=resume,
+                expert_identity=expert_identity,
             )
         )
     generation_accepted = sum(record["generation_accepted"] is True for record in records)
@@ -266,6 +283,7 @@ def _collect_shard(
     run_id: str,
     sim_backend: str,
     resume: bool = False,
+    expert_identity: str,
 ) -> list[dict[str, object]]:
     del resume
     import gymnasium as gym
@@ -302,7 +320,7 @@ def _collect_shard(
             record_reward=False,
             record_env_state=True,
             source_type="motionplanning",
-            source_desc="LangMani 2.0 Phase 2B accepted Candidate E push demonstrations",
+            source_desc=f"LangMani 2.0 Phase 2B {expert_identity} push demonstrations",
         )
         try:
             recorder.reset(
@@ -344,6 +362,7 @@ def _collect_shard(
             run_id=run_id,
             h5_path=h5_path,
             json_path=json_path,
+            expert_identity=expert_identity,
         )
         records.append(record)
         archives.append(
@@ -376,6 +395,7 @@ def _collect_shard_atomic(
     run_id: str,
     sim_backend: str,
     resume: bool,
+    expert_identity: str,
 ) -> list[dict[str, object]]:
     """Collect one shard with one atomic directory commit per simulator episode."""
 
@@ -417,6 +437,7 @@ def _collect_shard_atomic(
                 final_directory=final_directory,
                 run_id=run_id,
                 sim_backend=sim_backend,
+                expert_identity=expert_identity,
             )
         records.append(record)
         archives.append(archive)
@@ -441,6 +462,7 @@ def _collect_atomic_attempt(
     final_directory: Path,
     run_id: str,
     sim_backend: str,
+    expert_identity: str,
 ) -> tuple[dict[str, object], dict[str, object]]:
     import gymnasium as gym
     from mani_skill.utils.wrappers.record import RecordEpisode  # type: ignore[import-untyped]
@@ -482,7 +504,7 @@ def _collect_atomic_attempt(
         record_reward=False,
         record_env_state=True,
         source_type="motionplanning",
-        source_desc="LangMani 2.0 Phase 2B.2 Candidate E push demonstrations",
+        source_desc=f"LangMani 2.0 Phase 2B.2 {expert_identity} push demonstrations",
     )
     try:
         recorder.reset(seed=scheduled.seed, options={"task_spec": scheduled.task_spec.to_dict()})
@@ -521,6 +543,7 @@ def _collect_atomic_attempt(
         run_id=run_id,
         h5_path=relative_h5,
         json_path=relative_json,
+        expert_identity=expert_identity,
     )
     archive: dict[str, object] = {
         "episode_id": scheduled.episode_id,
@@ -603,6 +626,7 @@ def _attempt_record(
     run_id: str,
     h5_path: Path,
     json_path: Path,
+    expert_identity: str,
 ) -> dict[str, object]:
     evaluation = dict(result.final_environment_evaluation)
     task_id = scheduled.to_dict()["task_id"]
@@ -623,7 +647,7 @@ def _attempt_record(
         "object_geometry": (
             "cube" if scheduled.task_spec.target_object_id == "blue_cube" else "horizontal_cylinder"
         ),
-        "expert_identity": "PushToRegionExpert/CandidateE@59ca88e9",
+        "expert_identity": expert_identity,
         "expert_result": result.to_dict(),
         "expert_success": result.success,
         "final_evaluation": evaluation,

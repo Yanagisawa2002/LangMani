@@ -152,8 +152,22 @@ class PushCollectionConfig:
             _string(payload.get(key), key)
         if payload["environment_id"] != "LangMani-PushToRegion-v0":
             raise PushDatasetContractError("collection environment_id is not the pushing task")
-        if payload["accepted_expert_commit"] != ("59ca88e9f0514187252a6286ab1b8e06c4318fb4"):
-            raise PushDatasetContractError("collection must use accepted Candidate E")
+        contract_schema = payload.get("contract_schema_version")
+        if contract_schema is None:
+            expected_expert = "PushToRegionExpert/CandidateE"
+            expected_commit = "59ca88e9f0514187252a6286ab1b8e06c4318fb4"
+        else:
+            expected_expert = "PushToRegionExpert/CandidateF"
+            expected_commit = "6277d77227a51d39d675e328c4df7c233f302484"
+        candidate_name = expected_expert.rsplit("/", maxsplit=1)[-1].replace(
+            "Candidate", "Candidate "
+        )
+        if payload["expert_id"] != expected_expert:
+            raise PushDatasetContractError(
+                f"collection must use accepted {candidate_name} identity"
+            )
+        if payload["accepted_expert_commit"] != expected_commit:
+            raise PushDatasetContractError(f"collection must use accepted {candidate_name} commit")
         if payload["control_mode"] != "pd_joint_pos" or payload["sim_backend"] != "physx_cuda":
             raise PushDatasetContractError("collection runtime control/simulator mode changed")
         if payload["raw_observation_mode"] != "state_dict":
@@ -204,7 +218,6 @@ class PushCollectionConfig:
         }
         if dict(runtime) != required:
             raise PushDatasetContractError("required runtime pins changed")
-        contract_schema = payload.get("contract_schema_version")
         if contract_schema is not None:
             PushCollectionConfig._validate_phase2b2(payload, contract_schema)
 

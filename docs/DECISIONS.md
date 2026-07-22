@@ -2785,3 +2785,10 @@ halve a zero-step failed segment only down to 1 cm. It neither teleports nor mut
 does not change task evaluation, does not extend the 250-step limit, and does not clip or repair an
 action. Candidate F is provisional until local validation passes and an untouched 100-episode gate
 at a new seed range reaches the unchanged 95% threshold.
+
+Candidate F passed local implementation validation at Git
+`6277d77227a51d39d675e328c4df7c233f302484`. The Phase 2B.2 contract therefore binds that exact
+commit and freezes seeds 66100 through 66199 for its untouched 100-episode promotion gate. This
+does not relabel the v1 Candidate E contract or any historical v1 trajectory. Candidate F remains
+unaccepted for formal collection unless the new remote gate reaches at least 95/100 with every
+zero-tolerance runtime and action check still at zero.
