@@ -138,3 +138,7 @@ Candidate L adds a fixed object-specific precontainment braking margin. During a
 expert stops planner execution before full containment, commands the current measured joint state
 for the existing settle window, and lets the unchanged environment decide whether stable success
 forms. No target state, success flag, action bound, horizon, or acceptance criterion changes.
+
+Candidate L passed 39 focused runtime-contract tests, Ruff, format, and changed-module mypy at
+implementation commit `c7361c60daeaa50740bccee213de9485a4c078ef`. Diagnostic seeds
+66800--66863 are isolated from the untouched formal and collection schedules.

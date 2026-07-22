@@ -3,7 +3,7 @@
   "dataset_id": "langmani/phase2b-push-v2",
   "candidate_id": "PushToRegionExpert/CandidateJ",
   "candidate_implementation_commit": "d757d91fa7c12f8c341f692118d8d45882623834",
-  "runtime_source_commit": "50d28767539237e094657dda1a69798b75392526",
+  "runtime_source_commit": "750d71bc00ba0c5db3d67cc15e0391b125df03d0",
   "run_id": "20260722T071156Z_phase2b2-candidatej-probe_750d71b",
   "evaluation_mode": "diagnostic_probe",
   "formal_gate_eligible": false,
@@ -32,7 +32,7 @@
   "optimizer_steps": 0,
   "passed": false,
   "collection_started": false,
-  "full_report_sha256": "647e5509490f30211acf2e9aa960cdbc2de94f9b98387230243bf2f2660790ad",
-  "generation_audit_sha256": "14412a229b9d289b59f1f369d6dc9701be8f201428d3abae7c71bd3a3ec3d19e",
+  "full_report_sha256": "246b77dfd380a32562afaf53345aba3a8e1612257117373770fcfd60dcead6b3",
+  "generation_audit_sha256": "4c9778e3a2343a6a5206dc05844fd07f0588007b90827a3d90b82f44534497c5",
   "collection_fingerprint": "sha256:83e1bbc9ed0780410859d329cf40c1e1794df33ae2802bb15b001bc534a5b218"
 }

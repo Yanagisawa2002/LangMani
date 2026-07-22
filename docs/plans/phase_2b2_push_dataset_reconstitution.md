@@ -145,3 +145,6 @@ the other failure was a correction timeout. Candidate L retains the fixed paths 
 when privileged target distance enters a fixed band just outside full containment, then holds the
 current measured controller state for the existing settle window. This prevents primary-push
 momentum from continuing while the arm repositions. Diagnostic seeds 66800--66863 remain isolated.
+
+Candidate L is content-bound to implementation commit
+`c7361c60daeaa50740bccee213de9485a4c078ef`; its diagnostic schedule cannot promote the expert.

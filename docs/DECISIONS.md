@@ -2954,3 +2954,10 @@ enters a fixed object-specific band outside full containment, then commands the 
 joint state for the existing settle window. This may form unchanged stable success or leave a
 stationary target for ordinary correction. It does not modify target state, success, the controller,
 the 250-step limit, action bounds, or acceptance. Seeds 66800--66863 are diagnostic only.
+
+## D-114 - Bind Candidate L before its isolated diagnostic probe
+
+Candidate L passed 39 focused runtime-contract tests plus Ruff, format, and changed-module mypy at
+implementation commit `c7361c60daeaa50740bccee213de9485a4c078ef`. The v2 contract binds
+`PushToRegionExpert/CandidateL` to that exact source. Seeds 66800--66863 are diagnostic only;
+formal seeds 66300--66399 and all collection ranges remain untouched.
