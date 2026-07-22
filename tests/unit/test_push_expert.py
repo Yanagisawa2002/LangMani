@@ -198,6 +198,12 @@ def test_push_expert_config_rejects_unbounded_correction_search() -> None:
     with pytest.raises(ValueError, match="finite and non-negative"):
         PushExpertConfig(lateral_cylinder_compensation_degrees=-1.0)
 
+    with pytest.raises(ValueError, match="staging_height must exceed"):
+        PushExpertConfig(precontact_staging_height=0.1)
+
+    with pytest.raises(ValueError, match="must not exceed primary_push_increment"):
+        PushExpertConfig(primary_push_increment=0.02, minimum_primary_push_increment=0.03)
+
 
 def test_push_endpoint_stops_inside_full_containment_with_geometry_margin() -> None:
     environment = _FakeEnvironment()
@@ -327,9 +333,60 @@ def test_lateral_approach_falls_back_before_executing_out_of_bounds_plan() -> No
 
     assert result.success
     assert result.attempts == 2
-    assert result.planning_calls == 2
-    assert result.environment_steps == 1
-    assert environment.step_count == 1
+    assert result.planning_calls == 3
+    assert result.environment_steps == 2
+    assert environment.step_count == 2
+
+
+def test_free_space_stride_preserves_the_exact_final_planner_position() -> None:
+    environment = _FakeEnvironment()
+    planner = _FakePlanner(environment)
+    expert = PushToRegionExpert(
+        environment,
+        planner_factory=lambda _env: planner,
+    )
+    expert._context = environment.context
+    expert._planner = planner
+    positions = tuple(tuple([float(index) / 2.0] * 7) for index in range(5))
+
+    def plan_pose(pose7, *, use_attached: bool = False):
+        del use_attached
+        environment.tcp.pose.raw_pose = torch.tensor([pose7], dtype=torch.float32)
+        return PlannerPlanResult(
+            success=True,
+            status="Success",
+            failure=None,
+            positions=positions,
+        )
+
+    planner.plan_pose = plan_pose  # type: ignore[method-assign]
+    result = expert._planned_motion(
+        PushExpertPhase.MOVE_TO_PRECONTACT,
+        (expert._tcp_pose(),),
+        action_stride=2,
+    )
+
+    assert result.success
+    assert [float(action[0]) for action in expert.action_trace] == [0.0, 1.0, 2.0]
+
+
+def test_adaptive_primary_push_stops_when_the_existing_success_gate_fires() -> None:
+    environment = _FakeEnvironment()
+    planner = _FakePlanner(environment)
+    expert = PushToRegionExpert(
+        environment,
+        planner_factory=lambda _env: planner,
+    )
+    expert._context = environment.context
+    expert._planner = planner
+
+    result = expert._adaptive_primary_push()
+
+    assert result.success
+    assert result.phase is PushExpertPhase.PRIMARY_PUSH
+    assert result.environment_steps == 9
+    assert environment.step_count == 9
+    assert len(expert.action_trace) == 9
 
 
 def test_forward_strategy_preserves_the_original_contact_formula() -> None:

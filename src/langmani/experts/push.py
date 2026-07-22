@@ -6,6 +6,7 @@ import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
 from pathlib import Path
+from typing import Any, cast
 
 import numpy as np
 
@@ -300,16 +301,8 @@ class PushToRegionExpert:
     def _move_to_precontact(self) -> PushPhaseResult:
         object_position = self._target_position()
         direction = self._push_direction(object_position)
-        if self._is_lateral_task():
-            candidates = self._lateral_approach_candidates(object_position, direction)
-            return self._planned_lateral_approach(candidates)
-        pose = self._tcp_pose()
-        pose[:2] = object_position[:2] - direction * (
-            self.config.contact_offset + self.config.precontact_clearance
-        )
-        pose[2] = self.config.precontact_height
-        self._chosen_precontact_point = pose[:3].copy()
-        return self._planned_motion(PushExpertPhase.MOVE_TO_PRECONTACT, (pose,))
+        candidates = self._lateral_approach_candidates(object_position, direction)
+        return self._planned_lateral_approach(candidates)
 
     def _establish_contact(self) -> PushPhaseResult:
         object_position = self._target_position()
@@ -321,9 +314,102 @@ class PushToRegionExpert:
         return self._planned_motion(PushExpertPhase.ESTABLISH_CONTACT, (pose,))
 
     def _primary_push(self) -> PushPhaseResult:
-        object_position = self._target_position()
-        pose = self._push_endpoint_pose(object_position)
-        return self._planned_motion(PushExpertPhase.PRIMARY_PUSH, (pose,))
+        return self._adaptive_primary_push()
+
+    def _adaptive_primary_push(self) -> PushPhaseResult:
+        """Advance in bounded state-aware segments until full containment."""
+
+        phase = PushExpertPhase.PRIMARY_PUSH
+        before = self._environment_steps
+        planning_calls = 0
+        planning_duration = 0.0
+        execution_duration = 0.0
+        attempts = 0
+        last_status: str | None = None
+        for _segment in range(self.config.maximum_primary_push_segments):
+            if self._terminal_success or self._evaluation().get("target_inside_region") is True:
+                return self._success(
+                    phase,
+                    "bounded incremental push reached full containment",
+                    attempts=max(attempts, 1),
+                    steps=self._environment_steps - before,
+                    planning_calls=planning_calls,
+                    planning_duration=planning_duration,
+                    execution_duration=execution_duration,
+                    planner_status=last_status,
+                )
+            object_position = self._target_position()
+            direction = self._push_direction(object_position)
+            center_progress = float(
+                np.dot(self._target_center()[:2] - object_position[:2], direction)
+            )
+            if center_progress <= 0.0:
+                break
+            increment = max(
+                self.config.minimum_primary_push_increment,
+                min(self.config.primary_push_increment, center_progress),
+            )
+            segment_result: PushPhaseResult | None = None
+            while increment + 1e-12 >= self.config.minimum_primary_push_increment:
+                attempts += 1
+                pose = self._tcp_pose()
+                pose[:2] = (
+                    object_position[:2] - direction * self._contact_offset() + direction * increment
+                )
+                pose[2] = self._push_height()
+                result = self._planned_motion(phase, (pose,))
+                planning_calls += result.planning_calls
+                planning_duration += result.planning_duration_seconds
+                execution_duration += result.execution_duration_seconds
+                last_status = result.planner_status
+                segment_result = result
+                if result.success:
+                    break
+                if result.environment_steps or result.status not in {
+                    PushExpertStatus.IK_FAILURE,
+                    PushExpertStatus.PLANNING_FAILURE,
+                }:
+                    return replace(
+                        result,
+                        attempts=attempts,
+                        planning_calls=planning_calls,
+                        planning_duration_seconds=planning_duration,
+                        execution_duration_seconds=execution_duration,
+                    )
+                increment *= 0.5
+            if segment_result is None or not segment_result.success:
+                assert segment_result is not None
+                return replace(
+                    segment_result,
+                    attempts=attempts,
+                    planning_calls=planning_calls,
+                    planning_duration_seconds=planning_duration,
+                    execution_duration_seconds=execution_duration,
+                    message="all bounded primary-push increments failed planning",
+                )
+        evaluation = self._evaluation()
+        if self._terminal_success or evaluation.get("target_inside_region") is True:
+            return self._success(
+                phase,
+                "bounded incremental push reached full containment",
+                attempts=max(attempts, 1),
+                steps=self._environment_steps - before,
+                planning_calls=planning_calls,
+                planning_duration=planning_duration,
+                execution_duration=execution_duration,
+                planner_status=last_status,
+            )
+        return self._failure(
+            phase,
+            PushExpertStatus.CORRECTION_FAILURE,
+            "bounded incremental primary push did not reach full containment",
+            attempts=max(attempts, 1),
+            steps=self._environment_steps - before,
+            planning_calls=planning_calls,
+            planning_duration=planning_duration,
+            execution_duration=execution_duration,
+            planner_status=last_status,
+        )
 
     def _corrective_push(self, phase: PushExpertPhase) -> PushPhaseResult:
         if self._terminal_success or self._evaluation().get("target_inside_region") is True:
@@ -401,6 +487,8 @@ class PushToRegionExpert:
         return self.config.contact_offset
 
     def _lateral_compensation_degrees(self) -> float:
+        if not self._is_lateral_task():
+            return 0.0
         object_id = self._require_context().target_object.object_id
         if object_id == "blue_cube":
             return self.config.lateral_cube_compensation_degrees
@@ -415,7 +503,7 @@ class PushToRegionExpert:
         return is_lateral_region(self._require_context().episode_spec.task_spec.target_region_id)
 
     def _motion_direction(self, object_position: np.ndarray) -> np.ndarray:
-        if self._is_lateral_task() and self._active_push_direction is not None:
+        if self._active_push_direction is not None:
             return self._active_push_direction.copy()
         return self._push_direction(object_position)
 
@@ -463,9 +551,12 @@ class PushToRegionExpert:
                 continue
             attempts += 1
             self._chosen_precontact_point = np.asarray(candidate.precontact_point)
+            staging = self._pose_with_position(candidate.precontact_point)
+            staging[2] = self.config.precontact_staging_height
             result = self._planned_motion(
                 PushExpertPhase.MOVE_TO_PRECONTACT,
-                (self._pose_with_position(candidate.precontact_point),),
+                (staging, self._pose_with_position(candidate.precontact_point)),
+                action_stride=self.config.free_space_action_stride,
             )
             planning_calls += result.planning_calls
             planning_duration += result.planning_duration_seconds
@@ -558,7 +649,15 @@ class PushToRegionExpert:
         self,
         phase: PushExpertPhase,
         targets: Sequence[np.ndarray],
+        *,
+        action_stride: int = 1,
     ) -> PushPhaseResult:
+        if (
+            not isinstance(action_stride, int)
+            or isinstance(action_stride, bool)
+            or action_stride < 1
+        ):
+            raise ValueError("action_stride must be a positive integer")
         started = time.perf_counter()
         before = self._environment_steps
         planning_duration = 0.0
@@ -571,7 +670,7 @@ class PushToRegionExpert:
                 planner = self._require_planner()
                 planner.synchronize()
                 planning_started = time.perf_counter()
-                plan = planner.plan_pose(target)
+                plan = planner.plan_pose(tuple(float(value) for value in target))
                 duration = time.perf_counter() - planning_started
                 planning_duration += duration
                 self._planning_duration += duration
@@ -599,6 +698,11 @@ class PushToRegionExpert:
                     np.asarray((*arm_position, CLOSED_GRIPPER), dtype=np.float64)
                     for arm_position in plan.positions
                 )
+                if action_stride > 1 and len(planned_actions) > 1:
+                    sampled = planned_actions[::action_stride]
+                    if sampled[-1] is not planned_actions[-1]:
+                        sampled = (*sampled, planned_actions[-1])
+                    planned_actions = sampled
                 low, high = self._action_bounds()
                 if any(np.any(action < low) or np.any(action > high) for action in planned_actions):
                     return self._failure(
@@ -667,7 +771,7 @@ class PushToRegionExpert:
             raise _PushAbort(PushExpertStatus.TIMEOUT, "expert step budget exhausted")
         if action.shape != (PANDA_ACTION_DOF,) or not np.isfinite(action).all():
             raise _PushAbort(PushExpertStatus.EXECUTION_FAILURE, "expert action is invalid")
-        result = self.environment.step(action)
+        result = cast(Any, self.environment).step(action)
         self._actions.append(action.astype(np.float32, copy=True))
         self._environment_steps += 1
         if not isinstance(result, tuple) or len(result) != 5:
@@ -730,7 +834,7 @@ class PushToRegionExpert:
         return None
 
     def _evaluation(self) -> dict[str, bool | int | float]:
-        raw = self.base.get_push_expert_evaluation()
+        raw = cast(Any, self.base).get_push_expert_evaluation()
         if not isinstance(raw, Mapping):
             raise RuntimeError("get_push_expert_evaluation() must return a mapping")
         return {str(key): _json_scalar(value, str(key)) for key, value in raw.items()}
@@ -816,7 +920,7 @@ class PushToRegionExpert:
             raise RuntimeError("diagnostic_directory is required for rendering")
         from PIL import Image
 
-        frame = _numeric(self.environment.render(), "diagnostic render")
+        frame = _numeric(cast(Any, self.environment).render(), "diagnostic render")
         if frame.ndim == 4 and frame.shape[0] == 1:
             frame = frame[0]
         if frame.ndim != 3 or frame.shape[-1] not in (3, 4):

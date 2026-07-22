@@ -71,9 +71,14 @@ class PushExpertConfig:
     precontact_clearance: float = 0.075
     contact_offset: float = 0.045
     precontact_height: float = 0.12
+    precontact_staging_height: float = 0.24
     push_height: float = 0.025
     cylinder_push_height: float = 0.015
     region_goal_margin: float = 0.035
+    primary_push_increment: float = 0.04
+    minimum_primary_push_increment: float = 0.01
+    maximum_primary_push_segments: int = 12
+    free_space_action_stride: int = 2
     settle_steps: int = 16
     maximum_corrective_pushes: int = 2
     tcp_position_tolerance: float = 0.025
@@ -89,6 +94,8 @@ class PushExpertConfig:
             "maximum_episode_steps",
             "maximum_planning_attempts_per_phase",
             "gripper_close_steps",
+            "maximum_primary_push_segments",
+            "free_space_action_stride",
             "settle_steps",
         ):
             _positive_int(getattr(self, label), label)
@@ -103,13 +110,22 @@ class PushExpertConfig:
             "precontact_clearance",
             "contact_offset",
             "precontact_height",
+            "precontact_staging_height",
             "push_height",
             "cylinder_push_height",
             "region_goal_margin",
+            "primary_push_increment",
+            "minimum_primary_push_increment",
             "tcp_position_tolerance",
             "minimum_approach_obstacle_clearance",
         ):
             object.__setattr__(self, label, _finite(getattr(self, label), label))
+        if self.precontact_staging_height <= self.precontact_height:
+            raise ValueError("precontact_staging_height must exceed precontact_height")
+        if self.minimum_primary_push_increment > self.primary_push_increment:
+            raise ValueError(
+                "minimum_primary_push_increment must not exceed primary_push_increment"
+            )
         for label in (
             "lateral_cube_compensation_degrees",
             "lateral_cylinder_compensation_degrees",
@@ -133,9 +149,14 @@ class PushExpertConfig:
             "precontact_clearance": self.precontact_clearance,
             "contact_offset": self.contact_offset,
             "precontact_height": self.precontact_height,
+            "precontact_staging_height": self.precontact_staging_height,
             "push_height": self.push_height,
             "cylinder_push_height": self.cylinder_push_height,
             "region_goal_margin": self.region_goal_margin,
+            "primary_push_increment": self.primary_push_increment,
+            "minimum_primary_push_increment": self.minimum_primary_push_increment,
+            "maximum_primary_push_segments": self.maximum_primary_push_segments,
+            "free_space_action_stride": self.free_space_action_stride,
             "settle_steps": self.settle_steps,
             "maximum_corrective_pushes": self.maximum_corrective_pushes,
             "tcp_position_tolerance": self.tcp_position_tolerance,

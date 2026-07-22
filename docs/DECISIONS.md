@@ -2766,3 +2766,22 @@ content-addressed raw and LeRobot archives, successful restored-copy validation,
 SmolVLA batch processed with zero optimizer steps. Two independently restored replicas plus an
 explicit pending third copy are a temporary dataset gate; a true third copy is mandatory before any
 future 20,000-step training. This milestone cannot start Phase 2C.2 or Phase 2D.
+
+## D-102 - Reject Candidate E at the stricter v2 gate and bound Candidate F
+
+The first Phase 2B.2 gate ran the exact 100-episode schedule at Git
+`cd97c4f7cb48be5d45569a5729926fe7ddaa3075` on the pinned NumPy 1.26.4, mplib 0.1.1,
+ManiSkill 3.0.1, and LeRobot 0.6.0 runtime. It completed all episodes at 75/100 and is rejected.
+The report records seven planning failures, seven timeouts, seven verification failures, and four
+wrong-object interactions, with no simulator, finite-action, action-bound, or workspace failure.
+Its SHA-256 is `a6a8296a9df7c716698920d782c8e6f0aead6f61f18c228dcadba0a13a1c9489`.
+
+Formal data generation remains prohibited. Candidate F is the bounded response to all four
+observed path-level failure families: every precontact uses a fixed high staging pose and the
+existing deterministic obstacle-aware candidate set; only intermediate actions on collision-free
+free-space plans are sampled at stride two while their exact final joint target and every native
+action check remain; the primary push advances in at most twelve 4 cm state-aware segments and may
+halve a zero-step failed segment only down to 1 cm. It neither teleports nor mutates object state,
+does not change task evaluation, does not extend the 250-step limit, and does not clip or repair an
+action. Candidate F is provisional until local validation passes and an untouched 100-episode gate
+at a new seed range reaches the unchanged 95% threshold.
