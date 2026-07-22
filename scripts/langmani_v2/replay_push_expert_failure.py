@@ -157,7 +157,10 @@ class _RecordingEnvironment:
         target_position = target_pose[:3]
         target_center = _array(context.target_region_center)[:3]
         radius = float(context.target_object_planar_radius)
-        from langmani.environments.push_to_region import WORKSPACE_BOUNDS_XY
+        from langmani.environments.push_to_region import (
+            CONTACT_FORCE_THRESHOLD,
+            WORKSPACE_BOUNDS_XY,
+        )
 
         x_min, x_max, y_min, y_max = WORKSPACE_BOUNDS_XY
         workspace_margin = min(
@@ -168,6 +171,12 @@ class _RecordingEnvironment:
         )
         tcp_position = _array(context.agent.tcp.pose.p)[:3]
         contact_distance = math.dist(tcp_position[:2], target_position[:2])
+        contact_force_getter = getattr(self._base, "_robot_contact_magnitude", None)
+        target_contact_force = (
+            None
+            if not callable(contact_force_getter)
+            else float(_scalar(contact_force_getter(context.target_object.actor, arm_only=False)))
+        )
         action_values = None if action is None else self._np.asarray(action, dtype=self._np.float64)
         action_margin = (
             None
@@ -194,12 +203,79 @@ class _RecordingEnvironment:
                 "action_bound_margin": action_margin,
                 "contact_proxy": contact_distance <= radius + 0.055,
                 "contact_proxy_distance": contact_distance,
+                "target_contact_force": target_contact_force,
+                "target_contact": (
+                    None
+                    if target_contact_force is None
+                    else target_contact_force > CONTACT_FORCE_THRESHOLD
+                ),
+                "target_object_planar_radius": radius,
+                "workspace_bounds_xy": list(WORKSPACE_BOUNDS_XY),
                 "evaluation": {key: _scalar(value) for key, value in evaluation.items()},
                 "policy_diagnostics_digest": _digest_json(
                     {key: _array(value) for key, value in diagnostics.items()}
                 ),
             }
         )
+
+
+class _RecordingPlanner:
+    def __init__(
+        self,
+        delegate: object,
+        *,
+        recorder: _RecordingEnvironment,
+        records: list[dict[str, object]],
+    ) -> None:
+        self._delegate = delegate
+        self._recorder = recorder
+        self._records = records
+
+    def synchronize(self) -> None:
+        cast(Any, self._delegate).synchronize()
+
+    def plan_pose(self, pose7: Sequence[float], *, use_attached: bool = False) -> object:
+        start = len(self._recorder.actions)
+        context = cast(Any, self._recorder.unwrapped).get_push_expert_task_context()
+        before = _array(context.agent.tcp.pose.raw_pose)
+        result = cast(Any, self._delegate).plan_pose(pose7, use_attached=use_attached)
+        raw_result = result.to_dict()
+        positions = _sequence(raw_result.get("positions", []), "planner positions")
+        self._records.append(
+            {
+                "planned_pose": [float(value) for value in pose7],
+                "tcp_pose_before": before,
+                "use_attached": use_attached,
+                "action_start_index": start,
+                "action_end_index": start,
+                "result": {
+                    "success": raw_result.get("success"),
+                    "status": raw_result.get("status"),
+                    "failure": raw_result.get("failure"),
+                    "position_count": len(positions),
+                    "duration_seconds": raw_result.get("duration_seconds"),
+                },
+            }
+        )
+        return result
+
+    def attach_box(self, relative_pose7: Sequence[float]) -> None:
+        cast(Any, self._delegate).attach_box(relative_pose7)
+
+    def detach(self) -> None:
+        cast(Any, self._delegate).detach()
+
+    def close(self) -> None:
+        cast(Any, self._delegate).close()
+
+    def finalize(self) -> None:
+        for index, record in enumerate(self._records):
+            next_start = (
+                int(cast(int, self._records[index + 1]["action_start_index"]))
+                if index + 1 < len(self._records)
+                else len(self._recorder.actions)
+            )
+            record["action_end_index"] = next_start
 
 
 def _digest_json(value: object) -> str:
@@ -216,6 +292,7 @@ def _worker(args: argparse.Namespace) -> int:
     import langmani.environments  # noqa: F401
     from langmani.environments.push_specs import PushTaskSpec
     from langmani.environments.push_to_region import ENV_ID
+    from langmani.experts.planner import MplibPandaPlannerAdapter, PlannerAdapter
     from langmani.experts.push import PushToRegionExpert
     from langmani.experts.push_types import PushExpertConfig
 
@@ -243,11 +320,30 @@ def _worker(args: argparse.Namespace) -> int:
         recorder.capture(0)
         if args.keyframe_directory is not None:
             _save_frame(environment, args.keyframe_directory / "initial.png")
-        expert = PushToRegionExpert(recorder, config=PushExpertConfig())
+        planner_calls: list[dict[str, object]] = []
+        planner_wrapper: _RecordingPlanner | None = None
+
+        def planner_factory(worker_environment: object) -> PlannerAdapter:
+            nonlocal planner_wrapper
+            planner_wrapper = _RecordingPlanner(
+                MplibPandaPlannerAdapter(worker_environment),
+                recorder=recorder,
+                records=planner_calls,
+            )
+            return cast(PlannerAdapter, planner_wrapper)
+
+        expert_config = PushExpertConfig()
+        expert = PushToRegionExpert(
+            recorder,
+            config=expert_config,
+            planner_factory=planner_factory,
+        )
         try:
             result = expert.run()
         except Exception as error:  # noqa: BLE001 - exact historical error is evidence
             result = expert.unexpected_exception_result(error)
+        if planner_wrapper is not None:
+            planner_wrapper.finalize()
         if not recorder.snapshots or recorder.snapshots[-1]["step"] != len(recorder.actions):
             recorder.capture(len(recorder.actions))
         if args.keyframe_directory is not None:
@@ -256,6 +352,8 @@ def _worker(args: argparse.Namespace) -> int:
             "schema_version": "langmani-v2-phase2b3-replay-worker-v0",
             "case": case,
             "result": result.to_dict(),
+            "expert_config": expert_config.to_dict(),
+            "planner_calls": planner_calls,
             "step_trace": recorder.snapshots,
             "expert_diagnostic_trace": [item.to_dict() for item in expert.diagnostic_trace],
             "approach_candidates": list(expert.approach_candidate_diagnostics),
@@ -376,7 +474,11 @@ def _contact_events(trace: Sequence[object]) -> list[dict[str, object]]:
     previous = False
     for raw in trace:
         item = _mapping(raw, "snapshot")
-        current = item.get("contact_proxy") is True
+        current = (
+            item.get("target_contact") is True
+            if isinstance(item.get("target_contact"), bool)
+            else item.get("contact_proxy") is True
+        )
         if current != previous:
             events.append(
                 {
@@ -386,6 +488,89 @@ def _contact_events(trace: Sequence[object]) -> list[dict[str, object]]:
             )
         previous = current
     return events
+
+
+def _box_support_extent(pose: Sequence[object], direction: Sequence[float]) -> float:
+    values = [_number(value, "object pose") for value in pose]
+    if len(values) != 7:
+        raise ValueError("object pose must contain xyz plus a wxyz quaternion")
+    w, x, y, z = values[3:]
+    yaw = math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+    world_angle = math.atan2(direction[1], direction[0])
+    relative = world_angle - yaw
+    half_size = 0.025
+    return half_size * (abs(math.cos(relative)) + abs(math.sin(relative)))
+
+
+def _workspace_violation_detail(
+    *, trace: Sequence[object], planner_calls: Sequence[object], object_shape: object
+) -> dict[str, object] | None:
+    snapshots = [_mapping(item, "snapshot") for item in trace]
+    violation_index = next(
+        (
+            index
+            for index, item in enumerate(snapshots)
+            if _mapping(item.get("evaluation", {}), "evaluation").get("target_outside_workspace")
+            is True
+        ),
+        None,
+    )
+    if violation_index is None:
+        return None
+    violation = snapshots[violation_index]
+    prior = snapshots[max(0, violation_index - 1)]
+    pose = [
+        _number(value, "object pose")
+        for value in _sequence(violation.get("target_object_pose"), "target pose")
+    ]
+    prior_pose = [
+        _number(value, "prior object pose")
+        for value in _sequence(prior.get("target_object_pose"), "prior target pose")
+    ]
+    center = [
+        _number(value, "target center")
+        for value in _sequence(prior.get("target_center"), "target center")
+    ]
+    delta = [center[0] - prior_pose[0], center[1] - prior_pose[1]]
+    norm = math.hypot(*delta)
+    direction = [value / norm for value in delta] if norm > 1e-12 else [0.0, 0.0]
+    radius = _number(violation.get("target_object_planar_radius"), "planar radius")
+    bounds = [
+        _number(value, "workspace bound")
+        for value in _sequence(violation.get("workspace_bounds_xy"), "workspace bounds")
+    ]
+    if len(bounds) != 4:
+        raise ValueError("workspace bounds must contain x_min, x_max, y_min, y_max")
+    margins = {
+        "x_min": pose[0] - radius - bounds[0],
+        "x_max": bounds[1] - pose[0] - radius,
+        "y_min": pose[1] - radius - bounds[2],
+        "y_max": bounds[3] - pose[1] - radius,
+    }
+    nearest_boundary = min(margins, key=margins.__getitem__)
+    step = int(cast(int, violation.get("step")))
+    active_plan: Mapping[str, object] | None = None
+    for raw_call in planner_calls:
+        call = _mapping(raw_call, "planner call")
+        start = int(cast(int, call.get("action_start_index")))
+        end = int(cast(int, call.get("action_end_index")))
+        if start < step <= end:
+            active_plan = call
+            break
+    support_extent = _box_support_extent(pose, direction) if object_shape == "box" else radius
+    return {
+        "violation_step": step,
+        "planned_pose": None if active_plan is None else active_plan.get("planned_pose"),
+        "executed_pose": violation.get("tcp_position"),
+        "object_pose": pose,
+        "nearest_workspace_boundary": nearest_boundary,
+        "signed_workspace_margin": margins[nearest_boundary],
+        "all_signed_workspace_margins": margins,
+        "push_direction": direction,
+        "object_support_extent_in_push_direction": support_extent,
+        "environment_planar_radius": radius,
+        "planner_call": None if active_plan is None else dict(active_plan),
+    }
 
 
 def _case_summary(
@@ -411,6 +596,7 @@ def _case_summary(
         for semantic in semantics
     )
     trace = _sequence(first.get("step_trace"), "step_trace")
+    planner_calls = _sequence(first.get("planner_calls", []), "planner_calls")
     snapshots = [_mapping(item, "snapshot") for item in trace]
     margins = [float(cast(float, item["workspace_margin"])) for item in snapshots]
     action_margins = [
@@ -460,6 +646,8 @@ def _case_summary(
         ).get("target_distance"),
         "maximum_object_displacement": max(displacements),
         "contact_events": _contact_events(trace),
+        "expert_config": first.get("expert_config"),
+        "planner_calls": [dict(_mapping(item, "planner call")) for item in planner_calls],
         "workspace_violation_entity": (
             "TARGET_OBJECT"
             if _mapping(first_result.get("final_environment_evaluation", {}), "evaluation").get(
@@ -467,6 +655,11 @@ def _case_summary(
             )
             is True
             else None
+        ),
+        "workspace_violation_detail": _workspace_violation_detail(
+            trace=trace,
+            planner_calls=planner_calls,
+            object_shape=case.get("object_shape"),
         ),
     }
 

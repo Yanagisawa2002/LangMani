@@ -15,7 +15,11 @@ from langmani.v2.push_expert_recovery import (
     read_seed_bank,
     sha256_file,
 )
-from scripts.langmani_v2.replay_push_expert_failure import _save_frame, _selected_cases
+from scripts.langmani_v2.replay_push_expert_failure import (
+    _save_frame,
+    _selected_cases,
+    _workspace_violation_detail,
+)
 
 
 def _result(*, status: str, phase: str, evaluation: dict[str, object]) -> dict[str, object]:
@@ -179,3 +183,46 @@ def test_replay_selection_counts_only_new_category_cases() -> None:
         },
     )
     assert len(selected) == 5
+
+
+def test_workspace_violation_binds_plan_execution_and_object_geometry() -> None:
+    common = {
+        "target_center": [0.2, 0.0, 0.0],
+        "target_object_planar_radius": 0.025,
+        "workspace_bounds_xy": [-0.43, 0.43, -0.38, 0.38],
+        "target_contact": True,
+    }
+    trace = [
+        common
+        | {
+            "step": 4,
+            "target_object_pose": [0.39, 0.0, 0.025, 1.0, 0.0, 0.0, 0.0],
+            "tcp_position": [0.35, 0.0, 0.025],
+            "evaluation": {"target_outside_workspace": False},
+        },
+        common
+        | {
+            "step": 5,
+            "target_object_pose": [0.41, 0.0, 0.025, 1.0, 0.0, 0.0, 0.0],
+            "tcp_position": [0.37, 0.0, 0.025],
+            "evaluation": {"target_outside_workspace": True},
+        },
+    ]
+    planned = [0.4, 0.0, 0.025, 1.0, 0.0, 0.0, 0.0]
+    detail = _workspace_violation_detail(
+        trace=trace,
+        planner_calls=[
+            {
+                "action_start_index": 4,
+                "action_end_index": 6,
+                "planned_pose": planned,
+            }
+        ],
+        object_shape="cylinder",
+    )
+    assert detail is not None
+    assert detail["planned_pose"] == planned
+    assert detail["executed_pose"] == [0.37, 0.0, 0.025]
+    assert detail["nearest_workspace_boundary"] == "x_max"
+    assert detail["signed_workspace_margin"] == pytest.approx(-0.005)
+    assert detail["object_support_extent_in_push_direction"] == pytest.approx(0.025)
