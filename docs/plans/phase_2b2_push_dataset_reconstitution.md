@@ -176,3 +176,14 @@ Candidate O passed focused local validation at implementation commit
 `e55198ca44d478df584a85357a697ffbecbc8484`. Its diagnostic-only seeds are 68100--68163, disjoint
 from the untouched formal gate, every prior diagnostic range, and the reserved collection/top-up
 schedule. Diagnostic evidence remains ineligible for promotion by itself.
+
+Candidate O stopped after 5/64 diagnostic episodes: four cube successes followed by one
+zero-tolerance cylinder workspace exit. No G--O diagnostic candidate qualified for a fresh formal
+gate. The formal and collection ranges remain untouched, and Phase 2B.2 closes as Result B. Further
+expert work requires a separately authorized architecture rather than another parameter-only edit.
+
+Candidate O stopped after 5/64 diagnostic episodes on a cylinder workspace exit while retaining
+4/4 cube successes. Its target-directed 15 mm correction was ineffective because the primary push
+had left the TCP 9.2 cm from the rolling cylinder. Candidate P adds a bounded low local-contact
+waypoint before the same nudge only for that separated, near-target lateral-cylinder branch. No
+formal seed, collection seed, model, or optimizer is used.

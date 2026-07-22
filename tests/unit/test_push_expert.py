@@ -608,6 +608,19 @@ def test_lateral_cylinder_in_contact_correction_retargets_current_center_error()
     assert direction == pytest.approx([np.sqrt(0.5), -np.sqrt(0.5)])
     assert direction != pytest.approx(expert._active_push_direction)
 
+    targets, local_recontact = expert._in_contact_correction_targets(
+        np.array([0.1, 0.1, 0.025]),
+        direction,
+        0.015,
+    )
+
+    assert local_recontact
+    assert len(targets) == 2
+    assert targets[0][:3] == pytest.approx(
+        [0.1 - 0.045 * np.sqrt(0.5), 0.1 + 0.045 * np.sqrt(0.5), 0.015]
+    )
+    assert targets[1][:2] == pytest.approx(targets[0][:2] + 0.015 * direction)
+
 
 def test_corrective_phase_recontacts_when_contained_target_drifts_out() -> None:
     environment = _FakeEnvironment(

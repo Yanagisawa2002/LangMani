@@ -3002,3 +3002,32 @@ format, and changed-module mypy validation at implementation commit
 Seeds 68100--68163 are diagnostic only and are disjoint from the untouched 66300--66399 formal
 gate, every prior diagnostic range, and the reserved collection/top-up schedule. The diagnostic
 probe cannot promote the expert; collection remains closed until a complete formal gate passes.
+
+## D-120 - Reject Candidate O and close Phase 2B.2 as Result B
+
+Candidate O ran from clean runtime commit `4ebc10882fe02def4eb555a6192c90a901f5891a`. Its first four
+cube tasks succeeded, then the first cylinder/left task produced a target-workspace exit. The
+zero-tolerance rule stopped the 64-episode diagnostic schedule after five results. Simulator errors,
+nonfinite actions, and action-bound violations were zero; workspace violations were one. The full
+report SHA-256 is `18d25ffa52796035b2d59e879adaf4e5f2b38cf8142394f15b669fe6f280756a`.
+
+The two complete formal gates remain 75/100 and 11/100. Diagnostic G--O evidence cannot replace a
+formal gate, and none qualified for another formal run. Formal seeds 66300--66399 and collection
+seeds remain unused. Phase 2B.2 closes as Result B; a different expert architecture requires
+separate authorization.
+
+## D-120 - Reject Candidate O and restore only lost local cylinder contact
+
+Candidate O ran from clean Git `e167852affe047c3e10eb87b8580bc07ba885513` and stopped after
+five diagnostic episodes: all four cube tasks succeeded, then the first cylinder/left task crossed
+the workspace boundary during settle. Its full report SHA-256 is
+`8d738c9e1bd0866a76fbff1d9900b4e1b2947417bac861a9ec108b1eab714a27`; formal and collection
+seeds remain untouched.
+
+The same diagnostic seed showed that Candidate O rotated the short correction toward the target,
+but the primary push had already left the TCP 9.2 cm from the cylinder. The 15 mm correction
+therefore moved in free space while cylinder momentum increased lateral error from 5.0 cm to
+12.3 cm. Candidate P adds one low, local contact waypoint only for a near-target lateral cylinder
+whose TCP-to-object distance exceeds the existing contact proxy. It then executes the same bounded
+nudge. It does not change cube paths, high free-space recovery, task geometry, horizon, action
+bounds, thresholds, or zero-tolerance gates.

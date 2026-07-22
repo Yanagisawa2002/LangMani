@@ -516,12 +516,14 @@ class PushToRegionExpert:
                     target_distance - containment_radius + self.config.minimum_in_contact_nudge,
                 ),
             )
-            nudge = self._tcp_pose()
-            nudge[:2] += direction * advance
-            nudge[2] = self._push_height()
+            targets, local_recontact = self._in_contact_correction_targets(
+                object_position,
+                direction,
+                advance,
+            )
             result = self._planned_motion(
                 phase,
-                (nudge,),
+                targets,
                 stop_on_target_inside_region=True,
                 brake_before_containment=False,
             )
@@ -532,7 +534,11 @@ class PushToRegionExpert:
                 execution_duration_seconds=(
                     stabilization_duration + result.execution_duration_seconds
                 ),
-                message="executed bounded in-contact correction without re-contact",
+                message=(
+                    "executed bounded local re-contact correction"
+                    if local_recontact
+                    else "executed bounded in-contact correction without re-contact"
+                ),
             )
         if self._is_lateral_task():
             candidates = self._lateral_approach_candidates(
@@ -689,6 +695,33 @@ class PushToRegionExpert:
         if self._is_lateral_task() and context.target_object.object_id == "orange_cylinder":
             return self._push_direction(object_position)
         return self._motion_direction(object_position)
+
+    def _in_contact_correction_targets(
+        self,
+        object_position: np.ndarray,
+        direction: np.ndarray,
+        advance: float,
+    ) -> tuple[tuple[np.ndarray, ...], bool]:
+        """Return a short nudge, with local re-contact only for a separated cylinder."""
+
+        current = self._tcp_pose()
+        context = self._require_context()
+        local_recontact = bool(
+            self._is_lateral_task()
+            and context.target_object.object_id == "orange_cylinder"
+            and np.linalg.norm(current[:2] - object_position[:2]) > self._contact_offset() + 0.025
+        )
+        if local_recontact:
+            contact = current.copy()
+            contact[:2] = object_position[:2] - direction * self._contact_offset()
+            contact[2] = self._push_height()
+            nudge = contact.copy()
+            nudge[:2] += direction * advance
+            return (contact, nudge), True
+        nudge = current.copy()
+        nudge[:2] += direction * advance
+        nudge[2] = self._push_height()
+        return (nudge,), False
 
     def _lateral_compensation_degrees(self) -> float:
         if not self._is_lateral_task():
