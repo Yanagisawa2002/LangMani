@@ -191,3 +191,11 @@ Candidate P stopped after 5/64 diagnostic episodes with two successes, one timeo
 failure, and one zero-tolerance cylinder workspace exit. Under the milestone's explicit unstable
 generator stop rule, Phase 2B.2 closes as Result B at the expert gate. Formal collection attempts,
 accepted episodes, frames, exports, archives, loader batches, and optimizer steps all remain zero.
+
+Final local validation completed on the Result B closeout: `1536 passed, 32 skipped`; Ruff check
+passed; all 344 formatted files passed `ruff format --check`; changed Phase 2B.2 modules passed
+mypy; the full repository retained its accepted baseline of 551 errors in 63 files (below the task
+ceiling of 573); and both wheel and sdist built successfully. The two pytest warnings are narrow
+environment exceptions: optional local Pinocchio functionality is unavailable, while the real
+MPLib/ManiSkill path was exercised remotely, and this Windows identity cannot write pytest's cache
+under the Unicode checkout even though all test bodies completed.

@@ -32,5 +32,6 @@
   "collection_started": false,
   "full_report_sha256": "6c2eea259b0afeb140dba81b281b05bc8516e3ccffeb24ae9d4071a7db2c21ec",
   "generation_audit_sha256": "d82fdb63f780e8fc1863442a00cafbcd1080e569f87ba1427fa2f4a23f2c97a1",
+  "probe_log_sha256": "fca4259110ee09d7e3caf5f65133df6c5d8d0a0ff403f95b78115ac60f0f311c",
   "collection_fingerprint": "sha256:b6ced7901c48d146f87d91b124c32d4d4e8ec95dd6363eb2e02b03f8df9a32ac"
 }
