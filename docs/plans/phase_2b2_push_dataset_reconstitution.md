@@ -148,3 +148,8 @@ momentum from continuing while the arm repositions. Diagnostic seeds 66800--6686
 
 Candidate L is content-bound to implementation commit
 `c7361c60daeaa50740bccee213de9485a4c078ef`; its diagnostic schedule cannot promote the expert.
+
+Candidate L stopped after four standard timeouts because its best possible full-probe result fell
+to 60/64 (93.75%). With the two complete formal gates at 75/100 and 11/100 and all G--L probes
+rejected, Phase 2B.2 closes as Result B at the mandatory expert gate. Formal seeds 66300--66399,
+collection seeds, export, archives, SmolVLA loading, training, and Phase 2D remain untouched.

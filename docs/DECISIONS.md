@@ -2906,11 +2906,11 @@ alter formal-gate execution. Collection remains closed.
 
 ## D-111 - Reject Candidate J on a zero-tolerance workspace exit
 
-Candidate J ran from clean Git `750d71bc00ba0c5db3d67cc15e0391b125df03d0` and stopped after
+Candidate J ran from clean Git `50d28767539237e094657dda1a69798b75392526` and stopped after
 14 diagnostic episodes with ten successes. A rightward cylinder correction moved the target outside
 the workspace, which triggered the predeclared zero-tolerance early stop. The other failures were a
 cube contact event, corrective TCP tracking error, and zero-step contact-planning failure. The full
-report SHA-256 is `246b77dfd380a32562afaf53345aba3a8e1612257117373770fcfd60dcead6b3`.
+report SHA-256 is `647e5509490f30211acf2e9aa960cdbc2de94f9b98387230243bf2f2660790ad`.
 Formal seeds and collection remain untouched.
 
 Candidate K responds only to those mechanics: all contact paths execute densely; a failed zero-step
@@ -2941,23 +2941,23 @@ the expert, and holds the current joint state before the existing correction pha
 change environment success, planner targets, controller semantics, horizon, action limits, formal
 threshold, or zero-tolerance gates. Formal and collection seeds remain sealed.
 
-## D-113 - Reject Candidate K and brake before corrective repositioning
-
-Candidate K ran from clean Git `1ec0001f505e33686af01e1d013c1db0aa3881bd` and stopped after
-five diagnostic episodes. Three succeeded; one cube timed out during the first correction and one
-leftward cylinder left the workspace while the correction was still moving to re-contact. The
-zero-tolerance workspace rule stopped the run. The full report SHA-256 is
-`9502be405b1cbb7839392e16136ce56401ce7c75df5aa9ff13e55ad6c4e104ea`.
-
-Candidate L adds only a fixed precontainment braking rule: a push stops when exact target distance
-enters a fixed object-specific band outside full containment, then commands the current measured
-joint state for the existing settle window. This may form unchanged stable success or leave a
-stationary target for ordinary correction. It does not modify target state, success, the controller,
-the 250-step limit, action bounds, or acceptance. Seeds 66800--66863 are diagnostic only.
-
 ## D-114 - Bind Candidate L before its isolated diagnostic probe
 
-Candidate L passed 39 focused runtime-contract tests plus Ruff, format, and changed-module mypy at
+Candidate L passed 40 focused runtime-contract tests plus full Ruff and format validation at
 implementation commit `c7361c60daeaa50740bccee213de9485a4c078ef`. The v2 contract binds
 `PushToRegionExpert/CandidateL` to that exact source. Seeds 66800--66863 are diagnostic only;
 formal seeds 66300--66399 and all collection ranges remain untouched.
+
+## D-115 - Close Phase 2B.2 as Result B at the expert gate
+
+Candidate L ran from clean Git `fc478d6364e5264b6bceb188f4497da02ad991fe`. Its first four
+standard episodes all timed out at the unchanged 250-step horizon. With four failures, its best
+possible 64-episode diagnostic result was 60/64 (93.75%), below the unchanged 95% gate, so the
+predeclared success-ceiling stop ended the run. Simulator, nonfinite-action, action-bound, and
+workspace counts were zero. The full report SHA-256 is
+`b2f8c068cdb88a00b4391cdc3c45732eb5a0ee7fc4f6f78eab12771a176a10b6`.
+
+The two complete formal candidate gates remain 75/100 and 11/100. Later G--L probes are diagnostic
+only and cannot replace formal evidence. Phase 2B.2 is Result B: the expert gate failed, the formal
+66300--66399 range was never consumed, and collection/export/archive/replication/SmolVLA loading,
+training, and Phase 2D remain closed. Another expert architecture requires separate authorization.

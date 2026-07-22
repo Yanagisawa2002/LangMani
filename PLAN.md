@@ -40,6 +40,14 @@ The exact next stage is a separately invoked Phase 2C SmolVLA implementation/tra
 That authorization is dataset readiness only: no SmolVLA dependency, adapter, model, training run,
 evaluation, or learned-policy Phase 2 result exists yet, and Phase 2B starts none automatically.
 
+The later Phase 2B.2 byte-reconstitution attempt is separately closed as Result B. It used the new
+`langmani/phase2b-push-v2` identity and never reused v1 bytes or hashes. Two complete expert gates
+reached 75/100 and 11/100; the final bounded diagnostic candidate had four timeouts and a best-case
+60/64 ceiling. Because no candidate satisfied the mandatory 95%/100-episode gate, formal collection
+never started: v2 episodes=0, frames=0, optimizer steps=0, and Phase 2C.2 is not authorized from
+this reconstruction attempt. The next work, if separately authorized, is a new push-expert
+architecture rather than another parameter-only recovery.
+
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected

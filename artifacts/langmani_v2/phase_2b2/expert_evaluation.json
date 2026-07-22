@@ -1,0 +1,33 @@
+{
+  "schema_version": "langmani-v2-phase2b2-expert-gate-summary-v0",
+  "dataset_id": "langmani/phase2b-push-v2",
+  "acceptance_threshold": 0.95,
+  "minimum_formal_episodes": 100,
+  "formal_gates": [
+    {
+      "candidate_id": "PushToRegionExpert/CandidateE",
+      "episodes": 100,
+      "successes": 75,
+      "passed": false
+    },
+    {
+      "candidate_id": "PushToRegionExpert/CandidateF",
+      "episodes": 100,
+      "successes": 11,
+      "passed": false
+    }
+  ],
+  "diagnostic_probe_candidates": ["CandidateG", "CandidateH", "CandidateI", "CandidateJ", "CandidateK", "CandidateL"],
+  "latest_candidate": "PushToRegionExpert/CandidateL",
+  "latest_runtime_source_commit": "fc478d6364e5264b6bceb188f4497da02ad991fe",
+  "latest_probe_completed_episodes": 4,
+  "latest_probe_successes": 0,
+  "latest_probe_stop_reason": "success_ceiling_below_gate",
+  "formal_seed_start": 66300,
+  "formal_seed_count": 100,
+  "formal_seed_interval_consumed": false,
+  "collection_started": false,
+  "optimizer_steps": 0,
+  "expert_gate_passed": false,
+  "result": "RESULT_B_EXPERT_GATE_FAILED"
+}

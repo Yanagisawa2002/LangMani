@@ -79,6 +79,14 @@ only that a separately invoked Phase 2C may consume the frozen data; no SmolVLA 
 training run, or learned pushing result exists yet. Rejected probes and invalid infrastructure
 attempts remain diagnostics, not quality evidence.
 
+Phase 2B.2 separately attempted to reconstitute the unavailable push bytes under the new identity
+`langmani/phase2b-push-v2`. Its two complete formal expert gates reached 75/100 and 11/100. Six
+subsequent G--L candidates ran only on disjoint diagnostic seeds; the final Candidate L stopped
+after four timeouts because its best possible 64-episode result was 60/64 (93.75%). Phase 2B.2 is
+therefore Result B at the mandatory expert gate. Formal seeds 66300--66399 and all collection seeds
+remain untouched; no v2 raw episodes, LeRobot export, archive, loader batch, optimizer step,
+SmolVLA training, or Phase 2D work exists.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.

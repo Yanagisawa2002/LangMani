@@ -46,6 +46,15 @@ adapter, trained model, or learned Phase 2 policy metric exists yet. See the
 [`Phase 2B results`](docs/langmani_v2/phase_2b_results.md), and
 [`Phase 2B dataset audit`](docs/langmani_v2/phase_2b_dataset_audit.md).
 
+The later Phase 2B.2 reconstruction used a new `langmani/phase2b-push-v2` identity because the v1
+bytes were unavailable. It closed honestly as Result B at the mandatory expert gate: the two
+complete formal candidates reached 75/100 and 11/100, and the final bounded diagnostic candidate
+stopped with a best-case 60/64 (93.75%) ceiling. No v2 episode or frame was collected, no archive
+or dataset package was accepted, and no SmolVLA optimizer step ran. See the
+[`Phase 2B.2 expert report`](docs/langmani_v2/phase_2b2_expert_report.md),
+[`dataset Result B report`](docs/langmani_v2/phase_2b2_dataset_report.md), and
+[`v1/v2 comparison`](docs/langmani_v2/phase_2b2_v1_comparison.md).
+
 The completed Phase 2B archive can be independently re-audited without starting training:
 
 ```bash
