@@ -130,3 +130,7 @@ Candidate K removes stride sampling from both contact motions, adds a determinis
 contact waypoint after a zero-action screw-plan failure, sets the fixed cylinder goal margin to
 2 cm, and uses eight 6 cm maximum fallback segments. Diagnostic seeds 66700--66763 remain isolated;
 formal and collection schedules remain sealed.
+
+Candidate K passed focused runtime-contract and Ruff validation at implementation commit
+`413710deb15a1139b3ac830387c7543d7839c7f7`. The contract binds that exact commit without changing
+the 95/100 formal threshold or any zero-tolerance criterion.

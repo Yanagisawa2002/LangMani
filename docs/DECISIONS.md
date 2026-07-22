@@ -2918,3 +2918,12 @@ direct contact plan may use one fixed midpoint before the same final contact pos
 interior margin is fixed at 2 cm; and direct-push planning fallback is bounded to eight 6 cm
 segments. The horizon, controller, success predicate, action bounds, formal threshold, and
 zero-tolerance checks do not change. Seeds 66700--66763 are diagnostic only.
+
+## D-112 - Bind Candidate K to its verified implementation before isolated probing
+
+Candidate K passed 39 focused runtime-contract tests and Ruff validation at clean implementation
+commit `413710deb15a1139b3ac830387c7543d7839c7f7`. The Phase 2B.2 contract binds
+`PushToRegionExpert/CandidateK` to that exact source while retaining the untouched formal range
+66300--66399. Seeds 66700--66763 are diagnostic only and cannot promote the expert. Collection
+remains closed until a later full, untouched 100-episode gate reaches at least 95/100 with every
+zero-tolerance count at zero.

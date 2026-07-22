@@ -101,3 +101,8 @@ Candidate K restores dense controller execution for contact establishment and co
 adds a fixed two-waypoint contact fallback only after a zero-step direct plan failure, uses a 2 cm
 cylinder interior margin, and bounds the rare segmented fallback to eight 6 cm advances. It changes
 neither the 250-step limit nor any task, action, or acceptance gate.
+
+Candidate K passed 39 focused runtime-contract tests and Ruff validation at implementation commit
+`413710deb15a1139b3ac830387c7543d7839c7f7`. The v2 contract binds that exact source. Its isolated
+diagnostic range is 66700--66763; it is not eligible for promotion. Formal seeds 66300--66399 and
+all collection seeds remain sealed.

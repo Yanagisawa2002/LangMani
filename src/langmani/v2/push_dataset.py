@@ -157,8 +157,8 @@ class PushCollectionConfig:
             expected_expert = "PushToRegionExpert/CandidateE"
             expected_commit = "59ca88e9f0514187252a6286ab1b8e06c4318fb4"
         else:
-            expected_expert = "PushToRegionExpert/CandidateJ"
-            expected_commit = "d757d91fa7c12f8c341f692118d8d45882623834"
+            expected_expert = "PushToRegionExpert/CandidateK"
+            expected_commit = "413710deb15a1139b3ac830387c7543d7839c7f7"
         candidate_name = expected_expert.rsplit("/", maxsplit=1)[-1].replace(
             "Candidate", "Candidate "
         )
