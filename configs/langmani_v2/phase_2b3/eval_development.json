@@ -1,0 +1,10 @@
+{
+  "schema_version": "langmani-v2-phase2b3-evaluation-config-v1",
+  "mode": "development",
+  "expert_config": "configs/langmani_v2/phase_2b3/expert.json",
+  "seed_registry": "artifacts/langmani_v2/phase_2b3/seed_registry.json",
+  "standard_episodes": 60,
+  "hard_episodes": 40,
+  "minimum_success_rate": 0.95,
+  "official_collection_episodes": 0
+}

@@ -1,0 +1,8 @@
+{
+  "schema_version": "langmani-v2-phase2b3-evaluation-config-v1",
+  "mode": "failure_regression",
+  "expert_config": "configs/langmani_v2/phase_2b3/expert.json",
+  "replay_validation": "artifacts/langmani_v2/phase_2b3/replay_validation.json",
+  "minimum_success_rate": 0.8,
+  "official_collection_episodes": 0
+}

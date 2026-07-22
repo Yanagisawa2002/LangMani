@@ -744,6 +744,23 @@ class PushToRegionEnv(BaseEnv):
             raise ValueError(f"push expert requires num_envs=1, got {self.num_envs}")
         return dict(self.evaluate())
 
+    def get_push_expert_feedback(self) -> dict[str, torch.Tensor]:
+        """Return expert-only target contact and motion feedback for closed-loop control."""
+
+        if self.num_envs != 1:
+            raise ValueError(f"push expert requires num_envs=1, got {self.num_envs}")
+        if not hasattr(self, "_target_object_indices"):
+            raise PushExpertContextError("reset before requesting push expert feedback")
+        object_index = int(self._target_object_indices[0].detach().cpu())
+        actor = self.push_objects[object_index]
+        return {
+            "target_contact_force": self._robot_contact_magnitude(actor, arm_only=False),
+            "target_linear_velocity": actor.linear_velocity.detach().clone(),
+            "target_angular_velocity": actor.angular_velocity.detach().clone(),
+            "target_pose": actor.pose.raw_pose.detach().clone(),
+            "tcp_pose": self.agent.tcp.pose.raw_pose.detach().clone(),
+        }
+
     def get_push_expert_action_bounds(self) -> tuple[np.ndarray, np.ndarray]:
         """Return copied controller bounds for expert-side plan validation."""
 
