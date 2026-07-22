@@ -84,6 +84,7 @@ class SimulatorMPCPushConfig:
     development_minimum_prefix_agreement: float = 0.99
     formal_minimum_success_rate: float = 0.95
     maximum_bounded_repairs: int = 1
+    contact_free_replan_snapshots: bool = True
     score_progress_weight: float = 1.0
     score_alignment_weight: float = 0.4
     score_target_weight: float = 0.6
@@ -114,6 +115,8 @@ class SimulatorMPCPushConfig:
             raise ValueError("executed prefix cannot exceed candidate horizon")
         if self.maximum_bounded_repairs != 1:
             raise ValueError("Phase 2B.3 permits exactly one bounded repair")
+        if self.contact_free_replan_snapshots is not True:
+            raise ValueError("MPC sandbox snapshots must be captured at contact-free boundaries")
         if len(self.candidate_angle_offsets_degrees) * len(self.candidate_distance_scales) > 12:
             raise ValueError("MPC candidate set cannot exceed 12 physical rollouts")
         for name in (

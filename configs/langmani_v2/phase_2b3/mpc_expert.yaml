@@ -13,6 +13,7 @@
   "maximum_planner_retries": 1,
   "maximum_physically_simulated_candidates": 6,
   "maximum_bounded_repairs": 1,
+  "contact_free_replan_snapshots": true,
   "development": {
     "seed_start": 69000,
     "standard_episodes": 12,

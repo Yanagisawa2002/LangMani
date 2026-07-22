@@ -121,6 +121,13 @@ def _target_position(environment: Any) -> np.ndarray:
     return _numeric(context.target_object.actor.pose.p)[0].astype(np.float64, copy=True)
 
 
+def _target_contact(environment: Any) -> bool:
+    base = environment.unwrapped
+    context = base.get_push_expert_task_context()
+    force = _numeric(base._robot_contact_magnitude(context.target_object.actor, arm_only=False))
+    return bool(force.reshape(-1)[0] > CONTACT_FORCE_THRESHOLD)
+
+
 def _contact_bearing_segment(
     *,
     seed: int,
@@ -144,8 +151,11 @@ def _contact_bearing_segment(
         _reset(replay, seed, task)
         initial = _target_position(replay)
         first_motion_index: int | None = None
+        first_contact_index: int | None = None
         for index, action in enumerate(actions):
             replay.step(action)
+            if first_contact_index is None and _target_contact(replay):
+                first_contact_index = index
             displacement = float(np.linalg.norm(_target_position(replay)[:2] - initial[:2]))
             if first_motion_index is None and displacement >= 5e-4:
                 first_motion_index = index
@@ -153,7 +163,9 @@ def _contact_bearing_segment(
                 break
         if first_motion_index is None:
             raise RuntimeError("reference action trace never established physical target motion")
-        start = max(0, first_motion_index - 2)
+        if first_contact_index is None:
+            raise RuntimeError("reference action trace never established physical target contact")
+        start = max(0, first_contact_index - 3)
         stop = min(len(actions), start + ACTION_SEQUENCE_LENGTH)
         selected = tuple(
             np.asarray(action, dtype=np.float32).copy() for action in actions[start:stop]
@@ -163,6 +175,8 @@ def _contact_bearing_segment(
         _reset(live, seed, task)
         for action in actions[:start]:
             live.step(action)
+        if _target_contact(live):
+            raise RuntimeError("clone audit snapshot is not contact-free")
         live_snapshot = capture_push_simulation_state(live)
         live_trace = _run_actions(live, selected)
         return (
@@ -174,6 +188,7 @@ def _contact_bearing_segment(
                 "reference_success": result.success,
                 "reference_total_actions": len(actions),
                 "first_target_motion_action_index": first_motion_index,
+                "first_target_contact_action_index": first_contact_index,
                 "selected_action_start": start,
                 "selected_action_count": len(selected),
             },
@@ -377,6 +392,7 @@ def main() -> int:
             "live_continuation_replay": live_restore_comparison,
             "restore_mode": "fresh_isolated_environment_reset_then_complete_state_restore",
             "warm_in_place_restore_authorized": False,
+            "contact_free_replan_snapshots_required": True,
             "trace_sha256": {
                 "live_continuation": _trace_digest(live_trace),
                 "sandbox_first": _trace_digest(first),

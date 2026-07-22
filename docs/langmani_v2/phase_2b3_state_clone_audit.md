@@ -13,5 +13,11 @@ contact-bearing action sequence before and after restore, and across isolated ma
 environments. Categorical observations, contacts, success, and failure must agree exactly;
 continuous state tolerances and the resulting hashes will be recorded here after execution.
 
-Status: implementation in progress; no MPC qualification is authorized by this document alone.
+Two preserved precondition attempts showed that ManiSkill's public state does not reproduce an
+already-active PhysX contact cache: restoring a snapshot taken two actions before target motion
+produced 100% categorical agreement but up to 4.37 mm object-pose drift. Such warm or in-contact
+restoration is therefore prohibited. The accepted architecture must capture only an explicitly
+contact-free replan boundary, physically establish contact inside each candidate rollout, and
+return to a contact-free boundary before the next MPC decision.
 
+Status: implementation in progress; no MPC qualification is authorized by this document alone.

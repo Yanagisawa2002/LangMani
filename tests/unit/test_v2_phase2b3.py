@@ -172,6 +172,7 @@ def test_complete_simulation_snapshot_round_trip_and_tamper_detection() -> None:
 
 def test_candidate_generation_is_deterministic_and_geometry_aware() -> None:
     config = SimulatorMPCPushConfig()
+    assert config.contact_free_replan_snapshots is True
     common = {
         "object_position": (-0.15, 0.0, 0.025),
         "target_center": (0.12, 0.22, 0.001),
