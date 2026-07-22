@@ -15,7 +15,7 @@ from langmani.v2.push_expert_recovery import (
     read_seed_bank,
     sha256_file,
 )
-from scripts.langmani_v2.replay_push_expert_failure import _save_frame
+from scripts.langmani_v2.replay_push_expert_failure import _save_frame, _selected_cases
 
 
 def _result(*, status: str, phase: str, evaluation: dict[str, object]) -> dict[str, object]:
@@ -159,3 +159,23 @@ def test_keyframe_writer_moves_device_tensor_to_cpu(tmp_path: Path) -> None:
     output = tmp_path / "frame.png"
     _save_frame(Environment(), output)
     assert output.is_file()
+
+
+def test_replay_selection_counts_only_new_category_cases() -> None:
+    records = [
+        {
+            "candidate_id": "CandidateE" if seed < 3 else "CandidateH",
+            "seed": seed,
+            "episode_result": "FAILURE",
+            "failure_category": "STALLED_PROGRESS",
+        }
+        for seed in range(5)
+    ]
+    selected = _selected_cases(
+        {"records": records},
+        {
+            "per_failure_category": 5,
+            "selection": {"candidate_f_per_category": 5},
+        },
+    )
+    assert len(selected) == 5

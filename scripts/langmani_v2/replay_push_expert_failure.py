@@ -282,8 +282,12 @@ def _selected_cases(
     failures = [item for item in records if item.get("episode_result") == "FAILURE"]
     selected: dict[tuple[str, int], dict[str, object]] = {}
 
-    def add(item: dict[str, object]) -> None:
-        selected[(str(item["candidate_id"]), int(cast(int, item["seed"])))] = item
+    def add(item: dict[str, object]) -> bool:
+        key = (str(item["candidate_id"]), int(cast(int, item["seed"])))
+        if key in selected:
+            return False
+        selected[key] = item
+        return True
 
     for item in failures:
         if item.get("candidate_id") == "CandidateE":
@@ -296,8 +300,7 @@ def _selected_cases(
     f_counts: Counter[str] = Counter()
     for item in failures:
         category = str(item.get("failure_category"))
-        if item.get("candidate_id") == "CandidateF" and f_counts[category] < f_limit:
-            add(item)
+        if item.get("candidate_id") == "CandidateF" and f_counts[category] < f_limit and add(item):
             f_counts[category] += 1
     target = int(cast(int, config.get("per_failure_category", 5)))
     category_counts = Counter(
@@ -307,8 +310,7 @@ def _selected_cases(
     )
     for item in failures:
         category = str(item.get("failure_category"))
-        if category_counts[category] < target:
-            add(item)
+        if category_counts[category] < target and add(item):
             category_counts[category] += 1
     return sorted(
         selected.values(),
