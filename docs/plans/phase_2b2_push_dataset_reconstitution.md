@@ -69,3 +69,13 @@ closed. Any successor must reduce controller-executed primary-push horizon cost 
 the 250-step limit, exact success criterion, obstacle-aware approach constraints, native action
 bounds, and all zero-tolerance safety gates. A successor requires another untouched 100-episode
 schedule and a new versioned identity.
+
+Candidate G is implemented at Git `24709f1702914e72131245484d4405ac68a6303c`. It restores one
+direct content-bound primary-push plan as the default and uses the bounded segmented path only when
+that direct plan fails before executing an action. It also records complete fallback step counts,
+raises obstacle-crossing staging without changing the physical contact height, permits the existing
+controller to perform lateral-cylinder correction, and uses a geometry-specific cylinder endpoint
+margin. A diagnostic-only 32-episode probe may use seeds 66200--66231; probe output is explicitly
+ineligible for formal promotion. The untouched formal gate is frozen at seeds 66300--66399 under
+`PushToRegionExpert/CandidateG`. The threshold, 250-step horizon, task predicate, native action
+bounds, and every zero-tolerance gate remain unchanged.

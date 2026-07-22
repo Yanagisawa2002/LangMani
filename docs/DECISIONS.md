@@ -2803,3 +2803,20 @@ failure. Eighty failures occurred during `primary_push`; all 74 timeouts exhaust
 250-step limit. The diagnosis is bounded-segment execution cost, not permission to increase the
 horizon or relax acceptance. Simulator errors, non-finite actions, action-bound violations, and
 workspace violations remained zero. Formal collection, dataset export, and training remain closed.
+
+## D-104 - Freeze Candidate G with a diagnostic probe separated from promotion
+
+Candidate G passed local implementation validation at Git
+`24709f1702914e72131245484d4405ac68a6303c`. It executes one direct content-bound primary push by
+default and enters the bounded segmented fallback only after a zero-action planning or IK failure.
+It also makes full fallback step accounting explicit, raises only free-space staging, restores
+controller-executed lateral-cylinder correction, and binds a cylinder-specific containment margin.
+It does not extend the 250-step horizon, alter the task predicate, clip or repair actions, or relax
+any zero-tolerance gate.
+
+Seeds 66200 through 66231 are reserved for a diagnostic-only 20-standard/12-hard probe. The probe
+is marked `formal_gate_eligible=false`, can never set `passed=true`, and exists only to avoid wasting
+another full formal gate on an obviously weak path. The untouched Candidate G promotion gate is
+frozen at seeds 66300 through 66399 and still requires at least 95/100 with zero simulator errors,
+non-finite actions, action-bound violations, and workspace violations. Formal collection remains
+closed until that exact gate passes.

@@ -61,8 +61,8 @@ def test_phase2b2_contract_uses_independent_identity_and_exact_features() -> Non
     config = PushCollectionConfig.load(CONFIG)
 
     assert config.payload["dataset_version"] == "v2"
-    assert config.payload["expert_id"] == "PushToRegionExpert/CandidateF"
-    assert config.payload["accepted_expert_commit"] == ("6277d77227a51d39d675e328c4df7c233f302484")
+    assert config.payload["expert_id"] == "PushToRegionExpert/CandidateG"
+    assert config.payload["accepted_expert_commit"] == ("24709f1702914e72131245484d4405ac68a6303c")
     assert config.payload["supersedes_dataset_id"] == "langmani/phase2b-push-v1"
     assert config.payload["state_names"] == list(PANDA_POLICY_STATE_COMPONENTS)
     assert config.payload["action_names"] == list(PANDA_ACTION_COMPONENTS)
@@ -87,14 +87,14 @@ def test_expert_probe_schedule_is_explicit_and_does_not_consume_formal_seeds() -
     formal = build_expert_probe_schedule(config)
     probe = build_expert_probe_schedule(
         config,
-        seed_start=67_000,
+        seed_start=66_200,
         standard_episodes=8,
         hard_episodes=8,
     )
 
     assert len(formal) == 100
     assert len(probe) == 16
-    assert [seed for seed, _task in probe] == list(range(67_000, 67_016))
+    assert [seed for seed, _task in probe] == list(range(66_200, 66_216))
     assert {task.difficulty for _seed, task in probe[:8]} == {"standard"}
     assert {task.difficulty for _seed, task in probe[8:]} == {"hard"}
     assert {seed for seed, _task in formal}.isdisjoint(seed for seed, _task in probe)
@@ -331,7 +331,7 @@ def test_atomic_shard_resume_reuses_verified_episode_and_rejects_tampering(
         run_id="run",
         sim_backend="physx_cuda",
         resume=True,
-        expert_identity="PushToRegionExpert/CandidateF@6277d772",
+        expert_identity="PushToRegionExpert/CandidateG@24709f1",
     )
     assert resumed == [record]
 
@@ -344,7 +344,7 @@ def test_atomic_shard_resume_reuses_verified_episode_and_rejects_tampering(
             run_id="run",
             sim_backend="physx_cuda",
             resume=True,
-            expert_identity="PushToRegionExpert/CandidateF@6277d772",
+            expert_identity="PushToRegionExpert/CandidateG@24709f1",
         )
 
 

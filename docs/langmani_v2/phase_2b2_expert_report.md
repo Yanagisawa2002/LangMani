@@ -30,3 +30,11 @@ Formal collection did not start.
 The compact rejection summary is
 `artifacts/langmani_v2/phase_2b2/expert_evaluation_candidate_f_rejected.json`. The immutable full
 remote report SHA-256 is `94975a838063c4e20891cf478bf775127eaf6a04fbcfcd990caef415fad3087d`.
+
+## Candidate G pending gate
+
+Candidate G is locally validated at `24709f1702914e72131245484d4405ac68a6303c`. A diagnostic-only
+probe is reserved for seeds 66200 through 66231 and cannot produce a formal pass. If its mechanics
+are sound, the untouched formal gate will use seeds 66300 through 66399 under the unchanged 95%
+threshold and zero-tolerance safety contract. Until that exact gate passes, Candidate G remains
+provisional and formal collection remains closed.
