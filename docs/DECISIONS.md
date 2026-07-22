@@ -2709,3 +2709,24 @@ reached dataset creation. The deliberate empty-root probe stopped at missing `me
 executed zero optimizer steps. This validates base loading and launch mechanics only. The accepted
 Phase 2B roots remain unavailable, so it does not satisfy the real-batch smoke, training,
 checkpoint, or closed-loop gates.
+
+## D-099 - Recover Phase 2B by content identity or stop before optimization
+
+Phase 2C.1 treats the lost Phase 2B export as an external immutable asset, not as a reproducible
+build target. The accepted evidence retains exact sidecar hashes, split counts, aggregate byte
+count, feature/timing contracts, replay evidence, and an independent verifier hash, but it does not
+retain a complete per-file digest inventory or the six `meta/info.json` byte hashes. Those missing
+identities must not be guessed from a regenerated export.
+
+An `AcceptedDatasetPackage` may therefore be created only after a located candidate re-passes the
+retained sidecar identities, all six metadata/count/schema/task gates, complete real LeRobot
+readback, and the independent Phase 2B verifier. Package creation additionally computes a complete
+path-independent file-tree digest. Recovery verifies the package at its source, copies through an
+unaddressed owned staging directory, verifies the staging bytes, atomically activates the expected
+root name, and verifies the destination again. A copy interruption cannot materialize the final
+dataset path.
+
+If no candidate reaches `EXACT_ACCEPTED_DATASET`, every training gate remains closed and optimizer
+steps remain zero. Similar, partial, regenerated, or metadata-repaired data cannot substitute for
+the accepted Phase 2B bytes. The honest terminal state is Phase 2C.1 Result B; it does not downgrade
+the historical Phase 2B acceptance, claim a learned policy failure, or authorize Phase 2D.
