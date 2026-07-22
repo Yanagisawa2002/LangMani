@@ -60,3 +60,22 @@ package while official collection remains zero. Result B preserves an engineerin
 expert with exact development failures and untouched acceptance when development fails. Result C
 requires reproducible evidence that the controller/task/workspace combination is structurally
 infeasible. Any rejection recommends a task/data-source pivot instead of threshold relaxation.
+
+## Final execution outcome
+
+The one authorized architecture rebuild is complete. Local static validation passed 10,000
+geometry fixtures and 10,000 generated actions with no geometry, shape, finite-value, or action
+contract error. The first remote implementation then exhausted its eight-segment budget on all
+four smoke cases. The same architecture was frozen with a longer, still bounded twelve-segment
+budget and evaluated on the ordered historical regression schedule.
+
+That diagnostic completed 12 cases: 2 successes, 9 timeouts, and 1 wrong-object interaction. The
+wrong-object interaction is a new zero-tolerance failure, so the fail-fast regression contract
+stopped the milestone without consuming the other 43 regression cases. Development was not
+authorized, its 100 seeds remain untouched, and acceptance remains sealed with zero executed
+episodes. The expert package is `REJECTED`; official collection and optimizer steps remain zero.
+
+This is Result B, not a 16.7% development result. The 2/12 value describes a non-independent
+historical diagnostic subset only. The self-developed Push expert line stops here, with the pivot
+options limited to an official reliable expert task, an official benchmark dataset, validated
+motion-planning demonstrations, or an already stable LangMani task.

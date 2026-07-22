@@ -1,0 +1,40 @@
+{
+  "evaluated_source_commits": {
+    "budget_aware_diagnostic": "3e7f805f7b9a0c0a230a61c27b83eb85d2e7c591",
+    "replay": "e63931c8ff66c271c67e8208f982d449bdf41fbf",
+    "static_preflight_and_initial_smoke": "d5e310e2a0a9e6584188c97e1537bb574d2e73f9"
+  },
+  "formal_data_collection_performed": false,
+  "lerobot_export_performed": false,
+  "official_collection_episodes": 0,
+  "optimizer_steps": 0,
+  "phase_2c2_started": false,
+  "phase_2d_started": false,
+  "remote_tracked_source_clean": true,
+  "retrieved_evidence_sha256": {
+    "diagnostic_ledger": "3bd83162a47d5fee4e1ed82ce8d544effe726e4d0cbdb0f2d70f1a53bff88caa",
+    "diagnostic_report": "2fdae1cf21fc660cf6fa19970c62405e1c8cd0f0b084797df2567816d43c279a",
+    "gpu_inventory": "ef9c910c67c4984313890f68d7f9e94456aecfbc286260dccf53f7273ddc2657",
+    "remote_static_preflight": "95f59411303781e320a58284bc0cd4a5c0e464400c13d92d0c33f8bcf21986e5"
+  },
+  "run_ids": {
+    "initial_four_episode_smoke": "20260723T_phase2b3-smoke4_d5e310e",
+    "replay_evidence": "20260722T202052Z_phase2b3-replay-evidence_e63931c",
+    "static_preflight": "20260723T_phase2b3-preflight_d5e310e",
+    "twelve_episode_diagnostic": "20260723T_phase2b3-smoke4_3e7f805"
+  },
+  "runtime": {
+    "gpu_inventory": "NVIDIA GeForce RTX 5090, 580.76.05, 32607 MiB, 0 MiB",
+    "maniskill": "3.0.1",
+    "mplib": "0.1.1",
+    "numpy": "1.26.4",
+    "python": "3.12.3",
+    "sapien": "3.0.3",
+    "torch": "2.11.0+cu130"
+  },
+  "schema_version": "langmani-v2-phase2b3-remote-execution-audit-v1",
+  "server_disposition": "ONLINE_PER_USER_INSTRUCTION",
+  "smolvla_started": false,
+  "status": "COMPLETE_REJECTED",
+  "training_performed": false
+}

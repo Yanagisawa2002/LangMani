@@ -1,0 +1,29 @@
+{
+  "acceptance_bank_accessed": false,
+  "acceptance_passed": false,
+  "architecture": "GeometryConstrainedPushExpert",
+  "collection_entrypoint_authorized": false,
+  "development_passed": false,
+  "evaluated_source_commit": "3e7f805f7b9a0c0a230a61c27b83eb85d2e7c591",
+  "expert_config_sha256": "17cb6df01ba33f10dfd5992650780c5a1697604243ae0c5c6d819b234c2e1c60",
+  "expert_semantic_digest": "9e0c1bd94f7745c35e711f35d19bfbcc27dbfd5e2789e76cdb7446641aef443a",
+  "file_sha256": {
+    "acceptance_evaluation": "550f3b6b1cd0416429515e029dc5e2c991009a091aed3be5cec2006096080304",
+    "development_evaluation": "3337d25f8d125ec3509e544ea7a5b839cfb377cf25900bcc1bfaa3a737a326da",
+    "expert_config": "17cb6df01ba33f10dfd5992650780c5a1697604243ae0c5c6d819b234c2e1c60",
+    "failure_registry": "5e3b79992c3452b313d867944becdf0d4ffdd2c5b4b52f990c65f543000c0f0e",
+    "regression_evaluation": "c4888cfaa233b1a968d0b6895d0a0a7050314c9dfd6ad42881dd97221ec03a89",
+    "remote_execution_audit": "69aaac25ce5481ad2750216bc1706af61cb591ad2a328d1b743d9d2726b2980c",
+    "replay_validation": "0a50d9724298b792eaa570b3f32ac457c20f23742e86db70baaf3425e4f0b60d",
+    "root_cause_summary": "08b2adfd8b0108a5f86f3c12fe797362344fb8325c4782fe6763536c91cf5aa3",
+    "seed_registry": "e274797278d89ad365f6efe12477446aaf335e8efbf05c34db525ad115c153bc",
+    "static_geometry_validation": "44f5f581278fbefdba3af282a57c9b0cd25552555f885c1c5b73719356b7ecc2"
+  },
+  "finalizer_source_commit": "dde96632800173cb34487959eaab77c0003d1240",
+  "official_collection_episodes": 0,
+  "optimizer_steps": 0,
+  "package_status": "REJECTED",
+  "rejection_reason": "ZERO_TOLERANCE_WRONG_OBJECT_INTERACTION",
+  "schema_version": "langmani-v2-phase2b3-expert-package-manifest-v1",
+  "state_machine_version": "geometry_constrained_closed_loop_push_v1"
+}

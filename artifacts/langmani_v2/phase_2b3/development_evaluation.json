@@ -1,0 +1,15 @@
+{
+  "acceptance_bank_accessed": false,
+  "episodes_executed": 0,
+  "episodes_expected": 100,
+  "minimum_successes": 95,
+  "official_collection_episodes": 0,
+  "optimizer_steps": 0,
+  "passed": false,
+  "reason": "A zero-tolerance wrong-object interaction failed the diagnostic regression gate.",
+  "regression_evaluation_sha256": "c4888cfaa233b1a968d0b6895d0a0a7050314c9dfd6ad42881dd97221ec03a89",
+  "schema_version": "langmani-v2-phase2b3-development-evaluation-v1",
+  "status": "NOT_RUN_REGRESSION_GATE_FAILED",
+  "success_rate": null,
+  "successes": 0
+}

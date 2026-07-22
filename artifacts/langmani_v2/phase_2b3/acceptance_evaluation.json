@@ -1,0 +1,15 @@
+{
+  "development_evaluation_sha256": "3337d25f8d125ec3509e544ea7a5b839cfb377cf25900bcc1bfaa3a737a326da",
+  "episodes_executed": 0,
+  "episodes_expected": 100,
+  "minimum_successes": 95,
+  "official_collection_episodes": 0,
+  "optimizer_steps": 0,
+  "passed": false,
+  "reason": "Development was not authorized after the regression gate failed.",
+  "schema_version": "langmani-v2-phase2b3-acceptance-evaluation-v1",
+  "sealed": true,
+  "status": "NOT_RUN_DEVELOPMENT_GATE_FAILED",
+  "success_rate": null,
+  "successes": 0
+}
