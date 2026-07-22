@@ -125,9 +125,15 @@ def _contact_bearing_segment(
     *,
     seed: int,
     task: PushTaskSpec,
-) -> tuple[PushSimulationSnapshot, tuple[np.ndarray, ...], dict[str, object]]:
+) -> tuple[
+    PushSimulationSnapshot,
+    tuple[np.ndarray, ...],
+    list[dict[str, object]],
+    dict[str, object],
+]:
     source = _environment()
     replay = _environment()
+    live = _environment()
     try:
         _reset(source, seed, task)
         expert = PushToRegionExpert(source)
@@ -137,10 +143,8 @@ def _contact_bearing_segment(
             raise RuntimeError("reference expert produced too few actions for clone audit")
         _reset(replay, seed, task)
         initial = _target_position(replay)
-        snapshots: list[PushSimulationSnapshot] = []
         first_motion_index: int | None = None
         for index, action in enumerate(actions):
-            snapshots.append(capture_push_simulation_state(replay))
             replay.step(action)
             displacement = float(np.linalg.norm(_target_position(replay)[:2] - initial[:2]))
             if first_motion_index is None and displacement >= 5e-4:
@@ -156,9 +160,15 @@ def _contact_bearing_segment(
         )
         if len(selected) < 6:
             raise RuntimeError("contact-bearing clone sequence is too short")
+        _reset(live, seed, task)
+        for action in actions[:start]:
+            live.step(action)
+        live_snapshot = capture_push_simulation_state(live)
+        live_trace = _run_actions(live, selected)
         return (
-            snapshots[start],
+            live_snapshot,
             selected,
+            live_trace,
             {
                 "reference_status": result.status.value,
                 "reference_success": result.success,
@@ -169,8 +179,22 @@ def _contact_bearing_segment(
             },
         )
     finally:
+        live.close()
         replay.close()
         source.close()
+
+
+def _cold_restore(
+    environment: Any,
+    *,
+    seed: int,
+    task: PushTaskSpec,
+    snapshot: PushSimulationSnapshot,
+) -> None:
+    """Clear opaque PhysX contact caches, then restore all public state."""
+
+    _reset(environment, seed, task)
+    restore_push_simulation_state(environment, snapshot)
 
 
 def _comparison(
@@ -267,14 +291,13 @@ def _action_digest(actions: Sequence[np.ndarray]) -> str:
 def main() -> int:
     args = parse_args()
     task = PushTaskSpec("blue_cube", "left", "standard")
-    snapshot, actions, reference = _contact_bearing_segment(seed=args.seed, task=task)
+    snapshot, actions, live_trace, reference = _contact_bearing_segment(seed=args.seed, task=task)
     main_environment = _environment()
     sandbox_a = _environment()
     sandbox_b = _environment()
     try:
         for environment in (main_environment, sandbox_a, sandbox_b):
-            _reset(environment, args.seed, task)
-            restore_push_simulation_state(environment, snapshot)
+            _cold_restore(environment, seed=args.seed, task=task, snapshot=snapshot)
         configurations = [
             push_simulation_configuration(environment)
             for environment in (main_environment, sandbox_a, sandbox_b)
@@ -296,12 +319,13 @@ def main() -> int:
             == int(_numeric(main_after_sandbox.task_tensors["_elapsed_steps"]).reshape(-1)[0]),
         }
 
-        restore_push_simulation_state(sandbox_a, snapshot)
+        _cold_restore(sandbox_a, seed=args.seed, task=task, snapshot=snapshot)
         second = _run_actions(sandbox_a, actions)
-        restore_push_simulation_state(main_environment, snapshot)
+        _cold_restore(main_environment, seed=args.seed, task=task, snapshot=snapshot)
         main_trace = _run_actions(main_environment, actions)
         restore_comparison = _comparison(first, second)
         cross_environment_comparison = _comparison(first, main_trace)
+        live_restore_comparison = _comparison(live_trace, first)
         low, high = main_environment.unwrapped.get_push_expert_action_bounds()
         action_legal = all(
             action.shape == (8,)
@@ -316,6 +340,7 @@ def main() -> int:
             and action_legal
             and restore_comparison["passed"] is True
             and cross_environment_comparison["passed"] is True
+            and live_restore_comparison["passed"] is True
         )
         report = {
             "schema_version": "langmani-v2-phase2b3-state-clone-audit-v0",
@@ -336,7 +361,8 @@ def main() -> int:
                 "contact_solver_cache": False,
                 "contact_solver_cache_note": (
                     "ManiSkill 3.0.1 exposes no public contact-cache snapshot; deterministic "
-                    "contact-bearing replay is the acceptance test"
+                    "cold reset plus complete public-state restoration is the accepted sandbox "
+                    "semantics and contact-bearing live continuation is the acceptance test"
                 ),
             },
             "reference": reference,
@@ -348,7 +374,11 @@ def main() -> int:
             "isolation": isolation,
             "restore_replay": restore_comparison,
             "sandbox_main_replay": cross_environment_comparison,
+            "live_continuation_replay": live_restore_comparison,
+            "restore_mode": "fresh_isolated_environment_reset_then_complete_state_restore",
+            "warm_in_place_restore_authorized": False,
             "trace_sha256": {
+                "live_continuation": _trace_digest(live_trace),
                 "sandbox_first": _trace_digest(first),
                 "sandbox_restored": _trace_digest(second),
                 "main_execution": _trace_digest(main_trace),
