@@ -43,6 +43,7 @@ class _FakeEnvironment:
         wrong_object_after_step: bool = False,
         inside_after_step: int = 9,
         inside_until_step: int | None = None,
+        near_region_after_step: int | None = None,
         success_after_step: int = 9,
     ) -> None:
         self.unwrapped = self
@@ -52,6 +53,7 @@ class _FakeEnvironment:
         self.wrong_object_after_step = wrong_object_after_step
         self.inside_after_step = inside_after_step
         self.inside_until_step = inside_until_step
+        self.near_region_after_step = near_region_after_step
         self.success_after_step = success_after_step
         self.robot = _Robot()
         self.tcp = SimpleNamespace(pose=_Pose([0.0, 0.0, 0.3, 1.0, 0.0, 0.0, 0.0]))
@@ -96,7 +98,18 @@ class _FakeEnvironment:
             "target_inside_region": torch.tensor([inside]),
             "target_is_static": torch.tensor([True]),
             "stable_success_steps": torch.tensor([5 if success else 0]),
-            "target_distance": torch.tensor([0.0 if success else 0.4]),
+            "target_distance": torch.tensor(
+                [
+                    0.0
+                    if success
+                    else (
+                        0.08
+                        if self.near_region_after_step is not None
+                        and self.step_count >= self.near_region_after_step
+                        else 0.4
+                    )
+                ]
+            ),
             "target_outside_workspace": torch.tensor([False]),
             "target_lifted": torch.tensor([False]),
             "target_toppled": torch.tensor([False]),
@@ -222,6 +235,8 @@ def test_push_expert_config_rejects_unbounded_correction_search() -> None:
     assert config.minimum_primary_push_increment == pytest.approx(0.015)
     assert config.maximum_primary_push_segments == 8
     assert config.cylinder_region_goal_margin == pytest.approx(0.02)
+    assert config.precontainment_braking_margin == pytest.approx(0.025)
+    assert config.cylinder_precontainment_braking_margin == pytest.approx(0.035)
 
 
 def test_push_endpoint_stops_inside_full_containment_with_geometry_margin() -> None:
@@ -478,6 +493,41 @@ def test_primary_motion_brakes_at_full_containment_until_stable_success() -> Non
     assert result.environment_steps == 5
     assert environment.step_count == 5
     assert environment.get_push_expert_evaluation()["success"].item() is True
+
+
+def test_primary_motion_brakes_before_containment_and_holds_current_joint_state() -> None:
+    environment = _FakeEnvironment(
+        near_region_after_step=2,
+        inside_after_step=4,
+        success_after_step=6,
+    )
+    planner = _FakePlanner(environment)
+    expert = PushToRegionExpert(environment, planner_factory=lambda _env: planner)
+    expert._context = environment.context
+    expert._planner = planner
+    positions = tuple(tuple([float(index) / 4.0] * 7) for index in range(8))
+
+    def plan_pose(pose7, *, use_attached: bool = False):
+        del use_attached
+        environment.tcp.pose.raw_pose = torch.tensor([pose7], dtype=torch.float32)
+        return PlannerPlanResult(
+            success=True,
+            status="Success",
+            failure=None,
+            positions=positions,
+        )
+
+    planner.plan_pose = plan_pose  # type: ignore[method-assign]
+    result = expert._planned_motion(
+        PushExpertPhase.PRIMARY_PUSH,
+        (expert._tcp_pose(),),
+        stop_on_target_inside_region=True,
+    )
+
+    assert result.success
+    assert result.environment_steps == 6
+    assert environment.step_count == 6
+    assert expert._terminal_success
 
 
 def test_corrective_phase_waits_for_contained_target_to_become_stable() -> None:

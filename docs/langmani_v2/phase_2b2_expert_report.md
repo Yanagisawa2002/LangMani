@@ -87,12 +87,12 @@ reaches at least 95/100 with every zero-tolerance count at zero.
 
 ## Candidate J diagnostic rejection
 
-Candidate J ran from clean source `50d28767539237e094657dda1a69798b75392526` on diagnostic
+Candidate J ran from clean source `750d71bc00ba0c5db3d67cc15e0391b125df03d0` on diagnostic
 seeds beginning at 66600. It stopped after 14/64 episodes with 10 successes and four failures. One
 rightward cylinder correction pushed the target outside the workspace, so the predeclared
 zero-tolerance rule stopped the probe immediately. The other failures were one cube contact event,
 one corrective TCP tracking failure, and one zero-step contact-planning failure. The full report
-SHA-256 is `647e5509490f30211acf2e9aa960cdbc2de94f9b98387230243bf2f2660790ad`.
+SHA-256 is `246b77dfd380a32562afaf53345aba3a8e1612257117373770fcfd60dcead6b3`.
 Formal seeds and collection remain untouched.
 
 ## Candidate K pending gate
@@ -106,3 +106,35 @@ Candidate K passed 39 focused runtime-contract tests and Ruff validation at impl
 `413710deb15a1139b3ac830387c7543d7839c7f7`. The v2 contract binds that exact source. Its isolated
 diagnostic range is 66700--66763; it is not eligible for promotion. Formal seeds 66300--66399 and
 all collection seeds remain sealed.
+
+## Candidate K diagnostic rejection
+
+Candidate K ran from clean source `1ec0001f505e33686af01e1d013c1db0aa3881bd` on diagnostic
+seeds beginning at 66700. It stopped after 5/64 episodes with three successes, one timeout, and one
+target-workspace exit. The zero-tolerance workspace event occurred during the first cylinder/left
+standard task and stopped the probe immediately. The full report SHA-256 is
+`268b925950e7e6e97fe717bb69b7403d579e278910af653fc58429dabc0c9c5f`. Formal seeds and
+collection remain untouched.
+
+## Candidate L pending diagnostic
+
+Candidate L adds object-specific pre-containment braking to the unchanged Candidate K motion. It
+uses the existing privileged target-distance evaluation only inside the expert, stops the current
+planner action stream before overshoot, holds the current joint state, and lets the existing
+correction phases finish the task. It does not alter full-containment success, the 250-step horizon,
+action bounds, or any formal schedule.
+
+## Candidate K diagnostic rejection
+
+Candidate K ran from clean source `1ec0001f505e33686af01e1d013c1db0aa3881bd` and stopped after
+five diagnostic episodes. Three succeeded, one exhausted 250 steps during re-contact, and one
+leftward cylinder coasted outside the workspace while the first correction was repositioning.
+The zero-tolerance stop preserved formal seeds and collection. The full report SHA-256 is
+`9502be405b1cbb7839392e16136ce56401ce7c75df5aa9ff13e55ad6c4e104ea`.
+
+## Candidate L pending gate
+
+Candidate L adds a fixed object-specific precontainment braking margin. During a physical push, the
+expert stops planner execution before full containment, commands the current measured joint state
+for the existing settle window, and lets the unchanged environment decide whether stable success
+forms. No target state, success flag, action bound, horizon, or acceptance criterion changes.

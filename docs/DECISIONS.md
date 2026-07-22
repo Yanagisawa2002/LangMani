@@ -2906,11 +2906,11 @@ alter formal-gate execution. Collection remains closed.
 
 ## D-111 - Reject Candidate J on a zero-tolerance workspace exit
 
-Candidate J ran from clean Git `50d28767539237e094657dda1a69798b75392526` and stopped after
+Candidate J ran from clean Git `750d71bc00ba0c5db3d67cc15e0391b125df03d0` and stopped after
 14 diagnostic episodes with ten successes. A rightward cylinder correction moved the target outside
 the workspace, which triggered the predeclared zero-tolerance early stop. The other failures were a
 cube contact event, corrective TCP tracking error, and zero-step contact-planning failure. The full
-report SHA-256 is `647e5509490f30211acf2e9aa960cdbc2de94f9b98387230243bf2f2660790ad`.
+report SHA-256 is `246b77dfd380a32562afaf53345aba3a8e1612257117373770fcfd60dcead6b3`.
 Formal seeds and collection remain untouched.
 
 Candidate K responds only to those mechanics: all contact paths execute densely; a failed zero-step
@@ -2927,3 +2927,30 @@ commit `413710deb15a1139b3ac830387c7543d7839c7f7`. The Phase 2B.2 contract binds
 66300--66399. Seeds 66700--66763 are diagnostic only and cannot promote the expert. Collection
 remains closed until a later full, untouched 100-episode gate reaches at least 95/100 with every
 zero-tolerance count at zero.
+
+## D-113 - Reject Candidate K and bound one final pre-containment braking recovery
+
+Candidate K ran from clean Git `1ec0001f505e33686af01e1d013c1db0aa3881bd` and stopped after
+five diagnostic episodes with three successes, one timeout, and one target-workspace exit. The
+zero-tolerance workspace event makes the candidate ineligible for promotion. Its immutable report
+SHA-256 is `268b925950e7e6e97fe717bb69b7403d579e278910af653fc58429dabc0c9c5f`.
+
+Candidate L is the final bounded recovery inside the existing expert architecture. It adds only an
+object-specific pre-containment braking margin, uses the existing privileged target distance inside
+the expert, and holds the current joint state before the existing correction phases. It does not
+change environment success, planner targets, controller semantics, horizon, action limits, formal
+threshold, or zero-tolerance gates. Formal and collection seeds remain sealed.
+
+## D-113 - Reject Candidate K and brake before corrective repositioning
+
+Candidate K ran from clean Git `1ec0001f505e33686af01e1d013c1db0aa3881bd` and stopped after
+five diagnostic episodes. Three succeeded; one cube timed out during the first correction and one
+leftward cylinder left the workspace while the correction was still moving to re-contact. The
+zero-tolerance workspace rule stopped the run. The full report SHA-256 is
+`9502be405b1cbb7839392e16136ce56401ce7c75df5aa9ff13e55ad6c4e104ea`.
+
+Candidate L adds only a fixed precontainment braking rule: a push stops when exact target distance
+enters a fixed object-specific band outside full containment, then commands the current measured
+joint state for the existing settle window. This may form unchanged stable success or leave a
+stationary target for ordinary correction. It does not modify target state, success, the controller,
+the 250-step limit, action bounds, or acceptance. Seeds 66800--66863 are diagnostic only.

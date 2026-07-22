@@ -76,6 +76,8 @@ class PushExpertConfig:
     cylinder_push_height: float = 0.015
     region_goal_margin: float = 0.035
     cylinder_region_goal_margin: float = 0.02
+    precontainment_braking_margin: float = 0.025
+    cylinder_precontainment_braking_margin: float = 0.035
     primary_push_increment: float = 0.06
     minimum_primary_push_increment: float = 0.015
     maximum_primary_push_segments: int = 8
@@ -116,6 +118,8 @@ class PushExpertConfig:
             "cylinder_push_height",
             "region_goal_margin",
             "cylinder_region_goal_margin",
+            "precontainment_braking_margin",
+            "cylinder_precontainment_braking_margin",
             "primary_push_increment",
             "minimum_primary_push_increment",
             "tcp_position_tolerance",
@@ -156,6 +160,8 @@ class PushExpertConfig:
             "cylinder_push_height": self.cylinder_push_height,
             "region_goal_margin": self.region_goal_margin,
             "cylinder_region_goal_margin": self.cylinder_region_goal_margin,
+            "precontainment_braking_margin": self.precontainment_braking_margin,
+            "cylinder_precontainment_braking_margin": (self.cylinder_precontainment_braking_margin),
             "primary_push_increment": self.primary_push_increment,
             "minimum_primary_push_increment": self.minimum_primary_push_increment,
             "maximum_primary_push_segments": self.maximum_primary_push_segments,

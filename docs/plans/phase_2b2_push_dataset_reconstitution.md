@@ -134,3 +134,14 @@ formal and collection schedules remain sealed.
 Candidate K passed focused runtime-contract and Ruff validation at implementation commit
 `413710deb15a1139b3ac830387c7543d7839c7f7`. The contract binds that exact commit without changing
 the 95/100 formal threshold or any zero-tolerance criterion.
+
+Candidate K stopped after five diagnostic episodes because its first cylinder/left task left the
+target workspace. Candidate L is limited to object-specific pre-containment braking while preserving
+the same planner targets, controller, success geometry, horizon, and formal gate. Its diagnostic
+schedule will remain disjoint from every earlier probe and from formal collection.
+
+Candidate K stopped after 5/64 diagnostic episodes on a zero-tolerance cylinder workspace exit;
+the other failure was a correction timeout. Candidate L retains the fixed paths but brakes a push
+when privileged target distance enters a fixed band just outside full containment, then holds the
+current measured controller state for the existing settle window. This prevents primary-push
+momentum from continuing while the arm repositions. Diagnostic seeds 66800--66863 remain isolated.

@@ -628,6 +628,17 @@ class PushToRegionExpert:
     def _contact_offset(self) -> float:
         return self.config.contact_offset
 
+    def _precontainment_braking_margin(self) -> float:
+        object_id = self._require_context().target_object.object_id
+        if object_id == "blue_cube":
+            return self.config.precontainment_braking_margin
+        if object_id == "orange_cylinder":
+            return self.config.cylinder_precontainment_braking_margin
+        raise _PushAbort(
+            PushExpertStatus.INVALID_TASK,
+            f"precontainment braking margin is undefined for {object_id!r}",
+        )
+
     def _lateral_compensation_degrees(self) -> float:
         if not self._is_lateral_task():
             return 0.0
@@ -853,6 +864,7 @@ class PushToRegionExpert:
         planning_calls = 0
         last_status: str | None = None
         target_inside_region = False
+        precontainment_brake = False
         try:
             for target in targets:
                 if self._terminal_success or target_inside_region:
@@ -912,14 +924,22 @@ class PushToRegionExpert:
                     if self._terminal_success:
                         break
                     self._step_action(action)
-                    if (
-                        stop_on_target_inside_region
-                        and self._evaluation().get("target_inside_region") is True
-                    ):
-                        target_inside_region = True
-                        break
+                    if stop_on_target_inside_region:
+                        evaluation = self._evaluation()
+                        if evaluation.get("target_inside_region") is True:
+                            target_inside_region = True
+                            break
+                        target_distance = evaluation.get("target_distance")
+                        if isinstance(target_distance, (int, float)) and target_distance <= (
+                            self._require_context().full_containment_center_radius
+                            + self._precontainment_braking_margin()
+                        ):
+                            precontainment_brake = True
+                            break
             if target_inside_region and not self._terminal_success:
                 self._hold_while_contained(self.config.settle_steps)
+            elif precontainment_brake and not self._terminal_success:
+                self._hold(self.config.settle_steps)
         except _PushAbort as error:
             return self._failure(
                 phase,
@@ -932,7 +952,12 @@ class PushToRegionExpert:
                 execution_duration=max(0.0, time.perf_counter() - started - planning_duration),
                 planner_status=last_status,
             )
-        if not self._terminal_success and not target_inside_region and targets:
+        if (
+            not self._terminal_success
+            and not target_inside_region
+            and not precontainment_brake
+            and targets
+        ):
             position_error = float(np.linalg.norm(self._tcp_pose()[:3] - targets[-1][:3]))
             if position_error > self.config.tcp_position_tolerance:
                 return self._failure(
