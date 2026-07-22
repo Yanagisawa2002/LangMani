@@ -106,3 +106,9 @@ holds its current joint position for the existing bounded settle window so stabl
 before any endpoint overshoot or later verification. Diagnostic probes also stop and write evidence
 as soon as a zero-tolerance failure occurs or their mathematical success ceiling falls below 95%;
 formal gates never early-stop under this rule.
+
+Candidate I passed full local implementation validation at Git
+`3da6ecf5afccc09eae5fe69ece9170647a3357a0`. Its diagnostic-only range is 66500--66563. The
+untouched formal range remains 66300--66399, and all collection seeds remain disjoint. The v2
+contract binds `PushToRegionExpert/CandidateI` to the implementation commit without changing the
+formal threshold or zero-tolerance criteria.

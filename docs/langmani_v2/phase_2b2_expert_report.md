@@ -59,3 +59,11 @@ Candidate H is rejected without using formal seeds 66300 through 66399. The full
 `a896a8e5645b7e9c63237c94f9cc56359d2b5db9e703eed0cb815c2d3eadbc4c`; the compact summary is
 `artifacts/langmani_v2/phase_2b2/expert_probe_candidate_h_rejected.json`. Formal collection remains
 closed.
+
+## Candidate I pending gate
+
+Candidate I is locally validated at `3da6ecf5afccc09eae5fe69ece9170647a3357a0`. Its diagnostic
+range is 66500 through 66563 and cannot promote the expert. The untouched formal gate remains
+66300 through 66399. A diagnostic run writes an explicit partial report and stops once a
+zero-tolerance failure or an arithmetic success ceiling below 95% makes formal promotion
+impossible. Collection remains closed.

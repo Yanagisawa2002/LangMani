@@ -2865,3 +2865,13 @@ existing settle count, allowing the unchanged stable-success predicate to comple
 motion. Diagnostic runs may stop early only when a zero-tolerance failure already makes promotion
 invalid or the exact arithmetic success ceiling falls below 95%; formal evaluation remains complete
 and unchanged.
+
+## D-108 - Freeze Candidate I with cost-bounded diagnostic stopping
+
+Candidate I passed full local validation at Git
+`3da6ecf5afccc09eae5fe69ece9170647a3357a0`. Seeds 66500 through 66563 are reserved for its
+diagnostic-only probe. The probe may stop and emit a partial failure report only after a
+zero-tolerance failure occurs or its exact best-case success count can no longer meet 95%. This
+rule never applies to the formal 66300--66399 gate, which remains untouched and complete by
+contract. The v2 configuration now binds `PushToRegionExpert/CandidateI` to the implementation
+commit. Formal collection remains closed.
