@@ -158,3 +158,7 @@ The original task authorization also requires expert repair before declaring the
 Candidate M therefore resumes diagnostic screening after the Result B snapshot: it preserves the
 safe precontainment brake and replaces expensive high re-contact with one bounded 8--25 mm
 in-contact correction. Seeds 66900--66963 are diagnostic only and formal collection stays closed.
+
+Candidate N preserves the successful cube behavior and uses an earlier 5 cm cylinder braking band
+with at most 15 mm per in-contact nudge. Its diagnostic seeds 68000--68063 are disjoint from the
+formal gate and the reserved 67000-series collection/top-up schedule.

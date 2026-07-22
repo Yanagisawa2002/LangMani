@@ -2970,3 +2970,10 @@ without training or formal-seed access. Candidate M retains precontainment braki
 full high re-contact path for a nearby target with one bounded 8--25 mm controller-executed nudge.
 It is bound to implementation commit `1210976e0b926f913504cc8875dc6033d1926224`; seeds
 66900--66963 are diagnostic only.
+
+## D-117 - Bind Candidate N with cylinder-specific bounded braking
+
+Candidate N changes only cylinder dynamics: a 5 cm precontainment band and 15 mm maximum in-contact
+nudge replace the Candidate M cylinder values while cube behavior stays fixed. It is bound to
+implementation commit `f04cd60952428209f660833af0af21910ca4eead`. Diagnostic seeds
+68000--68063 avoid the formal and reserved collection ranges and cannot promote the expert.
