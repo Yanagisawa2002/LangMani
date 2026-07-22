@@ -508,7 +508,7 @@ class PushToRegionExpert:
         if isinstance(target_distance, (int, float)) and target_distance <= (
             containment_radius + self._precontainment_braking_margin()
         ):
-            direction = self._motion_direction(object_position)
+            direction = self._in_contact_correction_direction(object_position)
             advance = min(
                 self._maximum_in_contact_nudge(),
                 max(
@@ -681,6 +681,14 @@ class PushToRegionExpert:
             PushExpertStatus.INVALID_TASK,
             f"maximum in-contact nudge is undefined for {object_id!r}",
         )
+
+    def _in_contact_correction_direction(self, object_position: np.ndarray) -> np.ndarray:
+        """Steer a drifting lateral cylinder back toward the target center."""
+
+        context = self._require_context()
+        if self._is_lateral_task() and context.target_object.object_id == "orange_cylinder":
+            return self._push_direction(object_position)
+        return self._motion_direction(object_position)
 
     def _lateral_compensation_degrees(self) -> float:
         if not self._is_lateral_task():

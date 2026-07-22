@@ -148,3 +148,39 @@ It keeps Candidate L braking and replaces a nearby target's expensive re-contact
 8--25 mm in-contact correction. Implementation commit
 `1210976e0b926f913504cc8875dc6033d1926224` is bound to diagnostic seeds 66900--66963; formal and
 collection seeds remain untouched.
+
+## Candidate N diagnostic rejection and Candidate O repair
+
+Candidate N ran from clean source `48686a57b427ddbf6c99b01b51dc003970e1a5e9` on diagnostic
+seeds beginning at 68000. All four cube tasks succeeded, but the first cylinder/left task exited the
+workspace during settle, so the zero-tolerance stop ended the probe after 5/64 episodes. The full
+report SHA-256 is `9e88c4fcbdfbb60609597c1747e56baacf6d473aab2bbda3fd84f330b8068f30`.
+
+A deterministic replay of the same diagnostic seed retained the complete phase-boundary geometry.
+The cylinder's lateral error grew from 3.1 cm after primary push to 11.3 cm after its second
+in-contact correction; its final object-footprint workspace margin was -2.1 mm. Candidate O is
+limited to recomputing the current target-center direction for lateral-cylinder in-contact
+correction. The accepted cube path and all formal gates remain unchanged, and formal seeds
+66300--66399 plus collection seeds remain untouched.
+
+## Candidate M diagnostic rejection
+
+Candidate M ran from clean source `ef12836072473d868f3c319db5a35aa9945ac325`. It completed five
+diagnostic episodes with three successes, one timeout, and one target-workspace exit. The
+zero-tolerance workspace event rejected the candidate. The immutable full report SHA-256 is
+`4fb593d8493ea0abd8d24175d8546a41aef3bce76234f5cc2fc66f809f0d84e3`.
+
+## Candidate N diagnostic rejection and final Result B
+
+Candidate N retained Candidate M cube behavior and changed only the cylinder braking band and
+maximum in-contact nudge. It passed 41 focused tests and targeted Ruff/format checks before running
+from clean source `48686a57b427ddbf6c99b01b51dc003970e1a5e9` on seeds 68000--68063.
+The first four cube tasks succeeded. The first cylinder task then left the target workspace, so the
+zero-tolerance rule stopped the probe after 5/64 episodes. Simulator errors, nonfinite actions, and
+action-bound violations remained zero; workspace violations were one. The full report SHA-256 is
+`fe7a875f49183fcd27af2f5e2a27ffc4d85b554b1920387471e4bcd277a069a3`, and the generation-audit
+SHA-256 is `2a8a77173bbda67e96885f0376b49ccffd65fda39a4760e88b5003b0ea8db5f4`.
+
+The formal 66300--66399 range and every collection seed remain untouched. Phase 2B.2 is Result B:
+raw collection, export, archive, replication, loader preflight, SmolVLA, optimizer work, and Phase
+2D did not start. A different push-expert architecture requires separate authorization.

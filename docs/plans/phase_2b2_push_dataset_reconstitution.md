@@ -162,3 +162,18 @@ in-contact correction. Seeds 66900--66963 are diagnostic only and formal collect
 Candidate N preserves the successful cube behavior and uses an earlier 5 cm cylinder braking band
 with at most 15 mm per in-contact nudge. Its diagnostic seeds 68000--68063 are disjoint from the
 formal gate and the reserved 67000-series collection/top-up schedule.
+
+Candidate N stopped after 5/64 diagnostic episodes when the first cylinder task crossed the
+workspace boundary. The four cube tasks all succeeded, including the formerly failing
+forward-right task. A same-seed diagnostic trace showed that the cylinder remained on the table but
+its lateral error grew from 3.1 cm after the primary push to 11.3 cm after the second correction,
+because the in-contact corrections reused the initial approach direction after the object had
+drifted. Candidate O changes only that branch: a lateral-cylinder in-contact correction recomputes
+the direction from the current object position to the fixed target center. Cube motion, primary
+pushes, formal thresholds, task geometry, action bounds, and all frozen seed ranges remain unchanged.
+
+Candidate M stopped after five episodes on one timeout and one zero-tolerance target-workspace
+exit. Candidate N then passed the first four cube tasks but its first cylinder task also left the
+target workspace. The zero-tolerance rule stopped Candidate N after 5/64 episodes. This exhausts
+the bounded parameter-level recovery: Phase 2B.2 remains Result B, formal and collection seeds stay
+untouched, and a new expert architecture needs separate authorization.

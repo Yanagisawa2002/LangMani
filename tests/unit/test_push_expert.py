@@ -580,6 +580,35 @@ def test_corrective_phase_uses_short_in_contact_nudge_near_containment() -> None
     assert expert._terminal_success
 
 
+def test_lateral_cylinder_in_contact_correction_retargets_current_center_error() -> None:
+    environment = _FakeEnvironment(near_region_after_step=0)
+    environment.context = PushExpertTaskContext(
+        environment_id=environment.context.environment_id,
+        episode_spec=PushEpisodeSpec.create(
+            scene_seed=77,
+            task_spec=PushTaskSpec("orange_cylinder", "left", "standard"),
+        ),
+        agent=environment.context.agent,
+        robot=environment.context.robot,
+        target_object=environment.context.objects[1],
+        objects=environment.context.objects,
+        target_region_center=torch.tensor([0.2, 0.0, 0.001]),
+        target_region_radius=0.11,
+        target_object_planar_radius=0.025,
+        target_object_resting_height=0.025,
+        full_containment_center_radius=0.08,
+        table_top_z=environment.context.table_top_z,
+    )
+    expert = PushToRegionExpert(environment, planner_factory=lambda _env: _FakePlanner(environment))
+    expert._context = environment.context
+    expert._active_push_direction = np.array([0.8, 0.6])
+
+    direction = expert._in_contact_correction_direction(np.array([0.1, 0.1, 0.025]))
+
+    assert direction == pytest.approx([np.sqrt(0.5), -np.sqrt(0.5)])
+    assert direction != pytest.approx(expert._active_push_direction)
+
+
 def test_corrective_phase_recontacts_when_contained_target_drifts_out() -> None:
     environment = _FakeEnvironment(
         inside_after_step=0,

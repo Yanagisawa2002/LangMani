@@ -2977,3 +2977,33 @@ Candidate N changes only cylinder dynamics: a 5 cm precontainment band and 15 mm
 nudge replace the Candidate M cylinder values while cube behavior stays fixed. It is bound to
 implementation commit `f04cd60952428209f660833af0af21910ca4eead`. Diagnostic seeds
 68000--68063 avoid the formal and reserved collection ranges and cannot promote the expert.
+
+## D-118 - Reject Candidate N and retarget only drifting cylinder corrections
+
+Candidate N ran from clean Git `48686a57b427ddbf6c99b01b51dc003970e1a5e9` and stopped after
+five diagnostic episodes: all four cube tasks succeeded, then the first cylinder/left task crossed
+the workspace boundary during settle. The immutable full report SHA-256 is
+`9e88c4fcbdfbb60609597c1747e56baacf6d473aab2bbda3fd84f330b8068f30`; formal seeds and collection
+remain untouched.
+
+The same already-consumed diagnostic seed was replayed for phase-boundary geometry only. Its
+cylinder stayed on the table, but lateral error grew from 3.1 cm after primary push to 11.3 cm after
+the second in-contact correction because both corrections reused the initial approach direction.
+Candidate O recomputes the current object-to-target-center direction only for lateral-cylinder
+in-contact correction. It does not alter cube behavior, primary motion, controller semantics,
+success geometry, the 250-step horizon, action bounds, acceptance thresholds, or zero-tolerance
+gates. Candidate O requires a new disjoint diagnostic schedule before the formal gate can run.
+
+## D-118 - Reject Candidate N and retain Phase 2B.2 Result B
+
+Candidate N passed 41 focused tests and targeted Ruff/format checks, then ran from clean Git
+`48686a57b427ddbf6c99b01b51dc003970e1a5e9`. Its first four cube tasks succeeded, but the first
+cylinder task produced a target-workspace exit. The predeclared zero-tolerance rule stopped the
+probe after 5/64 episodes. Its immutable report SHA-256 is
+`fe7a875f49183fcd27af2f5e2a27ffc4d85b554b1920387471e4bcd277a069a3`; the generation-audit
+SHA-256 is `2a8a77173bbda67e96885f0376b49ccffd65fda39a4760e88b5003b0ea8db5f4`.
+
+The two formal gates remain 75/100 and 11/100, and diagnostic G--N evidence cannot replace them.
+The formal and collection seed ranges remain unused. Phase 2B.2 stays closed as Result B; any next
+expert repair must use a separately authorized architecture rather than another parameter-only
+recovery.
