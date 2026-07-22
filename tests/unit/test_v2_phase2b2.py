@@ -23,6 +23,7 @@ from langmani.v2.push_dataset import (
     PushDatasetContractError,
     build_collection_schedule,
 )
+from scripts.langmani_v2.evaluate_push_expert import _schedule as build_expert_probe_schedule
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CONFIG = PROJECT_ROOT / "configs" / "langmani_v2" / "phase_2b2" / "dataset_contract.yaml"
@@ -79,6 +80,49 @@ def test_phase2b2_contract_rejects_v1_identity(tmp_path: Path) -> None:
 
     with pytest.raises(PushDatasetContractError, match="independent v2"):
         PushCollectionConfig.load(path)
+
+
+def test_expert_probe_schedule_is_explicit_and_does_not_consume_formal_seeds() -> None:
+    config = PushCollectionConfig.load(CONFIG)
+    formal = build_expert_probe_schedule(config)
+    probe = build_expert_probe_schedule(
+        config,
+        seed_start=67_000,
+        standard_episodes=8,
+        hard_episodes=8,
+    )
+
+    assert len(formal) == 100
+    assert len(probe) == 16
+    assert [seed for seed, _task in probe] == list(range(67_000, 67_016))
+    assert {task.difficulty for _seed, task in probe[:8]} == {"standard"}
+    assert {task.difficulty for _seed, task in probe[8:]} == {"hard"}
+    assert {seed for seed, _task in formal}.isdisjoint(seed for seed, _task in probe)
+
+
+@pytest.mark.parametrize(
+    ("seed_start", "standard_episodes", "hard_episodes", "message"),
+    [
+        (-1, 1, 0, "non-negative"),
+        (1, -1, 1, "non-negative"),
+        (1, 0, 0, "cannot be empty"),
+    ],
+)
+def test_expert_probe_schedule_rejects_invalid_bounds(
+    seed_start: int,
+    standard_episodes: int,
+    hard_episodes: int,
+    message: str,
+) -> None:
+    config = PushCollectionConfig.load(CONFIG)
+
+    with pytest.raises(ValueError, match=message):
+        build_expert_probe_schedule(
+            config,
+            seed_start=seed_start,
+            standard_episodes=standard_episodes,
+            hard_episodes=hard_episodes,
+        )
 
 
 def test_accepted_package_rejects_v1_and_undersized_data() -> None:

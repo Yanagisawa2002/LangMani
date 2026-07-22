@@ -314,7 +314,33 @@ class PushToRegionExpert:
         return self._planned_motion(PushExpertPhase.ESTABLISH_CONTACT, (pose,))
 
     def _primary_push(self) -> PushPhaseResult:
-        return self._adaptive_primary_push()
+        phase = PushExpertPhase.PRIMARY_PUSH
+        object_position = self._target_position()
+        direct = self._planned_motion(phase, (self._push_endpoint_pose(object_position),))
+        if (
+            direct.success
+            or direct.environment_steps
+            or direct.status
+            not in {
+                PushExpertStatus.IK_FAILURE,
+                PushExpertStatus.PLANNING_FAILURE,
+            }
+        ):
+            return replace(direct, message="executed one content-bound direct primary push")
+        fallback = self._adaptive_primary_push()
+        return replace(
+            fallback,
+            attempts=direct.attempts + fallback.attempts,
+            environment_steps=direct.environment_steps + fallback.environment_steps,
+            planning_calls=direct.planning_calls + fallback.planning_calls,
+            planning_duration_seconds=(
+                direct.planning_duration_seconds + fallback.planning_duration_seconds
+            ),
+            execution_duration_seconds=(
+                direct.execution_duration_seconds + fallback.execution_duration_seconds
+            ),
+            message="direct primary planning failed before execution; " + fallback.message,
+        )
 
     def _adaptive_primary_push(self) -> PushPhaseResult:
         """Advance in bounded state-aware segments until full containment."""
@@ -372,6 +398,7 @@ class PushToRegionExpert:
                     return replace(
                         result,
                         attempts=attempts,
+                        environment_steps=self._environment_steps - before,
                         planning_calls=planning_calls,
                         planning_duration_seconds=planning_duration,
                         execution_duration_seconds=execution_duration,
@@ -382,6 +409,7 @@ class PushToRegionExpert:
                 return replace(
                     segment_result,
                     attempts=attempts,
+                    environment_steps=self._environment_steps - before,
                     planning_calls=planning_calls,
                     planning_duration_seconds=planning_duration,
                     execution_duration_seconds=execution_duration,
@@ -414,14 +442,6 @@ class PushToRegionExpert:
     def _corrective_push(self, phase: PushExpertPhase) -> PushPhaseResult:
         if self._terminal_success or self._evaluation().get("target_inside_region") is True:
             return self._success(phase, "target already reached the region; no correction needed")
-        if (
-            self._is_lateral_task()
-            and self._require_context().target_object.object_id == "orange_cylinder"
-        ):
-            return self._success(
-                phase,
-                "unsafe lateral-cylinder re-contact is disabled after the primary push",
-            )
         object_position = self._target_position()
         if self._is_lateral_task():
             candidates = self._lateral_approach_candidates(
@@ -439,17 +459,37 @@ class PushToRegionExpert:
         direction = self._motion_direction(object_position)
         current = self._tcp_pose()
         lift = current.copy()
-        lift[2] = self.config.precontact_height
+        lift[2] = self.config.precontact_staging_height
         behind_high = current.copy()
         behind_high[:2] = object_position[:2] - direction * (
             self._contact_offset() + self.config.precontact_clearance
         )
-        behind_high[2] = self.config.precontact_height
+        behind_high[2] = self.config.precontact_staging_height
         contact = behind_high.copy()
         contact[:2] = object_position[:2] - direction * self._contact_offset()
         contact[2] = self._push_height()
         push = self._push_endpoint_pose(object_position)
-        return self._planned_motion(phase, (lift, behind_high, contact, push))
+        free_space = self._planned_motion(
+            phase,
+            (lift, behind_high),
+            action_stride=self.config.free_space_action_stride,
+        )
+        if not free_space.success:
+            return free_space
+        contact_push = self._planned_motion(phase, (contact, push))
+        return replace(
+            contact_push,
+            attempts=free_space.attempts + contact_push.attempts,
+            environment_steps=free_space.environment_steps + contact_push.environment_steps,
+            planning_calls=free_space.planning_calls + contact_push.planning_calls,
+            planning_duration_seconds=(
+                free_space.planning_duration_seconds + contact_push.planning_duration_seconds
+            ),
+            execution_duration_seconds=(
+                free_space.execution_duration_seconds + contact_push.execution_duration_seconds
+            ),
+            message="executed sparse free-space re-contact and dense corrective push",
+        )
 
     def _push_endpoint_pose(self, object_position: np.ndarray) -> np.ndarray:
         """Return a conservative TCP endpoint just inside full containment.
@@ -461,10 +501,12 @@ class PushToRegionExpert:
 
         context = self._require_context()
         direction = self._motion_direction(object_position)
-        object_center_distance = max(
-            0.0,
-            context.full_containment_center_radius - self.config.region_goal_margin,
+        goal_margin = (
+            self.config.region_goal_margin
+            if context.target_object.object_id == "blue_cube"
+            else self.config.cylinder_region_goal_margin
         )
+        object_center_distance = max(0.0, context.full_containment_center_radius - goal_margin)
         pose = self._tcp_pose()
         pose[:2] = self._target_center()[:2] - direction * (
             object_center_distance + context.target_object_planar_radius
@@ -551,11 +593,13 @@ class PushToRegionExpert:
                 continue
             attempts += 1
             self._chosen_precontact_point = np.asarray(candidate.precontact_point)
+            lift = self._tcp_pose()
+            lift[2] = self.config.precontact_staging_height
             staging = self._pose_with_position(candidate.precontact_point)
             staging[2] = self.config.precontact_staging_height
             result = self._planned_motion(
                 PushExpertPhase.MOVE_TO_PRECONTACT,
-                (staging, self._pose_with_position(candidate.precontact_point)),
+                (lift, staging, self._pose_with_position(candidate.precontact_point)),
                 action_stride=self.config.free_space_action_stride,
             )
             planning_calls += result.planning_calls

@@ -71,10 +71,11 @@ class PushExpertConfig:
     precontact_clearance: float = 0.075
     contact_offset: float = 0.045
     precontact_height: float = 0.12
-    precontact_staging_height: float = 0.24
+    precontact_staging_height: float = 0.32
     push_height: float = 0.025
     cylinder_push_height: float = 0.015
     region_goal_margin: float = 0.035
+    cylinder_region_goal_margin: float = 0.01
     primary_push_increment: float = 0.04
     minimum_primary_push_increment: float = 0.01
     maximum_primary_push_segments: int = 12
@@ -114,6 +115,7 @@ class PushExpertConfig:
             "push_height",
             "cylinder_push_height",
             "region_goal_margin",
+            "cylinder_region_goal_margin",
             "primary_push_increment",
             "minimum_primary_push_increment",
             "tcp_position_tolerance",
@@ -153,6 +155,7 @@ class PushExpertConfig:
             "push_height": self.push_height,
             "cylinder_push_height": self.cylinder_push_height,
             "region_goal_margin": self.region_goal_margin,
+            "cylinder_region_goal_margin": self.cylinder_region_goal_margin,
             "primary_push_increment": self.primary_push_increment,
             "minimum_primary_push_increment": self.minimum_primary_push_increment,
             "maximum_primary_push_segments": self.maximum_primary_push_segments,

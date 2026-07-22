@@ -283,7 +283,7 @@ def test_lateral_contact_strategy_is_geometry_specific() -> None:
     assert expert._lateral_compensation_degrees() == pytest.approx(0.0)
 
 
-def test_unsafe_lateral_cylinder_recontact_is_disabled() -> None:
+def test_lateral_cylinder_recontact_uses_controller_actions() -> None:
     environment = _FakeEnvironment()
     environment.context = PushExpertTaskContext(
         environment_id=environment.context.environment_id,
@@ -302,17 +302,16 @@ def test_unsafe_lateral_cylinder_recontact_is_disabled() -> None:
         full_containment_center_radius=0.085,
         table_top_z=environment.context.table_top_z,
     )
-    expert = PushToRegionExpert(
-        environment,
-        planner_factory=lambda _env: _FakePlanner(environment),
-    )
+    planner = _FakePlanner(environment)
+    expert = PushToRegionExpert(environment, planner_factory=lambda _env: planner)
     expert._context = environment.context
+    expert._planner = planner
     result = expert._corrective_push(PushExpertPhase.CORRECTIVE_PUSH_1)
 
     assert result.success
-    assert result.environment_steps == 0
-    assert result.planning_calls == 0
-    assert "re-contact is disabled" in result.message
+    assert result.environment_steps == environment.step_count
+    assert result.planning_calls > 0
+    assert "corrective push" in result.message
 
 
 def test_lateral_approach_falls_back_before_executing_out_of_bounds_plan() -> None:
@@ -333,9 +332,9 @@ def test_lateral_approach_falls_back_before_executing_out_of_bounds_plan() -> No
 
     assert result.success
     assert result.attempts == 2
-    assert result.planning_calls == 3
-    assert result.environment_steps == 2
-    assert environment.step_count == 2
+    assert result.planning_calls == 4
+    assert result.environment_steps == 3
+    assert environment.step_count == 3
 
 
 def test_free_space_stride_preserves_the_exact_final_planner_position() -> None:
@@ -387,6 +386,23 @@ def test_adaptive_primary_push_stops_when_the_existing_success_gate_fires() -> N
     assert result.environment_steps == 9
     assert environment.step_count == 9
     assert len(expert.action_trace) == 9
+
+
+def test_primary_push_uses_one_direct_plan_before_bounded_fallback() -> None:
+    environment = _FakeEnvironment()
+    planner = _FakePlanner(environment)
+    expert = PushToRegionExpert(
+        environment,
+        planner_factory=lambda _env: planner,
+    )
+    expert._context = environment.context
+    expert._planner = planner
+
+    result = expert._primary_push()
+
+    assert result.success
+    assert result.planning_calls == 1
+    assert "direct primary push" in result.message
 
 
 def test_forward_strategy_preserves_the_original_contact_formula() -> None:

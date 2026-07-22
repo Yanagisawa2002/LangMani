@@ -30,22 +30,38 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--probe-seed-start", type=int)
+    parser.add_argument("--probe-standard-episodes", type=int)
+    parser.add_argument("--probe-hard-episodes", type=int)
     return parser.parse_args()
 
 
-def _schedule(config: PushCollectionConfig) -> tuple[tuple[int, PushTaskSpec], ...]:
+def _schedule(
+    config: PushCollectionConfig,
+    *,
+    seed_start: int | None = None,
+    standard_episodes: int | None = None,
+    hard_episodes: int | None = None,
+) -> tuple[tuple[int, PushTaskSpec], ...]:
     gate = config.payload["expert_evaluation"]
     assert isinstance(gate, dict)
-    start = int(gate["seed_start"])
+    start = int(gate["seed_start"]) if seed_start is None else seed_start
     values: list[tuple[int, PushTaskSpec]] = []
     index = 0
     combinations = tuple(
         (object_id, region_id) for object_id in PUSH_OBJECT_IDS for region_id in TARGET_REGION_IDS
     )
     difficulty_counts: tuple[tuple[PushDifficulty, int], ...] = (
-        ("standard", int(gate["standard_episodes"])),
-        ("hard", int(gate["hard_episodes"])),
+        (
+            "standard",
+            int(gate["standard_episodes"]) if standard_episodes is None else standard_episodes,
+        ),
+        ("hard", int(gate["hard_episodes"]) if hard_episodes is None else hard_episodes),
     )
+    if start < 0 or any(count < 0 for _, count in difficulty_counts):
+        raise ValueError("expert evaluation seed and episode counts must be non-negative")
+    if sum(count for _, count in difficulty_counts) < 1:
+        raise ValueError("expert evaluation schedule cannot be empty")
     for difficulty, count in difficulty_counts:
         for offset in range(count):
             object_id, region_id = combinations[offset % len(combinations)]
@@ -98,7 +114,22 @@ def main() -> int:
     args = parse_args()
     config = PushCollectionConfig.load(args.config)
     runtime = inspect_phase2b_runtime(config)
-    schedule = _schedule(config)
+    probe_values = (
+        args.probe_seed_start,
+        args.probe_standard_episodes,
+        args.probe_hard_episodes,
+    )
+    if any(value is not None for value in probe_values) and not all(
+        value is not None for value in probe_values
+    ):
+        raise ValueError("diagnostic probe requires all three --probe-* arguments")
+    probe_mode = all(value is not None for value in probe_values)
+    schedule = _schedule(
+        config,
+        seed_start=args.probe_seed_start,
+        standard_episodes=args.probe_standard_episodes,
+        hard_episodes=args.probe_hard_episodes,
+    )
     results: list[PushExpertResult] = []
     command_errors: list[dict[str, object]] = []
     for index, (seed, task) in enumerate(schedule):
@@ -143,7 +174,8 @@ def main() -> int:
     timeouts = sum(result.status is PushExpertStatus.TIMEOUT for result in results)
     success_rate = successes / len(schedule)
     passed = bool(
-        len(results) == len(schedule)
+        not probe_mode
+        and len(results) == len(schedule)
         and success_rate >= 0.95
         and simulator_errors == 0
         and nonfinite_actions == 0
@@ -153,6 +185,8 @@ def main() -> int:
     report = {
         "schema_version": "langmani-v2-phase2b2-expert-evaluation-v0",
         "dataset_id": "langmani/phase2b-push-v2",
+        "evaluation_mode": "diagnostic_probe" if probe_mode else "formal_gate",
+        "formal_gate_eligible": not probe_mode,
         "runtime": _sanitized_runtime(runtime),
         "schedule": [{"seed": seed, "task_spec": task.to_dict()} for seed, task in schedule],
         "expected_episodes": len(schedule),
@@ -173,6 +207,14 @@ def main() -> int:
         "results": [result.to_dict() for result in results],
         "optimizer_steps": 0,
         "passed": passed,
+        "probe_completed": bool(
+            probe_mode
+            and len(results) == len(schedule)
+            and simulator_errors == 0
+            and nonfinite_actions == 0
+            and action_bound_violations == 0
+            and workspace_violations == 0
+        ),
     }
     write_json_once(args.output, report)
     print(
@@ -181,6 +223,8 @@ def main() -> int:
             sort_keys=True,
         )
     )
+    if probe_mode:
+        return 0 if report["probe_completed"] is True else 2
     return 0 if passed else 2
 
 
