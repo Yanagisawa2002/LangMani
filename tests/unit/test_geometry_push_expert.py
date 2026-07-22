@@ -30,7 +30,7 @@ from langmani.experts.push_feasibility import (
 )
 from langmani.experts.push_types import PushExpertStatus
 from langmani.v2.push_expert_recovery import PushExpertRecoveryError, load_json
-from scripts.langmani_v2.evaluate_geometry_push_expert import _schedule
+from scripts.langmani_v2.evaluate_geometry_push_expert import _schedule, _zero_tolerance_reason
 
 
 def _cube() -> PlanarPrimitive:
@@ -311,3 +311,26 @@ def test_regression_schedule_reuses_only_frozen_replay_cases() -> None:
     validation = load_json("artifacts/langmani_v2/phase_2b3/replay_validation.json")
     assert len(schedule) == validation["case_count"] == 55
     assert schedule[0][0] == validation["cases"][0]["seed"]  # type: ignore[index]
+
+
+def test_regression_gate_stops_on_wrong_object_interaction() -> None:
+    record = {
+        "result": {
+            "status": "wrong_object_interaction",
+            "success": False,
+            "final_environment_evaluation": {},
+        }
+    }
+    assert _zero_tolerance_reason(record) == "wrong_object_interaction"
+    assert (
+        _zero_tolerance_reason(
+            {
+                "result": {
+                    "status": "timeout",
+                    "success": False,
+                    "final_environment_evaluation": {},
+                }
+            }
+        )
+        is None
+    )

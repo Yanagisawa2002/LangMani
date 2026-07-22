@@ -136,6 +136,29 @@ def _append_ledger(path: Path, record: dict[str, Any]) -> None:
         handle.flush()
 
 
+def _zero_tolerance_reason(record: dict[str, Any]) -> str | None:
+    """Return the first gate-stopping reason without reclassifying task failure."""
+
+    if "command_error" in record:
+        return "simulator_error"
+    result = record.get("result")
+    if not isinstance(result, dict):
+        return "malformed_result"
+    if result.get("status") == PushExpertStatus.UNEXPECTED_EXCEPTION.value:
+        return "simulator_error"
+    if result.get("status") == PushExpertStatus.WRONG_OBJECT_INTERACTION.value:
+        return "wrong_object_interaction"
+    evaluation = result.get("final_environment_evaluation")
+    if not isinstance(evaluation, dict):
+        return "malformed_evaluation"
+    for key in ("invalid_action", "action_out_of_bounds", "target_outside_workspace"):
+        if evaluation.get(key) is True:
+            return key
+    if result.get("success") is True and evaluation.get("success") is not True:
+        return "false_success"
+    return None
+
+
 def main() -> int:
     args = parse_args()
     config = load_json(args.config)
@@ -163,7 +186,21 @@ def main() -> int:
         if record.get("seed") != seed or record.get("task") != task.to_dict():
             raise ValueError("ledger does not match the frozen schedule")
 
+    stopped_early_reason = (
+        next(
+            (
+                reason
+                for record in existing
+                if (reason := _zero_tolerance_reason(record)) is not None
+            ),
+            None,
+        )
+        if args.limit_episodes is None
+        else None
+    )
     for index, (seed, task) in enumerate(schedule[len(existing) :], start=len(existing)):
+        if stopped_early_reason is not None:
+            break
         environment: Any | None = None
         try:
             environment = _environment()
@@ -189,6 +226,8 @@ def main() -> int:
         existing.append(record)
         status = record.get("result", {}).get("status", "command_error")
         print(f"[{index + 1}/{len(schedule)}] seed={seed} status={status}", flush=True)
+        if args.limit_episodes is None:
+            stopped_early_reason = _zero_tolerance_reason(record)
 
     results = [value["result"] for value in existing if isinstance(value.get("result"), dict)]
     command_errors = [value for value in existing if "command_error" in value]
@@ -204,11 +243,16 @@ def main() -> int:
     workspace_violations = sum(
         bool(value.get("target_outside_workspace", False)) for value in evaluations
     )
+    wrong_object_interactions = sum(
+        value.get("status") == PushExpertStatus.WRONG_OBJECT_INTERACTION.value for value in results
+    )
     false_successes = sum(
         value.get("success") is True and evaluation.get("success") is not True
         for value, evaluation in zip(results, evaluations, strict=True)
     )
-    success_rate = successes / len(schedule)
+    completed = len(existing)
+    success_rate = successes / completed if completed else 0.0
+    maximum_possible_successes = successes + (len(schedule) - completed)
     minimum_success_rate = float(config["minimum_success_rate"])
     complete = len(existing) == len(schedule) and len(results) == len(schedule)
     passed = bool(
@@ -219,6 +263,7 @@ def main() -> int:
         and nonfinite_actions == 0
         and action_bound_violations == 0
         and workspace_violations == 0
+        and wrong_object_interactions == 0
         and false_successes == 0
     )
     report = {
@@ -229,10 +274,11 @@ def main() -> int:
         "expert_config_sha256": sha256_file(expert_path),
         "expert_semantic_digest": sha256_json(expert_config.to_dict()),
         "expected_episodes": len(schedule),
-        "completed_episodes": len(existing),
+        "completed_episodes": completed,
         "successes": successes,
-        "failures": len(schedule) - successes,
+        "failures": completed - successes,
         "success_rate": success_rate,
+        "maximum_possible_successes": maximum_possible_successes,
         "minimum_success_rate": minimum_success_rate,
         "status_counts": dict(
             sorted(Counter(str(value.get("status")) for value in results).items())
@@ -244,6 +290,7 @@ def main() -> int:
         "nonfinite_actions": nonfinite_actions,
         "action_bound_violations": action_bound_violations,
         "workspace_violations": workspace_violations,
+        "wrong_object_interactions": wrong_object_interactions,
         "false_successes": false_successes,
         "mean_episode_steps": (
             sum(int(value.get("total_environment_steps", 0)) for value in results) / len(results)
@@ -265,6 +312,7 @@ def main() -> int:
         "official_collection_episodes": int(config["official_collection_episodes"]),
         "optimizer_steps": 0,
         "limited_probe": args.limit_episodes is not None,
+        "stopped_early_reason": stopped_early_reason,
         "passed": passed,
         "results": results,
         "command_errors": command_errors,
