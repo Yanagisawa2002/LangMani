@@ -102,7 +102,10 @@ def _save_frame(environment: object, path: Path) -> None:
     import numpy as np
     from PIL import Image
 
-    frame = np.asarray(cast(Any, environment).render())
+    raw_frame = cast(Any, environment).render()
+    if hasattr(raw_frame, "detach"):
+        raw_frame = raw_frame.detach().cpu()
+    frame = np.asarray(raw_frame)
     if frame.ndim == 4 and frame.shape[0] == 1:
         frame = frame[0]
     if frame.ndim != 3 or frame.shape[-1] not in (3, 4):

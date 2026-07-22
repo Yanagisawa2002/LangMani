@@ -15,6 +15,7 @@ from langmani.v2.push_expert_recovery import (
     read_seed_bank,
     sha256_file,
 )
+from scripts.langmani_v2.replay_push_expert_failure import _save_frame
 
 
 def _result(*, status: str, phase: str, evaluation: dict[str, object]) -> dict[str, object]:
@@ -135,3 +136,26 @@ def test_registry_rejects_report_digest_drift(tmp_path: Path) -> None:
     runs[0]["sha256"] = "0" * 64
     with pytest.raises(PushExpertRecoveryError, match="digest mismatch"):
         build_failure_registry(config=changed, history_root=tmp_path)
+
+
+def test_keyframe_writer_moves_device_tensor_to_cpu(tmp_path: Path) -> None:
+    import numpy as np
+
+    class DeviceFrame:
+        detached = False
+
+        def detach(self) -> DeviceFrame:
+            self.detached = True
+            return self
+
+        def cpu(self) -> np.ndarray:
+            assert self.detached
+            return np.zeros((8, 8, 3), dtype=np.uint8)
+
+    class Environment:
+        def render(self) -> DeviceFrame:
+            return DeviceFrame()
+
+    output = tmp_path / "frame.png"
+    _save_frame(Environment(), output)
+    assert output.is_file()
