@@ -176,3 +176,8 @@ Candidate O passed focused local validation at implementation commit
 `e55198ca44d478df584a85357a697ffbecbc8484`. Its diagnostic-only seeds are 68100--68163, disjoint
 from the untouched formal gate, every prior diagnostic range, and the reserved collection/top-up
 schedule. Diagnostic evidence remains ineligible for promotion by itself.
+
+Candidate O stopped after 5/64 diagnostic episodes: four cube successes followed by one
+zero-tolerance cylinder workspace exit. No G--O diagnostic candidate qualified for a fresh formal
+gate. The formal and collection ranges remain untouched, and Phase 2B.2 closes as Result B. Further
+expert work requires a separately authorized architecture rather than another parameter-only edit.

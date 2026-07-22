@@ -42,11 +42,11 @@ evaluation, or learned-policy Phase 2 result exists yet, and Phase 2B starts non
 
 The later Phase 2B.2 byte-reconstitution work uses the new `langmani/phase2b-push-v2` identity and
 never reuses v1 bytes or hashes. Two complete expert gates reached 75/100 and 11/100; eight later
-G--N diagnostic candidates were also rejected. Candidate N kept four cube successes but its first
-cylinder task caused a zero-tolerance workspace exit. Candidate O is now locally bound for one
-disjoint diagnostic probe that retargets the observed cylinder drift without changing the cube
-path or formal gates. Until a complete 95%/100-episode gate passes, formal collection remains
-closed: v2 episodes=0, frames=0, optimizer steps=0, and Phase 2C.2 is not authorized.
+G--O diagnostic candidates were also rejected. Candidate O kept four cube successes but its first
+cylinder task caused the same zero-tolerance workspace exit. No candidate satisfied the mandatory
+95%/100-episode gate, so formal collection never started: v2 episodes=0, frames=0, optimizer
+steps=0, and Phase 2C.2 is not authorized. Any further work requires a separately authorized expert
+architecture, not another parameter-only recovery.
 
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically

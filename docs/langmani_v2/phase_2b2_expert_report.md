@@ -168,3 +168,16 @@ changed-module mypy validation, at implementation commit
 `e55198ca44d478df584a85357a697ffbecbc8484`. Diagnostic seeds 68100--68163 are isolated from the
 formal and collection ranges. A passing diagnostic can only authorize spending the untouched
 100-episode formal schedule; it cannot itself accept the expert or open collection.
+
+## Candidate O diagnostic rejection and final Result B
+
+Candidate O ran from clean runtime commit `4ebc10882fe02def4eb555a6192c90a901f5891a` on its fixed
+68100--68163 diagnostic schedule. The four cube tasks succeeded, but the first cylinder/left task
+left the workspace. The zero-tolerance rule stopped the run after 5/64 episodes. Simulator errors,
+nonfinite actions, and action-bound violations were zero; workspace violations were one. The full
+report SHA-256 is `18d25ffa52796035b2d59e879adaf4e5f2b38cf8142394f15b669fe6f280756a`; the generation-audit
+SHA-256 is `db712c3356675c5e0f7839773d1568a05389d4092c52754908a204f8fa503bf0`.
+
+No diagnostic candidate G--O qualified for another formal gate. Formal seeds 66300--66399 and all
+collection seeds remain untouched. Phase 2B.2 ends as Result B: collection, export, archive,
+replication, loader preflight, optimizer work, SmolVLA, and Phase 2D did not start.
