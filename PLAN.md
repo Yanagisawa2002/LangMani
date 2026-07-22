@@ -40,14 +40,13 @@ The exact next stage is a separately invoked Phase 2C SmolVLA implementation/tra
 That authorization is dataset readiness only: no SmolVLA dependency, adapter, model, training run,
 evaluation, or learned-policy Phase 2 result exists yet, and Phase 2B starts none automatically.
 
-The later Phase 2B.2 byte-reconstitution attempt is separately closed as Result B. It used the new
-`langmani/phase2b-push-v2` identity and never reused v1 bytes or hashes. Two complete expert gates
-reached 75/100 and 11/100; eight later G--N diagnostic candidates were also rejected. Candidate N
-kept four cube successes but its first cylinder task caused a zero-tolerance workspace exit.
-Because no candidate satisfied the mandatory 95%/100-episode gate, formal collection never started:
-v2 episodes=0, frames=0, optimizer steps=0, and Phase 2C.2 is not authorized from this
-reconstruction attempt. The next work, if separately authorized, is a new push-expert architecture
-rather than another parameter-only recovery.
+The later Phase 2B.2 byte-reconstitution work uses the new `langmani/phase2b-push-v2` identity and
+never reuses v1 bytes or hashes. Two complete expert gates reached 75/100 and 11/100; eight later
+G--N diagnostic candidates were also rejected. Candidate N kept four cube successes but its first
+cylinder task caused a zero-tolerance workspace exit. Candidate O is now locally bound for one
+disjoint diagnostic probe that retargets the observed cylinder drift without changing the cube
+path or formal gates. Until a complete 95%/100-episode gate passes, formal collection remains
+closed: v2 episodes=0, frames=0, optimizer steps=0, and Phase 2C.2 is not authorized.
 
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically

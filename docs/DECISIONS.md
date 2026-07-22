@@ -2994,16 +2994,11 @@ in-contact correction. It does not alter cube behavior, primary motion, controll
 success geometry, the 250-step horizon, action bounds, acceptance thresholds, or zero-tolerance
 gates. Candidate O requires a new disjoint diagnostic schedule before the formal gate can run.
 
-## D-118 - Reject Candidate N and retain Phase 2B.2 Result B
+## D-119 - Bind Candidate O before isolated diagnostic screening
 
-Candidate N passed 41 focused tests and targeted Ruff/format checks, then ran from clean Git
-`48686a57b427ddbf6c99b01b51dc003970e1a5e9`. Its first four cube tasks succeeded, but the first
-cylinder task produced a target-workspace exit. The predeclared zero-tolerance rule stopped the
-probe after 5/64 episodes. Its immutable report SHA-256 is
-`fe7a875f49183fcd27af2f5e2a27ffc4d85b554b1920387471e4bcd277a069a3`; the generation-audit
-SHA-256 is `2a8a77173bbda67e96885f0376b49ccffd65fda39a4760e88b5003b0ea8db5f4`.
-
-The two formal gates remain 75/100 and 11/100, and diagnostic G--N evidence cannot replace them.
-The formal and collection seed ranges remain unused. Phase 2B.2 stays closed as Result B; any next
-expert repair must use a separately authorized architecture rather than another parameter-only
-recovery.
+Candidate O passed 41 focused local tests with one expected Windows symlink-capability skip, Ruff,
+format, and changed-module mypy validation at implementation commit
+`e55198ca44d478df584a85357a697ffbecbc8484`. The v2 contract now binds that exact implementation.
+Seeds 68100--68163 are diagnostic only and are disjoint from the untouched 66300--66399 formal
+gate, every prior diagnostic range, and the reserved collection/top-up schedule. The diagnostic
+probe cannot promote the expert; collection remains closed until a complete formal gate passes.

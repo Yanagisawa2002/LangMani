@@ -163,24 +163,8 @@ limited to recomputing the current target-center direction for lateral-cylinder 
 correction. The accepted cube path and all formal gates remain unchanged, and formal seeds
 66300--66399 plus collection seeds remain untouched.
 
-## Candidate M diagnostic rejection
-
-Candidate M ran from clean source `ef12836072473d868f3c319db5a35aa9945ac325`. It completed five
-diagnostic episodes with three successes, one timeout, and one target-workspace exit. The
-zero-tolerance workspace event rejected the candidate. The immutable full report SHA-256 is
-`4fb593d8493ea0abd8d24175d8546a41aef3bce76234f5cc2fc66f809f0d84e3`.
-
-## Candidate N diagnostic rejection and final Result B
-
-Candidate N retained Candidate M cube behavior and changed only the cylinder braking band and
-maximum in-contact nudge. It passed 41 focused tests and targeted Ruff/format checks before running
-from clean source `48686a57b427ddbf6c99b01b51dc003970e1a5e9` on seeds 68000--68063.
-The first four cube tasks succeeded. The first cylinder task then left the target workspace, so the
-zero-tolerance rule stopped the probe after 5/64 episodes. Simulator errors, nonfinite actions, and
-action-bound violations remained zero; workspace violations were one. The full report SHA-256 is
-`fe7a875f49183fcd27af2f5e2a27ffc4d85b554b1920387471e4bcd277a069a3`, and the generation-audit
-SHA-256 is `2a8a77173bbda67e96885f0376b49ccffd65fda39a4760e88b5003b0ea8db5f4`.
-
-The formal 66300--66399 range and every collection seed remain untouched. Phase 2B.2 is Result B:
-raw collection, export, archive, replication, loader preflight, SmolVLA, optimizer work, and Phase
-2D did not start. A different push-expert architecture requires separate authorization.
+Candidate O passed 41 focused local tests with one Windows symlink-capability skip, plus Ruff and
+changed-module mypy validation, at implementation commit
+`e55198ca44d478df584a85357a697ffbecbc8484`. Diagnostic seeds 68100--68163 are isolated from the
+formal and collection ranges. A passing diagnostic can only authorize spending the untouched
+100-episode formal schedule; it cannot itself accept the expert or open collection.

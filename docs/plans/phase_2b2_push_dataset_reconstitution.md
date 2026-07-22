@@ -172,8 +172,7 @@ drifted. Candidate O changes only that branch: a lateral-cylinder in-contact cor
 the direction from the current object position to the fixed target center. Cube motion, primary
 pushes, formal thresholds, task geometry, action bounds, and all frozen seed ranges remain unchanged.
 
-Candidate M stopped after five episodes on one timeout and one zero-tolerance target-workspace
-exit. Candidate N then passed the first four cube tasks but its first cylinder task also left the
-target workspace. The zero-tolerance rule stopped Candidate N after 5/64 episodes. This exhausts
-the bounded parameter-level recovery: Phase 2B.2 remains Result B, formal and collection seeds stay
-untouched, and a new expert architecture needs separate authorization.
+Candidate O passed focused local validation at implementation commit
+`e55198ca44d478df584a85357a697ffbecbc8484`. Its diagnostic-only seeds are 68100--68163, disjoint
+from the untouched formal gate, every prior diagnostic range, and the reserved collection/top-up
+schedule. Diagnostic evidence remains ineligible for promotion by itself.
