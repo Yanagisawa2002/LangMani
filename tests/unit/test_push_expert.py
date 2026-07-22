@@ -236,9 +236,10 @@ def test_push_expert_config_rejects_unbounded_correction_search() -> None:
     assert config.maximum_primary_push_segments == 8
     assert config.cylinder_region_goal_margin == pytest.approx(0.02)
     assert config.precontainment_braking_margin == pytest.approx(0.025)
-    assert config.cylinder_precontainment_braking_margin == pytest.approx(0.035)
-    assert config.minimum_in_contact_nudge == pytest.approx(0.008)
+    assert config.cylinder_precontainment_braking_margin == pytest.approx(0.05)
+    assert config.minimum_in_contact_nudge == pytest.approx(0.006)
     assert config.maximum_in_contact_nudge == pytest.approx(0.025)
+    assert config.maximum_cylinder_in_contact_nudge == pytest.approx(0.015)
 
 
 def test_push_endpoint_stops_inside_full_containment_with_geometry_margin() -> None:

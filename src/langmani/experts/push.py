@@ -510,7 +510,7 @@ class PushToRegionExpert:
         ):
             direction = self._motion_direction(object_position)
             advance = min(
-                self.config.maximum_in_contact_nudge,
+                self._maximum_in_contact_nudge(),
                 max(
                     self.config.minimum_in_contact_nudge,
                     target_distance - containment_radius + self.config.minimum_in_contact_nudge,
@@ -669,6 +669,17 @@ class PushToRegionExpert:
         raise _PushAbort(
             PushExpertStatus.INVALID_TASK,
             f"precontainment braking margin is undefined for {object_id!r}",
+        )
+
+    def _maximum_in_contact_nudge(self) -> float:
+        object_id = self._require_context().target_object.object_id
+        if object_id == "blue_cube":
+            return self.config.maximum_in_contact_nudge
+        if object_id == "orange_cylinder":
+            return self.config.maximum_cylinder_in_contact_nudge
+        raise _PushAbort(
+            PushExpertStatus.INVALID_TASK,
+            f"maximum in-contact nudge is undefined for {object_id!r}",
         )
 
     def _lateral_compensation_degrees(self) -> float:
