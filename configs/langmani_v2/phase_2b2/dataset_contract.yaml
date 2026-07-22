@@ -26,7 +26,7 @@
         "panda_joint5_position_target",
         "panda_joint6_position_target",
         "panda_joint7_position_target",
-        "panda_gripper_mimic_command",
+        "panda_gripper_mimic_command"
     ],
     "action_units": ["rad", "rad", "rad", "rad", "rad", "rad", "rad", "normalized_mimic"],
     "action_bounds": {
@@ -38,7 +38,7 @@
             -2.8973000049591064,
             -0.017500000074505806,
             -2.8973000049591064,
-            -1.0,
+            -1.0
         ],
         "high": [
             2.8973000049591064,
@@ -48,9 +48,9 @@
             2.8973000049591064,
             3.752500057220459,
             2.8973000049591064,
-            1.0,
+            1.0
         ],
-        "source": "native_pd_joint_pos_controller_action_space",
+        "source": "native_pd_joint_pos_controller_action_space"
     },
     "raw_observation_mode": "state_dict",
     "policy_observation_keys": ["observation.images.base_camera", "observation.state"],
@@ -66,7 +66,7 @@
         "panda_joint6",
         "panda_joint7",
         "panda_finger_joint1",
-        "panda_finger_joint2",
+        "panda_finger_joint2"
     ],
     "camera": {
         "name": "base_camera",
@@ -74,12 +74,12 @@
         "height": 256,
         "width": 256,
         "channels": 3,
-        "dtype": "uint8",
+        "dtype": "uint8"
     },
     "instruction_schema": {
         "storage": "LeRobot task metadata",
         "template_groups": ["training", "validation", "held_out_paraphrase"],
-        "canonical_task_sidecar": true,
+        "canonical_task_sidecar": true
     },
     "maximum_episode_steps": 250,
     "termination_definition": "success_or_environment_fail_or_time_limit",
@@ -95,7 +95,7 @@
         "maximum_simulator_errors": 0,
         "maximum_nonfinite_actions": 0,
         "maximum_action_bound_violations": 0,
-        "maximum_workspace_violations": 0,
+        "maximum_workspace_violations": 0
     },
     "pilot_attempts": 32,
     "pilot_seed_start": 65000,
@@ -114,7 +114,7 @@
         "left": 80,
         "right": 80,
         "forward_left": 80,
-        "forward_right": 80,
+        "forward_right": 80
     },
     "maximum_top_up_attempts": 160,
     "atomic_episode_commits": true,
@@ -123,7 +123,7 @@
     "language_templates": {
         "training": ["push_train_canonical_v0", "push_train_direct_v0", "push_train_constraint_v0"],
         "validation": ["push_validation_goal_v0"],
-        "held_out_paraphrase": ["push_heldout_nudge_v0"],
+        "held_out_paraphrase": ["push_heldout_nudge_v0"]
     },
     "split_strategy": {
         "semantic": "stable_scene_and_language_group_v1",
@@ -133,15 +133,15 @@
             "test_unseen_scene",
             "test_unseen_language",
             "test_hard",
-            "test_visual_shift",
+            "test_visual_shift"
         ],
-        "episode_level_only": true,
+        "episode_level_only": true
     },
     "replay": {
         "fraction": 1.0,
         "maximum_terminal_position_error": 0.01,
         "maximum_terminal_orientation_error_radians": 0.08,
-        "minimum_categorical_match_rate": 0.99,
+        "minimum_categorical_match_rate": 0.99
     },
     "dataset": {
         "format_version": "LeRobotDataset-v3/lerobot-0.6.0",
@@ -157,8 +157,8 @@
             "crf": 18,
             "gop": 2,
             "preset": "medium",
-            "threads": 1,
-        },
+            "threads": 1
+        }
     },
     "acceptance": {
         "minimum_expert_success_rate": 0.95,
@@ -173,12 +173,12 @@
         "maximum_split_leakage": 0,
         "archive_restore_required": true,
         "smolvla_loader_compatibility_required": true,
-        "optimizer_steps_required": 0,
+        "optimizer_steps_required": 0
     },
     "required_runtime": {
         "numpy": "1.26.4",
         "mplib": "0.1.1",
         "mani_skill": "3.0.1",
-        "lerobot": "0.6.0",
-    },
+        "lerobot": "0.6.0"
+    }
 }
