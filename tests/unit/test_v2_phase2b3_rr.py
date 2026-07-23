@@ -331,7 +331,7 @@ def test_result_d_artifacts_verify_and_detect_tampering(tmp_path: Path) -> None:
     manifest = json.loads((copied / "artifact_manifest.json").read_text(encoding="utf-8"))
     for entry in manifest["files"]:
         path = copied / entry["path"]
-        contents = path.read_bytes()
+        contents = path.read_bytes().replace(b"\r\n", b"\n")
         path.write_bytes(contents.replace(b"\n", b"\r\n"))
     translated = verify_phase2b3_rr_result_artifacts(copied)
     assert translated["passed"] is True
