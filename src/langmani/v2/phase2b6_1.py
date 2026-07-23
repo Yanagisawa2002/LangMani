@@ -398,6 +398,8 @@ def _classification_for_gate(gate_name: str | None) -> FailureClassification:
         "temporary_writer_gate": FailureClassification.WRITER_FAILURE,
         "episode_serialization_gate": FailureClassification.SERIALIZATION_FAILURE,
     }
+    if gate_name is None:
+        return FailureClassification.INSUFFICIENT_EVIDENCE
     return mapping.get(gate_name, FailureClassification.INSUFFICIENT_EVIDENCE)
 
 
