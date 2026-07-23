@@ -608,7 +608,7 @@ def _state_error(reference: object, observed: object) -> dict[str, object]:
 
 def _task_object_raw_poses(base: Any, task_id: str) -> dict[str, np.ndarray]:
     names = {
-        "PickCube-v1": ("obj",),
+        "PickCube-v1": ("cube",),
         "StackCube-v1": ("cubeA", "cubeB"),
         "PushCube-v1": ("obj",),
     }.get(task_id)
