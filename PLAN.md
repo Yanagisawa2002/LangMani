@@ -75,6 +75,15 @@ displacements and 12 workspace exits. The hard stop prevented broader developmen
 66300--66399, full PPO training, the 95/100 qualification, collection, datasets, SmolVLA, and
 student training remain sealed; full PPO training is neither eligible nor authorized.
 
+Phase 2B.4-F1 completed as Result C. Its state-centered bounded residual transform passed exact
+likelihood, checkpoint, and 100,000-action legality checks and materially reduced local arm/TCP
+motion in paired real physics. The only 262,144-step Probe A nevertheless had zero training
+successes. Fixed evaluation reached 0/32 success, 0/32 correct contact, 0/32 target progress, seven
+wrong-object interactions, and zero workspace exits. Probe B was not authorized or run. The custom
+PPO teacher route is frozen for this task formulation. No third probe, reward retry, sweep, resume,
+Stage 1/2, full curriculum, formal qualification, collection, dataset export, SmolVLA, or student
+training is authorized.
+
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected

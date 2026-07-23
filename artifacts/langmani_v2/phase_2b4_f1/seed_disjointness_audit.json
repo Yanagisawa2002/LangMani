@@ -1,0 +1,52 @@
+{
+  "f0_micro_evaluation_reused": false,
+  "fingerprint": "sha256:9282d85f239d2f4f68483136bcfcc988f6c5676ea039ba8dbf3cc9adedb2247e",
+  "formal_seed_accessed": false,
+  "namespaces": [
+    {
+      "accessible_in_f1": false,
+      "count": 100,
+      "name": "formal_qualification",
+      "start_inclusive": 66300,
+      "stop_exclusive": 66400
+    },
+    {
+      "accessible_in_f1": true,
+      "count": 100000,
+      "name": "f1_probe_train",
+      "start_inclusive": 1100000,
+      "stop_exclusive": 1200000
+    },
+    {
+      "accessible_in_f1": true,
+      "count": 32,
+      "name": "f1_probe_a_evaluation",
+      "start_inclusive": 1200000,
+      "stop_exclusive": 1200032
+    },
+    {
+      "accessible_in_f1": true,
+      "count": 48,
+      "name": "f1_probe_b_evaluation",
+      "start_inclusive": 1201000,
+      "stop_exclusive": 1201048
+    },
+    {
+      "accessible_in_f1": true,
+      "count": 256,
+      "name": "f1_diagnostic",
+      "start_inclusive": 1202000,
+      "stop_exclusive": 1202256
+    },
+    {
+      "accessible_in_f1": false,
+      "count": 100000,
+      "name": "future_full_curriculum",
+      "start_inclusive": 1210000,
+      "stop_exclusive": 1310000
+    }
+  ],
+  "overlaps": [],
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b4-f1-seeds-v0"
+}

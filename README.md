@@ -110,6 +110,31 @@ starting the simulator:
 python environment/verify_v2_phase2b4_f0.py
 ```
 
+Phase 2B.4-F1 is a separately bounded diagnosis of that exact F0 result. It does not reopen F0,
+merge the geometry route, or authorize a teacher/data/student stage. Its residual action transform
+is centered on current Panda joint state, remains structurally inside the native `float32[8]`
+`pd_joint_pos` bounds, and uses the same differentiable transform for rollout, PPO likelihood, and
+evaluation. Run each stage separately on native CUDA:
+
+```bash
+python environment/prepare_v2_phase2b4_f1.py
+CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_f1.py \
+  --audit-initial-exploration
+CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_f1.py \
+  --diagnose-f0 outputs/diagnostics/v2/phase2b4_f0/micro/micro_checkpoint.pt
+CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_f1.py --compare-actions
+```
+
+The comparison must pass before the single 262,144-step Probe A is started. Probe B has its own
+262,144-step cap and requires an explicit passing Probe A evaluation report. Formal seeds, Stage
+1/2, full PPO training, qualification, collection, LeRobot, SmolVLA, and student training remain
+blocked for every F1 result.
+
+F1 completed as Result C. The residual transform improved local initial motion, but Probe A reached
+0/32 success, zero correct contacts, zero target-progress episodes, and seven wrong-object
+interactions. Probe B did not run. The custom PPO teacher route is closed for this task formulation,
+and all downstream authorizations remain false.
+
 The completed Phase 2B archive can be independently re-audited without starting training:
 
 ```bash

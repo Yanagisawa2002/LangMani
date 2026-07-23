@@ -1,0 +1,28 @@
+{
+  "f0": {
+    "evaluation_episodes": 48,
+    "evaluation_successes": 0,
+    "initial_arm_target_l2_mean": 0.4988945722579956,
+    "initial_max_tcp_step_mean": 0.09022640436887741,
+    "training_steps": 1048576,
+    "training_successes": 0,
+    "workspace_exits": 12,
+    "wrong_object_interactions": 22
+  },
+  "f1_probe_a": {
+    "correct_contact_episodes": 0,
+    "evaluation_episodes": 32,
+    "evaluation_successes": 0,
+    "initial_arm_target_l2_mean": 0.23572410643100739,
+    "initial_max_tcp_step_mean": 0.044765230268239975,
+    "target_progress_episodes": 0,
+    "training_steps": 262144,
+    "training_successes": 0,
+    "workspace_exits": 0,
+    "wrong_object_interactions": 7
+  },
+  "fingerprint": "sha256:93173490f44b0a11b7b3dbd522c4cde75a8d67d0b71ff5ff38a9ba4170a1bcd6",
+  "mechanism_interpretation": "State-centered residual mapping materially reduced initial local motion, but actor initialization/log-std and Stage-0 task distribution also changed, so causal attribution cannot be isolated. The redesign still failed to discover correct contact and retained wrong-object interaction.",
+  "schema_version": "langmani-v2-phase2b4-f1-f0-f1-comparison-v0",
+  "unequal_training_budget_warning": "F0 used 1,048,576 steps and Probe A used 262,144; final task metrics are diagnostic comparisons, not equal-budget performance estimates."
+}

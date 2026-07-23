@@ -1,0 +1,22 @@
+{
+  "checkout_clean_before_each_target_stage": true,
+  "collection_started": false,
+  "concurrent_project_jobs": 0,
+  "execution_commit": "5934a0261f1f0bb6c5bf01df3e0ef0b8f3b50e49",
+  "fingerprint": "sha256:657650a6e3e6feaa8ee1457e0e264fc3cd90ba251007cd417719990cb1fc0e65",
+  "formal_qualification_started": false,
+  "hostname": "autodl-container-xpe9q58l10-db426ce5",
+  "network_turbo_sourced": true,
+  "post_run_gpu_jobs": 0,
+  "probe_a_evaluation_exit_code": 2,
+  "probe_a_evaluation_exit_expected_for_failed_gate": true,
+  "probe_a_exit_code": 0,
+  "probe_b_started": false,
+  "schema_version": "langmani-v2-phase2b4-f1-remote-execution-audit-v0",
+  "screen_sessions": [
+    "langmani_phase2b4_f1_probe_a"
+  ],
+  "server_shutdown_requested_or_run": false,
+  "student_training_started": false,
+  "vulkan_icd": "/etc/vulkan/icd.d/my_nvidia_icd.json"
+}

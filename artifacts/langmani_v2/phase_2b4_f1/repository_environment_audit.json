@@ -1,0 +1,34 @@
+{
+  "branch": "codex/langmani-v2-phase2b4-f1-ppo-diagnosis",
+  "checks": {
+    "branch_exact": true,
+    "excluded_geometry_is_not_ancestor": true,
+    "origin_identity": true,
+    "source_is_ancestor": true,
+    "worktree_clean_before_artifact_write": true
+  },
+  "collection_process_found": false,
+  "excluded_geometry_commit": "ae6aae49c61d96c68de434e08dc1167461a29543",
+  "fingerprint": "sha256:9e08a3507ebf29d9034ed553858e1cce1dd43018a434e85913c986bed0060d3f",
+  "formal_seeds_accessed": false,
+  "head": "095fa2900bb9bfefb6190ff976db9aff2f64cdd7",
+  "lerobot_process_found": false,
+  "origin": "git@github.com:Yanagisawa2002/LangMani.git",
+  "passed": true,
+  "repository": "https://github.com/Yanagisawa2002/LangMani.git",
+  "runtime": {
+    "cuda": "12.8",
+    "cuda_available": true,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "hostname": "autodl-container-xpe9q58l10-db426ce5",
+    "platform": "Linux-5.15.0-78-generic-x86_64-with-glibc2.35",
+    "python": "3.12.13",
+    "torch": "2.11.0+cu128"
+  },
+  "schema_version": "langmani-v2-phase2b4-f1-repository-environment-audit-v0",
+  "smolvla_process_found": false,
+  "source_branch": "codex/langmani-v2-phase2b4-ppo-teacher-feasibility",
+  "source_commit": "c5892a357da85f753d5d0c3775ccf2b94e0d8910",
+  "student_training_process_found": false,
+  "worktree": "/root/autodl-tmp/langmani"
+}

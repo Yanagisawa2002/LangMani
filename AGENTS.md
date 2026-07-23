@@ -116,6 +116,15 @@ demonstrate a profitable exploit. Formal seeds 66300--66399, full PPO training, 
 qualification, demonstrations, datasets, collection, SmolVLA, and student training remain sealed.
 `ppo_full_training_eligible=false` and every authorization flag remains false.
 
+Phase 2B.4-F1 completed as Result C and is the final bounded PPO-specific diagnosis. The
+100,000-action residual audit passed and the real paired short-prefix comparison materially reduced
+arm/TCP displacement, but the single 262,144-step Probe A had zero training successes. Its fixed
+32-episode evaluation had zero correct contacts, zero target-progress episodes, seven wrong-object
+interactions, and zero workspace exits. Probe B did not run. The custom PPO teacher route is frozen
+for this task formulation; there is no PPO F2, Probe C, reward retry, sweep, resume, or budget
+increase. Formal seeds 66300--66399, Stage 1/2, full PPO training, expert qualification, collection,
+LeRobot, SmolVLA, and all student training remain sealed and unauthorized.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
@@ -286,6 +295,17 @@ CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_ppo.py --train-micro
 CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_ppo.py \
   --evaluate-micro outputs/diagnostics/v2/phase2b4_f0/micro/micro_checkpoint.pt
 python environment/verify_v2_phase2b4_f0.py
+
+# Phase 2B.4-F1 deterministic contracts and separately invoked native target stages.
+python environment/prepare_v2_phase2b4_f1.py
+CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_f1.py \
+  --audit-initial-exploration
+CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_f1.py \
+  --diagnose-f0 outputs/diagnostics/v2/phase2b4_f0/micro/micro_checkpoint.pt
+CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_f1.py --compare-actions
+# Probe A is allowed only after the three diagnostics pass. Probe B is allowed only
+# when its explicit --probe-a-evaluation report passes every frozen gate.
+CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_f1.py --train-probe-a
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,
@@ -480,6 +500,12 @@ The exact environment creation commands are maintained in `README.md`.
   authorize automatic SmolVLA installation, training, evaluation, or a learned-policy quality
   claim. Generated raw archives, failure trajectories, LeRobot data, videos, and verifier reports
   remain under `outputs/`.
+- Phase 2B.4-F1 owns only diagnostic logs and at most two small PPO checkpoints under `outputs/`.
+  It must never edit F0 evidence, use the geometry branch, touch formal seeds, remove the Standard
+  distractor from the environment implementation, change physics/success/250-step limits, run a
+  third probe, resume or sweep a failed probe, or create demonstration/dataset/student artifacts.
+  Probe A retains F0 reward revision 0. Any Probe B reward revision requires an explicit
+  diagnosis-bound decision artifact and cannot be chosen merely because F0 success was zero.
 
 ## Definition of done
 

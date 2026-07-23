@@ -1,0 +1,23 @@
+{
+  "expected_terminated_advantage": 0.75,
+  "expected_truncated_advantage": 2.73,
+  "fingerprint": "sha256:9415171c970c006820cb311f90406f4cf29ed9bf8457c82c6b37391caae4a1e0",
+  "historical_episode_reason_limitation": "F0 did not retain per-training-episode termination labels; the exact 21,034-episode reason histogram is unavailable.",
+  "passed": true,
+  "probe_advantages": [
+    [
+      0.75,
+      2.7300000190734863
+    ]
+  ],
+  "schema_version": "langmani-v2-phase2b4-f1-termination-bootstrap-audit-v0",
+  "training_semantics": {
+    "asynchronous_reset_uses_explicit_full_seed_vector_and_physical_mask": true,
+    "post_failure_tail_steps": 0,
+    "safety_mask_merged_into_terminated": true,
+    "safety_reset_same_transition": true,
+    "terminal_observation_value_computed_then_masked_for_termination": true,
+    "terminated_bootstrap": false,
+    "truncated_bootstrap": true
+  }
+}

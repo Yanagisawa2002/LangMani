@@ -1,0 +1,65 @@
+{
+  "completed_episodes": 21034,
+  "completed_successes": 0,
+  "diagnostic_classification": {
+    "contact_learning_without_progress_proven": false,
+    "critic_failure_proven": false,
+    "entropy_collapse_proven": false,
+    "no_useful_task_learning": true,
+    "partial_approach_learning_proven": false,
+    "premature_policy_collapse_proven": false,
+    "reward_cancellation_proven": false,
+    "unsafe_progress_observed_in_fixed_evaluation": true
+  },
+  "evidence_boundary": "These fields were not retained by F0 and are reported unavailable rather than reconstructed from later rollouts.",
+  "fingerprint": "sha256:af87747bd99e969c8d5fda9ab565f90c9709c32235f36632271e3a33180ff76c",
+  "first_quartile_progress_mean": -0.015690748471753956,
+  "first_quartile_return_mean": -5.673748454565018,
+  "global_step": 1048576,
+  "last_quartile_progress_mean": -0.013455634319587278,
+  "last_quartile_return_mean": -5.408587399743425,
+  "recorded_actor_loss": {
+    "first": 0.0645013228058815,
+    "last": -0.0070058926939964294
+  },
+  "recorded_approximate_kl": {
+    "first": 0.17720580101013184,
+    "last": 0.05040549114346504,
+    "maximum": 0.17720580101013184,
+    "snapshots_above_target_0_1": 2
+  },
+  "recorded_clip_fraction": {
+    "first": 0.7421875,
+    "last": 0.498046875,
+    "maximum": 0.7421875,
+    "median": 0.44140625
+  },
+  "recorded_critic_loss": {
+    "first": 0.1184450015425682,
+    "last": 0.6394617557525635
+  },
+  "recorded_reward_mean": {
+    "first": -0.02662990428507328,
+    "last": -0.13170942664146423,
+    "maximum": -0.02662990428507328,
+    "minimum": -0.13826608657836914
+  },
+  "recorded_snapshot_count": 33,
+  "recorded_transformed_sample_entropy": {
+    "first": -4.647761344909668,
+    "last": -10.089948654174805,
+    "note": "F0 recorded -log_prob after the action transform, not an analytic Normal entropy; this trace alone cannot prove entropy collapse."
+  },
+  "schema_version": "langmani-v2-phase2b4-f1-f0-learning-dynamics-audit-v0",
+  "source_report_fingerprint": "sha256:edc4fab105b5395763b110b993d05683e3a2b8963cab9ab1e20bf54ea0ab4a9e",
+  "source_report_schema": "langmani-v2-phase2b4-f0-micro-training-v0",
+  "unavailable_from_frozen_training_report": [
+    "per-episode median return",
+    "per-component reward timeline",
+    "value explained variance",
+    "action mean and standard deviation by iteration",
+    "state-value prediction distribution",
+    "training termination reason per episode",
+    "contact and containment event frequencies"
+  ]
+}

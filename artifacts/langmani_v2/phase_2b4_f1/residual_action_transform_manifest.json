@@ -1,0 +1,51 @@
+{
+  "arm_reference": "current Panda qpos[0:7]",
+  "bounds_source": "active environment single_action_space",
+  "clipping_emitted_action": false,
+  "control_mode": "pd_joint_pos",
+  "current_coordinate_boundary_guard": "clamp to [-1+1e-6,1-1e-6] before atanh",
+  "dtype": "float32",
+  "exact_change_of_variables_log_probability": true,
+  "fallback": false,
+  "fingerprint": "sha256:a1a111eb6d0ba6327510dac854b1cb100e4c4fc7d991c1f4aa2f3ded1f586165",
+  "gripper_reference": "current mean finger qpos mapped from [0,0.04] to [-1,1]",
+  "high": [
+    2.8973000049591064,
+    1.7627999782562256,
+    2.8973000049591064,
+    -0.0697999969124794,
+    2.8973000049591064,
+    3.752500057220459,
+    2.8973000049591064,
+    1.0
+  ],
+  "low": [
+    -2.8973000049591064,
+    -1.7627999782562256,
+    -2.8973000049591064,
+    -3.0717999935150146,
+    -2.8973000049591064,
+    -0.017500000074505806,
+    -2.8973000049591064,
+    -1.0
+  ],
+  "name": "state_centered_bounded_residual_v1",
+  "projection": false,
+  "residual_scales": [
+    0.07999999821186066,
+    0.07999999821186066,
+    0.07999999821186066,
+    0.07999999821186066,
+    0.07999999821186066,
+    0.07999999821186066,
+    0.07999999821186066,
+    0.25
+  ],
+  "schema_version": "langmani-v2-phase2b4-f1-state-centered-residual-v1",
+  "shape": [
+    8
+  ],
+  "stochastic_and_deterministic_transform_shared": true,
+  "transform": "current action reference -> normalized z_current -> safe atanh; z_next=tanh(atanh_safe(z_current)+scale*tanh(policy_latent)); native action=affine(z_next)",
+  "zero_residual_identity": true
+}

@@ -1,0 +1,70 @@
+{
+  "cpu_safe_main_runtime": {
+    "deselected": 18,
+    "elapsed_seconds": 135.99,
+    "failed": 2,
+    "known_environment_failures": [
+      "M2 physical integration requires planner-side numpy==1.26.4 but main PPO runtime has numpy==2.2.6",
+      "M3A physical integration depends on the same M2 planner-side runtime"
+    ],
+    "passed": 1634,
+    "warnings": 3
+  },
+  "f1_regression_detected": false,
+  "f1_targeted_pytest": {
+    "elapsed_seconds": 3.27,
+    "failed": 0,
+    "passed": 35
+  },
+  "isolated_build": {
+    "passed": true,
+    "sdist": "langmani-0.1.0.tar.gz",
+    "wheel": "langmani-0.1.0-py3-none-any.whl"
+  },
+  "migration_dependency_repair": {
+    "mypy": "1.14.1",
+    "outlines": "1.3.1",
+    "pydantic": "2.13.4"
+  },
+  "mypy_changed_modules": {
+    "modules_checked": 6,
+    "passed": true
+  },
+  "mypy_full_current": {
+    "errors": 573,
+    "files_with_errors": 67,
+    "passed": false,
+    "source_files_checked": 155
+  },
+  "mypy_regression": {
+    "changed_modules_clean": true,
+    "new_error_count": 0
+  },
+  "mypy_source_baseline": {
+    "commit": "c5892a357da85f753d5d0c3775ccf2b94e0d8910",
+    "errors": 573,
+    "files_with_errors": 67,
+    "passed": false,
+    "source_files_checked": 153
+  },
+  "planner_runtime_isolated_rechecks": {
+    "m2_six_task_physical": {
+      "elapsed_seconds": 10.34,
+      "failed": 0,
+      "passed": 1
+    },
+    "m3a_one_group_collect_replay_inspect": {
+      "elapsed_seconds": 19.33,
+      "failed": 0,
+      "passed": 1
+    }
+  },
+  "ruff_check": {
+    "passed": true
+  },
+  "ruff_format_check": {
+    "files_unchanged": 369,
+    "passed": true
+  },
+  "schema_version": "langmani-v2-phase2b4-f1-test-summary-v0"
+}

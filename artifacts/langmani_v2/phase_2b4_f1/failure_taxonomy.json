@@ -1,0 +1,17 @@
+{
+  "action_integrity_failure": false,
+  "collection_not_run": true,
+  "correct_contact_learning_failure": true,
+  "fingerprint": "sha256:b8fe78ebbdb20c6f48e94a09ea44244bdf4c84cb284dc4f2abd05ec586019763",
+  "formal_qualification_not_run": true,
+  "infrastructure_failure": false,
+  "pipeline_invalidity": false,
+  "ppo_teacher_algorithm_failure": true,
+  "probe_a_safety_failure": true,
+  "probe_b_not_authorized": true,
+  "residual_exploration_locality_failure": false,
+  "result": "RESULT_C",
+  "schema_version": "langmani-v2-phase2b4-f1-failure-taxonomy-v0",
+  "student_training_not_run": true,
+  "target_progress_learning_failure": true
+}

@@ -3159,3 +3159,66 @@ the frozen F0 teacher design; it is not a claim that reinforcement learning cann
 The compact manifest hashes and sizes use Git-canonical UTF-8 JSON bytes: CRLF is normalized to LF,
 while any other carriage return is rejected. This keeps the same immutable evidence independently
 verifiable from Windows and Linux checkouts without accepting arbitrary whitespace changes.
+
+## D-127 - Freeze the bounded Phase 2B.4-F1 PPO diagnosis and residual exploration protocol
+
+Phase 2B.4-F1 starts only from immutable F0 Result C commit
+`c5892a357da85f753d5d0c3775ccf2b94e0d8910`. The independent geometry commit
+`ae6aae49c61d96c68de434e08dc1167461a29543` remains excluded. F1 does not reinterpret F0's valid
+pipeline and zero-success result. It reports fields that were not retained in F0, including the
+per-episode training termination histogram and per-iteration value explained variance, as
+unavailable rather than synthesizing them from new rollouts.
+
+The new action identity is `state_centered_bounded_residual_v1`. Current Panda qpos is normalized
+within the live native bounds, mapped through a guarded inverse tanh, incremented by an explicit
+per-dimension bounded residual, mapped through tanh, and affinely returned to the unchanged
+`float32[8] pd_joint_pos` contract. Arm residual scales are 0.08 and the gripper scale is 0.25.
+The complete transform Jacobian is included in PPO log probability using the stable analytic
+log-derivative of tanh. The current-coordinate guard is `1e-6` and the zero-residual identity
+tolerance is `2e-6`. Emitted actions have no clip,
+projection, invalid-action replacement, or fallback path. A 100,000-action legality audit and a
+paired 32-by-8-step physical comparison must pass before learning.
+
+F1 Stage 0 uses only the cube, Standard left/forward-right tasks, canonical 250-step stable success,
+unchanged physics/geometry, and the unchanged Standard distractor. Probe A keeps reward revision 0,
+the F0 PPO architecture/optimizer settings, one fixed seed, and exactly 262,144 environment steps.
+Its independent 32-episode gate requires zero wrong-object/workspace/action-integrity events, at
+least 25% correct contact, and at least 20% target-directed progress. Only that conjunction permits
+one disjoint 262,144-step Probe B. Probe B's 48-episode gate additionally requires at least 20%
+success, one success in each included direction, at least 50% correct contact, and at least 40%
+progress. No third probe, sweep, resume, or algorithm switch is permitted.
+
+Formal seeds 66300--66399, future full-curriculum identities, Stage 1/2, full PPO training, expert
+qualification, collection, LeRobot export, SmolVLA, ACT/VLA-JEPA, and student work remain sealed.
+Even a positive F1 result sets eligibility only; all downstream authorization flags remain false.
+
+## D-128 - Close Phase 2B.4-F1 as Result C at the Probe A gate
+
+The target implementation ran from clean commit
+`5934a0261f1f0bb6c5bf01df3e0ef0b8f3b50e49` on the migrated RTX 5090 host. The target installation,
+F0 compact verifier, 100,000-action legality audit, exact log-probability test, checkpoint
+reconstruction, and termination/bootstrap audit passed. The residual audit emitted zero non-finite
+or out-of-bound actions, used no clip or projection, and reproduced current targets within
+`1.0132789611816406e-6`.
+
+The paired 32-by-8-step physical comparison reduced mean maximum arm target displacement from
+0.712 to 0.305 rad and mean maximum TCP step displacement from 0.0902 to 0.0448 m. It improved
+locally smooth prefixes from 0/32 to 21/32. Both paths had zero short-prefix wrong-object and
+workspace events, so this is a local-kinematics result rather than task competence.
+
+The frozen F0 checkpoint diagnostic on 32 new F1 identities reached the behind-object region in
+20 episodes but made zero correct target contacts and produced 14 wrong-object outcomes, nine
+workspace exits, and nine timeouts. Correct-contact/containment credit was absent, so no contact
+reward revision was justified. Probe A retained reward revision 0.
+
+Probe A ran exactly 262,144 environment steps and observed zero training successes. Its fixed
+32-episode evaluation reached zero stable success, zero correct-contact episodes, zero
+target-progress episodes, 25 timeouts, seven wrong-object interactions, and zero workspace exits.
+All 6,474 evaluation actions remained finite and in bounds with no clip or projection. This fails
+the zero-tolerance, contact, and progress gates, so Probe B did not run.
+
+F1 is Result C: the state-centered redesign improved initial locality but did not produce safe
+nonzero pushing competence. The custom PPO teacher route is frozen for the current task
+formulation; another PPO iteration, Probe C, reward retry, budget increase, or algorithm switch is
+not authorized. Formal seeds 66300--66399, full PPO, expert qualification, collection, LeRobot,
+SmolVLA, and student training remain unaccessed and unauthorized.

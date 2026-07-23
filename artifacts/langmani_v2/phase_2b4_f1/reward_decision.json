@@ -1,0 +1,17 @@
+{
+  "decision_evidence": {
+    "containment_increase_episodes": 0,
+    "correct_contact_episodes": 0,
+    "frozen_f0_training": "zero successes and no material aggregate progress",
+    "new_checkpoint_diagnostic_role": "read-only behavior on new F1 diagnostic seeds, not historical reconstruction",
+    "reason": "No correct contact was discovered; adding post-contact credit would not solve contact discovery, and the evidence does not prove cancellation of useful contact credit.",
+    "target_distance_reduction_episodes": 1
+  },
+  "fingerprint": "sha256:81a63cdeda2ed07da8aaae43ab2e2666e6cb7d99e5b1d0f5142d4a01bdeda47d",
+  "no_reward_change_before_diagnosis": true,
+  "probe_a_reward_revision": 0,
+  "probe_b_reward_revision": 0,
+  "reward_revision_implemented": false,
+  "schema_version": "langmani-v2-phase2b4-f1-reward-decision-v0",
+  "status": "final_before_probe_a"
+}

@@ -1,0 +1,15 @@
+{
+  "another_ppo_iteration_prohibited": true,
+  "custom_ppo_teacher_route_frozen": true,
+  "diagnosis_valid": true,
+  "fingerprint": "sha256:c1ad6838883c5e4098a696975aac1d00e20cd83fc20dbce4fa40e45202d0394d",
+  "hard_stop_reason": "Probe A evaluation had seven wrong-object interactions, zero correct contacts, and zero target-progress episodes.",
+  "pipeline_valid": true,
+  "probe_a_passed": false,
+  "probe_b_authorized": false,
+  "probe_b_ran": false,
+  "recommended_next_method": "Use a standard task with an existing validated expert or official demonstrations; alternatively use separately validated teleoperation.",
+  "residual_exploration_materially_safer": true,
+  "result": "RESULT_C",
+  "schema_version": "langmani-v2-phase2b4-f1-result-classification-v0"
+}

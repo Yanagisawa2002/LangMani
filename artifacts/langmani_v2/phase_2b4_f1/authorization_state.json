@@ -1,0 +1,14 @@
+{
+  "data_collection_authorized": false,
+  "demonstration_source_validated": false,
+  "expert_qualification_authorized": false,
+  "fingerprint": "sha256:dcd3c426cc906a593a66fda8d3046ffdc195e57290fdd624b16e6e8ec6337f39",
+  "ppo_failure_mechanism_identified": true,
+  "ppo_full_training_authorized": false,
+  "ppo_safe_curriculum_eligible": false,
+  "ppo_safe_curriculum_validated": false,
+  "result": "RESULT_C",
+  "schema_version": "langmani-v2-phase2b4-f1-authorization-v0",
+  "smolvla_training_authorized": false,
+  "student_policy_training_started": false
+}

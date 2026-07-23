@@ -1,0 +1,207 @@
+{
+  "f0_zero_latent_mapping": {
+    "important_distinction": "F0 did not sample around zero latent directly: its distribution mean added an inverse-tanh current-qpos reference. Initial stochastic means were state-centered, but learned actor offsets were not residual-capped.",
+    "maps_to": "global action-space midpoint",
+    "maximum_distance_from_midpoint": 0.0
+  },
+  "fingerprint": "sha256:c3602e8246e418b651ca80506cf571c70e375b308edbee6249d07642753dcc15",
+  "global_f0_initial": {
+    "action_saturation_count": 1,
+    "action_saturation_rate": 1e-05,
+    "arm_joint_limit_proximity_count": 0,
+    "arm_joint_limit_proximity_rate": 0.0,
+    "arm_joint_target_l2": {
+      "maximum": 1.202560305595398,
+      "mean": 0.4988945722579956,
+      "p50": 0.4885198473930359,
+      "p95": 0.7576859593391418,
+      "p99": 0.8816462755203247
+    },
+    "gripper_target_displacement": {
+      "maximum": 1.9501209259033203,
+      "mean": 1.8993159532546997,
+      "p50": 1.9004480838775635,
+      "p95": 1.9230362176895142,
+      "p99": 1.9309797286987305
+    },
+    "large_global_jump_count": 96975,
+    "large_global_jump_rate": 0.96975,
+    "large_global_jump_threshold_rad": 0.25,
+    "latent_log_std": -2.5,
+    "per_arm_joint_absolute_displacement": [
+      {
+        "maximum": 0.9858829975128174,
+        "mean": 0.1894201636314392,
+        "p50": 0.16111697256565094,
+        "p95": 0.464465856552124,
+        "p99": 0.6082151532173157
+      },
+      {
+        "maximum": 0.670905590057373,
+        "mean": 0.10998302698135376,
+        "p50": 0.09278927743434906,
+        "p95": 0.2697213590145111,
+        "p99": 0.35613948106765747
+      },
+      {
+        "maximum": 1.0166122913360596,
+        "mean": 0.19078859686851501,
+        "p50": 0.16193199157714844,
+        "p95": 0.46483999490737915,
+        "p99": 0.6090645790100098
+      },
+      {
+        "maximum": 0.5599340200424194,
+        "mean": 0.09221439808607101,
+        "p50": 0.07807618379592896,
+        "p95": 0.225808247923851,
+        "p99": 0.29957160353660583
+      },
+      {
+        "maximum": 0.93950355052948,
+        "mean": 0.18954375386238098,
+        "p50": 0.16125577688217163,
+        "p95": 0.4631183445453644,
+        "p99": 0.6032955646514893
+      },
+      {
+        "maximum": 0.6572726964950562,
+        "mean": 0.11603263765573502,
+        "p50": 0.09797084331512451,
+        "p95": 0.284816175699234,
+        "p99": 0.3763488233089447
+      },
+      {
+        "maximum": 1.0107364654541016,
+        "mean": 0.1752709597349167,
+        "p50": 0.14859485626220703,
+        "p95": 0.42912328243255615,
+        "p99": 0.5600780844688416
+      }
+    ]
+  },
+  "passed": true,
+  "physical_contact_and_workspace_risk": "measured separately by global_versus_residual_comparison.json on identical real-physics short prefixes",
+  "representative_reset_count": 128,
+  "residual_legality": {
+    "action_schema": "langmani-v2-phase2b4-f1-state-centered-residual-v1",
+    "clipping_events": 0,
+    "fingerprint": "sha256:4c305b675fade8b5f737c72640af67dc8de6d506743d4badd68529c5266e9b81",
+    "maximum_zero_residual_identity_error": 1.0132789611816406e-06,
+    "nonfinite_actions": 0,
+    "observed_max": [
+      0.2486281841993332,
+      0.5453707575798035,
+      0.25148940086364746,
+      -1.8286386728286743,
+      0.24604034423828125,
+      2.5229833126068115,
+      1.01071298122406,
+      0.9999994039535522
+    ],
+    "observed_min": [
+      -0.24955205619335175,
+      0.23122592270374298,
+      -0.2590690553188324,
+      -2.089167594909668,
+      -0.248043954372406,
+      2.1893317699432373,
+      0.5454015731811523,
+      0.9999983310699463
+    ],
+    "out_of_bounds_actions": 0,
+    "passed": true,
+    "projection_events": 0,
+    "sample_count": 100000,
+    "schema_version": "langmani-v2-phase2b4-f1-residual-action-legality-v0",
+    "zero_residual_tolerance": 2e-06
+  },
+  "sample_count": 100000,
+  "schema_version": "langmani-v2-phase2b4-f1-exploration-distribution-audit-v0",
+  "state_centered_residual_initial": {
+    "action_saturation_count": 100000,
+    "action_saturation_rate": 1.0,
+    "arm_joint_limit_proximity_count": 0,
+    "arm_joint_limit_proximity_rate": 0.0,
+    "arm_joint_target_l2": {
+      "maximum": 0.43410277366638184,
+      "mean": 0.23572410643100739,
+      "p50": 0.237127423286438,
+      "p95": 0.31777113676071167,
+      "p99": 0.3480408787727356
+    },
+    "gripper_target_displacement": {
+      "maximum": 1.6689300537109375e-06,
+      "mean": 1.042021494868095e-06,
+      "p50": 1.0132789611816406e-06,
+      "p95": 1.4901161193847656e-06,
+      "p99": 1.5497207641601562e-06
+    },
+    "large_global_jump_count": 40168,
+    "large_global_jump_rate": 0.40168,
+    "large_global_jump_threshold_rad": 0.25,
+    "latent_log_std": -0.5,
+    "per_arm_joint_absolute_displacement": [
+      {
+        "maximum": 0.22890539467334747,
+        "mean": 0.0937868133187294,
+        "p50": 0.09019576013088226,
+        "p95": 0.1924339085817337,
+        "p99": 0.21218998730182648
+      },
+      {
+        "maximum": 0.13478654623031616,
+        "mean": 0.054142631590366364,
+        "p50": 0.051756903529167175,
+        "p95": 0.11120031774044037,
+        "p99": 0.12279167771339417
+      },
+      {
+        "maximum": 0.22903557121753693,
+        "mean": 0.09386298805475235,
+        "p50": 0.0900699645280838,
+        "p95": 0.19208933413028717,
+        "p99": 0.21184445917606354
+      },
+      {
+        "maximum": 0.11313426494598389,
+        "mean": 0.04526546970009804,
+        "p50": 0.04349488019943237,
+        "p95": 0.09275010228157043,
+        "p99": 0.1025199219584465
+      },
+      {
+        "maximum": 0.22829268872737885,
+        "mean": 0.09386847913265228,
+        "p50": 0.0902303159236908,
+        "p95": 0.1920163333415985,
+        "p99": 0.21169701218605042
+      },
+      {
+        "maximum": 0.14133310317993164,
+        "mean": 0.05699382722377777,
+        "p50": 0.054656982421875,
+        "p95": 0.11668949574232101,
+        "p99": 0.12901687622070312
+      },
+      {
+        "maximum": 0.21651291847229004,
+        "mean": 0.0869160071015358,
+        "p50": 0.08327493071556091,
+        "p95": 0.17829377949237823,
+        "p99": 0.1966465562582016
+      }
+    ],
+    "residual_scales": [
+      0.08,
+      0.08,
+      0.08,
+      0.08,
+      0.08,
+      0.08,
+      0.08,
+      0.25
+    ]
+  },
+  "static_locality_improvement": 0.5275071737819863
+}

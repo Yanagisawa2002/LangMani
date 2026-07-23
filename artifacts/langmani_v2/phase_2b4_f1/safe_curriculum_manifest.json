@@ -1,0 +1,84 @@
+{
+  "fingerprint": "sha256:2da754d797b3bb35958c940e1f2df7c91d475d776555bde30cd43f744a84ac54",
+  "forbidden_simplifications": [
+    "success relaxation",
+    "episode-budget increase",
+    "physics modification",
+    "direct object control",
+    "scripted fallback",
+    "motion planning",
+    "distractor deletion from the environment implementation"
+  ],
+  "physics_equivalence": {
+    "action_shape": [
+      8
+    ],
+    "control_mode": "pd_joint_pos",
+    "environment": "LangMani-PushToRegion-v0",
+    "episode_budget": 250,
+    "mass_or_friction_changed": false,
+    "object_geometry_changed": false,
+    "robot": "Panda",
+    "success_predicate": "unchanged canonical stable success",
+    "target_geometry_changed": false
+  },
+  "schema_version": "langmani-v2-phase2b4-f1-safe-curriculum-v0",
+  "stages": [
+    {
+      "advancement": {
+        "probe_a": "zero safety events, contact >=25%, target-directed progress >=20%",
+        "probe_b": "success >=20%, per-direction cube success, contact >=50%, progress >=40%, zero safety events"
+      },
+      "difficulty": [
+        "standard"
+      ],
+      "directions": [
+        "left",
+        "forward_right"
+      ],
+      "distractor": "unchanged Standard distractor at its canonical safe location",
+      "name": "stage_0_contact_acquisition",
+      "objects": [
+        "blue_cube"
+      ],
+      "reset_range": "f1_probe_train",
+      "rollback": "any frozen zero-tolerance event or failed gate hard-stops F1",
+      "runnable_in_f1": true
+    },
+    {
+      "difficulty": [
+        "standard"
+      ],
+      "directions": [
+        "left",
+        "right",
+        "forward_left",
+        "forward_right"
+      ],
+      "name": "stage_1_geometry_direction_expansion",
+      "objects": [
+        "blue_cube",
+        "orange_cylinder"
+      ],
+      "runnable_in_f1": false
+    },
+    {
+      "difficulty": [
+        "standard",
+        "hard"
+      ],
+      "directions": [
+        "left",
+        "right",
+        "forward_left",
+        "forward_right"
+      ],
+      "name": "stage_2_full_task_distribution",
+      "objects": [
+        "blue_cube",
+        "orange_cylinder"
+      ],
+      "runnable_in_f1": false
+    }
+  ]
+}

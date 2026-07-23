@@ -1,0 +1,38 @@
+{
+  "allowed": [
+    "contract_audit",
+    "f0_read_only_diagnosis",
+    "global_residual_physical_comparison",
+    "initial_exploration_audit",
+    "probe_a_evaluation",
+    "probe_a_training",
+    "probe_b_evaluation",
+    "probe_b_training"
+  ],
+  "datasets_created": false,
+  "demonstrations_generated": false,
+  "excluded_geometry_commit": "ae6aae49c61d96c68de434e08dc1167461a29543",
+  "fingerprint": "sha256:a17dee361cf1f76f7c1be81a6a759638d4a9019e89df46848d2be5b539948f55",
+  "formal_seeds_accessed": false,
+  "maximum_combined_training_steps": 524288,
+  "maximum_probe_count": 2,
+  "prohibited": [
+    "act_training",
+    "demonstration_collection",
+    "expert_qualification",
+    "formal_qualification",
+    "lerobot_export",
+    "motion_planning",
+    "ppo_full_training",
+    "scripted_fallback",
+    "simulator_mpc",
+    "smolvla_training",
+    "stage_1_training",
+    "stage_2_training",
+    "student_training",
+    "vla_jepa_training"
+  ],
+  "schema_version": "langmani-v2-phase2b4-f1-operation-boundary-v0",
+  "source_commit": "c5892a357da85f753d5d0c3775ccf2b94e0d8910",
+  "student_training_started": false
+}
