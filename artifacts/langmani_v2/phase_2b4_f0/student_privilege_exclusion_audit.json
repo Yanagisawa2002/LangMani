@@ -1,0 +1,34 @@
+{
+  "fingerprint": "sha256:79bbb50ceabbb78a22f09ac9e9f5b8987261807e6acdd496ba67f2110f11f19c",
+  "leaked_fields": [],
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b4-f0-student-privilege-exclusion-v0",
+  "student_fields": [
+    "observation.images.base_camera",
+    "observation.state.panda_qpos"
+  ],
+  "student_normalization_statistics_created": false,
+  "student_state_dimension": 9,
+  "teacher_privileged_fields": [
+    "contact_state",
+    "containment_margin",
+    "difficulty_one_hot",
+    "distractor_to_target",
+    "lift_and_alignment",
+    "normalized_elapsed_time",
+    "object_angular_velocities",
+    "object_linear_velocities",
+    "object_poses",
+    "panda_qvel",
+    "target_object_geometry",
+    "target_object_one_hot",
+    "target_region_center",
+    "target_region_geometry",
+    "target_region_one_hot",
+    "target_to_goal",
+    "target_workspace_margins",
+    "tcp_pose",
+    "tcp_to_distractor",
+    "tcp_to_target"
+  ]
+}

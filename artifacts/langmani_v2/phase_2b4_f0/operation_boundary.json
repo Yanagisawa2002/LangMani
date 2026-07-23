@@ -1,0 +1,26 @@
+{
+  "allowed": [
+    "contract_audit",
+    "gpu_pipeline_smoke",
+    "ppo_feasibility_development_evaluation",
+    "ppo_micro_evaluation",
+    "ppo_micro_training"
+  ],
+  "datasets_created": false,
+  "demonstrations_generated": false,
+  "fingerprint": "sha256:2f28062032eb506eea4c065833c6b4fa2e513fd75782703913811cf5e0b8e746",
+  "formal_qualification_started": false,
+  "prohibited": [
+    "act_training",
+    "demonstration_collection",
+    "expert_qualification",
+    "formal_qualification_seed_access",
+    "lerobot_export",
+    "ppo_full_training",
+    "smolvla_training",
+    "student_training",
+    "vla_jepa_training"
+  ],
+  "schema_version": "langmani-v2-phase2b4-f0-operation-boundary-v0",
+  "student_training_started": false
+}

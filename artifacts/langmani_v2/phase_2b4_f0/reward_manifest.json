@@ -1,0 +1,35 @@
+{
+  "components": {
+    "action_change": "-0.01 * mean((a_t - a_t-1)^2)",
+    "behind_progress": "2 * (previous_behind_distance - current_behind_distance)",
+    "containment_progress": "2 * (current_fraction - previous_fraction)",
+    "correct_contact_onset": "0.05 * onset * max(push_alignment, 0)",
+    "safety": {
+      "action_out_of_bounds": -20.0,
+      "invalid_action": -20.0,
+      "robot_collision": -5.0,
+      "target_is_grasped": -12.0,
+      "target_lifted": -12.0,
+      "target_outside_workspace": -12.0,
+      "target_toppled": -12.0,
+      "wrong_object_contact": -10.0,
+      "wrong_object_displaced": -10.0
+    },
+    "saturation": "-0.02 * mean(relu(abs(a_normalized)-0.95)/0.05)",
+    "step": "-0.01",
+    "target_progress": "20 * (previous_distance - current_distance)",
+    "terminal_success": "10 * canonical_success",
+    "wrong_side_contact": "-0.10 * onset * max(-push_alignment, 0)"
+  },
+  "direct_object_control": false,
+  "fingerprint": "sha256:10314a0c818a1d543173fcff38af0b4ad2350e48f10b12a6ce8f8c5b65ca2c1e",
+  "potential_based_dense_terms": [
+    "target_progress",
+    "behind_progress",
+    "containment_progress"
+  ],
+  "reward_revision_limit": 1,
+  "reward_revision_used": 0,
+  "schema_version": "langmani-v2-phase2b4-f0-reward-v0",
+  "terminal_success_predicate": "unchanged LangMani-PushToRegion-v0 stable success"
+}

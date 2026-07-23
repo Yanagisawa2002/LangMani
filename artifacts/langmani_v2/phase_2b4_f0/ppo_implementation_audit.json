@@ -1,0 +1,29 @@
+{
+  "adapted_components": [
+    "GPU vectorized state-environment structure",
+    "separate three-layer tanh actor and critic MLPs",
+    "rollout tensor storage",
+    "generalized advantage estimation",
+    "clipped PPO surrogate",
+    "Adam optimization",
+    "deterministic mean-policy evaluation"
+  ],
+  "f0_clips_or_projects_actions": false,
+  "fingerprint": "sha256:93eb070b9eef6361f5784ecfffeb1ef1890fd2be67f4cd610526473532092e97",
+  "official_baseline_clips_actions": true,
+  "official_project": "ManiSkill",
+  "official_revision": "a4a4f9272ad64b1564035874b605ceb687b63ed8",
+  "official_source": "https://github.com/haosulab/ManiSkill/blob/v3.0.1/examples/baselines/ppo/ppo.py",
+  "official_version": "3.0.1",
+  "schema_version": "langmani-v2-phase2b4-f0-ppo-implementation-audit-v0",
+  "semantic_changes": {
+    "action_distribution": "unbounded Normal plus post-hoc clamp replaced by one tanh-affine distribution shared by rollout, update, reload, and evaluation",
+    "checkpoint": "full policy, optimizer, config, fingerprints, and RNG state",
+    "evaluation": "single-environment deterministic action with unchanged physical task",
+    "normalization": "fixed component scales without fitting or clipping",
+    "observation": "fixed project-owned current privileged state schema",
+    "reset": "project-owned explicit full seed vector plus physically masked partial reset",
+    "resume": "checkpoint is reconstructable but F0 exposes no resume command"
+  },
+  "source_commit": "3ded856bc0fba7cd749f1fb0caf738fd7fce5751"
+}

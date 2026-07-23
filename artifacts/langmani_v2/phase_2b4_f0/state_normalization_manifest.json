@@ -1,0 +1,139 @@
+{
+  "fingerprint": "sha256:bd03b70d049e6eb2a22bf738ddadd821ffb73dd38067d4de731b61317066e245",
+  "fit_from_student_data": false,
+  "method": "fixed_componentwise_scale_without_clipping",
+  "observation_schema": "langmani-v2-phase2b4-f0-teacher-observation-v0",
+  "online_statistics": false,
+  "scales": {
+    "contact_state": [
+      1.0,
+      1.0
+    ],
+    "containment_margin": [
+      1.0
+    ],
+    "difficulty_one_hot": [
+      1.0,
+      1.0
+    ],
+    "distractor_to_target": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "lift_and_alignment": [
+      1.0,
+      1.0
+    ],
+    "normalized_elapsed_time": [
+      1.0
+    ],
+    "object_angular_velocities": [
+      10.0,
+      10.0,
+      10.0,
+      10.0,
+      10.0,
+      10.0
+    ],
+    "object_linear_velocities": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "object_poses": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "panda_qpos": [
+      3.2,
+      3.2,
+      3.2,
+      3.2,
+      3.2,
+      3.2,
+      3.2,
+      0.04,
+      0.04
+    ],
+    "panda_qvel": [
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0
+    ],
+    "target_object_geometry": [
+      1.0,
+      1.0
+    ],
+    "target_object_one_hot": [
+      1.0,
+      1.0
+    ],
+    "target_region_center": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "target_region_geometry": [
+      1.0
+    ],
+    "target_region_one_hot": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "target_to_goal": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "target_workspace_margins": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "tcp_pose": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "tcp_to_distractor": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "tcp_to_target": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "schema_version": "langmani-v2-phase2b4-f0-state-normalization-v0"
+}

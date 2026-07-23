@@ -1,0 +1,254 @@
+{
+  "current_state_only": true,
+  "dimension": 87,
+  "dtype": "float32",
+  "excluded": [
+    "future_states",
+    "scene_seed",
+    "expert_action",
+    "optimal_contact_point",
+    "scripted_phase",
+    "future_success",
+    "qualification_outcome",
+    "target_action",
+    "direct_object_control"
+  ],
+  "fields": [
+    {
+      "name": "panda_qpos",
+      "privileged": true,
+      "scale": [
+        3.2,
+        3.2,
+        3.2,
+        3.2,
+        3.2,
+        3.2,
+        3.2,
+        0.04,
+        0.04
+      ],
+      "width": 9
+    },
+    {
+      "name": "panda_qvel",
+      "privileged": true,
+      "scale": [
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0
+      ],
+      "width": 9
+    },
+    {
+      "name": "tcp_pose",
+      "privileged": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "width": 7
+    },
+    {
+      "name": "object_poses",
+      "privileged": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "width": 14
+    },
+    {
+      "name": "object_linear_velocities",
+      "privileged": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "width": 6
+    },
+    {
+      "name": "object_angular_velocities",
+      "privileged": true,
+      "scale": [
+        10.0,
+        10.0,
+        10.0,
+        10.0,
+        10.0,
+        10.0
+      ],
+      "width": 6
+    },
+    {
+      "name": "target_region_center",
+      "privileged": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "width": 3
+    },
+    {
+      "name": "target_region_geometry",
+      "privileged": true,
+      "scale": [
+        1.0
+      ],
+      "width": 1
+    },
+    {
+      "name": "target_object_geometry",
+      "privileged": true,
+      "scale": [
+        1.0,
+        1.0
+      ],
+      "width": 2
+    },
+    {
+      "name": "target_object_one_hot",
+      "privileged": true,
+      "scale": [
+        1.0,
+        1.0
+      ],
+      "width": 2
+    },
+    {
+      "name": "target_region_one_hot",
+      "privileged": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "width": 4
+    },
+    {
+      "name": "difficulty_one_hot",
+      "privileged": true,
+      "scale": [
+        1.0,
+        1.0
+      ],
+      "width": 2
+    },
+    {
+      "name": "target_to_goal",
+      "privileged": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "width": 3
+    },
+    {
+      "name": "tcp_to_target",
+      "privileged": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "width": 3
+    },
+    {
+      "name": "distractor_to_target",
+      "privileged": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "width": 3
+    },
+    {
+      "name": "tcp_to_distractor",
+      "privileged": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "width": 3
+    },
+    {
+      "name": "target_workspace_margins",
+      "privileged": true,
+      "scale": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "width": 4
+    },
+    {
+      "name": "contact_state",
+      "privileged": true,
+      "scale": [
+        1.0,
+        1.0
+      ],
+      "width": 2
+    },
+    {
+      "name": "lift_and_alignment",
+      "privileged": true,
+      "scale": [
+        1.0,
+        1.0
+      ],
+      "width": 2
+    },
+    {
+      "name": "normalized_elapsed_time",
+      "privileged": true,
+      "scale": [
+        1.0
+      ],
+      "width": 1
+    },
+    {
+      "name": "containment_margin",
+      "privileged": true,
+      "scale": [
+        1.0
+      ],
+      "width": 1
+    }
+  ],
+  "fingerprint": "sha256:79fcde9295a86c26e4968ea59974903acb653e296e8102edf3d246965807eed2",
+  "schema_version": "langmani-v2-phase2b4-f0-teacher-observation-v0"
+}

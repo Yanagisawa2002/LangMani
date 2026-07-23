@@ -1,0 +1,44 @@
+{
+  "fingerprint": "sha256:cc5b591ecfd3933390428fad32a17be096acc8177a57fc7f8bf823638f3d1b64",
+  "formal_seed_accessed": false,
+  "namespaces": [
+    {
+      "accessible_in_f0": false,
+      "count": 100,
+      "name": "formal_qualification",
+      "start_inclusive": 66300,
+      "stop_exclusive": 66400
+    },
+    {
+      "accessible_in_f0": true,
+      "count": 100000,
+      "name": "ppo_train",
+      "start_inclusive": 700000,
+      "stop_exclusive": 800000
+    },
+    {
+      "accessible_in_f0": true,
+      "count": 60,
+      "name": "ppo_micro_evaluation",
+      "start_inclusive": 800000,
+      "stop_exclusive": 800060
+    },
+    {
+      "accessible_in_f0": true,
+      "count": 60,
+      "name": "ppo_feasibility_development",
+      "start_inclusive": 810000,
+      "stop_exclusive": 810060
+    },
+    {
+      "accessible_in_f0": false,
+      "count": 100000,
+      "name": "future_ppo_full_development",
+      "start_inclusive": 820000,
+      "stop_exclusive": 920000
+    }
+  ],
+  "overlaps": [],
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b4-f0-seeds-v0"
+}

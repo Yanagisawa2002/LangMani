@@ -1,0 +1,30 @@
+{
+  "checks": {
+    "canonical_success_highest": true,
+    "failure_not_comparable_to_success": true,
+    "hovering_below_progress": true,
+    "oscillation_not_profitable": true,
+    "outside_workspace_not_profitable": true,
+    "wrong_object_not_profitable": true
+  },
+  "fingerprint": "sha256:76511cee72eb2447893b5a9738ea8bb377dbbd7f6359ba49d13a2fd07f96501a",
+  "passed": true,
+  "reward_revision_used": 0,
+  "reward_schema": "langmani-v2-phase2b4-f0-reward-v0",
+  "scenarios": {
+    "approaching_wrong_side": -0.20999999344348907,
+    "brief_unstable_target": 7.789999961853027,
+    "canonical_success": 19.279998779296875,
+    "hovering_near_object": -0.03999998979270458,
+    "lifting": -12.010000228881836,
+    "moving_away": -1.609999656677246,
+    "no_movement": -0.19999999552965164,
+    "oscillating": -0.7119941711425781,
+    "outside_workspace": -10.010000228881836,
+    "repeated_tapping": -0.14999999664723873,
+    "saturating": -0.6000000238418579,
+    "toppling": -12.010000228881836,
+    "wrong_object_interaction": -20.010000228881836
+  },
+  "schema_version": "langmani-v2-phase2b4-f0-reward-hacking-audit-v0"
+}

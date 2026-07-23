@@ -1,0 +1,63 @@
+{
+  "action_shape": [
+    8
+  ],
+  "control_mode": "pd_joint_pos",
+  "development_evaluation_episodes": 60,
+  "environment_id": "LangMani-PushToRegion-v0",
+  "episode_budget": 250,
+  "fingerprint": "sha256:e82531aa687fbf0b1d39136e4f4b9ff206730c7ae1c7aa3793a20489513046f7",
+  "formal_qualification": false,
+  "frozen_before_learning": true,
+  "full_curriculum": false,
+  "hyperparameter_sweep": false,
+  "micro_evaluation_episodes": 48,
+  "ppo": {
+    "batch_size": 4096,
+    "clip_coef": 0.2,
+    "entropy_coef": 0.001,
+    "gae_lambda": 0.95,
+    "gamma": 0.99,
+    "hidden_dim": 256,
+    "initial_log_std": -2.5,
+    "iterations": 256,
+    "learning_rate": 0.0003,
+    "max_grad_norm": 0.5,
+    "minibatch_size": 512,
+    "num_envs": 128,
+    "num_minibatches": 8,
+    "num_steps": 32,
+    "seed": 240400,
+    "target_kl": 0.1,
+    "total_timesteps": 1048576,
+    "update_epochs": 4,
+    "value_coef": 0.5
+  },
+  "render_backend": "none",
+  "reward_revision_limit": 1,
+  "reward_revision_used": 0,
+  "schema_version": "langmani-v2-phase2b4-f0-micro-training-configuration-v0",
+  "sim_backend": "physx_cuda",
+  "task_distribution": [
+    {
+      "difficulty": "standard",
+      "target_object_id": "blue_cube",
+      "target_region_id": "left"
+    },
+    {
+      "difficulty": "standard",
+      "target_object_id": "blue_cube",
+      "target_region_id": "forward_right"
+    },
+    {
+      "difficulty": "standard",
+      "target_object_id": "orange_cylinder",
+      "target_region_id": "left"
+    },
+    {
+      "difficulty": "standard",
+      "target_object_id": "orange_cylinder",
+      "target_region_id": "forward_right"
+    }
+  ]
+}
