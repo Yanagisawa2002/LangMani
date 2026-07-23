@@ -279,6 +279,35 @@ def source_trajectory_identity(
     )
 
 
+def source_reset_identity(
+    *,
+    task_id: str,
+    source_episode_id: int,
+    reset_kwargs_sha256: str,
+) -> str:
+    """Bind reset kwargs to the task-local episode that gives them meaning.
+
+    The official sources expose reset kwargs for each episode, but no
+    cross-task reset-family identifier.  Identical kwargs in two different
+    environments therefore do not identify the same physical reset.
+    """
+
+    if task_id not in TASK_IDS:
+        raise Phase2B6ContractError(f"unknown selected task {task_id!r}")
+    if isinstance(source_episode_id, bool) or not isinstance(source_episode_id, int):
+        raise Phase2B6ContractError("source episode ID must be an integer")
+    if not reset_kwargs_sha256.startswith("sha256:"):
+        raise Phase2B6ContractError("reset kwargs identity must be SHA-256 bound")
+    return _canonical_identity(
+        {
+            "schema_version": "langmani-v2-phase2b6-source-reset-identity-v0",
+            "source_task_id": task_id,
+            "source_trajectory_id": source_episode_id,
+            "reset_kwargs_sha256": reset_kwargs_sha256,
+        }
+    )
+
+
 def derived_episode_identity(
     *,
     spec: Mapping[str, object],

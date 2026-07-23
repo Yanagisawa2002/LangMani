@@ -70,6 +70,7 @@ from langmani.v2.phase2b6 import (
     build_task_balance_manifest,
     fingerprinted,
     load_production_spec,
+    source_reset_identity,
     source_trajectory_identity,
     summarize_replay_gate,
     verify_phase2b5_package,
@@ -562,8 +563,13 @@ def validate_source_schema(
                         raise Phase2B6ContractError("selected official source is not successful")
                     terminal_agreements += int(source_success is h5_success)
                     action_hash = _array_sha256(actions, dtype=np.dtype(np.float32))
-                    reset_hash = stable_reset_identity(
+                    reset_kwargs_hash = stable_reset_identity(
                         cast(Mapping[str, object], metadata["reset_kwargs"])
+                    )
+                    reset_hash = source_reset_identity(
+                        task_id=task_id,
+                        source_episode_id=episode_id,
+                        reset_kwargs_sha256=reset_kwargs_hash,
                     )
                     initial_hash = _h5_state_sha256(cast(h5py.Group, group["env_states"]), 0)
                     action_hashes.append(action_hash)
@@ -586,6 +592,7 @@ def validate_source_schema(
                             "episode_seed": int(metadata["episode_seed"]),
                             "source_success": source_success,
                             "reset_kwargs": metadata["reset_kwargs"],
+                            "reset_kwargs_sha256": reset_kwargs_hash,
                             "reset_identity": reset_hash,
                             "initial_state_sha256": initial_hash,
                             "action_sha256": action_hash,

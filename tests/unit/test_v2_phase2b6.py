@@ -32,6 +32,7 @@ from langmani.v2.phase2b6 import (
     load_production_spec,
     make_action_chunk,
     masked_mean_squared_error,
+    source_reset_identity,
     source_trajectory_identity,
     summarize_replay_gate,
     validate_student_feature_names,
@@ -202,6 +203,26 @@ def test_episode_identity_and_primary_split_materialization_are_deterministic() 
     language_banks = {row["primary_split"]: row["language_bank"] for row in first["assignments"]}
     assert language_banks["train"] == "train"
     assert language_banks["test_unseen_task_language"] == "held_out"
+
+
+def test_reset_identity_is_task_local_when_official_kwargs_repeat() -> None:
+    raw_identity = "sha256:" + "7" * 64
+    pick = source_reset_identity(
+        task_id="PickCube-v1",
+        source_episode_id=17,
+        reset_kwargs_sha256=raw_identity,
+    )
+    stack = source_reset_identity(
+        task_id="StackCube-v1",
+        source_episode_id=17,
+        reset_kwargs_sha256=raw_identity,
+    )
+    assert pick != stack
+    assert pick == source_reset_identity(
+        task_id="PickCube-v1",
+        source_episode_id=17,
+        reset_kwargs_sha256=raw_identity,
+    )
 
 
 def test_primary_split_leakage_detects_source_and_media_overlap() -> None:
