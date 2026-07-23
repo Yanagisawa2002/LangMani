@@ -3345,3 +3345,34 @@ LeRobot readback from physically restored bytes. Result A grants only later-phas
 `act_training_authorized=false`, `smolvla_training_authorized=false`,
 `vla_jepa_training_authorized=false`, `student_policy_training_started=false`,
 `optimizer_steps=0`, and `backward_passes=0` remain invariant throughout this phase.
+
+## D-132 - Close Phase 2B.6 as Result C at the first full-production replay rejection
+
+The Phase 2B.6 preflight rehashed and accepted the immutable Phase 2B.5 package, all three official
+ZIPs, and all 3,000 JSON/HDF5 source trajectories totaling 254,374 transitions. The deterministic
+source-level split and language manifests passed their pre-conversion identity audit. The
+three-episode post-render visual-shift pilot also passed with categorical agreement 1.0 and no
+action, physics, reset, geometry, or timing change.
+
+Full production ran from clean producer commit
+`73b2cd1517e7c3d2bfc08bd2898e46a3195eb1c9`. It completed PickCube 1,000/1,000 and accepted the
+first 938 StackCube replays. The once-executed replay of `StackCube-v1` source episode 938 then
+returned a failed physical replay gate. This was after physical execution, not an infrastructure
+failure, so the frozen retry policy prohibited a retry. Production stopped immediately with
+1,939 attempted episodes, 1,938 accepted partial replay records, 178,633 accepted frames, one
+rejection, and 1,061 unattempted episodes. PushCube production did not start.
+
+The producer wrapper at that commit replaced the returned inner replay record with a generic
+`episode replay gate failed` row before persistence. Therefore the exact failed inner subgate is
+unavailable and must not be reconstructed. In particular, the wrapper's surrogate
+`simulator_error_count=1` is not evidence of an observed simulator exception. Commit
+`b469635eeea542a47c4e923ba5a0ce101a31747a` repairs future failure preservation by writing the
+complete returned replay record before the hard stop; it does not rerun or amend episode 938.
+
+Phase 2B.6 is therefore `RESULT_C`. No accepted multi-skill package exists. Task-specific LeRobot
+conversion, full visual-shift materialization, train-only normalization, full LeRobot readback,
+complete source-to-derived verification, physical-media leakage audit, archive creation, and
+restore validation were not started. The partial bytes remain diagnostics outside Git and cannot
+be used as an implicit training or failure corpus. ACT, SmolVLA, and VLA-JEPA eligibility and
+authorization are all false; no model or checkpoint was loaded, no optimizer was created, no
+backward pass ran, `student_policy_training_started=false`, and `optimizer_steps=0`.

@@ -1,0 +1,16 @@
+{
+  "accepted_frame_count": 77976,
+  "accepted_replay_episode_count": 1000,
+  "attempted_episode_count": 1000,
+  "complete_task_source_coverage": true,
+  "fingerprint": "sha256:93ccf5e41dc6c379c4da1a7aae737c13b58254d65c99214fe3cc82c12b50a05f",
+  "full_task_gate_passed": true,
+  "hard_stop_reached": false,
+  "optimizer_steps": 0,
+  "passed": true,
+  "rejected_episode_count": 0,
+  "schema_version": "langmani-v2-phase2b6-partial-task-replay-summary-v0",
+  "skill_family": "pick_and_place",
+  "student_policy_training_started": false,
+  "task_id": "PickCube-v1"
+}

@@ -1,0 +1,59 @@
+{
+  "episode_balance": {
+    "PickCube-v1": 0.3333333333333333,
+    "PushCube-v1": 0.3333333333333333,
+    "StackCube-v1": 0.3333333333333333
+  },
+  "episode_counts": {
+    "PickCube-v1": 700,
+    "PushCube-v1": 700,
+    "StackCube-v1": 700
+  },
+  "fingerprint": "sha256:57c1256c5ad4dd036be392cb0d16e95e1a52dae41bf151bd42a36a434ca8e312",
+  "frame_balance": {
+    "PickCube-v1": 0.3071540663828064,
+    "PushCube-v1": 0.27160591044339577,
+    "StackCube-v1": 0.4212400231737979
+  },
+  "future_sampling_recommendations": {
+    "natural_frame_frequency": {
+      "task_probabilities": {
+        "PickCube-v1": 0.3071540663828064,
+        "PushCube-v1": 0.27160591044339577,
+        "StackCube-v1": 0.4212400231737979
+      },
+      "warning": "StackCube receives a larger contribution because its episodes are longer."
+    },
+    "uniform_episode": {
+      "task_probabilities": {
+        "PickCube-v1": 0.3333333333333333,
+        "PushCube-v1": 0.3333333333333333,
+        "StackCube-v1": 0.3333333333333333
+      },
+      "within_task_note": "sample episodes uniformly, then sample a valid frame within the episode"
+    },
+    "uniform_task": {
+      "per_frame_multipliers_relative_to_natural": {
+        "PickCube-v1": 1.085231712081258,
+        "PushCube-v1": 1.2272683344378175,
+        "StackCube-v1": 0.7913144881672475
+      },
+      "recommended_for_primary_multiskill_baselines": true,
+      "task_probabilities": {
+        "PickCube-v1": 0.3333333333333333,
+        "PushCube-v1": 0.3333333333333333,
+        "StackCube-v1": 0.3333333333333333
+      }
+    }
+  },
+  "optimizer_steps": 0,
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b6-task-balance-v0",
+  "scope": "primary_train_only",
+  "training_started": false,
+  "transition_counts": {
+    "PickCube-v1": 54608,
+    "PushCube-v1": 48288,
+    "StackCube-v1": 74891
+  }
+}

@@ -155,6 +155,17 @@ forced into the contract because their downloaded official sources contain no di
 `phase2b6_dataset_production_eligible=true`; full production and every policy-training
 authorization remain false.
 
+Phase 2B.6 started the separately authorized full official multi-skill production but closed as
+`RESULT_C`. Its source and visual-shift preflight passed, and recorded-action replay completed all
+1,000 PickCube episodes plus 938 StackCube episodes. The next StackCube source episode, ID 938,
+returned a non-retryable physical replay-gate rejection, so the process stopped at 1,939 attempts
+with 1,938 accepted partial episodes and 178,633 frames. PushCube production and every downstream
+LeRobot conversion, full readback, archive, restore, and normalization stage did not run. The
+partial bytes are preserved diagnostics and are not `LangManiOfficialMultiSkill-v1`. See the
+[`Phase 2B.6 result`](docs/langmani_v2/phase_2b6_result.md) and
+[`dataset card`](docs/langmani_v2/phase_2b6_dataset_card.md). ACT, SmolVLA, VLA-JEPA, and all other
+training remain ineligible, unstarted, and unauthorized.
+
 The native no-training stages are explicitly separate:
 
 ```bash
@@ -177,6 +188,13 @@ Compact finalized evidence is independently checked without simulation or policy
 
 ```bash
 python environment/verify_v2_phase2b5.py
+```
+
+The compact Phase 2B.6 Result C evidence can be independently verified without simulator,
+LeRobot media, source archives, or model loading:
+
+```bash
+python environment/verify_v2_phase2b6.py
 ```
 
 The completed Phase 2B archive can be independently re-audited without starting training:

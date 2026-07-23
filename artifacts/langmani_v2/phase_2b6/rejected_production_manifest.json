@@ -1,0 +1,32 @@
+{
+  "episode_count": 1,
+  "episodes": [
+    {
+      "action_frame_alignment": false,
+      "attempt_index": 0,
+      "categorical_outcome_agreement": false,
+      "derived_episode_identity": "sha256:1eefa0f33e0763a63960047ef7ee5b343fd4b84f355382d486b5918953de38d1",
+      "error": {
+        "message": "episode replay gate failed",
+        "type": "Phase2B6RuntimeError"
+      },
+      "invalid_action_count": 0,
+      "nonfinite_value_count": 0,
+      "passed": false,
+      "primary_split": "test_unseen_reset",
+      "raw_relative_path": "work/raw/stackcube/episode_000938.npz",
+      "replay_success": false,
+      "retry": false,
+      "retry_reason": null,
+      "simulator_error_count": 1,
+      "source_episode_id": 938,
+      "source_success": true,
+      "source_trajectory_identity": "sha256:f5c25c7b4f1f7f5ed0cd8b3641f7a451f758c1a47eb9aa31bf96b0081848f7a3",
+      "task_id": "StackCube-v1"
+    }
+  ],
+  "failure_training_corpus_created": false,
+  "fingerprint": "sha256:f1739c311c4b3642149e4f30bdee374b074c2ae9cbbbf99ef3b29c556736aa70",
+  "passed": false,
+  "schema_version": "langmani-v2-phase2b6-rejected-production-v0"
+}

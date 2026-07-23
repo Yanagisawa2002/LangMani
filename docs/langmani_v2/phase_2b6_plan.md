@@ -34,7 +34,8 @@ closed.
 | Total | three skills | `LangManiOfficialMultiSkill-v1` | 3,000 | 254,374 |
 
 Every source identity binds the official revision, ZIP hash, task, source trajectory, reset,
-initial state, and action-sequence hash. Every derived identity additionally binds the replay
+and action-sequence hash. The initial-state hash is audited separately. Every derived identity
+additionally binds the replay
 configuration, camera configuration, deterministic language template, primary split, and dataset
 version.
 
@@ -81,3 +82,17 @@ act_training_started = false
 smolvla_training_started = false
 vla_jepa_training_started = false
 ```
+
+## Executed outcome
+
+The frozen plan was executed on the native RTX 5090 target and closed as `RESULT_C`. Preflight
+validated all 3,000 source trajectories and 254,374 source transitions, and the three-episode
+visual-shift pilot passed. Full production then accepted all 1,000 PickCube replays and the first
+938 StackCube replays. `StackCube-v1` source episode 938 was the first rejected physical replay,
+so the run stopped immediately at 1,939 attempted episodes. PushCube production did not start.
+
+The accepted partial replay bytes contain 1,938 episodes and 178,633 policy frames. They are
+preserved diagnostics, not an accepted dataset. Task-root conversion, full LeRobot readback,
+source-to-derived full verification, archive creation, restoration, and all model training were
+not started. See `phase_2b6_result.md` and the compact evidence under
+`artifacts/langmani_v2/phase_2b6/`.

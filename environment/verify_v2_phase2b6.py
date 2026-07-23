@@ -20,7 +20,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ARTIFACT_ROOT = PROJECT_ROOT / "artifacts" / "langmani_v2" / "phase_2b6"
 DEFAULT_OUTPUT = PROJECT_ROOT / "outputs" / "diagnostics" / "v2" / "phase2b6" / "verification.json"
 
-REQUIRED_FILES = {
+REQUIRED_FILES_RESULT_A = {
     "repository_environment_audit.json",
     "phase2b5_source_package_verification.json",
     "frozen_production_specification.json",
@@ -54,6 +54,30 @@ REQUIRED_FILES = {
     "authorization_state.json",
     "remote_execution_audit.json",
 }
+REQUIRED_FILES_RESULT_C = {
+    "repository_environment_audit.json",
+    "phase2b5_source_package_verification.json",
+    "frozen_production_specification.json",
+    "source_integrity_audit.json",
+    "source_schema_result.json",
+    "production_run_manifest.json",
+    "replay_summary_pickcube.json",
+    "replay_summary_stackcube.json",
+    "replay_summary_pushcube.json",
+    "rejected_production_manifest.json",
+    "observation_action_contract.json",
+    "language_template_manifest.json",
+    "primary_split_manifest.json",
+    "cross_skill_fold_manifests.json",
+    "visual_shift_pilot.json",
+    "padding_audit.json",
+    "task_balance_manifest.json",
+    "production_failure_analysis.json",
+    "result_classification.json",
+    "authorization_state.json",
+    "remote_execution_audit.json",
+}
+FULL_ONLY_FILES = REQUIRED_FILES_RESULT_A - REQUIRED_FILES_RESULT_C
 
 
 def parse_args() -> argparse.Namespace:
@@ -114,67 +138,20 @@ def main() -> int:
         size_checks[relative] = len(normalized) == raw_entry["size_bytes"]
         fingerprint_checks[relative] = _fingerprint_valid(_read(path))
     entry_names = set(hash_checks)
-    package = _read(root / "accepted_multiskill_dataset_package.json")
     result = _read(root / "result_classification.json")
     authorization = _read(root / "authorization_state.json")
     source = _read(root / "source_schema_result.json")
     production = _read(root / "production_run_manifest.json")
-    task_roots = _read(root / "task_specific_root_manifests.json")
-    readback = _read(root / "full_readback_result.json")
-    equality = _read(root / "source_to_derived_verifier_result.json")
-    leakage = _read(root / "leakage_audit.json")
-    archive = _read(root / "archive_manifest.json")
-    restore = _read(root / "restore_validation_result.json")
     padding = _read(root / "padding_audit.json")
-    normalization = _read(root / "normalization_manifest.json")
-    checks = {
+    common_checks = {
         "artifact_manifest_fingerprint": _fingerprint_valid(manifest),
-        "required_artifacts_present": entry_names >= REQUIRED_FILES,
         "all_artifact_hashes": all(hash_checks.values()),
         "all_artifact_sizes": all(size_checks.values()),
         "all_artifact_fingerprints": all(fingerprint_checks.values()),
-        "result_a": result.get("result") == "RESULT_A" and result.get("passed") is True,
-        "accepted_package": (
-            package.get("schema_version") == "langmani-v2-phase2b6-accepted-multiskill-dataset-v0"
-            and package.get("episode_count") == EXPECTED_EPISODES
-            and package.get("frame_count") == EXPECTED_TRANSITIONS
-            and package.get("tasks") == list(TASK_IDS)
-            and package.get("contains_trained_model") is False
-        ),
         "source_accounting": (
             source.get("passed") is True
             and source.get("episode_count") == EXPECTED_EPISODES
             and source.get("transition_count") == EXPECTED_TRANSITIONS
-        ),
-        "full_replay": (
-            production.get("passed") is True
-            and production.get("episode_count") == EXPECTED_EPISODES
-            and production.get("frame_count") == EXPECTED_TRANSITIONS
-            and cast(Mapping[str, object], production["aggregate_gate"]).get(
-                "categorical_outcome_agreement_rate"
-            )
-            == 1.0
-        ),
-        "task_roots": (
-            task_roots.get("passed") is True
-            and task_roots.get("episode_count") == EXPECTED_EPISODES
-            and task_roots.get("frame_count") == EXPECTED_TRANSITIONS
-        ),
-        "full_readback": (
-            readback.get("passed") is True
-            and readback.get("episode_count") == EXPECTED_EPISODES
-            and readback.get("frame_count") == EXPECTED_TRANSITIONS
-            and readback.get("visual_shift_episode_count") == 150
-            and readback.get("decoding_failure_count") == 0
-        ),
-        "source_equality": (
-            equality.get("passed") is True
-            and equality.get("source_episode_count") == EXPECTED_EPISODES
-            and equality.get("exact_action_equality_count") == EXPECTED_EPISODES
-            and equality.get("approximate_action_tolerance_used") is False
-        ),
-        "zero_leakage": (
-            leakage.get("passed") is True and leakage.get("primary_split_overlap_count") == 0
         ),
         "padding_masks": (
             padding.get("passed") is True
@@ -185,24 +162,6 @@ def main() -> int:
                 "16",
                 "50",
             }
-        ),
-        "train_only_normalization": (
-            normalization.get("passed") is True
-            and normalization.get("source_view") == "primary_train_only"
-            and normalization.get("validation_episode_count") == 0
-            and normalization.get("test_episode_count") == 0
-        ),
-        "archive_restore": (
-            archive.get("passed") is True
-            and restore.get("passed") is True
-            and restore.get("restored_tree_digest") == archive.get("primary_tree_digest")
-        ),
-        "eligibility_only": (
-            authorization.get("accepted_multiskill_dataset_validated") is True
-            and authorization.get("act_baseline_training_eligible") is True
-            and authorization.get("smolvla_push_multiskill_training_eligible") is True
-            and authorization.get("vla_jepa_training_eligible") is True
-            and authorization.get("eligibility_is_authorization") is False
         ),
         "all_training_unauthorized": all(
             authorization.get(key) is False
@@ -220,6 +179,134 @@ def main() -> int:
         and authorization.get("optimizer_steps") == 0
         and authorization.get("backward_passes") == 0,
     }
+    package: dict[str, Any] = {}
+    if result.get("result") == "RESULT_A":
+        package = _read(root / "accepted_multiskill_dataset_package.json")
+        task_roots = _read(root / "task_specific_root_manifests.json")
+        readback = _read(root / "full_readback_result.json")
+        equality = _read(root / "source_to_derived_verifier_result.json")
+        leakage = _read(root / "leakage_audit.json")
+        archive = _read(root / "archive_manifest.json")
+        restore = _read(root / "restore_validation_result.json")
+        normalization = _read(root / "normalization_manifest.json")
+        result_checks = {
+            "required_artifacts_present": entry_names >= REQUIRED_FILES_RESULT_A,
+            "result_a": result.get("passed") is True,
+            "accepted_package": (
+                package.get("schema_version")
+                == "langmani-v2-phase2b6-accepted-multiskill-dataset-v0"
+                and package.get("episode_count") == EXPECTED_EPISODES
+                and package.get("frame_count") == EXPECTED_TRANSITIONS
+                and package.get("tasks") == list(TASK_IDS)
+                and package.get("contains_trained_model") is False
+            ),
+            "full_replay": (
+                production.get("passed") is True
+                and production.get("episode_count") == EXPECTED_EPISODES
+                and production.get("frame_count") == EXPECTED_TRANSITIONS
+                and cast(Mapping[str, object], production["aggregate_gate"]).get(
+                    "categorical_outcome_agreement_rate"
+                )
+                == 1.0
+            ),
+            "task_roots": (
+                task_roots.get("passed") is True
+                and task_roots.get("episode_count") == EXPECTED_EPISODES
+                and task_roots.get("frame_count") == EXPECTED_TRANSITIONS
+            ),
+            "full_readback": (
+                readback.get("passed") is True
+                and readback.get("episode_count") == EXPECTED_EPISODES
+                and readback.get("frame_count") == EXPECTED_TRANSITIONS
+                and readback.get("visual_shift_episode_count") == 150
+                and readback.get("decoding_failure_count") == 0
+            ),
+            "source_equality": (
+                equality.get("passed") is True
+                and equality.get("source_episode_count") == EXPECTED_EPISODES
+                and equality.get("exact_action_equality_count") == EXPECTED_EPISODES
+                and equality.get("approximate_action_tolerance_used") is False
+            ),
+            "zero_leakage": (
+                leakage.get("passed") is True and leakage.get("primary_split_overlap_count") == 0
+            ),
+            "train_only_normalization": (
+                normalization.get("passed") is True
+                and normalization.get("source_view") == "primary_train_only"
+                and normalization.get("validation_episode_count") == 0
+                and normalization.get("test_episode_count") == 0
+            ),
+            "archive_restore": (
+                archive.get("passed") is True
+                and restore.get("passed") is True
+                and restore.get("restored_tree_digest") == archive.get("primary_tree_digest")
+            ),
+            "eligibility_only": (
+                authorization.get("accepted_multiskill_dataset_validated") is True
+                and authorization.get("act_baseline_training_eligible") is True
+                and authorization.get("smolvla_push_multiskill_training_eligible") is True
+                and authorization.get("vla_jepa_training_eligible") is True
+                and authorization.get("eligibility_is_authorization") is False
+            ),
+        }
+    elif result.get("result") == "RESULT_C":
+        rejected = _read(root / "rejected_production_manifest.json")
+        failure = _read(root / "production_failure_analysis.json")
+        result_checks = {
+            "required_artifacts_present": entry_names >= REQUIRED_FILES_RESULT_C,
+            "result_c": (
+                result.get("passed") is True
+                and result.get("classification_complete") is True
+                and result.get("accepted_multiskill_dataset_package_created") is False
+            ),
+            "partial_production_accounting": (
+                production.get("passed") is False
+                and production.get("attempted_episode_count") == 1_939
+                and production.get("accepted_replay_episode_count") == 1_938
+                and production.get("rejected_episode_count") == 1
+                and production.get("unattempted_episode_count") == 1_061
+                and production.get("accepted_frame_count") == 178_633
+                and production.get("hard_stop_task_id") == "StackCube-v1"
+                and production.get("hard_stop_source_episode_id") == 938
+            ),
+            "physical_failure_preserved": (
+                rejected.get("episode_count") == 1
+                and rejected.get("failure_training_corpus_created") is False
+                and failure.get("passed") is True
+                and failure.get("verified_failure_kind")
+                == "post_execution_physical_replay_gate_rejection"
+                and failure.get("infrastructure_failure") is False
+                and failure.get("retry_permitted") is False
+                and failure.get("retry_performed") is False
+                and failure.get("exact_inner_failed_subgate_available") is False
+                and failure.get("unavailable_fields_were_not_reconstructed") is True
+                and failure.get("production_continued_after_failure") is False
+            ),
+            "downstream_not_fabricated": (
+                not (entry_names & FULL_ONLY_FILES)
+                and not (root / "accepted_multiskill_dataset_package.json").exists()
+                and production.get("lerobot_conversion_started") is False
+                and production.get("archive_started") is False
+                and production.get("restore_started") is False
+            ),
+            "eligibility_closed": all(
+                authorization.get(key) is False
+                for key in (
+                    "accepted_multiskill_dataset_validated",
+                    "act_baseline_training_eligible",
+                    "smolvla_push_multiskill_training_eligible",
+                    "smolvla_training_eligible",
+                    "vla_jepa_training_eligible",
+                )
+            ),
+            "manifest_result_scope": (
+                manifest.get("result_scope") == "result_c_hard_stop"
+                and manifest.get("passed") is True
+            ),
+        }
+    else:
+        raise ValueError(f"unsupported Phase 2B.6 result {result.get('result')!r}")
+    checks = {**common_checks, **result_checks}
     report: dict[str, object] = {
         "schema_version": "langmani-v2-phase2b6-independent-verification-v0",
         "artifact_file_count": len(entries),

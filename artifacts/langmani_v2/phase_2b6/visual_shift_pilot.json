@@ -1,0 +1,382 @@
+{
+  "action_sequence_changed": false,
+  "appearance_contract": {
+    "actions_changed": false,
+    "exposure_multiplier": 0.9,
+    "geometry_changed": false,
+    "identity": "langmani-v2-phase2b6-postrender-appearance-v0",
+    "implementation": "post_render_rgb_only",
+    "physics_changed": false,
+    "pilot_episodes_per_task": 1,
+    "reset_changed": false,
+    "rgb_channel_multipliers": [
+      1.03,
+      1.0,
+      0.94
+    ],
+    "scope": "evaluation_only_test_visual_shift",
+    "timing_changed": false
+  },
+  "categorical_outcome_agreement_rate": 1.0,
+  "created_at_utc": "2026-07-23T14:27:46.272979+00:00",
+  "episode_count": 3,
+  "fingerprint": "sha256:c6c6ec0ca67a4614d0fb80198c0f39b06a9dd827bd70542078b2b7f6cd92df54",
+  "passed": true,
+  "physics_configuration_changed": false,
+  "schema_version": "langmani-v2-phase2b6-visual-shift-pilot-v0",
+  "tasks": [
+    {
+      "action_sha256": "sha256:78349e8be037d9a1d674dda77aa4b277374fd2c73b04bcb73a96f09aa21171f0",
+      "categorical_physical_outcome_preserved": true,
+      "changed_channel_values": 15722334,
+      "derived_episode_identity": "sha256:b729eb68c146570b3145cf8b91ec44b4d876aeab1abc470ffcf6773c6315d82e",
+      "original_rgb_sha256": "sha256:4e701d07cf7347e03895de33895ee875e84d037e37322599f4a7315fbf14e9ea",
+      "passed": true,
+      "physics_input_changed": false,
+      "physics_replay": {
+        "action_clipping_or_projection": false,
+        "action_frame_alignment": true,
+        "categorical_outcome_agreement": true,
+        "fabricated_terminal_action": false,
+        "first_state_anchor_error": null,
+        "first_state_anchor_used": false,
+        "invalid_action_count": 0,
+        "nonfinite_value_count": 0,
+        "passed": true,
+        "planner_or_expert_invoked": false,
+        "policy_frame_count": 80,
+        "replay_success": true,
+        "replayed_action_count": 80,
+        "semantic_reset_state_error": {
+          "compared_numeric_values": 70,
+          "matched_leaf_count": 4,
+          "maximum_absolute_error": 0.0,
+          "mean_absolute_error": 0.0,
+          "missing_leaves": [],
+          "per_numeric_leaf": {
+            "actors/cube": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/goal_site": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/table-workspace": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "articulations/panda": {
+              "compared_values": 31,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            }
+          },
+          "shape_mismatch_leaves": [],
+          "structures_match": true,
+          "unexpected_leaves": []
+        },
+        "simulator_error_count": 0,
+        "source_action_count": 80,
+        "source_action_sha256": "sha256:78349e8be037d9a1d674dda77aa4b277374fd2c73b04bcb73a96f09aa21171f0",
+        "source_success": true,
+        "success_predicate_modified": false,
+        "terminal_diagnostic_frame_count": 1,
+        "terminal_object_pose_error": {
+          "diagnostic_only": true,
+          "maximum_quaternion_sign_invariant_l2": 0.0,
+          "maximum_translation_l2_m": 0.0,
+          "objects": {
+            "cube": {
+              "quaternion_sign_invariant_l2": 0.0,
+              "translation_l2_m": 0.0
+            }
+          }
+        },
+        "terminal_rgb_sha256": "sha256:3be6599be147c4c37895f9c87124696c241e928e9bfefb11199f7d2eff1bc847",
+        "terminal_state_error": {
+          "compared_numeric_values": 70,
+          "matched_leaf_count": 4,
+          "maximum_absolute_error": 0.0,
+          "mean_absolute_error": 0.0,
+          "missing_leaves": [],
+          "per_numeric_leaf": {
+            "actors/cube": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/goal_site": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/table-workspace": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "articulations/panda": {
+              "compared_values": 31,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            }
+          },
+          "shape_mismatch_leaves": [],
+          "structures_match": true,
+          "unexpected_leaves": []
+        },
+        "terminated_signal_count": 4,
+        "truncated_signal_count": 31,
+        "wall_clock_seconds": 0.34859460801817477
+      },
+      "post_render_only": true,
+      "primary_split": "test_visual_shift",
+      "shifted_rgb_sha256": "sha256:3923f79cfaab56eb1c8f6194bea8adece945dc3acc8a4abe9906ec4e15f37fd5",
+      "source_episode_id": 13,
+      "source_trajectory_identity": "sha256:f5accfbc0c7001dd57ebbe82deb2583894b8c48ef448a464b019b386a8ff9c4a",
+      "state_sha256": "sha256:fd98e2ee784936ecf94bbabb1bb2a25aece35b796e258a4a624821f8ad38a121",
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_sha256": "sha256:216c5e414662b83ecdaab0311545d0bf4df10eee7cb444c01b5b4b49f5a261ff",
+      "categorical_physical_outcome_preserved": true,
+      "changed_channel_values": 21409633,
+      "derived_episode_identity": "sha256:5397a6e0991d650a51c34eb8f1ece0e789c780e141ab77b81a596c9048e86a66",
+      "original_rgb_sha256": "sha256:d0719fd3a89e132865f4155baca0a759ffd3bfce55902134724f2d3a926a1c8d",
+      "passed": true,
+      "physics_input_changed": false,
+      "physics_replay": {
+        "action_clipping_or_projection": false,
+        "action_frame_alignment": true,
+        "categorical_outcome_agreement": true,
+        "fabricated_terminal_action": false,
+        "first_state_anchor_error": null,
+        "first_state_anchor_used": false,
+        "invalid_action_count": 0,
+        "nonfinite_value_count": 0,
+        "passed": true,
+        "planner_or_expert_invoked": false,
+        "policy_frame_count": 109,
+        "replay_success": true,
+        "replayed_action_count": 109,
+        "semantic_reset_state_error": {
+          "compared_numeric_values": 70,
+          "matched_leaf_count": 4,
+          "maximum_absolute_error": 0.0,
+          "mean_absolute_error": 0.0,
+          "missing_leaves": [],
+          "per_numeric_leaf": {
+            "actors/cubeA": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/cubeB": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/table-workspace": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "articulations/panda_wristcam": {
+              "compared_values": 31,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            }
+          },
+          "shape_mismatch_leaves": [],
+          "structures_match": true,
+          "unexpected_leaves": []
+        },
+        "simulator_error_count": 0,
+        "source_action_count": 109,
+        "source_action_sha256": "sha256:216c5e414662b83ecdaab0311545d0bf4df10eee7cb444c01b5b4b49f5a261ff",
+        "source_success": true,
+        "success_predicate_modified": false,
+        "terminal_diagnostic_frame_count": 1,
+        "terminal_object_pose_error": {
+          "diagnostic_only": true,
+          "maximum_quaternion_sign_invariant_l2": 0.0008958920493789017,
+          "maximum_translation_l2_m": 0.0003598118305988199,
+          "objects": {
+            "cubeA": {
+              "quaternion_sign_invariant_l2": 0.0008958920493789017,
+              "translation_l2_m": 0.0003598118305988199
+            },
+            "cubeB": {
+              "quaternion_sign_invariant_l2": 1.923738306622072e-05,
+              "translation_l2_m": 1.329829500481094e-06
+            }
+          }
+        },
+        "terminal_rgb_sha256": "sha256:fe77077cce8d3a6557e8f2b096e0c0b64cb16c37dc785cd378c97aa8cb2b1b2d",
+        "terminal_state_error": {
+          "compared_numeric_values": 70,
+          "matched_leaf_count": 4,
+          "maximum_absolute_error": 0.058660827577114105,
+          "mean_absolute_error": 0.001602685374037703,
+          "missing_leaves": [],
+          "per_numeric_leaf": {
+            "actors/cubeA": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.058660827577114105,
+              "mean_absolute_error": 0.005425112670018542
+            },
+            "actors/cubeB": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.022990607656538486,
+              "mean_absolute_error": 0.003201307305105799
+            },
+            "actors/table-workspace": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "articulations/panda_wristcam": {
+              "compared_values": 31,
+              "maximum_absolute_error": 1.7470410966780037e-05,
+              "mean_absolute_error": 1.4360163233152802e-06
+            }
+          },
+          "shape_mismatch_leaves": [],
+          "structures_match": true,
+          "unexpected_leaves": []
+        },
+        "terminated_signal_count": 6,
+        "truncated_signal_count": 60,
+        "wall_clock_seconds": 0.6948032419895753
+      },
+      "post_render_only": true,
+      "primary_split": "test_visual_shift",
+      "shifted_rgb_sha256": "sha256:d59ad9a7ffc84581990548782851d20407f7177634d70a286aa612bd807f0dbc",
+      "source_episode_id": 3,
+      "source_trajectory_identity": "sha256:a2d7fc6a251d372819d8969d823d59de62d1446658f1c042a6a3454c39977087",
+      "state_sha256": "sha256:bfbfabc927c5265097a5a0f4432a819e6f79a2d9a163426690a425264f2625da",
+      "task_id": "StackCube-v1"
+    },
+    {
+      "action_sha256": "sha256:5fd30016a4eebf6741434b3f0ad33a2327d9b3fb71fccee07a6ddb032bd2fc7c",
+      "categorical_physical_outcome_preserved": true,
+      "changed_channel_values": 12386304,
+      "derived_episode_identity": "sha256:c85fc53d8e40b3ec63e20a3c0a119615164dc568d5b50bd6391c1a11bb3a64c1",
+      "original_rgb_sha256": "sha256:d6a41d3fd513f85e560cbec0409412c9f819f9cfa75121ce315d4d32d01c6146",
+      "passed": true,
+      "physics_input_changed": false,
+      "physics_replay": {
+        "action_clipping_or_projection": false,
+        "action_frame_alignment": true,
+        "categorical_outcome_agreement": true,
+        "fabricated_terminal_action": false,
+        "first_state_anchor_error": null,
+        "first_state_anchor_used": false,
+        "invalid_action_count": 0,
+        "nonfinite_value_count": 0,
+        "passed": true,
+        "planner_or_expert_invoked": false,
+        "policy_frame_count": 63,
+        "replay_success": true,
+        "replayed_action_count": 63,
+        "semantic_reset_state_error": {
+          "compared_numeric_values": 70,
+          "matched_leaf_count": 4,
+          "maximum_absolute_error": 0.0,
+          "mean_absolute_error": 0.0,
+          "missing_leaves": [],
+          "per_numeric_leaf": {
+            "actors/cube": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/goal_region": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/table-workspace": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "articulations/panda": {
+              "compared_values": 31,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            }
+          },
+          "shape_mismatch_leaves": [],
+          "structures_match": true,
+          "unexpected_leaves": []
+        },
+        "simulator_error_count": 0,
+        "source_action_count": 63,
+        "source_action_sha256": "sha256:5fd30016a4eebf6741434b3f0ad33a2327d9b3fb71fccee07a6ddb032bd2fc7c",
+        "source_success": true,
+        "success_predicate_modified": false,
+        "terminal_diagnostic_frame_count": 1,
+        "terminal_object_pose_error": {
+          "diagnostic_only": true,
+          "maximum_quaternion_sign_invariant_l2": 0.0,
+          "maximum_translation_l2_m": 0.0,
+          "objects": {
+            "obj": {
+              "quaternion_sign_invariant_l2": 0.0,
+              "translation_l2_m": 0.0
+            }
+          }
+        },
+        "terminal_rgb_sha256": "sha256:ae1e32d33e6d80e31b099a5c3efd0ad043246384c5ffc14f78cd5c997683e2cd",
+        "terminal_state_error": {
+          "compared_numeric_values": 70,
+          "matched_leaf_count": 4,
+          "maximum_absolute_error": 0.0,
+          "mean_absolute_error": 0.0,
+          "missing_leaves": [],
+          "per_numeric_leaf": {
+            "actors/cube": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/goal_region": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/table-workspace": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "articulations/panda": {
+              "compared_values": 31,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            }
+          },
+          "shape_mismatch_leaves": [],
+          "structures_match": true,
+          "unexpected_leaves": []
+        },
+        "terminated_signal_count": 9,
+        "truncated_signal_count": 14,
+        "wall_clock_seconds": 0.19900440203491598
+      },
+      "post_render_only": true,
+      "primary_split": "test_visual_shift",
+      "shifted_rgb_sha256": "sha256:cce2807b38353acbd602d3bffff9ef875cf1c82fade09abea13af7f1aeb3d6ba",
+      "source_episode_id": 17,
+      "source_trajectory_identity": "sha256:e08f69d9d7e694380440bb52f11065b899a3c15a88840a21f87c60c9d92453d4",
+      "state_sha256": "sha256:ae33aab9fbec8746591166122ec95df286110cb176f0d268f863bafe330777ba",
+      "task_id": "PushCube-v1"
+    }
+  ],
+  "visual_shift_identity": "langmani-v2-phase2b6-postrender-appearance-v0"
+}

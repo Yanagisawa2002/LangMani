@@ -1,0 +1,80 @@
+{
+  "created_at_utc": "2026-07-23T14:27:07.586912+00:00",
+  "fingerprint": "sha256:e9a4f72a7052b148dd359b74695c62b6d73d6c57c61fc0a049b9c596ba7d2c07",
+  "maniskill_source_revision": "a4a4f9272ad64b1564035874b605ceb687b63ed8",
+  "official_source_revision": "d674485bbffdd533914e52d272fdda34c0515608",
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b6-source-integrity-audit-v0",
+  "source_files_modified": false,
+  "tasks": [
+    {
+      "checks": {
+        "ordinary_file": true,
+        "reproducible_extraction": true,
+        "safe_zip_members": true,
+        "selected_members_present": true,
+        "sha256": true,
+        "size": true
+      },
+      "license": "Apache-2.0",
+      "member_count": 22,
+      "official_repository": "haosulab/ManiSkill_Demonstrations",
+      "official_revision": "d674485bbffdd533914e52d272fdda34c0515608",
+      "passed": true,
+      "selected_extraction_matches": {
+        "PickCube-v1/motionplanning/trajectory.h5": true,
+        "PickCube-v1/motionplanning/trajectory.json": true
+      },
+      "sha256": "sha256:b2d4afb30fa309755862b98c342e6ee18918253c93f3bbac16ed6670748f26d8",
+      "size_bytes": 36590010,
+      "source_zip": "/root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608/sources/PickCube-v1.zip",
+      "task_id": "PickCube-v1"
+    },
+    {
+      "checks": {
+        "ordinary_file": true,
+        "reproducible_extraction": true,
+        "safe_zip_members": true,
+        "selected_members_present": true,
+        "sha256": true,
+        "size": true
+      },
+      "license": "Apache-2.0",
+      "member_count": 18,
+      "official_repository": "haosulab/ManiSkill_Demonstrations",
+      "official_revision": "d674485bbffdd533914e52d272fdda34c0515608",
+      "passed": true,
+      "selected_extraction_matches": {
+        "StackCube-v1/motionplanning/trajectory.h5": true,
+        "StackCube-v1/motionplanning/trajectory.json": true
+      },
+      "sha256": "sha256:f9b7d34b9aa418a04aa8e4322d4dea5aa27e8ae81757f60b210c1ffc54bf9c1b",
+      "size_bytes": 43486191,
+      "source_zip": "/root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608/sources/StackCube-v1.zip",
+      "task_id": "StackCube-v1"
+    },
+    {
+      "checks": {
+        "ordinary_file": true,
+        "reproducible_extraction": true,
+        "safe_zip_members": true,
+        "selected_members_present": true,
+        "sha256": true,
+        "size": true
+      },
+      "license": "Apache-2.0",
+      "member_count": 18,
+      "official_repository": "haosulab/ManiSkill_Demonstrations",
+      "official_revision": "d674485bbffdd533914e52d272fdda34c0515608",
+      "passed": true,
+      "selected_extraction_matches": {
+        "PushCube-v1/motionplanning/trajectory.h5": true,
+        "PushCube-v1/motionplanning/trajectory.json": true
+      },
+      "sha256": "sha256:1ce24408bf93658501faaa0ef164a0cdc29539cc412612a413fac746697eeab2",
+      "size_bytes": 24573577,
+      "source_zip": "/root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608/sources/PushCube-v1.zip",
+      "task_id": "PushCube-v1"
+    }
+  ]
+}

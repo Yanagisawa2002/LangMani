@@ -1,0 +1,16 @@
+{
+  "accepted_multiskill_dataset_package_created": false,
+  "accepted_multiskill_dataset_validated": false,
+  "archive_created": false,
+  "classification_complete": true,
+  "fingerprint": "sha256:56c921afb34adfba38fbfd5f306766fc9b6562f1cb76ad5f6504bd5fbb7b4243",
+  "full_lerobot_readback_started": false,
+  "label": "Production or replay validation failure",
+  "optimizer_steps": 0,
+  "passed": true,
+  "physical_replay_hard_stop": "sha256:94dddb44c65ec717cef156ab6bd150ac0d1abfa447e870c809971d12e529d4f5",
+  "restore_validation_started": false,
+  "result": "RESULT_C",
+  "schema_version": "langmani-v2-phase2b6-result-classification-v0",
+  "student_policy_training_started": false
+}

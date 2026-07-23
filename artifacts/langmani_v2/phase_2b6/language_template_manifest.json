@@ -1,0 +1,303 @@
+{
+  "ambiguous_cross_task_text_count": 0,
+  "assignment_seed": "langmani-v2-phase2b6-language-v0",
+  "fingerprint": "sha256:5a0774b90847b4ea1a43c4c603d9f3cbd283622f47cb1733880d6356fc457997",
+  "passed": true,
+  "privileged_coordinate_reference_count": 0,
+  "schema_version": "langmani-v2-phase2b6-language-template-manifest-v0",
+  "tasks": {
+    "PickCube-v1": {
+      "held_out": [
+        {
+          "bank": "held_out",
+          "skill_family": "pick_and_place",
+          "task_id": "PickCube-v1",
+          "template_id": "phase2b6:PickCube-v1:held_out:00:ca20c94ca09f8259",
+          "text": "Carry the cube to the indicated destination."
+        },
+        {
+          "bank": "held_out",
+          "skill_family": "pick_and_place",
+          "task_id": "PickCube-v1",
+          "template_id": "phase2b6:PickCube-v1:held_out:01:eb851521850aeb46",
+          "text": "Pick up the block and deliver it to the target area."
+        },
+        {
+          "bank": "held_out",
+          "skill_family": "pick_and_place",
+          "task_id": "PickCube-v1",
+          "template_id": "phase2b6:PickCube-v1:held_out:02:ed9192cff04dd559",
+          "text": "Relocate the cube to the goal using a grasp."
+        },
+        {
+          "bank": "held_out",
+          "skill_family": "pick_and_place",
+          "task_id": "PickCube-v1",
+          "template_id": "phase2b6:PickCube-v1:held_out:03:0cc32cea927e5788",
+          "text": "Use the gripper to move the cube onto its destination."
+        }
+      ],
+      "train": [
+        {
+          "bank": "train",
+          "skill_family": "pick_and_place",
+          "task_id": "PickCube-v1",
+          "template_id": "phase2b6:PickCube-v1:train:00:32628d89d1dc1a4a",
+          "text": "Pick up the cube and move it to the target location."
+        },
+        {
+          "bank": "train",
+          "skill_family": "pick_and_place",
+          "task_id": "PickCube-v1",
+          "template_id": "phase2b6:PickCube-v1:train:01:8238fe4edbd171a7",
+          "text": "Lift the cube and place it at the goal."
+        },
+        {
+          "bank": "train",
+          "skill_family": "pick_and_place",
+          "task_id": "PickCube-v1",
+          "template_id": "phase2b6:PickCube-v1:train:02:b1d79448428a2fc4",
+          "text": "Move the cube into the target area by picking it up."
+        },
+        {
+          "bank": "train",
+          "skill_family": "pick_and_place",
+          "task_id": "PickCube-v1",
+          "template_id": "phase2b6:PickCube-v1:train:03:af13d761ac475744",
+          "text": "Grasp the cube and carry it to the marked destination."
+        },
+        {
+          "bank": "train",
+          "skill_family": "pick_and_place",
+          "task_id": "PickCube-v1",
+          "template_id": "phase2b6:PickCube-v1:train:04:c4194b3787caf773",
+          "text": "Pick the cube up and set it down at the target."
+        },
+        {
+          "bank": "train",
+          "skill_family": "pick_and_place",
+          "task_id": "PickCube-v1",
+          "template_id": "phase2b6:PickCube-v1:train:05:b17431d6d8d1c45b",
+          "text": "Transfer the cube to the goal location."
+        }
+      ],
+      "validation": [
+        {
+          "bank": "validation",
+          "skill_family": "pick_and_place",
+          "task_id": "PickCube-v1",
+          "template_id": "phase2b6:PickCube-v1:validation:00:9737406f7b13fbf6",
+          "text": "Lift and relocate the cube to its target."
+        },
+        {
+          "bank": "validation",
+          "skill_family": "pick_and_place",
+          "task_id": "PickCube-v1",
+          "template_id": "phase2b6:PickCube-v1:validation:01:ad7a6e1710b90918",
+          "text": "Grasp the cube, then place it on the goal."
+        }
+      ]
+    },
+    "PushCube-v1": {
+      "held_out": [
+        {
+          "bank": "held_out",
+          "skill_family": "planar_pushing",
+          "task_id": "PushCube-v1",
+          "template_id": "phase2b6:PushCube-v1:held_out:00:46329bf309efee3b",
+          "text": "Nudge the cube across the surface into the goal."
+        },
+        {
+          "bank": "held_out",
+          "skill_family": "planar_pushing",
+          "task_id": "PushCube-v1",
+          "template_id": "phase2b6:PushCube-v1:held_out:01:464961012470a06e",
+          "text": "Drive the block to the marked area by pushing."
+        },
+        {
+          "bank": "held_out",
+          "skill_family": "planar_pushing",
+          "task_id": "PushCube-v1",
+          "template_id": "phase2b6:PushCube-v1:held_out:02:f7b4485c0e85e387",
+          "text": "Without lifting it, guide the cube onto the destination."
+        },
+        {
+          "bank": "held_out",
+          "skill_family": "planar_pushing",
+          "task_id": "PushCube-v1",
+          "template_id": "phase2b6:PushCube-v1:held_out:03:6b635b277073aaef",
+          "text": "Use planar contact to move the cube into its target region."
+        }
+      ],
+      "train": [
+        {
+          "bank": "train",
+          "skill_family": "planar_pushing",
+          "task_id": "PushCube-v1",
+          "template_id": "phase2b6:PushCube-v1:train:00:c28b00787687cac2",
+          "text": "Push the cube onto the target region."
+        },
+        {
+          "bank": "train",
+          "skill_family": "planar_pushing",
+          "task_id": "PushCube-v1",
+          "template_id": "phase2b6:PushCube-v1:train:01:1f6925337e8aa246",
+          "text": "Slide the cube into the marked goal area."
+        },
+        {
+          "bank": "train",
+          "skill_family": "planar_pushing",
+          "task_id": "PushCube-v1",
+          "template_id": "phase2b6:PushCube-v1:train:02:aab806df01dba35f",
+          "text": "Move the cube to the target by pushing it."
+        },
+        {
+          "bank": "train",
+          "skill_family": "planar_pushing",
+          "task_id": "PushCube-v1",
+          "template_id": "phase2b6:PushCube-v1:train:03:b31dc36b9972b5dd",
+          "text": "Use the gripper to push the cube onto the goal."
+        },
+        {
+          "bank": "train",
+          "skill_family": "planar_pushing",
+          "task_id": "PushCube-v1",
+          "template_id": "phase2b6:PushCube-v1:train:04:ed130366867826de",
+          "text": "Guide the cube into the target region without picking it up."
+        },
+        {
+          "bank": "train",
+          "skill_family": "planar_pushing",
+          "task_id": "PushCube-v1",
+          "template_id": "phase2b6:PushCube-v1:train:05:deea922539a81839",
+          "text": "Push the block until it reaches the marked destination."
+        }
+      ],
+      "validation": [
+        {
+          "bank": "validation",
+          "skill_family": "planar_pushing",
+          "task_id": "PushCube-v1",
+          "template_id": "phase2b6:PushCube-v1:validation:00:2a5bd8969d15f961",
+          "text": "Slide the block onto its goal region."
+        },
+        {
+          "bank": "validation",
+          "skill_family": "planar_pushing",
+          "task_id": "PushCube-v1",
+          "template_id": "phase2b6:PushCube-v1:validation:01:5696108ad907dbce",
+          "text": "Move the cube into the target area using a push."
+        }
+      ]
+    },
+    "StackCube-v1": {
+      "held_out": [
+        {
+          "bank": "held_out",
+          "skill_family": "stacking",
+          "task_id": "StackCube-v1",
+          "template_id": "phase2b6:StackCube-v1:held_out:00:ed8e497229003b25",
+          "text": "Form a tower by placing one cube over the other."
+        },
+        {
+          "bank": "held_out",
+          "skill_family": "stacking",
+          "task_id": "StackCube-v1",
+          "template_id": "phase2b6:StackCube-v1:held_out:01:25b47e060ab5c1ae",
+          "text": "Make the two blocks into a stable vertical stack."
+        },
+        {
+          "bank": "held_out",
+          "skill_family": "stacking",
+          "task_id": "StackCube-v1",
+          "template_id": "phase2b6:StackCube-v1:held_out:02:fc3a3af6c62eb874",
+          "text": "Set the upper cube onto the lower cube."
+        },
+        {
+          "bank": "held_out",
+          "skill_family": "stacking",
+          "task_id": "StackCube-v1",
+          "template_id": "phase2b6:StackCube-v1:held_out:03:a9da62272d90d6ca",
+          "text": "Use the gripper to assemble a stack from the two cubes."
+        }
+      ],
+      "train": [
+        {
+          "bank": "train",
+          "skill_family": "stacking",
+          "task_id": "StackCube-v1",
+          "template_id": "phase2b6:StackCube-v1:train:00:e7eb4529e52b9089",
+          "text": "Pick up one cube and stack it on top of the other cube."
+        },
+        {
+          "bank": "train",
+          "skill_family": "stacking",
+          "task_id": "StackCube-v1",
+          "template_id": "phase2b6:StackCube-v1:train:01:2dfdf7fea8353bd2",
+          "text": "Place one cube securely on top of the second cube."
+        },
+        {
+          "bank": "train",
+          "skill_family": "stacking",
+          "task_id": "StackCube-v1",
+          "template_id": "phase2b6:StackCube-v1:train:02:47c7923b3c4ad5c8",
+          "text": "Build a two-cube stack."
+        },
+        {
+          "bank": "train",
+          "skill_family": "stacking",
+          "task_id": "StackCube-v1",
+          "template_id": "phase2b6:StackCube-v1:train:03:b024262d50eda04c",
+          "text": "Lift a cube and set it on the other cube."
+        },
+        {
+          "bank": "train",
+          "skill_family": "stacking",
+          "task_id": "StackCube-v1",
+          "template_id": "phase2b6:StackCube-v1:train:04:d875257c236fe22e",
+          "text": "Stack the movable cube above the remaining cube."
+        },
+        {
+          "bank": "train",
+          "skill_family": "stacking",
+          "task_id": "StackCube-v1",
+          "template_id": "phase2b6:StackCube-v1:train:05:95daa492f1bbba53",
+          "text": "Arrange the two cubes into a vertical stack."
+        }
+      ],
+      "validation": [
+        {
+          "bank": "validation",
+          "skill_family": "stacking",
+          "task_id": "StackCube-v1",
+          "template_id": "phase2b6:StackCube-v1:validation:00:b6ecaa51ef8527a8",
+          "text": "Put one block on top of the other block."
+        },
+        {
+          "bank": "validation",
+          "skill_family": "stacking",
+          "task_id": "StackCube-v1",
+          "template_id": "phase2b6:StackCube-v1:validation:01:7853094b0bcd3203",
+          "text": "Lift one cube and complete a two-level stack."
+        }
+      ]
+    }
+  },
+  "template_counts": {
+    "PickCube-v1": {
+      "held_out": 4,
+      "train": 6,
+      "validation": 2
+    },
+    "PushCube-v1": {
+      "held_out": 4,
+      "train": 6,
+      "validation": 2
+    },
+    "StackCube-v1": {
+      "held_out": 4,
+      "train": 6,
+      "validation": 2
+    }
+  }
+}

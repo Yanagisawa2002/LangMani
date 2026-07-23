@@ -95,6 +95,17 @@ LeRobot 0.6 conversion and full readback. This sets only
 production, ACT, SmolVLA, VLA-JEPA, student training, and custom-expert reactivation remain
 unstarted and unauthorized.
 
+Phase 2B.6 executed the authorized official multi-skill production and closed as Result C. All
+3,000 source trajectories and 254,374 source transitions passed immutable source validation, and
+the three-task visual-shift pilot passed. Full replay then completed PickCube 1,000/1,000 and
+StackCube 938 accepted episodes before `StackCube-v1` source episode 938 returned the first
+non-retryable physical replay-gate rejection. Production stopped at 1,939 attempts: 1,938 accepted
+partial replay records, 178,633 frames, one rejection, and 1,061 unattempted episodes. PushCube,
+task-root conversion, full LeRobot readback, archive, restore, and normalization did not start.
+The partial bytes are diagnostics, not an accepted dataset. All training eligibility and
+authorization flags remain false, `student_policy_training_started=false`, and
+`optimizer_steps=0`.
+
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected

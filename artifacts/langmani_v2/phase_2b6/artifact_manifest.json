@@ -1,0 +1,138 @@
+{
+  "file_count": 21,
+  "files": [
+    {
+      "path": "authorization_state.json",
+      "sha256": "sha256:1cde212a3e9736bf7093a5892b33d0cc6248f901374ffd973122e163a0ce1e42",
+      "size_bytes": 873
+    },
+    {
+      "path": "cross_skill_fold_manifests.json",
+      "sha256": "sha256:00e7177691cfaf37fcc5a81364667f4415b0bb5a26b3624dfba9203aa848f8b4",
+      "size_bytes": 425136
+    },
+    {
+      "path": "frozen_production_specification.json",
+      "sha256": "sha256:8cdf35bf1142ad4774fa9be4b6a198a02662b2576d6abcfb84d8b5bb0574b553",
+      "size_bytes": 962
+    },
+    {
+      "path": "language_template_manifest.json",
+      "sha256": "sha256:9c859c88fd5a2ff774e5fea0c9d086d43773890368c69b3c3485f6d1eef538d7",
+      "size_bytes": 10794
+    },
+    {
+      "path": "observation_action_contract.json",
+      "sha256": "sha256:c6eca2d4ef28e1b27010395736e78cacae55e039adcbc48e204dfd5339c8645a",
+      "size_bytes": 2972
+    },
+    {
+      "path": "padding_audit.json",
+      "sha256": "sha256:794f651f80516fac1028aca6b315c96b0d43cc262b5790cb2a901ed657e5e6d8",
+      "size_bytes": 17998
+    },
+    {
+      "path": "phase2b5_source_package_verification.json",
+      "sha256": "sha256:f49f61ad136f1e975783bdaf8ff4b2eebb3cd789a011d7af1b3e31367cd7f8ef",
+      "size_bytes": 3121
+    },
+    {
+      "path": "primary_split_manifest.json",
+      "sha256": "sha256:00f2fb815b0899b1312cca16c906fe452a7764a6810aabbcc3c5188806ab944d",
+      "size_bytes": 2823429
+    },
+    {
+      "path": "production_failure_analysis.json",
+      "sha256": "sha256:abe35f565fd646ba256b4123e1f7366493428f02555c85187a5203c64e2f4a46",
+      "size_bytes": 1405
+    },
+    {
+      "path": "production_run_manifest.json",
+      "sha256": "sha256:45aa6a934155e1129add916cbeaa7b81f7db44953da32b7552eb3f3d3ea3ea9b",
+      "size_bytes": 1740
+    },
+    {
+      "path": "rejected_production_manifest.json",
+      "sha256": "sha256:4f29d4ede61924c97bab3a630ea9ca922a375e8e4cdbc15db056477d772b809a",
+      "size_bytes": 1136
+    },
+    {
+      "path": "remote_execution_audit.json",
+      "sha256": "sha256:cec9170fb37930932b6a806145769f812582707797d81039e15e2bfcac0b822e",
+      "size_bytes": 3059
+    },
+    {
+      "path": "replay_summary_pickcube.json",
+      "sha256": "sha256:498ab61881a9af2f862a83fbefecb0f126f5cbdd8e3b5aa36f4d71ad0809c88c",
+      "size_bytes": 564
+    },
+    {
+      "path": "replay_summary_pushcube.json",
+      "sha256": "sha256:01a5d62a3f5b27055544115849828720d9e2900f77e59422390cb56ad92969ab",
+      "size_bytes": 557
+    },
+    {
+      "path": "replay_summary_stackcube.json",
+      "sha256": "sha256:9c3e9bf9f73ce052d0019400baaa49489016d84e80e3657633039b75d43c228e",
+      "size_bytes": 560
+    },
+    {
+      "path": "repository_environment_audit.json",
+      "sha256": "sha256:81e33f5d3c4098d069afddc51b2056dcf7253cf8550c60fe6460b60dd6ec31fe",
+      "size_bytes": 4113
+    },
+    {
+      "path": "result_classification.json",
+      "sha256": "sha256:0a2f46951705936077cf91bf3a49883f3cfc0655aa7eac23fdbca83f5968d259",
+      "size_bytes": 684
+    },
+    {
+      "path": "source_integrity_audit.json",
+      "sha256": "sha256:14d1c9a7a4ba73640abc3f43240585133643651a9347cfca524cc89159466408",
+      "size_bytes": 3167
+    },
+    {
+      "path": "source_schema_result.json",
+      "sha256": "sha256:12c724251c837532a74c4e3c3061911c8848db807fc66d220bc11da112d3c461",
+      "size_bytes": 3305
+    },
+    {
+      "path": "task_balance_manifest.json",
+      "sha256": "sha256:4c59268183e57faaf97e25e4551a0eacf2cad2ee87c61e2e161aa46299d995fb",
+      "size_bytes": 1846
+    },
+    {
+      "path": "visual_shift_pilot.json",
+      "sha256": "sha256:fb3d2f2bd7074a16fa0dae53a5eda64c9e5c1c76bc5a187a57186e020fd9c019",
+      "size_bytes": 14867
+    }
+  ],
+  "fingerprint": "sha256:a4b4ace15b3d5bd5dfb2215507abd14fcbe1a0a21dce0f875d6d91dcc676f8a0",
+  "large_dataset_bytes_committed": false,
+  "passed": true,
+  "required_result_c_files": [
+    "authorization_state.json",
+    "cross_skill_fold_manifests.json",
+    "frozen_production_specification.json",
+    "language_template_manifest.json",
+    "observation_action_contract.json",
+    "padding_audit.json",
+    "phase2b5_source_package_verification.json",
+    "primary_split_manifest.json",
+    "production_failure_analysis.json",
+    "production_run_manifest.json",
+    "rejected_production_manifest.json",
+    "remote_execution_audit.json",
+    "replay_summary_pickcube.json",
+    "replay_summary_pushcube.json",
+    "replay_summary_stackcube.json",
+    "repository_environment_audit.json",
+    "result_classification.json",
+    "source_integrity_audit.json",
+    "source_schema_result.json",
+    "task_balance_manifest.json",
+    "visual_shift_pilot.json"
+  ],
+  "result_scope": "result_c_hard_stop",
+  "schema_version": "langmani-v2-phase2b6-artifact-manifest-v0"
+}

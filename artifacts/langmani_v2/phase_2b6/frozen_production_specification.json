@@ -1,0 +1,16 @@
+{
+  "fingerprint": "sha256:4ac3c21bb1ee1ed7d7e43f427ff7a02a48c0acd03b998c759f21977d6ff6596c",
+  "passed": true,
+  "production_run_id": "langmani-official-multiskill-v1-production-20260723",
+  "schema_version": "langmani-v2-phase2b6-frozen-specification-evidence-v0",
+  "specification_lock": {
+    "fingerprint": "sha256:966c9852d38104fd6086b31926da79097d6ecab5021a7526ad684219979a0ed8",
+    "frozen_specification_fingerprint": "sha256:bfaff9604d02ef0fb6a9f3c81eeffb09d92274e6d6d698fe4102be472aa973b4",
+    "full_production_started": false,
+    "production_run_id": "langmani-official-multiskill-v1-production-20260723",
+    "schema_version": "langmani-v2-phase2b6-specification-lock-v0",
+    "source_commit": "8c81058008bb03c4611c9133adf4112e2a21287f",
+    "specification_sha256": "sha256:84021d42a33ad939cf4b707eaf75a8b71fcd6c083b88ee2a4aed0b7181e0b232"
+  },
+  "specification_sha256": "sha256:84021d42a33ad939cf4b707eaf75a8b71fcd6c083b88ee2a4aed0b7181e0b232"
+}

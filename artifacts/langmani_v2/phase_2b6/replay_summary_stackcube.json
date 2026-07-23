@@ -1,0 +1,16 @@
+{
+  "accepted_frame_count": 100657,
+  "accepted_replay_episode_count": 938,
+  "attempted_episode_count": 939,
+  "complete_task_source_coverage": false,
+  "fingerprint": "sha256:27bbd1721383fc808a87677509a14c659a593c2ebfb79615c978ebddc6f0a790",
+  "full_task_gate_passed": false,
+  "hard_stop_reached": true,
+  "optimizer_steps": 0,
+  "passed": false,
+  "rejected_episode_count": 1,
+  "schema_version": "langmani-v2-phase2b6-partial-task-replay-summary-v0",
+  "skill_family": "stacking",
+  "student_policy_training_started": false,
+  "task_id": "StackCube-v1"
+}

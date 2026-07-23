@@ -137,6 +137,17 @@ downloaded official packages contain only delta-action sources. This sets
 dataset production, ACT, SmolVLA, VLA-JEPA, student training, and custom-expert reactivation remain
 unstarted and unauthorized.
 
+Phase 2B.6 executed full official-source production and closed as Result C. Immutable source
+validation still passed for all 3,000 trajectories and 254,374 transitions, and the three-episode
+visual-shift pilot passed. Production completed 1,000 PickCube and 938 StackCube replay episodes
+before `StackCube-v1` source episode 938 returned a non-retryable physical replay-gate rejection.
+The hard stop preserved 1,938 accepted partial replay records and 178,633 frames, one rejection,
+and 1,061 unattempted episodes. PushCube production, LeRobot task roots, full readback, full
+source-to-derived verification, archive, restore, and canonical normalization did not start. The
+partial output is diagnostic only and must not be treated as an accepted dataset or failure
+training corpus. All model-training eligibility and authorization flags remain false,
+`student_policy_training_started=false`, and `optimizer_steps=0`.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
@@ -322,6 +333,10 @@ CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_f1.py --train-probe-a
 # Phase 2B.5 official-source qualification; stages remain explicitly separate.
 python environment/run_v2_phase2b5_official_demos.py --help
 python environment/verify_v2_phase2b5.py
+
+# Phase 2B.6 compact Result A or fail-closed Result C evidence verification.
+# This command reads only tracked JSON artifacts and starts no simulator or model.
+python environment/verify_v2_phase2b6.py
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,

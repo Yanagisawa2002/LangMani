@@ -1,0 +1,37 @@
+{
+  "accepted_frame_count": 178633,
+  "accepted_replay_episode_count": 1938,
+  "archive_started": false,
+  "attempted_episode_count": 1939,
+  "created_at_utc": "2026-07-23T15:06:17.226354+00:00",
+  "fingerprint": "sha256:8dd5b368acee89cbd8d49d06f0d85e689f2adca990952b2cf4ce3fa13f620017",
+  "full_replay_completed": false,
+  "hard_stop_fingerprint": "sha256:94dddb44c65ec717cef156ab6bd150ac0d1abfa447e870c809971d12e529d4f5",
+  "hard_stop_source_episode_id": 938,
+  "hard_stop_task_id": "StackCube-v1",
+  "lerobot_conversion_started": false,
+  "optimizer_steps": 0,
+  "passed": false,
+  "production_start": {
+    "fingerprint": "sha256:191926e2f821ff4177e2f333a9327db1e2919291ba58608ed14a7d7d9ad17e70",
+    "optimizer_steps": 0,
+    "producer_commit": "73b2cd1517e7c3d2bfc08bd2898e46a3195eb1c9",
+    "producer_worktree_clean": true,
+    "production_run_id": "langmani-official-multiskill-v1-production-20260723",
+    "schema_version": "langmani-v2-phase2b6-production-start-v0",
+    "specification_sha256": "sha256:84021d42a33ad939cf4b707eaf75a8b71fcd6c083b88ee2a4aed0b7181e0b232",
+    "started_at_utc": "2026-07-23T14:28:41.003153+00:00",
+    "student_policy_training_started": false
+  },
+  "rejected_episode_count": 1,
+  "restore_started": false,
+  "schema_version": "langmani-v2-phase2b6-partial-production-run-v0",
+  "source_episode_count": 3000,
+  "student_policy_training_started": false,
+  "task_summaries": {
+    "PickCube-v1": "sha256:93ccf5e41dc6c379c4da1a7aae737c13b58254d65c99214fe3cc82c12b50a05f",
+    "PushCube-v1": "sha256:8a7aaecc6b38d69092af33c3ca0ac4bd67ea049a30b16f002f316d32774efe52",
+    "StackCube-v1": "sha256:27bbd1721383fc808a87677509a14c659a593c2ebfb79615c978ebddc6f0a790"
+  },
+  "unattempted_episode_count": 1061
+}

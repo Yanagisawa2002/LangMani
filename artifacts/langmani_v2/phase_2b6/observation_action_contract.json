@@ -1,0 +1,118 @@
+{
+  "action": {
+    "clipping": false,
+    "control_mode": "pd_joint_pos",
+    "dtype": "float32",
+    "fabricated_terminal_action": false,
+    "feature": "action",
+    "interpolation": false,
+    "joint_order": [
+      "panda_joint1_position_target",
+      "panda_joint2_position_target",
+      "panda_joint3_position_target",
+      "panda_joint4_position_target",
+      "panda_joint5_position_target",
+      "panda_joint6_position_target",
+      "panda_joint7_position_target",
+      "panda_gripper_normalized_command"
+    ],
+    "lower_bounds": [
+      -2.8973,
+      -1.7628,
+      -2.8973,
+      -3.0718,
+      -2.8973,
+      -0.0175,
+      -2.8973,
+      -1.0
+    ],
+    "projection": false,
+    "schema": "PandaJointPositionActionV0",
+    "shape": [
+      8
+    ],
+    "upper_bounds": [
+      2.8973,
+      1.7628,
+      2.8973,
+      -0.0698,
+      2.8973,
+      3.7525,
+      2.8973,
+      1.0
+    ]
+  },
+  "camera": {
+    "calibration_source": "ManiSkill-v3 task base_camera public sensor parameters recorded at production",
+    "codec": "h264",
+    "crop": "none",
+    "dtype": "uint8",
+    "encoder": {
+      "crf": 18,
+      "gop": 2,
+      "preset": "medium",
+      "video_backend": "pyav"
+    },
+    "frame_rate_hz": 20,
+    "height": 256,
+    "layout": "HWC_RGB",
+    "name": "base_camera",
+    "pixel_format": "yuv444p",
+    "width": 256
+  },
+  "fabricated_terminal_action": false,
+  "fingerprint": "sha256:1aa1240f2094cde3d02f32fad4f691c4b1d9148bc835aaf47430eb5324669706",
+  "observation": {
+    "image_feature": "observation.images.base_camera",
+    "post_terminal_frame_policy": "diagnostic-only and excluded from policy datasets",
+    "prohibited_student_fields": [
+      "object_pose",
+      "goal_pose",
+      "full_simulator_state",
+      "privileged_contact_state",
+      "reward",
+      "success_internals",
+      "expert_phase",
+      "future_observation"
+    ],
+    "state_components": [
+      "panda_joint1",
+      "panda_joint2",
+      "panda_joint3",
+      "panda_joint4",
+      "panda_joint5",
+      "panda_joint6",
+      "panda_joint7",
+      "panda_finger_joint1",
+      "panda_finger_joint2"
+    ],
+    "state_dtype": "float32",
+    "state_feature": "observation.state",
+    "state_schema": "PandaPolicyStateV0",
+    "state_shape": [
+      9
+    ],
+    "student_field_allowlist": [
+      "observation.images.base_camera",
+      "observation.state",
+      "action",
+      "task",
+      "task_id",
+      "skill_family",
+      "source_episode_identity",
+      "derived_episode_identity",
+      "instruction_template_id",
+      "primary_split",
+      "episode_index",
+      "frame_index",
+      "timestamp"
+    ],
+    "timing": "observation[t] immediately precedes action[t]"
+  },
+  "optimizer_steps": 0,
+  "passed": true,
+  "post_terminal_frame_in_policy_dataset": false,
+  "pre_action_frame_count_equals_action_count": true,
+  "privileged_fields_excluded": true,
+  "schema_version": "langmani-v2-phase2b6-observation-action-contract-v0"
+}

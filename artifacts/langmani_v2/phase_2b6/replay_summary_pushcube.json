@@ -1,0 +1,16 @@
+{
+  "accepted_frame_count": 0,
+  "accepted_replay_episode_count": 0,
+  "attempted_episode_count": 0,
+  "complete_task_source_coverage": false,
+  "fingerprint": "sha256:8a7aaecc6b38d69092af33c3ca0ac4bd67ea049a30b16f002f316d32774efe52",
+  "full_task_gate_passed": false,
+  "hard_stop_reached": false,
+  "optimizer_steps": 0,
+  "passed": false,
+  "rejected_episode_count": 0,
+  "schema_version": "langmani-v2-phase2b6-partial-task-replay-summary-v0",
+  "skill_family": "planar_pushing",
+  "student_policy_training_started": false,
+  "task_id": "PushCube-v1"
+}

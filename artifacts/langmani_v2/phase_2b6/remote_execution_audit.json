@@ -1,0 +1,25 @@
+{
+  "backward_passes": 0,
+  "commands": [
+    "/root/autodl-tmp/conda-envs/langmani/bin/python environment/run_v2_phase2b6.py preflight --spec configs/langmani_v2/phase2b6_dataset_production.yaml --source-root /root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608 --production-root /root/autodl-tmp/langmani-external/phase2b6/production_v1 --evidence-root /root/autodl-tmp/langmani-external/phase2b6/evidence --archive-root /root/autodl-tmp/langmani-external/phase2b6-archive --restore-root /root/autodl-tmp/langmani-external/phase2b6-restore-scratch --network-turbo-sourced",
+    "/root/autodl-tmp/conda-envs/langmani/bin/python environment/run_v2_phase2b6.py preflight --spec configs/langmani_v2/phase2b6_dataset_production.yaml --source-root /root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608 --production-root /root/autodl-tmp/langmani-external/phase2b6/production_v1 --evidence-root /root/autodl-tmp/langmani-external/phase2b6/evidence --archive-root /root/autodl-tmp/langmani-external/phase2b6-archive --restore-root /root/autodl-tmp/langmani-external/phase2b6-restore-scratch --network-turbo-sourced",
+    "/root/autodl-tmp/conda-envs/langmani/bin/python environment/run_v2_phase2b6.py visual-shift-pilot --spec configs/langmani_v2/phase2b6_dataset_production.yaml --source-root /root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608 --production-root /root/autodl-tmp/langmani-external/phase2b6/production_v1 --evidence-root /root/autodl-tmp/langmani-external/phase2b6/evidence",
+    "/root/autodl-tmp/conda-envs/langmani/bin/python environment/run_v2_phase2b6.py produce --spec configs/langmani_v2/phase2b6_dataset_production.yaml --source-root /root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608 --production-root /root/autodl-tmp/langmani-external/phase2b6/production_v1 --evidence-root /root/autodl-tmp/langmani-external/phase2b6/evidence",
+    "/root/autodl-tmp/conda-envs/langmani/bin/python environment/run_v2_phase2b6.py finalize-failure --spec configs/langmani_v2/phase2b6_dataset_production.yaml --production-root /root/autodl-tmp/langmani-external/phase2b6/production_v1 --evidence-root /root/autodl-tmp/langmani-external/phase2b6/evidence"
+  ],
+  "created_at_utc": "2026-07-23T15:06:17.226815+00:00",
+  "custom_expert_started": false,
+  "finalizer_commit": "b469635eeea542a47c4e923ba5a0ce101a31747a",
+  "finalizer_worktree_clean": true,
+  "fingerprint": "sha256:d959b412aa016a27e20f8d3496f66a0cfe5eac9b2219c75f4cd9ea5bab8aa2ce",
+  "hostname": "autodl-container-xpe9q58l10-db426ce5",
+  "model_loaded": false,
+  "official_action_replay_only": true,
+  "optimizer_created": false,
+  "optimizer_steps": 0,
+  "passed": true,
+  "producer_branch": "codex/langmani-v2-phase2b6-dataset-production",
+  "production_commit": "73b2cd1517e7c3d2bfc08bd2898e46a3195eb1c9",
+  "schema_version": "langmani-v2-phase2b6-remote-execution-audit-v0",
+  "student_policy_training_started": false
+}

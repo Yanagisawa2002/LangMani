@@ -1,0 +1,115 @@
+{
+  "authorization_state": {
+    "act_training_started": false,
+    "custom_push_expert_route_active": false,
+    "optimizer_steps": 0,
+    "smolvla_training_started": false,
+    "student_policy_training_started": false,
+    "vla_jepa_training_started": false
+  },
+  "branch": "codex/langmani-v2-phase2b6-dataset-production",
+  "checks": {
+    "github_matches_head": true,
+    "network_turbo_sourced": true,
+    "no_merge_commits_since_source": true,
+    "phase2b5_package_identity": true,
+    "process_state": true,
+    "source_commit_is_ancestor": true,
+    "storage": true,
+    "target_branch": true,
+    "upstream_matches_head": true,
+    "worktree_clean": true
+  },
+  "created_at_utc": "2026-07-23T14:27:06.860017+00:00",
+  "fingerprint": "sha256:7f724f834ef942ab0b920b68ecb5951a5688bf6213fb69ba52e86277c9050a48",
+  "github_branch_sha": "73b2cd1517e7c3d2bfc08bd2898e46a3195eb1c9",
+  "gpu": {
+    "available": true,
+    "devices": [
+      {
+        "driver_version": "595.71.05",
+        "memory_total_mib": 32607,
+        "memory_used_mib": 2,
+        "name": "NVIDIA GeForce RTX 5090",
+        "utilization_percent": 0,
+        "uuid": "GPU-e72d1ea7-5fcb-a83f-ba21-88f316be5a4b"
+      }
+    ]
+  },
+  "head": "73b2cd1517e7c3d2bfc08bd2898e46a3195eb1c9",
+  "passed": true,
+  "process_state": {
+    "matching_processes": [
+      {
+        "command": "tee /root/autodl-tmp/langmani-external/phase2b6/logs/preflight-rerun.log",
+        "pid": 46582,
+        "ppid": 44212
+      }
+    ],
+    "passed": true,
+    "prohibited_active_processes": [],
+    "query_succeeded": true
+  },
+  "remote": "git@github.com:Yanagisawa2002/LangMani.git",
+  "repository_path": "/root/autodl-tmp/langmani",
+  "runtime_environments": {
+    "maniskill": {
+      "environment_prefix": "/root/autodl-tmp/conda-envs/langmani",
+      "executable": "/root/autodl-tmp/conda-envs/langmani/bin/python3.12",
+      "packages": {
+        "h5py": "3.16.0",
+        "mani-skill": "3.0.1",
+        "numpy": "2.2.6",
+        "pillow": "12.3.0",
+        "sapien": "3.0.3",
+        "torch": "2.11.0+cu128"
+      },
+      "python": "3.12.13"
+    }
+  },
+  "schema_version": "langmani-v2-phase2b6-repository-environment-audit-v0",
+  "source_commit": "8c81058008bb03c4611c9133adf4112e2a21287f",
+  "source_package_identity": "sha256:22e93d609fc4564d0bdb3e5fc7571cf8971c8a86b3cf3bdaa910108621bcbcc2",
+  "storage": {
+    "estimate_components": {
+      "archive_and_restore": "approximately 6-16 GiB combined",
+      "compressed_replay_intermediates": "approximately 28-35 GiB",
+      "primary_lerobot_and_visual_shift": "approximately 3-8 GiB"
+    },
+    "estimated_peak_increment_bytes": 64424509440,
+    "minimum_free_bytes": 107443576832,
+    "passed": true,
+    "volumes": {
+      "archive": {
+        "free_bytes": 107443576832,
+        "measured_at": "/root/autodl-tmp/langmani-external",
+        "requested_path": "/root/autodl-tmp/langmani-external/phase2b6-archive",
+        "total_bytes": 268435456000,
+        "used_bytes": 160991879168
+      },
+      "official_source": {
+        "free_bytes": 107443576832,
+        "measured_at": "/root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608",
+        "requested_path": "/root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608",
+        "total_bytes": 268435456000,
+        "used_bytes": 160991879168
+      },
+      "production": {
+        "free_bytes": 107443576832,
+        "measured_at": "/root/autodl-tmp/langmani-external/phase2b6/production_v1",
+        "requested_path": "/root/autodl-tmp/langmani-external/phase2b6/production_v1",
+        "total_bytes": 268435456000,
+        "used_bytes": 160991879168
+      },
+      "restore": {
+        "free_bytes": 107443576832,
+        "measured_at": "/root/autodl-tmp/langmani-external",
+        "requested_path": "/root/autodl-tmp/langmani-external/phase2b6-restore-scratch",
+        "total_bytes": 268435456000,
+        "used_bytes": 160991879168
+      }
+    }
+  },
+  "upstream": "73b2cd1517e7c3d2bfc08bd2898e46a3195eb1c9",
+  "worktree_path": "/root/autodl-tmp/langmani"
+}
