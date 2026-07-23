@@ -3294,3 +3294,54 @@ a full dataset or policy result. `full_dataset_production_started=false`,
 `act_training_authorized=false`, `smolvla_training_authorized=false`,
 `vla_jepa_training_authorized=false`, `student_policy_training_started=false`, and
 `custom_push_expert_route_active=false`. Phase 2B.6 may start only by a separate instruction.
+
+## D-131 - Freeze Phase 2B.6 official multi-skill dataset production
+
+Phase 2B.6 starts only from immutable Phase 2B.5 Result A commit
+`8c81058008bb03c4611c9133adf4112e2a21287f`. Its sole source authority is the accepted official
+package for `PickCube-v1`, `StackCube-v1`, and `PushCube-v1` at
+`ManiSkill_Demonstrations@d674485bbffdd533914e52d272fdda34c0515608`. Historical custom push,
+geometry, simulator-MPC, reset-replay, and PPO branches remain closed and cannot supply source
+episodes, task definitions, actions, thresholds, or conclusions.
+
+The immutable production specification is
+`configs/langmani_v2/phase2b6_dataset_production.yaml`. It binds all three official ZIP identities,
+ManiSkill 3.0.1, the upstream ManiSkill source revision, `physx_cpu` replay, `sapien_cuda`
+rendering, the accepted 256-by-256 base camera, `PandaPolicyStateV0`, native `float32[8]
+pd_joint_pos`, 20 Hz, five physics substeps, exact episode/transition totals, language banks,
+episode identities, splits, post-render visual shift, archive layout, retry policy, and hard
+stops. Once full production starts, a material specification change requires a new run identity
+and output root while preserving the old partial run.
+
+Every official trajectory is replayed from its official metadata and accepted first-state
+mechanism using only its original action bytes. Each policy frame is the observation immediately
+before its corresponding action. The post-final-action image is diagnostic only, and no synthetic
+terminal action is created. Replay acceptance is conjunctive: all 3,000 official successes must
+remain successes, categorical agreement and frame/action alignment must both be 100%, and invalid
+actions, non-finite values, and simulator errors must all be zero. Physical failures are never
+retried or repaired. At most one identical retry is permitted only for an infrastructure failure
+before or outside physical execution.
+
+Primary splits are materialized once per immutable source episode and exposed reset identity:
+700/100/100/50/50 per task for train, validation, unseen reset, unseen task language, and visual
+shift. Task/split-specific LeRobot 0.6 subroots keep physical media from crossing split
+boundaries, while one task container and one unified immutable multi-root index preserve the
+requested task-level identities. The 150 visual-shift episodes are disjoint evaluation episodes;
+their second rendering applies only the pre-registered post-render exposure and color-temperature
+transform. Physics, reset, state, action, timing, geometry, friction, and success remain unchanged.
+Cross-skill folds are metadata-only alternate experiment views and do not support an unseen-skill
+claim without separately trained future models.
+
+Action horizons 10, 16, and 50 use an explicit boolean `action_is_pad` mask. Future masked losses
+must exclude padded timesteps; zero vectors alone carry no padding meaning. Canonical
+normalization is computed only from the pooled natural-frame primary training view. Per-task and
+equal-task views remain diagnostics, and uniform-task sampling is the recommended default for
+future multi-skill baselines so StackCube's longer trajectories do not silently dominate.
+
+Acceptance additionally requires all-frame LeRobot 0.6 structural readback, decoding of every
+video frame, exact source-to-derived action equality for all episodes, zero primary-split leakage,
+an external deterministic content-addressed archive, and a full file-hash restore plus stratified
+LeRobot readback from physically restored bytes. Result A grants only later-phase eligibility.
+`act_training_authorized=false`, `smolvla_training_authorized=false`,
+`vla_jepa_training_authorized=false`, `student_policy_training_started=false`,
+`optimizer_steps=0`, and `backward_passes=0` remain invariant throughout this phase.
