@@ -8,6 +8,8 @@ import pytest
 
 from langmani.v2.phase2b5 import (
     CANDIDATE_TASKS,
+    PANDA_ACTION_HIGH,
+    PANDA_ACTION_LOW,
     PINNED_SOURCE_FILES,
     SOURCE_COMMIT,
     TARGET_BRANCH,
@@ -122,7 +124,8 @@ def test_metadata_and_reset_schema() -> None:
 
 
 def test_action_dtype_shape_finiteness_and_bounds() -> None:
-    actions = np.zeros((3, 8), dtype=np.float32)
+    valid_action = (PANDA_ACTION_LOW + PANDA_ACTION_HIGH) / np.float32(2.0)
+    actions = np.repeat(valid_action[None, :], repeats=3, axis=0)
     report = validate_action_array(actions)
     assert report["passed"] is True
     assert report["finite_value_rate"] == 1.0
