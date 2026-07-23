@@ -25,6 +25,7 @@ from langmani.v2.phase2b6_lerobot import (
 )
 from langmani.v2.phase2b6_runtime import (
     compute_dataset_statistics,
+    finalize_result_c,
     prepare_production,
     run_full_replay_production,
     run_visual_shift_pilot,
@@ -53,6 +54,7 @@ def parse_args() -> argparse.Namespace:
             "archive",
             "restore",
             "finalize",
+            "finalize-failure",
             "artifact-manifest",
         ),
     )
@@ -207,6 +209,13 @@ def main() -> int:
         )
     elif args.stage == "finalize":
         result = finalize_acceptance(
+            production_root=production_root,
+            evidence_root=evidence_root,
+            repo_root=repo_root,
+            command_log=_command_log(production_root),
+        )
+    elif args.stage == "finalize-failure":
+        result = finalize_result_c(
             production_root=production_root,
             evidence_root=evidence_root,
             repo_root=repo_root,

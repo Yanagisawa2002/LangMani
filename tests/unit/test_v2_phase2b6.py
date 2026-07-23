@@ -40,6 +40,7 @@ from langmani.v2.phase2b6 import (
 )
 from langmani.v2.phase2b6_runtime import (
     Phase2B6RuntimeError,
+    finalize_result_c,
     freeze_production_spec,
     verify_source_bytes,
 )
@@ -399,3 +400,81 @@ def test_result_acceptance_and_training_authorization_are_separate() -> None:
     assert state["optimizer_created"] is False
     assert state["optimizer_steps"] == 0
     assert state["backward_passes"] == 0
+
+
+def test_result_c_finalization_preserves_generic_hard_stop_without_fabrication(
+    tmp_path: Path,
+) -> None:
+    production = tmp_path / "production"
+    evidence = tmp_path / "evidence"
+    (production / "work").mkdir(parents=True)
+    (production / "run").mkdir(parents=True)
+    evidence.mkdir()
+    (evidence / "source_integrity_audit.json").write_text(
+        json.dumps({"passed": True}), encoding="utf-8"
+    )
+    (evidence / "source_schema_result.json").write_text(
+        json.dumps({"passed": True}), encoding="utf-8"
+    )
+    failure = {
+        "task_id": "StackCube-v1",
+        "source_episode_id": 938,
+        "source_trajectory_identity": "sha256:" + "9" * 64,
+        "derived_episode_identity": "sha256:" + "8" * 64,
+        "primary_split": "test_unseen_reset",
+        "source_success": True,
+        "replay_success": False,
+        "categorical_outcome_agreement": False,
+        "action_frame_alignment": False,
+        "invalid_action_count": 0,
+        "nonfinite_value_count": 0,
+        "simulator_error_count": 1,
+        "passed": False,
+        "error": {
+            "type": "Phase2B6RuntimeError",
+            "message": "episode replay gate failed",
+        },
+    }
+    success = {
+        "task_id": "PickCube-v1",
+        "source_episode_id": 0,
+        "source_action_count": 12,
+        "passed": True,
+    }
+    (production / "work" / "replay_records.jsonl").write_text(
+        "\n".join(json.dumps(row) for row in (success, failure)) + "\n",
+        encoding="utf-8",
+    )
+    (evidence / "rejected_production_manifest.json").write_text(
+        json.dumps({"episode_count": 1, "episodes": [failure], "passed": False}),
+        encoding="utf-8",
+    )
+    (production / "run" / "full_production_started.json").write_text(
+        json.dumps(
+            {
+                "producer_commit": SOURCE_COMMIT,
+                "student_policy_training_started": False,
+                "optimizer_steps": 0,
+            }
+        ),
+        encoding="utf-8",
+    )
+    result = finalize_result_c(
+        repo_root=PROJECT_ROOT,
+        production_root=production,
+        evidence_root=evidence,
+        command_log=("phase2b6 produce",),
+    )
+    assert result["result"] == "RESULT_C"
+    assert result["passed"] is True
+    analysis = json.loads(
+        (evidence / "production_failure_analysis.json").read_text(encoding="utf-8")
+    )
+    assert analysis["exact_inner_failed_subgate_available"] is False
+    assert analysis["unavailable_fields_were_not_reconstructed"] is True
+    authorization = json.loads((evidence / "authorization_state.json").read_text(encoding="utf-8"))
+    assert authorization["accepted_multiskill_dataset_validated"] is False
+    assert authorization["act_baseline_training_eligible"] is False
+    assert authorization["student_policy_training_started"] is False
+    assert authorization["optimizer_steps"] == 0
+    assert not (evidence / "accepted_multiskill_dataset_package.json").exists()

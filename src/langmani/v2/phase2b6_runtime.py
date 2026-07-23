@@ -63,11 +63,13 @@ from langmani.v2.phase2b6 import (
     TASK_IDS,
     Phase2B6ContractError,
     apply_visual_shift,
+    authorization_state,
     build_cross_skill_folds,
     build_language_template_manifest,
     build_padding_audit,
     build_primary_split_manifest,
     build_task_balance_manifest,
+    classify_result,
     fingerprinted,
     load_production_spec,
     source_reset_identity,
@@ -1250,27 +1252,6 @@ def run_full_replay_production(
                         )
                         if arrays is None:
                             raise Phase2B6RuntimeError("production replay did not capture arrays")
-                        if record["passed"] is not True:
-                            raise Phase2B6RuntimeError("episode replay gate failed")
-                        _save_episode_npz(output_path, arrays)
-                        raw_hash = "sha256:" + sha256_file(output_path)
-                        if source_episode_id in contact_episode_ids:
-                            rgb = arrays["rgb"]
-                            contact_path = (
-                                production_root
-                                / "primary"
-                                / "contact_sheets"
-                                / f"{task_id}_episode_{source_episode_id:06d}.png"
-                            )
-                            _contact_sheet(
-                                contact_path,
-                                (
-                                    rgb[0],
-                                    rgb[len(rgb) // 2],
-                                    rgb[-1],
-                                    arrays["terminal_rgb"],
-                                ),
-                            )
                         progress_row: dict[str, object] = {
                             "attempt_index": 0,
                             "retry": False,
@@ -1284,28 +1265,75 @@ def run_full_replay_production(
                             "instruction_template_id": assignment["instruction_template_id"],
                             "instruction": assignment["instruction"],
                             "primary_split": assignment["primary_split"],
-                            "raw_relative_path": output_path.relative_to(
-                                production_root
-                            ).as_posix(),
-                            "raw_sha256": raw_hash,
-                            "rgb_sha256": _array_sha256(arrays["rgb"]),
-                            "state_sha256": _array_sha256(
-                                arrays["state"], dtype=np.dtype(np.float32)
-                            ),
-                            "derived_action_sha256": _array_sha256(
-                                arrays["action"], dtype=np.dtype(np.float32)
-                            ),
-                            "timestamp_sha256": _array_sha256(
-                                arrays["timestamp"], dtype=np.dtype(np.float64)
-                            ),
                             "first_frame_semantics": "pre-action observation for action[0]",
                             "last_policy_frame_semantics": (
                                 "pre-action observation for the final recorded action"
                             ),
                             "post_terminal_frame_policy_dataset": False,
-                            "error": None,
                             **record,
                         }
+                        if record["passed"] is not True:
+                            progress_row.update(
+                                {
+                                    "raw_relative_path": None,
+                                    "raw_sha256": None,
+                                    "rgb_sha256": _array_sha256(arrays["rgb"]),
+                                    "state_sha256": _array_sha256(
+                                        arrays["state"], dtype=np.dtype(np.float32)
+                                    ),
+                                    "derived_action_sha256": _array_sha256(
+                                        arrays["action"], dtype=np.dtype(np.float32)
+                                    ),
+                                    "timestamp_sha256": _array_sha256(
+                                        arrays["timestamp"], dtype=np.dtype(np.float64)
+                                    ),
+                                    "error": {
+                                        "type": "ReplayGateRejected",
+                                        "message": (
+                                            "physical replay completed but one or more "
+                                            "frozen episode gates rejected the result"
+                                        ),
+                                    },
+                                }
+                            )
+                        else:
+                            _save_episode_npz(output_path, arrays)
+                            if source_episode_id in contact_episode_ids:
+                                rgb = arrays["rgb"]
+                                contact_path = (
+                                    production_root
+                                    / "primary"
+                                    / "contact_sheets"
+                                    / f"{task_id}_episode_{source_episode_id:06d}.png"
+                                )
+                                _contact_sheet(
+                                    contact_path,
+                                    (
+                                        rgb[0],
+                                        rgb[len(rgb) // 2],
+                                        rgb[-1],
+                                        arrays["terminal_rgb"],
+                                    ),
+                                )
+                            progress_row.update(
+                                {
+                                    "raw_relative_path": output_path.relative_to(
+                                        production_root
+                                    ).as_posix(),
+                                    "raw_sha256": "sha256:" + sha256_file(output_path),
+                                    "rgb_sha256": _array_sha256(arrays["rgb"]),
+                                    "state_sha256": _array_sha256(
+                                        arrays["state"], dtype=np.dtype(np.float32)
+                                    ),
+                                    "derived_action_sha256": _array_sha256(
+                                        arrays["action"], dtype=np.dtype(np.float32)
+                                    ),
+                                    "timestamp_sha256": _array_sha256(
+                                        arrays["timestamp"], dtype=np.dtype(np.float64)
+                                    ),
+                                    "error": None,
+                                }
+                            )
                     except Exception as error:
                         progress_row = {
                             "attempt_index": 0,
@@ -1650,9 +1678,183 @@ def compute_dataset_statistics(
     return stats, normalization
 
 
+def finalize_result_c(
+    *,
+    repo_root: Path,
+    production_root: Path,
+    evidence_root: Path,
+    command_log: Sequence[str],
+) -> dict[str, object]:
+    """Freeze an honest Result C after a non-retryable production hard stop."""
+
+    if (evidence_root / "accepted_multiskill_dataset_package.json").exists():
+        raise Phase2B6RuntimeError("Result C cannot coexist with an accepted package")
+    rejected = _read_json(evidence_root / "rejected_production_manifest.json")
+    rows = _read_jsonl(production_root / "work" / "replay_records.jsonl")
+    failed = [row for row in rows if row.get("passed") is not True]
+    if rejected.get("episode_count") != 1 or len(failed) != 1:
+        raise Phase2B6RuntimeError("Result C finalization requires exactly one preserved hard stop")
+    failure = failed[0]
+    error = cast(Mapping[str, object], failure.get("error"))
+    diagnostic_overwrite = (
+        error.get("type") == "Phase2B6RuntimeError"
+        and error.get("message") == "episode replay gate failed"
+        and "terminal_state_error" not in failure
+    )
+    if not diagnostic_overwrite:
+        raise Phase2B6RuntimeError("unexpected failure schema requires independent review")
+    success_rows = [row for row in rows if row.get("passed") is True]
+    task_summaries: dict[str, object] = {}
+    for task_id in TASK_IDS:
+        task_rows = [row for row in rows if row.get("task_id") == task_id]
+        task_successes = [row for row in task_rows if row.get("passed") is True]
+        task_failures = [row for row in task_rows if row.get("passed") is not True]
+        summary = fingerprinted(
+            {
+                "schema_version": "langmani-v2-phase2b6-partial-task-replay-summary-v0",
+                "task_id": task_id,
+                "skill_family": CANDIDATE_TASKS[task_id].skill_family,
+                "attempted_episode_count": len(task_rows),
+                "accepted_replay_episode_count": len(task_successes),
+                "rejected_episode_count": len(task_failures),
+                "accepted_frame_count": sum(
+                    int(cast(int, row["source_action_count"])) for row in task_successes
+                ),
+                "complete_task_source_coverage": len(task_rows) == 1_000,
+                "hard_stop_reached": bool(task_failures),
+                "full_task_gate_passed": len(task_rows) == 1_000 and not task_failures,
+                "student_policy_training_started": False,
+                "optimizer_steps": 0,
+                "passed": len(task_rows) == 1_000 and not task_failures,
+            }
+        )
+        task_summaries[task_id] = summary
+        _write_json(
+            evidence_root / f"replay_summary_{_task_slug(task_id)}.json",
+            summary,
+        )
+    source = _read_json(evidence_root / "source_integrity_audit.json")
+    source_schema = _read_json(evidence_root / "source_schema_result.json")
+    start = _read_json(production_root / "run" / "full_production_started.json")
+    failure_analysis = fingerprinted(
+        {
+            "schema_version": "langmani-v2-phase2b6-production-failure-analysis-v0",
+            "created_at_utc": _timestamp(),
+            "verified_failure_kind": "post_execution_physical_replay_gate_rejection",
+            "infrastructure_failure": False,
+            "retry_permitted": False,
+            "retry_performed": False,
+            "failed_task_id": failure["task_id"],
+            "failed_source_episode_id": failure["source_episode_id"],
+            "failed_source_trajectory_identity": failure["source_trajectory_identity"],
+            "primary_split": failure["primary_split"],
+            "source_success": failure["source_success"],
+            "physical_replay_executed_once": True,
+            "outer_error": error,
+            "exact_inner_failed_subgate_available": False,
+            "diagnostic_preservation_defect": (
+                "The production wrapper replaced the completed replay record with a "
+                "generic failure row before persistence."
+            ),
+            "unavailable_fields_were_not_reconstructed": True,
+            "invalid_action_count_recorded_by_wrapper": failure["invalid_action_count"],
+            "nonfinite_value_count_recorded_by_wrapper": failure["nonfinite_value_count"],
+            "wrapper_simulator_error_count_is_not_a_verified_simulator_exception": True,
+            "planner_or_expert_repair_invoked": False,
+            "production_continued_after_failure": False,
+            "failure_training_corpus_created": False,
+            "result_implication": "RESULT_C",
+            "passed": True,
+        }
+    )
+    production = fingerprinted(
+        {
+            "schema_version": "langmani-v2-phase2b6-partial-production-run-v0",
+            "created_at_utc": _timestamp(),
+            "production_start": start,
+            "source_episode_count": EXPECTED_EPISODES,
+            "attempted_episode_count": len(rows),
+            "accepted_replay_episode_count": len(success_rows),
+            "rejected_episode_count": len(failed),
+            "unattempted_episode_count": EXPECTED_EPISODES - len(rows),
+            "accepted_frame_count": sum(
+                int(cast(int, row["source_action_count"])) for row in success_rows
+            ),
+            "task_summaries": {
+                task_id: cast(Mapping[str, object], summary)["fingerprint"]
+                for task_id, summary in task_summaries.items()
+            },
+            "hard_stop_task_id": failure["task_id"],
+            "hard_stop_source_episode_id": failure["source_episode_id"],
+            "hard_stop_fingerprint": failure_analysis["fingerprint"],
+            "full_replay_completed": False,
+            "lerobot_conversion_started": False,
+            "archive_started": False,
+            "restore_started": False,
+            "student_policy_training_started": False,
+            "optimizer_steps": 0,
+            "passed": False,
+        }
+    )
+    result = classify_result(
+        source_integrity_valid=source.get("passed") is True and source_schema.get("passed") is True,
+        replay_and_derived_integrity_valid=False,
+        accepted_skill_count=1,
+        archive_created=False,
+        restore_valid=False,
+    )
+    if result.value != "RESULT_C":
+        raise Phase2B6RuntimeError("hard-stopped production must classify as Result C")
+    authorization = fingerprinted(authorization_state(accepted=False))
+    classification = fingerprinted(
+        {
+            "schema_version": "langmani-v2-phase2b6-result-classification-v0",
+            "result": result.value,
+            "label": "Production or replay validation failure",
+            "accepted_multiskill_dataset_package_created": False,
+            "accepted_multiskill_dataset_validated": False,
+            "physical_replay_hard_stop": failure_analysis["fingerprint"],
+            "full_lerobot_readback_started": False,
+            "archive_created": False,
+            "restore_validation_started": False,
+            "student_policy_training_started": False,
+            "optimizer_steps": 0,
+            "classification_complete": True,
+            "passed": True,
+        }
+    )
+    remote = fingerprinted(
+        {
+            "schema_version": "langmani-v2-phase2b6-remote-execution-audit-v0",
+            "created_at_utc": _timestamp(),
+            "hostname": platform.node(),
+            "production_commit": start["producer_commit"],
+            "finalizer_commit": _git(repo_root, "rev-parse", "HEAD"),
+            "producer_branch": _git(repo_root, "branch", "--show-current"),
+            "finalizer_worktree_clean": not _git(repo_root, "status", "--porcelain=v1"),
+            "commands": list(command_log),
+            "official_action_replay_only": True,
+            "custom_expert_started": False,
+            "model_loaded": False,
+            "optimizer_created": False,
+            "backward_passes": 0,
+            "optimizer_steps": 0,
+            "student_policy_training_started": False,
+            "passed": True,
+        }
+    )
+    _write_json(evidence_root / "production_failure_analysis.json", failure_analysis)
+    _write_json(evidence_root / "production_run_manifest.json", production)
+    _write_json(evidence_root / "authorization_state.json", authorization)
+    _write_json(evidence_root / "result_classification.json", classification)
+    _write_json(evidence_root / "remote_execution_audit.json", remote)
+    return classification
+
+
 __all__ = [
     "Phase2B6RuntimeError",
     "compute_dataset_statistics",
+    "finalize_result_c",
     "freeze_production_spec",
     "prepare_production",
     "repository_environment_audit",

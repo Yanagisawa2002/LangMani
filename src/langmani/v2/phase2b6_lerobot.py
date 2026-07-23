@@ -1761,13 +1761,52 @@ def write_artifact_manifest(*, evidence_root: Path) -> dict[str, object]:
                 "sha256": "sha256:" + sha256_file(path),
             }
         )
+    result_path = evidence_root / "result_classification.json"
+    result = _read_json(result_path) if result_path.is_file() else {}
+    result_c_required = {
+        "repository_environment_audit.json",
+        "phase2b5_source_package_verification.json",
+        "frozen_production_specification.json",
+        "source_integrity_audit.json",
+        "source_schema_result.json",
+        "production_run_manifest.json",
+        "replay_summary_pickcube.json",
+        "replay_summary_stackcube.json",
+        "replay_summary_pushcube.json",
+        "rejected_production_manifest.json",
+        "observation_action_contract.json",
+        "language_template_manifest.json",
+        "primary_split_manifest.json",
+        "cross_skill_fold_manifests.json",
+        "visual_shift_pilot.json",
+        "padding_audit.json",
+        "task_balance_manifest.json",
+        "production_failure_analysis.json",
+        "result_classification.json",
+        "authorization_state.json",
+        "remote_execution_audit.json",
+    }
+    entry_names = {str(entry["path"]) for entry in entries}
+    if result.get("result") == "RESULT_C":
+        completeness = (
+            result_c_required <= entry_names
+            and not (evidence_root / "accepted_multiskill_dataset_package.json").exists()
+        )
+        expected_scope = "result_c_hard_stop"
+    else:
+        completeness = len(entries) >= 25
+        expected_scope = "accepted_full_production"
     manifest = fingerprinted(
         {
             "schema_version": "langmani-v2-phase2b6-artifact-manifest-v0",
             "file_count": len(entries),
             "files": entries,
             "large_dataset_bytes_committed": False,
-            "passed": len(entries) >= 25,
+            "result_scope": expected_scope,
+            "required_result_c_files": (
+                sorted(result_c_required) if expected_scope == "result_c_hard_stop" else []
+            ),
+            "passed": completeness,
         }
     )
     _write_json(manifest_path, manifest)
