@@ -4,6 +4,7 @@ import copy
 import json
 import zipfile
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 import pytest
@@ -108,7 +109,8 @@ def test_frozen_spec_and_source_commit_enforcement() -> None:
         "task_count": 3,
         "skill_family_count": 3,
     }
-    assert tuple(spec["padding"]["candidate_horizons"]) == ACTION_HORIZONS
+    padding = cast(dict[str, object], spec["padding"])
+    assert tuple(cast(list[int], padding["candidate_horizons"])) == ACTION_HORIZONS
     enforce_starting_point(parent_commit=SOURCE_COMMIT, branch=TARGET_BRANCH)
     with pytest.raises(Phase2B6ContractError, match="must start"):
         enforce_starting_point(parent_commit="0" * 40, branch=TARGET_BRANCH)
@@ -151,7 +153,8 @@ def test_selected_source_zip_hash_and_extraction_equality(tmp_path: Path) -> Non
         expanded.mkdir(parents=True)
         (expanded / "trajectory.h5").write_bytes(source_h5)
         (expanded / "trajectory.json").write_bytes(source_json)
-        task = spec["tasks"][task_id]
+        tasks = cast(dict[str, dict[str, object]], spec["tasks"])
+        task = tasks[task_id]
         task["source_zip_relative_path"] = f"sources/{task_id}.zip"
         task["source_zip_size_bytes"] = archive.stat().st_size
         task["source_zip_sha256"] = "sha256:" + sha256_file(archive)

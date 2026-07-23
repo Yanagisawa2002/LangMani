@@ -29,7 +29,7 @@ from langmani.v2.phase2b6_lerobot import (
 pytestmark = [pytest.mark.integration, pytest.mark.video]
 
 try:
-    LEROBOT_VERSION = metadata.version("lerobot")
+    LEROBOT_VERSION: str | None = metadata.version("lerobot")
 except metadata.PackageNotFoundError:
     LEROBOT_VERSION = None
 

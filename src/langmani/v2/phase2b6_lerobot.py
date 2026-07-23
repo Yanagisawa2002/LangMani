@@ -12,6 +12,7 @@ import os
 import platform
 import shutil
 import subprocess
+import sys
 import time
 from collections import Counter
 from collections.abc import Mapping, Sequence
@@ -67,6 +68,18 @@ VISUAL_SHIFT_ID_FEATURE = "visual_shift_identity"
 
 class Phase2B6LeRobotError(RuntimeError):
     """Raised when conversion, readback, archive, or restore fails closed."""
+
+
+def _as_int(value: object) -> int:
+    """Convert a validated JSON-like scalar without widening public contracts."""
+
+    return int(cast(Any, value))
+
+
+def _as_float(value: object) -> float:
+    """Convert a validated JSON-like scalar without widening public contracts."""
+
+    return float(cast(Any, value))
 
 
 def _timestamp() -> str:
@@ -138,11 +151,11 @@ def lerobot_environment_manifest() -> dict[str, object]:
             "schema_version": "langmani-v2-phase2b6-lerobot-environment-v0",
             "created_at_utc": _timestamp(),
             "python": platform.python_version(),
-            "executable": Path(os.sys.executable).resolve().as_posix(),
+            "executable": Path(sys.executable).resolve().as_posix(),
             "environment_prefix": (
                 os.environ.get("CONDA_PREFIX")
                 or os.environ.get("VIRTUAL_ENV")
-                or Path(os.sys.executable).resolve().parents[1].as_posix()
+                or Path(sys.executable).resolve().parents[1].as_posix()
             ),
             "packages": packages,
             "cuda_runtime_reported_by_torch": torch.version.cuda,
@@ -274,7 +287,7 @@ def _validate_npz(
         state = np.asarray(payload["state"], dtype=np.float32)
         action = np.asarray(payload["action"], dtype=np.float32)
         timestamp = np.asarray(payload["timestamp"], dtype=np.float64)
-    length = int(replay["source_action_count"])
+    length = _as_int(replay["source_action_count"])
     if (
         rgb.shape != (length, *IMAGE_SHAPE)
         or state.shape != (length, 9)
@@ -334,7 +347,7 @@ def convert_task_split_roots(
                     for row in assignments
                     if row["task_id"] == task_id and row["primary_split"] == split
                 ],
-                key=lambda row: int(row["source_episode_id"]),
+                key=lambda row: _as_int(row["source_episode_id"]),
             )
             final_root = primary / "task_roots" / _task_slug(task_id) / "splits" / split
             staging_root = final_root.parent / f".{split}.partial"
@@ -467,11 +480,11 @@ def convert_task_split_roots(
             "dataset_identity": task_spec["dataset_id"],
             "container_relative_path": task_container.relative_to(primary).as_posix(),
             "episode_count": sum(
-                int(cast(Mapping[str, object], report)["episode_count"])
+                _as_int(cast(Mapping[str, object], report)["episode_count"])
                 for report in split_reports.values()
             ),
             "frame_count": sum(
-                int(cast(Mapping[str, object], report)["frame_count"])
+                _as_int(cast(Mapping[str, object], report)["frame_count"])
                 for report in split_reports.values()
             ),
             "tree_digest": task_tree["tree_digest"],
@@ -490,11 +503,11 @@ def convert_task_split_roots(
             "lerobot_environment": environment,
             "task_roots": task_reports,
             "episode_count": sum(
-                int(cast(Mapping[str, object], report)["episode_count"])
+                _as_int(cast(Mapping[str, object], report)["episode_count"])
                 for report in task_reports.values()
             ),
             "frame_count": sum(
-                int(cast(Mapping[str, object], report)["frame_count"])
+                _as_int(cast(Mapping[str, object], report)["frame_count"])
                 for report in task_reports.values()
             ),
             "physical_media_partitioning": (
@@ -509,12 +522,12 @@ def convert_task_split_roots(
                     for report in task_reports.values()
                 )
                 and sum(
-                    int(cast(Mapping[str, object], report)["episode_count"])
+                    _as_int(cast(Mapping[str, object], report)["episode_count"])
                     for report in task_reports.values()
                 )
                 == EXPECTED_EPISODES
                 and sum(
-                    int(cast(Mapping[str, object], report)["frame_count"])
+                    _as_int(cast(Mapping[str, object], report)["frame_count"])
                     for report in task_reports.values()
                 )
                 == EXPECTED_TRANSITIONS
@@ -552,7 +565,7 @@ def convert_visual_shift_roots(
                 for row in assignments
                 if row["task_id"] == task_id and row["primary_split"] == "test_visual_shift"
             ],
-            key=lambda row: int(row["source_episode_id"]),
+            key=lambda row: _as_int(row["source_episode_id"]),
         )
         final_root = primary / "visual_shift_roots" / _task_slug(task_id)
         staging_root = final_root.parent / f".{_task_slug(task_id)}.partial"
@@ -580,7 +593,7 @@ def convert_visual_shift_roots(
             rgb, state, action, _ = _validate_npz(path=path, replay=replay)
             shifted = apply_visual_shift(
                 rgb,
-                exposure_multiplier=float(visual["exposure_multiplier"]),
+                exposure_multiplier=_as_float(visual["exposure_multiplier"]),
                 rgb_channel_multipliers=cast(Sequence[float], visual["rgb_channel_multipliers"]),
             )
             changed_values += int(np.count_nonzero(shifted != rgb))
@@ -667,11 +680,11 @@ def convert_visual_shift_roots(
             "appearance_contract": visual,
             "task_roots": task_reports,
             "episode_count": sum(
-                int(cast(Mapping[str, object], report)["episode_count"])
+                _as_int(cast(Mapping[str, object], report)["episode_count"])
                 for report in task_reports.values()
             ),
             "frame_count": sum(
-                int(cast(Mapping[str, object], report)["frame_count"])
+                _as_int(cast(Mapping[str, object], report)["frame_count"])
                 for report in task_reports.values()
             ),
             "changed_channel_values": total_changed_values,
@@ -926,8 +939,8 @@ def _readback_one_root(
     equality_rows: list[dict[str, object]] = []
     api_episode_count = 0
     for episode in episode_rows:
-        start = int(episode["global_frame_start"])
-        length = int(episode["frame_count"])
+        start = _as_int(episode["global_frame_start"])
+        length = _as_int(episode["frame_count"])
         stop = start + length
         rows = hf[start:stop]
         state = np.asarray(rows[STATE_FEATURE], dtype=np.float32)
@@ -949,7 +962,7 @@ def _readback_one_root(
             failures["state"] += 1
         if not np.all(np.isfinite(action)):
             failures["action"] += 1
-        expected_episode_index = int(episode["local_episode_index"])
+        expected_episode_index = _as_int(episode["local_episode_index"])
         if (
             not np.all(episode_indices == expected_episode_index)
             or not np.array_equal(frame_indices, np.arange(length))
@@ -1012,8 +1025,8 @@ def _readback_one_root(
             }
         )
     videos = _decode_all_videos(root)
-    expected_episodes = int(sidecar["episode_count"])
-    expected_frames = int(sidecar["frame_count"])
+    expected_episodes = _as_int(sidecar["episode_count"])
+    expected_frames = _as_int(sidecar["frame_count"])
     report = {
         "repo_id": sidecar["repo_id"],
         "root": root.as_posix(),
@@ -1023,7 +1036,7 @@ def _readback_one_root(
         "expected_frame_count": expected_frames,
         "api_episode_readback_count": api_episode_count,
         "frame_level_structural_validation_count": sum(
-            int(row["frame_count"]) for row in equality_rows
+            _as_int(row["frame_count"]) for row in equality_rows
         ),
         "failures": failures,
         "video": videos,
@@ -1031,7 +1044,7 @@ def _readback_one_root(
             int(dataset.num_episodes) == expected_episodes
             and int(dataset.num_frames) == expected_frames
             and api_episode_count == expected_episodes
-            and sum(int(row["frame_count"]) for row in equality_rows) == expected_frames
+            and sum(_as_int(row["frame_count"]) for row in equality_rows) == expected_frames
             and all(value == 0 for value in failures.values())
             and videos["passed"] is True
             and videos["decoded_frame_count"] == expected_frames
@@ -1099,16 +1112,18 @@ def run_full_readback(
             ),
             flush=True,
         )
-    total_episodes = sum(int(report["episode_count"]) for report in root_reports)
-    total_frames = sum(int(report["frame_count"]) for report in root_reports)
-    visual_episodes = sum(int(report["episode_count"]) for report in visual_root_reports)
-    visual_frames = sum(int(report["frame_count"]) for report in visual_root_reports)
+    total_episodes = sum(_as_int(report["episode_count"]) for report in root_reports)
+    total_frames = sum(_as_int(report["frame_count"]) for report in root_reports)
+    visual_episodes = sum(
+        _as_int(report["episode_count"]) for report in visual_root_reports
+    )
+    visual_frames = sum(_as_int(report["frame_count"]) for report in visual_root_reports)
     decoded_primary_frames = sum(
-        int(cast(Mapping[str, object], report["video"])["decoded_frame_count"])
+        _as_int(cast(Mapping[str, object], report["video"])["decoded_frame_count"])
         for report in root_reports
     )
     decoded_visual_frames = sum(
-        int(cast(Mapping[str, object], report["video"])["decoded_frame_count"])
+        _as_int(cast(Mapping[str, object], report["video"])["decoded_frame_count"])
         for report in visual_root_reports
     )
     all_reports = [*root_reports, *visual_root_reports]
@@ -1127,10 +1142,11 @@ def run_full_readback(
             "all_generated_episode_readback_count": total_episodes + visual_episodes,
             "all_generated_frame_readback_count": total_frames + visual_frames,
             "api_episode_readback_count": sum(
-                int(report["api_episode_readback_count"]) for report in all_reports
+                _as_int(report["api_episode_readback_count"]) for report in all_reports
             ),
             "frame_level_structural_validation_count": sum(
-                int(report["frame_level_structural_validation_count"]) for report in all_reports
+                _as_int(report["frame_level_structural_validation_count"])
+                for report in all_reports
             ),
             "decoded_frame_count": decoded_primary_frames + decoded_visual_frames,
             "decoded_primary_frame_count": decoded_primary_frames,
@@ -1145,15 +1161,15 @@ def run_full_readback(
                 for report in all_reports
             ),
             "state_failure_count": sum(
-                int(cast(Mapping[str, object], report["failures"])["state"])
+                _as_int(cast(Mapping[str, object], report["failures"])["state"])
                 for report in all_reports
             ),
             "action_failure_count": sum(
-                int(cast(Mapping[str, object], report["failures"])["action"])
+                _as_int(cast(Mapping[str, object], report["failures"])["action"])
                 for report in all_reports
             ),
             "metadata_failure_count": sum(
-                int(cast(Mapping[str, object], report["failures"])["metadata"])
+                _as_int(cast(Mapping[str, object], report["failures"])["metadata"])
                 for report in all_reports
             ),
             "primary_roots": root_reports,
@@ -1224,14 +1240,17 @@ def run_source_to_derived_verification(
     equality = _read_json(production_root / "work" / "derived_equality_intermediate.json")
     derived_rows = cast(list[dict[str, object]], equality["episode_rows"])
     derived_by_source = {
-        (str(row["task_id"]), int(row["source_episode_id"])): row for row in derived_rows
+        (str(row["task_id"]), _as_int(row["source_episode_id"])): row
+        for row in derived_rows
     }
     replay_rows = _load_replay_rows(production_root)
     replay_by_source = {
-        (str(row["task_id"]), int(row["source_episode_id"])): row for row in replay_rows
+        (str(row["task_id"]), _as_int(row["source_episode_id"])): row
+        for row in replay_rows
     }
     split_by_source = {
-        (str(row["task_id"]), int(row["source_episode_id"])): row for row in assignments
+        (str(row["task_id"]), _as_int(row["source_episode_id"])): row
+        for row in assignments
     }
     failures: list[dict[str, object]] = []
     checked = 0
@@ -1249,9 +1268,10 @@ def run_source_to_derived_verification(
                 replay = replay_by_source[(task_id, source_episode_id)]
                 split = split_by_source[(task_id, source_episode_id)]
                 checks = {
-                    "source_action_count": len(source_actions) == int(derived["frame_count"]),
-                    "derived_action_count": int(derived["frame_count"])
-                    == int(replay["source_action_count"]),
+                    "source_action_count": len(source_actions)
+                    == _as_int(derived["frame_count"]),
+                    "derived_action_count": _as_int(derived["frame_count"])
+                    == _as_int(replay["source_action_count"]),
                     "action_hash": source_hash == derived["derived_action_sha256"],
                     "action_values_exact": derived["action_exact"] is True,
                     "source_success": replay["source_success"] is True,
@@ -1507,7 +1527,7 @@ def restore_and_validate(
             sample_episode_indices = sorted({0, len(episodes) // 2, len(episodes) - 1})
             for local_index in sample_episode_indices:
                 episode = episodes[local_index]
-                global_index = int(episode["global_frame_start"])
+                global_index = _as_int(episode["global_frame_start"])
                 row = dataset[global_index]
                 image = _to_numpy(row[IMAGE_FEATURE])
                 state = _to_numpy(row[STATE_FEATURE])

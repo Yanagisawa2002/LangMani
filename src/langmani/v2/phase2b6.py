@@ -549,7 +549,7 @@ def audit_primary_split_leakage(
         "action_sha256",
         "initial_state_sha256",
     )
-    matrix: dict[str, dict[str, object]] = {}
+    matrix: dict[str, dict[str, int]] = {}
     for left_index, left in enumerate(PRIMARY_SPLITS):
         for right in PRIMARY_SPLITS[left_index + 1 :]:
             left_rows = [row for row in assignments if row.get("primary_split") == left]
@@ -703,7 +703,7 @@ def build_padding_audit(
     for horizon in horizons:
         if isinstance(horizon, bool) or not isinstance(horizon, int) or horizon <= 0:
             raise Phase2B6ContractError("padding horizons must be positive integers")
-        grouped: dict[str, dict[str, int]] = {}
+        grouped: dict[str, dict[str, int | float]] = {}
         total_chunks = 0
         padded_chunks = 0
         padded_timesteps = 0

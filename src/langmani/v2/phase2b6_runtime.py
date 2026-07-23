@@ -14,6 +14,7 @@ import platform
 import shutil
 import statistics
 import subprocess
+import sys
 import time
 import zipfile
 from collections import defaultdict
@@ -81,6 +82,18 @@ from langmani.v2.phase2b6 import (
 
 class Phase2B6RuntimeError(RuntimeError):
     """Raised when native production cannot preserve the frozen contract."""
+
+
+def _as_int(value: object) -> int:
+    """Convert a validated JSON-like scalar without widening public contracts."""
+
+    return int(cast(Any, value))
+
+
+def _as_float(value: object) -> float:
+    """Convert a validated JSON-like scalar without widening public contracts."""
+
+    return float(cast(Any, value))
 
 
 def _timestamp() -> str:
@@ -203,11 +216,11 @@ def _runtime_versions() -> dict[str, object]:
             packages[name] = "not_installed"
     return {
         "python": platform.python_version(),
-        "executable": Path(os.sys.executable).resolve().as_posix(),
+        "executable": Path(sys.executable).resolve().as_posix(),
         "environment_prefix": (
             os.environ.get("CONDA_PREFIX")
             or os.environ.get("VIRTUAL_ENV")
-            or Path(os.sys.executable).resolve().parents[1].as_posix()
+            or Path(sys.executable).resolve().parents[1].as_posix()
         ),
         "packages": packages,
     }
@@ -305,7 +318,8 @@ def _storage_audit(paths: Mapping[str, Path]) -> dict[str, object]:
             "free_bytes": usage.free,
         }
     minimum_free = min(
-        int(cast(Mapping[str, object], report)["free_bytes"]) for report in reports.values()
+        _as_int(cast(Mapping[str, object], report)["free_bytes"])
+        for report in reports.values()
     )
     estimated_peak_increment_bytes = 60 * 1024**3
     return {
@@ -647,7 +661,10 @@ def validate_source_schema(
         }
         task_reports.append(report)
     inventory.sort(
-        key=lambda row: (TASK_IDS.index(str(row["task_id"])), int(row["source_episode_id"]))
+        key=lambda row: (
+            TASK_IDS.index(str(row["task_id"])),
+            _as_int(row["source_episode_id"]),
+        )
     )
     inventory_digest = canonical_json_sha256({"episodes": inventory})
     inventory_path = production_root / "work" / "source_episode_inventory.json"
@@ -656,7 +673,7 @@ def validate_source_schema(
         {
             "schema_version": "langmani-v2-phase2b6-source-episode-inventory-v0",
             "episode_count": len(inventory),
-            "transition_count": sum(int(row["transition_count"]) for row in inventory),
+            "transition_count": sum(_as_int(row["transition_count"]) for row in inventory),
             "episodes_digest": inventory_digest,
             "episodes": inventory,
         },
@@ -671,14 +688,15 @@ def validate_source_schema(
             "source_inventory_sha256": "sha256:" + sha256_file(inventory_path),
             "source_inventory_digest": inventory_digest,
             "episode_count": len(inventory),
-            "transition_count": sum(int(row["transition_count"]) for row in inventory),
+            "transition_count": sum(_as_int(row["transition_count"]) for row in inventory),
             "tasks": task_reports,
             "malformed_trajectory_count": sum(
-                int(report["malformed_count"]) for report in task_reports
+                _as_int(report["malformed_count"]) for report in task_reports
             ),
             "passed": (
                 len(inventory) == EXPECTED_EPISODES
-                and sum(int(row["transition_count"]) for row in inventory) == EXPECTED_TRANSITIONS
+                and sum(_as_int(row["transition_count"]) for row in inventory)
+                == EXPECTED_TRANSITIONS
                 and all(report["passed"] is True for report in task_reports)
             ),
         }
@@ -1017,9 +1035,9 @@ def run_visual_shift_pilot(
         document = _read_json(json_path)
         episodes = validate_metadata_document(document, expected_task_id=task_id)
         metadata = {int(row["episode_id"]): row for row in episodes}[
-            int(selected["source_episode_id"])
+            _as_int(selected["source_episode_id"])
         ]
-        env = gym.make(task_id, **_environment_kwargs(document))
+        env = gym.make(task_id, **cast(Any, _environment_kwargs(document)))
         base: Any = env.unwrapped
         try:
             with h5py.File(h5_path, "r") as trajectories:
@@ -1030,7 +1048,7 @@ def run_visual_shift_pilot(
                     metadata=metadata,
                     group=cast(
                         h5py.Group,
-                        trajectories[f"traj_{int(selected['source_episode_id'])}"],
+                        trajectories[f"traj_{_as_int(selected['source_episode_id'])}"],
                     ),
                     capture_arrays=True,
                 )
@@ -1038,7 +1056,7 @@ def run_visual_shift_pilot(
                 raise Phase2B6RuntimeError("visual pilot did not capture arrays")
             shifted = apply_visual_shift(
                 arrays["rgb"],
-                exposure_multiplier=float(visual["exposure_multiplier"]),
+                exposure_multiplier=_as_float(visual["exposure_multiplier"]),
                 rgb_channel_multipliers=cast(Sequence[float], visual["rgb_channel_multipliers"]),
             )
             changed = int(np.count_nonzero(shifted != arrays["rgb"]))
@@ -1131,10 +1149,13 @@ def _contact_sheet_episode_ids(
 ) -> set[int]:
     rows = sorted(
         [row for row in assignments if row["task_id"] == task_id],
-        key=lambda row: (int(row["transition_count"]), int(row["source_episode_id"])),
+        key=lambda row: (
+            _as_int(row["transition_count"]),
+            _as_int(row["source_episode_id"]),
+        ),
     )
     indices = {0, len(rows) // 4, len(rows) // 2, 3 * len(rows) // 4, len(rows) - 1}
-    return {int(rows[index]["source_episode_id"]) for index in indices}
+    return {_as_int(rows[index]["source_episode_id"]) for index in indices}
 
 
 def _mark_full_production_started(
@@ -1191,7 +1212,9 @@ def run_full_replay_production(
         production_root=production_root,
     )
     assignments = _load_assignments(production_root)
-    by_key = {(str(row["task_id"]), int(row["source_episode_id"])): row for row in assignments}
+    by_key = {
+        (str(row["task_id"]), _as_int(row["source_episode_id"])): row for row in assignments
+    }
     progress_path = production_root / "work" / "replay_records.jsonl"
     progress = _read_jsonl(progress_path)
     completed: dict[str, dict[str, Any]] = {}
@@ -1209,7 +1232,7 @@ def run_full_replay_production(
         h5_path, json_path = _selected_paths(source_root, task_id)
         document = _read_json(json_path)
         episodes = validate_metadata_document(document, expected_task_id=task_id)
-        env = gym.make(task_id, **_environment_kwargs(document))
+        env = gym.make(task_id, **cast(Any, _environment_kwargs(document)))
         base: Any = env.unwrapped
         if str(base.control_mode) != CONTROL_MODE or int(base.control_freq) != 20:
             env.close()
