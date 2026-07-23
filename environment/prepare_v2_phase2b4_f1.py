@@ -139,6 +139,8 @@ def main() -> int:
     prior = verify_phase2b4_f0_artifacts(F0_ARTIFACT_ROOT)
     if prior["passed"] is not True or prior["result"] != "RESULT_C":
         raise RuntimeError("frozen F0 evidence verification failed")
+    f0_manifest = _read(F0_ARTIFACT_ROOT / "artifact_manifest.json")
+    f0_authorization = _read(F0_ARTIFACT_ROOT / "authorization_state.json")
     prior_payload = _fingerprinted(
         {
             "schema_version": "langmani-v2-phase2b4-f1-prior-evidence-verification-v0",
@@ -146,8 +148,8 @@ def main() -> int:
             "result": prior["result"],
             "artifact_hash_checks": prior["artifact_hash_checks"],
             "artifact_size_checks": prior["artifact_size_checks"],
-            "checkpoint": prior["checkpoint"],
-            "prior_authorization_state": prior["authorization_state"],
+            "checkpoint": f0_manifest["checkpoint"],
+            "prior_authorization_state": f0_authorization,
             "prior_evidence_immutable": True,
             "passed": True,
         }
