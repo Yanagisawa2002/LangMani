@@ -1437,9 +1437,8 @@ def record_infrastructure_hard_stop(*, output_root: Path, evidence_root: Path) -
             "diagnosis": {
                 "primary_layer": "environment_construction",
                 "categorization": "infrastructure_runtime_configuration",
-                "working_vulkan_loader_path_exists": (
-                    default["passed"] is True and egl["passed"] is True
-                ),
+                "working_vulkan_loader_path_exists": egl["passed"] is True,
+                "runtime_selected_loader_is_incompatible": default["passed"] is False,
                 "legacy_glx_icd_is_incompatible": legacy["passed"] is False,
                 "inference": (
                     "the failed SAPIEN invocation did not select the working "
@@ -1460,7 +1459,7 @@ def record_infrastructure_hard_stop(*, output_root: Path, evidence_root: Path) -
             "production_resumed": False,
             "optimizer_steps": 0,
             "passed": (
-                default["passed"] is True and legacy["passed"] is False and egl["passed"] is True
+                default["passed"] is False and legacy["passed"] is False and egl["passed"] is True
             ),
         }
     )
