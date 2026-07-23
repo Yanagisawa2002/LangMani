@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
@@ -103,7 +104,17 @@ def load_production_spec(path: str | Path) -> dict[str, Any]:
     """Load the frozen JSON-compatible YAML and enforce material invariants."""
 
     spec_path = Path(path).resolve()
-    spec = _read_json(spec_path)
+    try:
+        text = spec_path.read_text(encoding="utf-8")
+        try:
+            loaded = json.loads(text)
+        except json.JSONDecodeError:
+            loaded = json.loads(re.sub(r",(?=\s*[}\]])", "", text))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise Phase2B6ContractError(f"failed to read JSON-compatible YAML {spec_path}") from error
+    if not isinstance(loaded, dict):
+        raise Phase2B6ContractError("production specification must contain one object")
+    spec = loaded
     if spec.get("schema_version") != SPEC_SCHEMA:
         raise Phase2B6ContractError("production specification schema changed")
     if spec.get("derived_dataset_version") != DATASET_PACKAGE_ID:
@@ -959,7 +970,9 @@ def validate_student_feature_names(feature_names: Iterable[str]) -> None:
     if not required <= actual:
         raise Phase2B6ContractError(f"student schema lacks {sorted(required - actual)}")
     if actual & prohibited:
-        raise Phase2B6ContractError(f"student schema contains {sorted(actual & prohibited)}")
+        raise Phase2B6ContractError(
+            f"student schema contains privileged fields {sorted(actual & prohibited)}"
+        )
 
 
 def group_assignments(
