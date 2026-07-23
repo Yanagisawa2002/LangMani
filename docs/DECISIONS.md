@@ -3222,3 +3222,39 @@ nonzero pushing competence. The custom PPO teacher route is frozen for the curre
 formulation; another PPO iteration, Probe C, reward retry, budget increase, or algorithm switch is
 not authorized. Formal seeds 66300--66399, full PPO, expert qualification, collection, LeRobot,
 SmolVLA, and student training remain unaccessed and unauthorized.
+
+## D-129 - Qualify pinned official demonstrations without reopening the custom route
+
+Phase 2B.5 begins only from immutable F1 Result C commit
+`6ca3786702ada4e92be607a5293b9c3c31d2a7d4`. It permanently freezes custom expert, geometry,
+simulator-MPC, reset-replay, and PPO development for `LangMani-PushToRegion-v0`. Historical
+evidence is rehashed but never rewritten, and no formal custom seed, missing v1 byte, or independent
+rejected branch may become new training data.
+
+The official source identity is `haosulab/ManiSkill_Demonstrations` at immutable revision
+`d674485bbffdd533914e52d272fdda34c0515608`, used with ManiSkill 3.0.1 and upstream source
+revision `a4a4f9272ad64b1564035874b605ceb687b63ed8`. Only required candidate archives are retained
+outside the repository, byte-sized, SHA-256 addressed, and safely expanded after member-path and
+symlink checks. Source acceptance reads the actual JSON/HDF5 records; a registry entry or sample
+video is insufficient.
+
+The preferred common contract is direct Panda `pd_joint_pos`, `float32[8]`, 20 Hz, five simulator
+substeps per action. A source using another mode can be classified incompatible or, only with
+separate deterministic evidence, convertible; Phase 2B.5 never clips, projects, repairs, or silently
+converts it. Official success predicates stay unchanged. Bounded replay uses 20 deterministic,
+length-spanning/reset-diverse episodes per candidate. A selected source then uses 100 such episodes.
+Both gates require at least 99% categorical agreement, exactly 100% action/frame alignment, zero
+invalid actions, and zero simulator exceptions.
+
+The future-student frame allowlist is base-camera `uint8[256,256,3]` RGB without cropping,
+`PandaPolicyStateV0 float32[9]`, the recorded action, one task ID, one canonical instruction, and a
+20 Hz timestamp. Full environment states and object/goal poses remain separate diagnostics. Only
+five replay-passing episodes per selected task may be converted through a separate LeRobot 0.6
+environment and read back with the public dataset API. The pilot is not full dataset production.
+
+Result A requires three genuine skill families plus all source, direct-action, replay, observation,
+privilege, LeRobot, and split-design gates. Even Result A grants only
+`phase2b6_dataset_production_eligible=true`. `act_training_authorized=false`,
+`smolvla_training_authorized=false`, `vla_jepa_training_authorized=false`,
+`student_policy_training_started=false`, and `custom_push_expert_route_active=false` remain
+mandatory, and no policy training follows automatically.

@@ -135,6 +135,38 @@ F1 completed as Result C. The residual transform improved local initial motion, 
 interactions. Probe B did not run. The custom PPO teacher route is closed for this task formulation,
 and all downstream authorizations remain false.
 
+Phase 2B.5 permanently leaves that custom source route frozen and qualifies pinned official
+ManiSkill demonstration bytes instead. It downloads only the required candidate archives, hashes
+and inspects their real JSON/HDF5 records, accepts no repaired or clipped action, replays 20 and
+then 100 stratified official action sequences per selected task, reconstructs five RGB/Panda-state
+episodes per selected task, and round-trips only that bounded pilot through an isolated LeRobot
+0.6 runtime. It creates no expert, planner, optimizer, full dataset, or trained model. See the
+[`Phase 2B.5 plan`](docs/langmani_v2/phase_2b5_plan.md) and
+[`demonstration mechanism audit`](docs/langmani_v2/phase_2b5_maniskill_demo_audit.md).
+
+The native no-training stages are explicitly separate:
+
+```bash
+python environment/run_v2_phase2b5_official_demos.py schema --source-root <pinned-source-root>
+python environment/run_v2_phase2b5_official_demos.py bounded-replay \
+  --source-root <pinned-source-root>
+python environment/run_v2_phase2b5_official_demos.py strong-replay \
+  --source-root <pinned-source-root>
+python environment/run_v2_phase2b5_official_demos.py pilot \
+  --source-root <pinned-source-root> --pilot-root <new-pilot-root>
+python environment/run_v2_phase2b5_official_demos.py convert \
+  --pilot-root <pilot-root> --dataset-root <new-lerobot-pilot-root>
+python environment/run_v2_phase2b5_official_demos.py readback \
+  --dataset-root <lerobot-pilot-root>
+python environment/run_v2_phase2b5_official_demos.py padding
+```
+
+Compact finalized evidence is independently checked without simulation or policy loading:
+
+```bash
+python environment/verify_v2_phase2b5.py
+```
+
 The completed Phase 2B archive can be independently re-audited without starting training:
 
 ```bash
