@@ -318,8 +318,7 @@ def _storage_audit(paths: Mapping[str, Path]) -> dict[str, object]:
             "free_bytes": usage.free,
         }
     minimum_free = min(
-        _as_int(cast(Mapping[str, object], report)["free_bytes"])
-        for report in reports.values()
+        _as_int(cast(Mapping[str, object], report)["free_bytes"]) for report in reports.values()
     )
     estimated_peak_increment_bytes = 60 * 1024**3
     return {
@@ -1212,9 +1211,7 @@ def run_full_replay_production(
         production_root=production_root,
     )
     assignments = _load_assignments(production_root)
-    by_key = {
-        (str(row["task_id"]), _as_int(row["source_episode_id"])): row for row in assignments
-    }
+    by_key = {(str(row["task_id"]), _as_int(row["source_episode_id"])): row for row in assignments}
     progress_path = production_root / "work" / "replay_records.jsonl"
     progress = _read_jsonl(progress_path)
     completed: dict[str, dict[str, Any]] = {}

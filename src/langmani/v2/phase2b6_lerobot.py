@@ -1114,9 +1114,7 @@ def run_full_readback(
         )
     total_episodes = sum(_as_int(report["episode_count"]) for report in root_reports)
     total_frames = sum(_as_int(report["frame_count"]) for report in root_reports)
-    visual_episodes = sum(
-        _as_int(report["episode_count"]) for report in visual_root_reports
-    )
+    visual_episodes = sum(_as_int(report["episode_count"]) for report in visual_root_reports)
     visual_frames = sum(_as_int(report["frame_count"]) for report in visual_root_reports)
     decoded_primary_frames = sum(
         _as_int(cast(Mapping[str, object], report["video"])["decoded_frame_count"])
@@ -1145,8 +1143,7 @@ def run_full_readback(
                 _as_int(report["api_episode_readback_count"]) for report in all_reports
             ),
             "frame_level_structural_validation_count": sum(
-                _as_int(report["frame_level_structural_validation_count"])
-                for report in all_reports
+                _as_int(report["frame_level_structural_validation_count"]) for report in all_reports
             ),
             "decoded_frame_count": decoded_primary_frames + decoded_visual_frames,
             "decoded_primary_frame_count": decoded_primary_frames,
@@ -1240,17 +1237,14 @@ def run_source_to_derived_verification(
     equality = _read_json(production_root / "work" / "derived_equality_intermediate.json")
     derived_rows = cast(list[dict[str, object]], equality["episode_rows"])
     derived_by_source = {
-        (str(row["task_id"]), _as_int(row["source_episode_id"])): row
-        for row in derived_rows
+        (str(row["task_id"]), _as_int(row["source_episode_id"])): row for row in derived_rows
     }
     replay_rows = _load_replay_rows(production_root)
     replay_by_source = {
-        (str(row["task_id"]), _as_int(row["source_episode_id"])): row
-        for row in replay_rows
+        (str(row["task_id"]), _as_int(row["source_episode_id"])): row for row in replay_rows
     }
     split_by_source = {
-        (str(row["task_id"]), _as_int(row["source_episode_id"])): row
-        for row in assignments
+        (str(row["task_id"]), _as_int(row["source_episode_id"])): row for row in assignments
     }
     failures: list[dict[str, object]] = []
     checked = 0
@@ -1268,8 +1262,7 @@ def run_source_to_derived_verification(
                 replay = replay_by_source[(task_id, source_episode_id)]
                 split = split_by_source[(task_id, source_episode_id)]
                 checks = {
-                    "source_action_count": len(source_actions)
-                    == _as_int(derived["frame_count"]),
+                    "source_action_count": len(source_actions) == _as_int(derived["frame_count"]),
                     "derived_action_count": _as_int(derived["frame_count"])
                     == _as_int(replay["source_action_count"]),
                     "action_hash": source_hash == derived["derived_action_sha256"],
