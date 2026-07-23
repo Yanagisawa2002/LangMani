@@ -3093,3 +3093,33 @@ measurement was created. `mpc_pilot_eligible=false`, `mpc_pilot_authorized=false
 `expert_qualification_authorized=false`, `data_collection_authorized=false`,
 `smolvla_training_authorized=false`, `training_started=false`, and
 `demonstration_source_validated=false`.
+
+## D-125 - Freeze the bounded Phase 2B.4-F0 PPO teacher feasibility protocol
+
+Phase 2B.4-F0 starts only from RR Result D commit
+`3ded856bc0fba7cd749f1fb0caf738fd7fce5751`. The independent geometry commit
+`ae6aae49c61d96c68de434e08dc1167461a29543` remains excluded. MPC Result C and RR Result D are
+immutable historical evidence: the former invalidated public state-clone continuation for MPC;
+the latter found no executable historical action prefix and made no physical nondeterminism claim.
+
+The compatible maintained reference is ManiSkill 3.0.1 PPO at tag commit
+`a4a4f9272ad64b1564035874b605ceb687b63ed8`. F0 preserves its separate three-layer 256-unit tanh
+actor/critic, rollout, GAE, clipped surrogate, and Adam structure, but rejects the reference
+Normal-plus-clamp action path. One Gaussian-latent/tanh/affine distribution, parameterized by the
+active environment bounds, now owns stochastic rollout, update likelihood, deterministic
+evaluation, and checkpoint reconstruction. No emitted action is clipped, projected, rejected,
+replaced, or delegated to an expert.
+
+Before learning, F0 freezes an 87D current privileged teacher observation, the separate
+`base_camera + PandaPolicyStateV0[9]` future-student schema, fixed non-fitted state scales, reward
+revision 0, five disjoint seed namespaces, 128 vector environments, and exactly 1,048,576 micro
+steps. The reward-hacking audit passed without repair. The 48-episode micro gate must pass before
+one 60-episode broader development evaluation. A micro failure hard-stops as Result C; an invalid
+pipeline/reward stops as Result D.
+
+Formal seeds 66300--66399 and future full-development identities remain sealed. F0 creates no
+demonstration, archive, failure corpus, LeRobot dataset, split, student statistic, or accepted
+dataset package. Even Result A sets only `ppo_full_training_eligible=true`;
+`ppo_full_training_authorized`, `expert_qualification_authorized`,
+`data_collection_authorized`, `smolvla_training_authorized`,
+`training_started_for_student_policy`, and `demonstration_source_validated` remain false.

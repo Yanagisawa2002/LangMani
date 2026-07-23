@@ -106,6 +106,15 @@ execution. This is not a physical nondeterminism result and does not rewrite Pha
 No reset, replay, fixed probe, runtime measurement, MPC pilot, expert qualification, collection,
 or training ran. Every eligibility and authorization flag remains false.
 
+Phase 2B.4-F0 is a separately isolated privileged-state PPO teacher feasibility study rooted at
+the RR Result D commit. It may run one 1,048,576-step micro PPO configuration and, only after its
+48-episode gate passes, one 60-episode broader development evaluation. It must preserve the
+unchanged push environment and native `float32[8]` `pd_joint_pos` action, use only current
+privileged teacher state, keep the future student schema privilege-free, and structurally bound
+actions with one tanh-affine transform. Formal seeds 66300--66399, full PPO training, the 95/100
+qualification, demonstrations, datasets, collection, SmolVLA, and student training remain sealed.
+`ppo_full_training_eligible=true` may describe Result A only and never grants authorization.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
@@ -268,6 +277,13 @@ python environment/verify_v2_phase2b3.py
 
 # Phase 2B.3.1-RR compact Result D evidence verification (no simulator execution)
 python environment/verify_v2_phase2b3_rr.py
+
+# Phase 2B.4-F0 deterministic contracts and separately invoked native target stages
+python environment/prepare_v2_phase2b4_f0.py
+CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_ppo.py --smoke
+CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_ppo.py --train-micro
+CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_ppo.py \
+  --evaluate-micro outputs/diagnostics/v2/phase2b4_f0/micro/micro_checkpoint.pt
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,

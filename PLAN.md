@@ -65,6 +65,15 @@ episode or boundary was selected, and no GPU, simulator, reset, replay, probe, r
 expert, collection, or training ran. Result D is not a new physical transition result and leaves
 the Phase 2B.3 Result C evidence unchanged.
 
+Phase 2B.4-F0 is the active, separately isolated privileged-state PPO teacher feasibility study.
+It starts exactly from the RR Result D commit and excludes the independent geometry branch. F0
+freezes an 87D current-state teacher observation, a no-privilege future-student schema, one
+tanh-affine native action distribution, reward revision 0, disjoint seed namespaces, 128 GPU
+environments, and a 1,048,576-step single-configuration micro budget. The 48-episode micro gate
+must pass before the 60-episode broader development evaluation can run. Formal seeds
+66300--66399, full PPO training, the 95/100 qualification, collection, datasets, SmolVLA, and
+student training remain sealed. Even Result A grants eligibility only, never authorization.
+
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected

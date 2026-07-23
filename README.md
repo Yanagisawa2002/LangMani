@@ -86,6 +86,22 @@ The Result D package is also verified without simulator execution:
 python environment/verify_v2_phase2b3_rr.py
 ```
 
+Phase 2B.4-F0 is a bounded privileged-state PPO teacher feasibility study over the unchanged push
+environment. It creates no demonstrations or dataset and never accesses formal seeds. Prepare the
+fixed CPU-readable contracts first; the later commands require the native CUDA target and each
+stage is invoked separately:
+
+```bash
+python environment/prepare_v2_phase2b4_f0.py
+CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_ppo.py --smoke
+CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_ppo.py --train-micro
+CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_ppo.py \
+  --evaluate-micro outputs/diagnostics/v2/phase2b4_f0/micro/micro_checkpoint.pt
+```
+
+The development evaluation is allowed only when the immutable micro report passes. F0 never
+starts full PPO training, expert qualification, data collection, SmolVLA, or student training.
+
 The completed Phase 2B archive can be independently re-audited without starting training:
 
 ```bash
