@@ -235,6 +235,24 @@ def test_result_c_is_mixed_physical_outcome() -> None:
     )
 
 
+def test_result_d_preserves_infrastructure_hard_stop() -> None:
+    report = classify_result(
+        source_identity_proven=True,
+        control_runs=[],
+        mode_a_runs=[],
+        mode_b_runs=[],
+        mode_c_runs=[],
+        historical_producer_final_success=False,
+        infrastructure_failure=True,
+    )
+    assert report["result"] == Phase2B61Result.RESULT_D.value
+    assert (
+        report["primary_failure_classification"]
+        == FailureClassification.INSUFFICIENT_EVIDENCE.value
+    )
+    assert report["secondary_contributing_factors"] == ["environment_construction_failure"]
+
+
 def test_result_a_localizes_observation_or_writer_layer() -> None:
     controls = [_run(episode_id=936), _run(episode_id=937)]
     mode_a = [_run(episode_id=938) for _ in range(3)]

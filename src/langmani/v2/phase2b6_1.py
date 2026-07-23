@@ -409,6 +409,7 @@ def classify_result(
     mode_b_runs: Sequence[Mapping[str, object]],
     mode_c_runs: Sequence[Mapping[str, object]],
     historical_producer_final_success: bool | None,
+    infrastructure_failure: bool = False,
 ) -> dict[str, object]:
     """Classify the bounded evidence without authorizing production or training."""
 
@@ -421,7 +422,13 @@ def classify_result(
     elif not controls_pass:
         result = Phase2B61Result.RESULT_D
         primary = FailureClassification.INSUFFICIENT_EVIDENCE
-        secondary = ["accepted_control_failure"]
+        secondary = [
+            (
+                "environment_construction_failure"
+                if infrastructure_failure
+                else "accepted_control_failure"
+            )
+        ]
         physical_valid = None
     elif len(mode_a_runs) != 3:
         result = Phase2B61Result.RESULT_D
@@ -516,9 +523,12 @@ def eligibility_state(classification: Mapping[str, object]) -> dict[str, object]
             "phase2b6_reproduction_run_eligible": result is Phase2B61Result.RESULT_A,
             "phase2b6_protocol_revision_eligible": result is Phase2B61Result.RESULT_A,
             "source_episode_exclusion_review_eligible": result is Phase2B61Result.RESULT_B,
-            "source_replay_determinism_validated": not (
-                result is Phase2B61Result.RESULT_C
-                and primary is FailureClassification.INTERMITTENT_PHYSICAL_NONDETERMINISM
+            "source_replay_determinism_validated": (
+                result is not Phase2B61Result.RESULT_D
+                and not (
+                    result is Phase2B61Result.RESULT_C
+                    and primary is FailureClassification.INTERMITTENT_PHYSICAL_NONDETERMINISM
+                )
             ),
             "eligibility_is_authorization": False,
             "passed": True,

@@ -33,6 +33,7 @@ REQUIRED_FILES = {
     "frozen_partial_output_inventory.json",
     "source_episode_identity_manifest.json",
     "historical_evidence_audit.json",
+    "infrastructure_failure_report.json",
     "forensic_protocol.json",
     "producer_forensic_call_sequence_audit.json",
     "control_episode_results.json",
@@ -107,6 +108,7 @@ def verify(artifact_root: Path) -> dict[str, object]:
     mode_a = cast(list[Mapping[str, object]], documents["episode_938_mode_a_results.json"]["runs"])
     mode_b = cast(list[Mapping[str, object]], documents["episode_938_mode_b_results.json"]["runs"])
     mode_c = cast(list[Mapping[str, object]], documents["episode_938_mode_c_result.json"]["runs"])
+    infrastructure = documents.get("infrastructure_failure_report.json")
     run_gate_checks = []
     for run in control_runs + mode_a + mode_b + mode_c:
         sub_gates = cast(Mapping[str, Mapping[str, object]], run["sub_gates"])
@@ -126,6 +128,7 @@ def verify(artifact_root: Path) -> dict[str, object]:
         mode_b_runs=mode_b,
         mode_c_runs=mode_c,
         historical_producer_final_success=False,
+        infrastructure_failure=infrastructure is not None,
     )
     recorded_classification = documents["result_classification.json"]
     recomputed_eligibility = eligibility_state(recomputed_classification)
@@ -141,12 +144,20 @@ def verify(artifact_root: Path) -> dict[str, object]:
         "all_hashes": bool(hash_checks) and all(hash_checks.values()),
         "all_sizes": bool(size_checks) and all(size_checks.values()),
         "all_document_fingerprints": bool(fingerprints) and all(fingerprints.values()),
-        "explicit_run_gates": bool(run_gate_checks) and all(run_gate_checks),
-        "controls_exact": control_ids == list(CONTROL_EPISODE_IDS)
-        and controls_validated(control_runs),
-        "mode_a_budget_exact": len(mode_a) == 3,
+        "explicit_run_gates": all(run_gate_checks),
+        "controls_exact": (
+            control_ids == list(CONTROL_EPISODE_IDS) and controls_validated(control_runs)
+            if infrastructure is None
+            else not control_runs
+            and infrastructure["passed"] is True
+            and infrastructure["attempt_result"]["source_action_submissions"] == 0
+        ),
+        "mode_a_budget_exact": len(mode_a) == 3 if infrastructure is None else not mode_a,
         "mode_b_budget_not_exceeded": len(mode_b) <= 2,
         "mode_c_budget_not_exceeded": len(mode_c) <= 1,
+        "hard_stop_preserved": (
+            True if infrastructure is None else not mode_a and not mode_b and not mode_c
+        ),
         "classification_recomputed": recomputed_classification == recorded_classification,
         "eligibility_recomputed": recomputed_eligibility == recorded_eligibility,
         "authorization_recomputed": expected_authorization == recorded_authorization,

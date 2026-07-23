@@ -9,6 +9,7 @@ from pathlib import Path
 from langmani.v2.phase2b6_1_runtime import (
     finalize_forensics,
     prepare_forensics,
+    record_infrastructure_hard_stop,
     run_forensic_replay,
     write_artifact_manifest,
 )
@@ -22,7 +23,13 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "stage",
-        choices=("preflight", "run", "finalize", "artifact-manifest"),
+        choices=(
+            "preflight",
+            "run",
+            "record-infrastructure-hard-stop",
+            "finalize",
+            "artifact-manifest",
+        ),
     )
     parser.add_argument("--repo-root", type=Path, default=PROJECT_ROOT)
     parser.add_argument("--source-root", type=Path)
@@ -79,6 +86,11 @@ def main() -> int:
             mode_value=args.mode,
             episode_id=_required_int(args.episode_id, "--episode-id"),
             repetition=_required_int(args.repetition, "--repetition"),
+        )
+    elif args.stage == "record-infrastructure-hard-stop":
+        result = record_infrastructure_hard_stop(
+            output_root=output_root,
+            evidence_root=evidence_root,
         )
     elif args.stage == "finalize":
         result = finalize_forensics(

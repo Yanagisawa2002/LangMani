@@ -203,6 +203,34 @@ def _gpu_audit() -> dict[str, object]:
         return {"available": False, "error": f"{type(error).__name__}: {error}"}
 
 
+def _command_audit(
+    command: Sequence[str], *, environment: Mapping[str, str] | None = None
+) -> dict[str, object]:
+    try:
+        result = subprocess.run(
+            list(command),
+            check=False,
+            capture_output=True,
+            text=True,
+            env=dict(environment) if environment is not None else None,
+        )
+        return {
+            "command": list(command),
+            "exit_code": result.returncode,
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "passed": result.returncode == 0,
+        }
+    except OSError as error:
+        return {
+            "command": list(command),
+            "exit_code": None,
+            "stdout": "",
+            "stderr": f"{type(error).__name__}: {error}",
+            "passed": False,
+        }
+
+
 def _process_audit() -> dict[str, object]:
     prohibited_terms = (
         "run_v2_phase2b6.py produce",
@@ -1336,6 +1364,110 @@ def run_forensic_replay(
     return report
 
 
+def record_infrastructure_hard_stop(*, output_root: Path, evidence_root: Path) -> dict[str, object]:
+    """Freeze the observed control-936 environment-construction hard stop.
+
+    This stage performs read-only Vulkan diagnostics. It does not construct a
+    simulator and cannot be used to retry the failed control.
+    """
+
+    run_directory = output_root / "runs" / "stackcube_936" / "mode_A" / "repetition_1"
+    if not run_directory.is_dir():
+        raise Phase2B61RuntimeError("failed control attempt directory is missing")
+    if (run_directory / "forensic_run.json").exists():
+        raise Phase2B61RuntimeError("control attempt unexpectedly completed")
+    other_run_directories = [
+        path
+        for path in (output_root / "runs").glob("stackcube_*/mode_*/repetition_*")
+        if path != run_directory
+    ]
+    if other_run_directories:
+        raise Phase2B61RuntimeError("later forensic runs exist after the hard stop")
+    base_environment = dict(os.environ)
+    default = _command_audit(["vulkaninfo", "--summary"])
+    legacy = _command_audit(
+        ["vulkaninfo", "--summary"],
+        environment={
+            **base_environment,
+            "VK_ICD_FILENAMES": "/etc/vulkan/icd.d/nvidia_icd.json",
+        },
+    )
+    egl = _command_audit(
+        ["vulkaninfo", "--summary"],
+        environment={
+            **base_environment,
+            "VK_ICD_FILENAMES": "/etc/vulkan/icd.d/my_nvidia_icd.json",
+        },
+    )
+    report = fingerprinted(
+        {
+            "schema_version": "langmani-v2-phase2b6-1-infrastructure-hard-stop-v0",
+            "created_at_utc": _timestamp(),
+            "attempted_run": {
+                "task_id": TASK_ID,
+                "episode_id": 936,
+                "mode": "A",
+                "repetition": 1,
+                "fresh_process": True,
+            },
+            "attempt_result": {
+                "environment_creation_started": True,
+                "environment_creation_succeeded": False,
+                "reset_started": False,
+                "source_action_submissions": 0,
+                "source_episode_936_physical_outcome_observed": False,
+                "error_type": "RuntimeError",
+                "error_message": "vk::createInstanceUnique: ErrorIncompatibleDriver",
+                "observed_renderer_messages": [
+                    "Extension VK_KHR_external_memory_capabilities is not available",
+                    "Extension VK_KHR_external_semaphore_capabilities is not available",
+                    "Your GPU driver does not support Vulkan",
+                ],
+                "original_exit_code": 1,
+                "original_stderr_log_file_created": False,
+                "evidence_status": "observed_terminal_output_and_empty_run_directory",
+            },
+            "diagnostics": {
+                "runtime_environment_vk_icd_filenames": os.environ.get("VK_ICD_FILENAMES"),
+                "gpu": _gpu_audit(),
+                "default_loader": default,
+                "legacy_glx_icd": legacy,
+                "egl_icd": egl,
+            },
+            "diagnosis": {
+                "primary_layer": "environment_construction",
+                "categorization": "infrastructure_runtime_configuration",
+                "working_vulkan_loader_path_exists": (
+                    default["passed"] is True and egl["passed"] is True
+                ),
+                "legacy_glx_icd_is_incompatible": legacy["passed"] is False,
+                "inference": (
+                    "the failed SAPIEN invocation did not select the working "
+                    "Vulkan ICD; this is an infrastructure/configuration result, "
+                    "not a StackCube replay outcome"
+                ),
+                "preflight_gap": (
+                    "the original preflight recorded GPU presence but did not "
+                    "construct a Vulkan instance"
+                ),
+            },
+            "hard_stop_triggered": True,
+            "control_rerun_performed": False,
+            "episode_937_run": False,
+            "episode_938_run_count": 0,
+            "mode_b_run_count": 0,
+            "mode_c_run_count": 0,
+            "production_resumed": False,
+            "optimizer_steps": 0,
+            "passed": (
+                default["passed"] is True and legacy["passed"] is False and egl["passed"] is True
+            ),
+        }
+    )
+    _write_json(evidence_root / "infrastructure_failure_report.json", report)
+    return report
+
+
 def _load_runs(output_root: Path, episode_id: int, mode: str) -> list[dict[str, Any]]:
     directory = output_root / "runs" / f"stackcube_{episode_id}" / f"mode_{mode}"
     if not directory.is_dir():
@@ -1354,6 +1486,8 @@ def finalize_forensics(*, output_root: Path, evidence_root: Path) -> dict[str, o
     mode_b = _load_runs(output_root, 938, "B")
     mode_c = _load_runs(output_root, 938, "C")
     source = _read_json(evidence_root / "source_episode_identity_manifest.json")
+    infrastructure_path = evidence_root / "infrastructure_failure_report.json"
+    infrastructure = _read_json(infrastructure_path) if infrastructure_path.is_file() else None
     classification = classify_result(
         source_identity_proven=source["producer_input_identity_proven"] is True,
         control_runs=control_runs,
@@ -1361,6 +1495,7 @@ def finalize_forensics(*, output_root: Path, evidence_root: Path) -> dict[str, o
         mode_b_runs=mode_b,
         mode_c_runs=mode_c,
         historical_producer_final_success=False,
+        infrastructure_failure=infrastructure is not None,
     )
     eligibility = eligibility_state(classification)
     authorization = authorization_state()
@@ -1461,6 +1596,10 @@ def finalize_forensics(*, output_root: Path, evidence_root: Path) -> dict[str, o
         {
             "schema_version": "langmani-v2-phase2b6-1-control-results-v0",
             "runs": control_runs,
+            "infrastructure_failure": infrastructure,
+            "control_936_environment_created": False if infrastructure else None,
+            "control_936_physical_outcome_observed": False if infrastructure else None,
+            "control_937_not_run_due_to_hard_stop": infrastructure is not None,
             "passed": len(control_runs) == 2
             and all(run_passed_for_mode(run) for run in control_runs),
         }
@@ -1516,6 +1655,7 @@ def finalize_forensics(*, output_root: Path, evidence_root: Path) -> dict[str, o
             "mode_a_run_count": len(mode_a),
             "mode_b_run_count": len(mode_b),
             "mode_c_run_count": len(mode_c),
+            "infrastructure_failure": infrastructure,
             "stack_939_or_later_processed": False,
             "pushcube_processed": False,
             "production_resumed": False,
@@ -1563,6 +1703,7 @@ __all__ = [
     "inventory_frozen_output",
     "prepare_forensics",
     "producer_call_sequence_audit",
+    "record_infrastructure_hard_stop",
     "repository_environment_audit",
     "run_forensic_replay",
     "write_artifact_manifest",
