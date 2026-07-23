@@ -97,7 +97,7 @@ def test_official_source_identity_and_file_hashing(tmp_path: Path) -> None:
     source = tmp_path / "source.bin"
     source.write_bytes(b"official")
     assert sha256_file(source) == (
-        "b7e0372e09537b2128e4f92394075ce8bccb7600a1acc63c137754c146c78699"
+        "6896191a14f6c66534bac457f50996b9330cd702cb6dbaae4c08d1d213e93d98"
     )
     linked = tmp_path / "linked.bin"
     try:

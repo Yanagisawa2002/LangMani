@@ -245,7 +245,7 @@ PINNED_SOURCE_FILES: Final = {
             "PullCube-v1",
             "PullCube-v1.zip",
             11_141_008,
-            "582ca678e1d28691d408cb738fa1723e8ec28d8c6390715eaacc33c5dd740cbd7",
+            "582ca678e1d28691d408cb738fa1723e8ec28d8c6390715eacc33c5dd740cbd7",
         ),
     )
 }
@@ -486,17 +486,17 @@ def select_stratified_episode_ids(
     selected: list[tuple[int, int, str]] = []
     seen_ids: set[int] = set()
     for index in targets:
-        row = ordered[int(index)]
-        if row[0] not in seen_ids:
-            selected.append(row)
-            seen_ids.add(row[0])
-    for row in ordered:
+        entry = ordered[int(index)]
+        if entry[0] not in seen_ids:
+            selected.append(entry)
+            seen_ids.add(entry[0])
+    for entry in ordered:
         if len(selected) == count:
             break
-        if row[0] not in seen_ids:
-            selected.append(row)
-            seen_ids.add(row[0])
-    return tuple(row[0] for row in sorted(selected, key=lambda item: item[0]))
+        if entry[0] not in seen_ids:
+            selected.append(entry)
+            seen_ids.add(entry[0])
+    return tuple(entry[0] for entry in sorted(selected, key=lambda item: item[0]))
 
 
 def compare_replay_episode(
@@ -541,8 +541,16 @@ def aggregate_replay_gate(rows: Sequence[Mapping[str, object]]) -> dict[str, obj
         raise Phase2B5ContractError("replay gate requires at least one episode")
     agreement_count = sum(row.get("categorical_outcome_agreement") is True for row in rows)
     alignment_count = sum(row.get("action_frame_alignment") is True for row in rows)
-    invalid = sum(int(row.get("invalid_action_count", 0)) for row in rows)
-    simulator_errors = sum(int(row.get("simulator_error_count", 0)) for row in rows)
+    invalid_values = [row.get("invalid_action_count", 0) for row in rows]
+    simulator_error_values = [row.get("simulator_error_count", 0) for row in rows]
+    if any(isinstance(value, bool) or not isinstance(value, int) for value in invalid_values):
+        raise Phase2B5ContractError("invalid action counts must be integers")
+    if any(
+        isinstance(value, bool) or not isinstance(value, int) for value in simulator_error_values
+    ):
+        raise Phase2B5ContractError("simulator error counts must be integers")
+    invalid = sum(value for value in invalid_values if isinstance(value, int))
+    simulator_errors = sum(value for value in simulator_error_values if isinstance(value, int))
     agreement_rate = agreement_count / len(rows)
     alignment_rate = alignment_count / len(rows)
     return {

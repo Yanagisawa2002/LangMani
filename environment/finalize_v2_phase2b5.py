@@ -178,7 +178,7 @@ def _source_hash_index(source_manifest: dict[str, Any]) -> dict[str, object]:
 
 
 def _split_design() -> dict[str, object]:
-    empty_design = {
+    empty_design: dict[str, list[dict[str, object]]] = {
         "train": [],
         "validation": [],
         "test_unseen_reset": [],
@@ -393,6 +393,9 @@ def main() -> int:
     strong = runtime["strong_replay_results"]
     privilege = runtime["privilege_exclusion_audit"]
     split = _split_design()
+    split_leakage = split["leakage_checks"]
+    if not isinstance(split_leakage, dict):
+        raise RuntimeError("split leakage report must be an object")
     language = _language_contract()
     gates = {
         "source_identity": True,
@@ -403,7 +406,7 @@ def main() -> int:
         "privilege_exclusion": privilege["passed"] is True,
         "lerobot_conversion": conversion["passed"] is True,
         "lerobot_readback": readback["passed"] is True,
-        "split_design": split["leakage_checks"]["passed"] is True,
+        "split_design": split_leakage.get("passed") is True,
     }
     package = accepted_source_package(
         selected_task_ids=SELECTED_TASK_IDS,

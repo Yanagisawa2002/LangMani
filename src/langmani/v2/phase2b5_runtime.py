@@ -20,9 +20,9 @@ from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from importlib import metadata as importlib_metadata
 from pathlib import Path, PurePosixPath
-from typing import Any
+from typing import Any, cast
 
-import h5py
+import h5py  # type: ignore[import-untyped]
 import numpy as np
 
 from langmani.datasets.policy_state import extract_panda_policy_state_v0
@@ -205,8 +205,8 @@ def inspect_official_sources(
         episodes_by_id = {int(row["episode_id"]): row for row in episodes}
         lengths: list[int] = []
         action_digests: list[str] = []
-        action_min = np.full(8, np.inf, dtype=np.float64)
-        action_max = np.full(8, -np.inf, dtype=np.float64)
+        action_min: np.ndarray = np.full(8, np.inf, dtype=np.float64)
+        action_max: np.ndarray = np.full(8, -np.inf, dtype=np.float64)
         action_values = 0
         nonfinite_values = 0
         bound_violation_values = 0
@@ -250,8 +250,12 @@ def inspect_official_sources(
                         action_max, np.asarray(action_report["maximum"], dtype=np.float64)
                     )
                     action_values += int(actions.size)
-                    nonfinite_values += int(action_report["nonfinite_values"])
-                    bound_violation_values += int(action_report["bound_violation_values"])
+                    nonfinite = action_report["nonfinite_values"]
+                    violations = action_report["bound_violation_values"]
+                    if not isinstance(nonfinite, int) or not isinstance(violations, int):
+                        raise Phase2B5ContractError("action count fields must be integers")
+                    nonfinite_values += nonfinite
+                    bound_violation_values += violations
                 except (KeyError, TypeError, ValueError, Phase2B5ContractError) as error:
                     malformed.append(
                         {
@@ -348,7 +352,7 @@ def inspect_candidate_task_sources(*, source_root: Path) -> dict[str, object]:
     """Inspect all five required official candidates, including incompatible modes."""
     try:
         import gymnasium as gym
-        import mani_skill.envs  # noqa: F401
+        import mani_skill.envs  # type: ignore[import-untyped]  # noqa: F401
     except (ImportError, RuntimeError, OSError) as error:
         raise Phase2B5RuntimeError(
             "candidate audit requires the native ManiSkill runtime"
@@ -437,10 +441,10 @@ def inspect_candidate_task_sources(*, source_root: Path) -> dict[str, object]:
         )
         try:
             observation, _ = env.reset(seed=0)
-            base = env.unwrapped
+            base: Any = env.unwrapped
             sensor_data = observation.get("sensor_data", {})
             cameras = sorted(sensor_data) if isinstance(sensor_data, Mapping) else []
-            action_space = env.action_space
+            action_space: Any = env.action_space
             max_episode_steps = getattr(env.spec, "max_episode_steps", None)
             robot_uid = str(base.robot_uids)
             state_available = extract_panda_policy_state_v0(base.agent.robot).shape == (9,)
@@ -595,17 +599,17 @@ def run_official_action_replays(
     """Replay recorded actions from a source-state anchor with official predicates."""
     try:
         import gymnasium as gym
-        import mani_skill.envs  # noqa: F401 - registers official environments
-    except (ImportError, RuntimeError, OSError) as error:
+        import mani_skill.envs  # type: ignore[import-untyped]  # noqa: F401
+    except (ImportError, RuntimeError, OSError) as import_error:
         raise Phase2B5RuntimeError(
             "official replay requires the native ManiSkill runtime"
-        ) from error
+        ) from import_error
 
     task_reports: list[dict[str, object]] = []
     for task_id in task_ids:
         h5_path, json_path = _selected_paths(source_root, task_id)
         document, episodes = _load_episode_metadata(json_path)
-        episodes_by_id = {int(row["episode_id"]): row for row in episodes}
+        episodes_by_id = {cast(int, row["episode_id"]): row for row in episodes}
         if episode_ids_by_task is None:
             selected_ids = select_stratified_episode_ids(episodes, count=replay_count)
         else:
@@ -624,7 +628,7 @@ def run_official_action_replays(
         )
         started = time.perf_counter()
         env = gym.make(task_id, **env_kwargs)
-        base = env.unwrapped
+        base: Any = env.unwrapped
         if str(base.control_mode) != CONTROL_MODE or int(base.control_freq) != 20:
             env.close()
             raise Phase2B5RuntimeError("native replay environment violates action timing")
@@ -656,7 +660,7 @@ def run_official_action_replays(
                     replay_success_step: int | None = None
                     semantic_reset_error: dict[str, object] | None = None
                     terminal_error: dict[str, object] | None = None
-                    error: dict[str, object] | None = None
+                    episode_error: dict[str, object] | None = None
                     try:
                         env.reset(**episode["reset_kwargs"])
                         semantic_reset_error = _state_error(source_initial, base.get_state_dict())
@@ -678,7 +682,7 @@ def run_official_action_replays(
                         terminal_error = _state_error(source_terminal, base.get_state_dict())
                     except Exception as caught:
                         simulator_error_count = 1
-                        error = {
+                        episode_error = {
                             "type": type(caught).__name__,
                             "message": str(caught),
                         }
@@ -709,7 +713,7 @@ def run_official_action_replays(
                             "first_state_anchor_used": True,
                             "terminal_state_error": terminal_error,
                             "action_validation": action_report,
-                            "error": error,
+                            "error": episode_error,
                             **comparison,
                         }
                     )
@@ -736,6 +740,12 @@ def run_official_action_replays(
                 }
             )
         )
+    task_gate_passes: list[bool] = []
+    for task_report in task_reports:
+        gate_value = task_report.get("gate")
+        task_gate_passes.append(
+            isinstance(gate_value, Mapping) and gate_value.get("passed") is True
+        )
     payload = _fingerprinted(
         {
             "schema_version": "langmani-v2-phase2b5-official-replay-results-v0",
@@ -745,7 +755,7 @@ def run_official_action_replays(
             "sim_backend": "physx_cpu",
             "recorded_actions_only": True,
             "task_reports": task_reports,
-            "all_tasks_passed": all(report["gate"]["passed"] is True for report in task_reports),
+            "all_tasks_passed": all(task_gate_passes),
         }
     )
     _write_json(output_root / report_name, payload)
@@ -796,7 +806,7 @@ def generate_visual_policy_pilot(
     """Replay five accepted episodes per task and capture pre-action policy frames."""
     try:
         import gymnasium as gym
-        import mani_skill.envs  # noqa: F401
+        import mani_skill.envs  # type: ignore[import-untyped]  # noqa: F401
     except (ImportError, RuntimeError, OSError) as error:
         raise Phase2B5RuntimeError("visual pilot requires the native ManiSkill runtime") from error
     if pilot_root.exists():
@@ -807,7 +817,7 @@ def generate_visual_policy_pilot(
         h5_path, json_path = _selected_paths(source_root, task_id)
         document, episodes = _load_episode_metadata(json_path)
         selected_ids = select_stratified_episode_ids(episodes, count=episodes_per_task)
-        episodes_by_id = {int(row["episode_id"]): row for row in episodes}
+        episodes_by_id = {cast(int, row["episode_id"]): row for row in episodes}
         env_kwargs = dict(document["env_info"]["env_kwargs"])
         env_kwargs.update(
             {
@@ -821,7 +831,7 @@ def generate_visual_policy_pilot(
             }
         )
         env = gym.make(task_id, **env_kwargs)
-        base = env.unwrapped
+        base: Any = env.unwrapped
         episode_reports: list[dict[str, object]] = []
         try:
             with h5py.File(h5_path, "r") as trajectories:
@@ -924,6 +934,11 @@ def generate_visual_policy_pilot(
                 "episodes": episode_reports,
             }
         )
+    all_episode_reports = [
+        episode
+        for task_report in task_reports
+        for episode in cast(list[dict[str, object]], task_report["episodes"])
+    ]
     payload = _fingerprinted(
         {
             "schema_version": "langmani-v2-phase2b5-visual-pilot-manifest-v0",
@@ -950,17 +965,14 @@ def generate_visual_policy_pilot(
                 "timing": "each frame is captured immediately before its recorded action",
             },
             "tasks": task_reports,
-            "episode_count": sum(len(task["episodes"]) for task in task_reports),
+            "episode_count": len(all_episode_reports),
             "policy_frame_count": sum(
-                int(episode["policy_frame_count"])
-                for task in task_reports
-                for episode in task["episodes"]
+                cast(int, episode["policy_frame_count"]) for episode in all_episode_reports
             ),
             "privileged_fields_in_student_schema": [],
             "passed": all(
                 episode["frame_action_aligned"] is True and episode["success"] is True
-                for task in task_reports
-                for episode in task["episodes"]
+                for episode in all_episode_reports
             ),
         }
     )
@@ -1054,8 +1066,8 @@ def convert_visual_pilot_to_lerobot(
 ) -> dict[str, object]:
     """Convert only the bounded NPZ pilot through LeRobot's public writer."""
     try:
-        from lerobot.configs import RGBEncoderConfig
-        from lerobot.datasets import LeRobotDataset
+        from lerobot.configs import RGBEncoderConfig  # type: ignore[import-untyped]
+        from lerobot.datasets import LeRobotDataset  # type: ignore[import-untyped]
     except (ImportError, RuntimeError, OSError) as error:
         raise Phase2B5RuntimeError("LeRobot 0.6 public dataset API is unavailable") from error
     environment = lerobot_environment_manifest()
@@ -1217,7 +1229,7 @@ def readback_lerobot_pilot(
 ) -> dict[str, object]:
     """Load and random-access every converted frame through LeRobot 0.6."""
     try:
-        from lerobot.datasets import LeRobotDataset
+        from lerobot.datasets import LeRobotDataset  # type: ignore[import-untyped]
     except (ImportError, RuntimeError, OSError) as error:
         raise Phase2B5RuntimeError("LeRobot 0.6 readback API is unavailable") from error
     conversion = _read_json(conversion_manifest_path)
