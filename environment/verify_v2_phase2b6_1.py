@@ -136,7 +136,8 @@ def verify(artifact_root: Path) -> dict[str, object]:
     expected_authorization = authorization_state()
     recorded_authorization = documents["authorization_state_final.json"]
     control_ids = sorted(
-        int(cast(Mapping[str, object], run["run_identity"])["episode_id"]) for run in control_runs
+        int(cast(Any, cast(Mapping[str, object], run["run_identity"])["episode_id"]))
+        for run in control_runs
     )
     checks = {
         "required_files": (listed | {"artifact_manifest.json"}) >= REQUIRED_FILES,

@@ -362,7 +362,7 @@ def controls_validated(control_runs: Sequence[Mapping[str, object]]) -> bool:
 
     keys = [
         (
-            int(cast(Mapping[str, object], run["run_identity"])["episode_id"]),
+            int(cast(Any, cast(Mapping[str, object], run["run_identity"])["episode_id"])),
             str(cast(Mapping[str, object], run["run_identity"])["mode"]),
         )
         for run in control_runs
@@ -381,7 +381,7 @@ def _physical_outcome(run: Mapping[str, object]) -> tuple[bool, str | None]:
 
 
 def _classification_for_gate(gate_name: str | None) -> FailureClassification:
-    mapping = {
+    mapping: dict[str, FailureClassification] = {
         "reset_identity_gate": FailureClassification.RESET_FAILURE,
         "action_contract_gate": FailureClassification.ACTION_CONTRACT_FAILURE,
         "step_execution_gate": FailureClassification.PHYSICAL_TRAJECTORY_DIVERGENCE,
@@ -461,21 +461,21 @@ def classify_result(
                 )
                 physical_valid = False
         elif mode_b_runs and not all(run_passed_for_mode(run) for run in mode_b_runs):
-            failed = [
+            failed_mode_b = [
                 first_failed_gate(cast(Mapping[str, Mapping[str, object]], run["sub_gates"]))
                 for run in mode_b_runs
                 if not run_passed_for_mode(run)
             ]
             result = Phase2B61Result.RESULT_A
-            primary = _classification_for_gate(failed[0] if failed else None)
-            secondary = [str(value) for value in failed[1:] if value is not None]
+            primary = _classification_for_gate(failed_mode_b[0] if failed_mode_b else None)
+            secondary = [str(value) for value in failed_mode_b[1:] if value is not None]
             physical_valid = True
         elif mode_c_runs and not all(run_passed_for_mode(run) for run in mode_c_runs):
-            failed = first_failed_gate(
+            failed_mode_c = first_failed_gate(
                 cast(Mapping[str, Mapping[str, object]], mode_c_runs[0]["sub_gates"])
             )
             result = Phase2B61Result.RESULT_A
-            primary = _classification_for_gate(failed)
+            primary = _classification_for_gate(failed_mode_c)
             secondary = []
             physical_valid = True
         elif (

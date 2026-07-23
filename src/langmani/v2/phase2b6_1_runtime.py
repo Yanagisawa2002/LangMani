@@ -313,18 +313,18 @@ def build_source_identity_manifest(
     inventory = _read_json(frozen_root / "work" / "source_episode_inventory.json")
     inventory_rows = cast(list[dict[str, object]], inventory["episodes"])
     frozen_by_id = {
-        int(row["source_episode_id"]): row
+        int(cast(Any, row["source_episode_id"])): row
         for row in inventory_rows
         if row.get("task_id") == TASK_ID
-        and int(row["source_episode_id"]) in (*CONTROL_EPISODE_IDS, TARGET_EPISODE_ID)
+        and int(cast(Any, row["source_episode_id"])) in (*CONTROL_EPISODE_IDS, TARGET_EPISODE_ID)
     }
     assignments = _read_json(frozen_root / "work" / "primary_split_manifest.json")
     assignment_rows = cast(list[dict[str, object]], assignments["assignments"])
     assignment_by_id = {
-        int(row["source_episode_id"]): row
+        int(cast(Any, row["source_episode_id"])): row
         for row in assignment_rows
         if row.get("task_id") == TASK_ID
-        and int(row["source_episode_id"]) in (*CONTROL_EPISODE_IDS, TARGET_EPISODE_ID)
+        and int(cast(Any, row["source_episode_id"])) in (*CONTROL_EPISODE_IDS, TARGET_EPISODE_ID)
     }
     reports: list[dict[str, object]] = []
     with h5py.File(h5_path, "r") as trajectories:
@@ -1140,7 +1140,9 @@ def run_forensic_replay(
                 step_reports.append(
                     {
                         "step_index": index,
-                        "submitted_action_sha256": array_sha256(action, dtype=np.dtype(np.float32)),
+                        "submitted_action_sha256": array_sha256(
+                            np.asarray(action), dtype=np.dtype(np.float32)
+                        ),
                         "observation_acquisition_success": observation_ok,
                         "rgb_frame_acquisition_success": rgb_ok,
                         "panda_state_acquisition_success": state_ok,
@@ -1184,7 +1186,9 @@ def run_forensic_replay(
                 status=GateStatus.PASSED if not simulator_exceptions else GateStatus.FAILED,
                 detail="no simulator exception was observed",
                 first_failure_step=(
-                    int(simulator_exceptions[0]["step_index"]) if simulator_exceptions else None
+                    int(cast(Any, simulator_exceptions[0]["step_index"]))
+                    if simulator_exceptions
+                    else None
                 ),
                 evidence={"exceptions": simulator_exceptions},
             )
@@ -1217,7 +1221,7 @@ def run_forensic_replay(
                 alignment = alignment_audit(
                     source_action_count=len(actions),
                     generated_policy_frame_count=len(step_reports),
-                    action_indices=[int(row["step_index"]) for row in step_reports],
+                    action_indices=[int(cast(Any, row["step_index"])) for row in step_reports],
                     frame_indices=list(range(len(step_reports))),
                     timestamps=arrays["timestamp"][: len(step_reports)].tolist(),
                     terminal_diagnostic_frame_count=1,
