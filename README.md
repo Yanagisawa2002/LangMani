@@ -71,6 +71,21 @@ The compact fail-closed evidence can be rehashed without simulator execution:
 python environment/verify_v2_phase2b3.py
 ```
 
+Phase 2B.3.1-RR then asked whether exact reset plus replay of the complete original action prefix
+could recover the hidden contact history that public snapshot restore missed. The prerequisite
+failed before simulator execution: the latest evidence retains action counts, indices, and hashes,
+but not the original executable `float32[8]` action arrays from step zero. The phase is therefore
+`RESULT_D / HISTORICAL_PREFIX_UNAVAILABLE`, not a new physical nondeterminism result. No reset,
+sandbox, probe, runtime measurement, expert, collection, or training ran. See the
+[`RR result`](docs/langmani_v2/phase_2b3_rr_result.md) and
+[`transcript audit`](docs/langmani_v2/phase_2b3_rr_transcript_audit.md).
+
+The Result D package is also verified without simulator execution:
+
+```bash
+python environment/verify_v2_phase2b3_rr.py
+```
+
 The completed Phase 2B archive can be independently re-audited without starting training:
 
 ```bash

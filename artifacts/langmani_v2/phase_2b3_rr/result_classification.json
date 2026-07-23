@@ -1,0 +1,14 @@
+{
+  "schema_version": "langmani-v2-phase2b3-rr-result-classification-v0",
+  "result": "RESULT_D",
+  "label": "HISTORICAL_PREFIX_UNAVAILABLE",
+  "reason": "complete_original_float32_8_action_prefixes_and_bound_call_sequence_are_unavailable",
+  "historical_phase2b3_result_preserved": "RESULT_C/MPC_ARCHITECTURE_INVALID",
+  "physical_nondeterminism_conclusion": false,
+  "reset_replay_transition_validated": false,
+  "runtime_viability_validated": false,
+  "mpc_pilot_eligible": false,
+  "hard_stop_stage": "transcript_availability_audit",
+  "simulator_trials": 0,
+  "phase_completed_correctly": true
+}

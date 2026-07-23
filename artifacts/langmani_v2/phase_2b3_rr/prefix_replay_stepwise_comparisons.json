@@ -1,0 +1,10 @@
+{
+  "schema_version": "langmani-v2-phase2b3-rr-prefix-comparisons-v0",
+  "status": "not_run_historical_prefix_unavailable",
+  "prefixes_attempted": 0,
+  "actions_replayed": 0,
+  "environment_steps": 0,
+  "stepwise_comparisons": [],
+  "reset_replay_transition_validated": false,
+  "simulator_started": false
+}

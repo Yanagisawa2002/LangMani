@@ -1,0 +1,10 @@
+{
+  "schema_version": "langmani-v2-phase2b3-rr-first-divergence-v0",
+  "status": "not_applicable_historical_prefix_unavailable",
+  "first_divergence_step": null,
+  "first_divergence_field": null,
+  "classification": null,
+  "physical_divergence_observed": false,
+  "hidden_physics_state_inferred": false,
+  "reason": "Reset-replay never began, so Result D must not be interpreted as a transition or nondeterminism failure."
+}

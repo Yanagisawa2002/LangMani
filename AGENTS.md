@@ -97,6 +97,15 @@ beside the task's 5 mm containment clearance and cannot be repaired by widening 
 prediction gate, bounded repair, formal seeds 66300--66399, collection, training, and SmolVLA were
 not run. Phase 2B.4 collection and Phase 2C.2 training remain unauthorized.
 
+Phase 2B.3.1-RR separately audited whether exact reset plus replay of the complete historical
+native action prefix could reconstruct contact-bearing transitions. The required original
+`float32[8]` `pd_joint_pos` arrays and a complete bound call-sequence identity were unavailable;
+only counts, indices, and hashes survived. The phase is therefore
+`RESULT_D / HISTORICAL_PREFIX_UNAVAILABLE` and stopped before protocol freeze or simulator
+execution. This is not a physical nondeterminism result and does not rewrite Phase 2B.3 Result C.
+No reset, replay, fixed probe, runtime measurement, MPC pilot, expert qualification, collection,
+or training ran. Every eligibility and authorization flag remains false.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
@@ -256,6 +265,9 @@ python environment/verify_v2_phase2b.py --help
 
 # Phase 2B.3 compact Result C evidence verification (no simulator execution)
 python environment/verify_v2_phase2b3.py
+
+# Phase 2B.3.1-RR compact Result D evidence verification (no simulator execution)
+python environment/verify_v2_phase2b3_rr.py
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,

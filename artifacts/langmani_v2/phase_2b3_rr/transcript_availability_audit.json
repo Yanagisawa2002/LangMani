@@ -1,0 +1,65 @@
+{
+  "schema_version": "langmani-v2-phase2b3-rr-transcript-availability-v0",
+  "audit_date": "2026-07-23",
+  "status": "hard_stop_historical_prefix_unavailable",
+  "result": "RESULT_D",
+  "label": "HISTORICAL_PREFIX_UNAVAILABLE",
+  "complete_original_transcripts_found": false,
+  "actual_native_action_arrays_found": 0,
+  "required_action_dtype": "float32",
+  "required_action_shape": [8],
+  "required_controller_mode": "pd_joint_pos",
+  "searches": [
+    {
+      "source": "latest evidence node at source commit cc31ced97e66220626ef39374b3e3acf84ccd463",
+      "scope": [
+        "outputs/diagnostics/v2/phase2b2",
+        "outputs/diagnostics/v2/phase2b3",
+        "outputs/datasets/langmani_v2"
+      ],
+      "json_exact_action_key_hits": 0,
+      "phase2b2_or_phase2b3_h5_hdf5_npz_npy_pt_pth_hits": 0,
+      "selected_seed_filename_hits": 0
+    },
+    {
+      "source": "committed MPC artifacts at cc31ced97e66220626ef39374b3e3acf84ccd463",
+      "numeric_action_arrays_found": 0
+    },
+    {
+      "source": "external geometry artifacts at ae6aae49c61d96c68de434e08dc1167461a29543",
+      "numeric_action_arrays_found": 0,
+      "copied_into_new_branch": false
+    }
+  ],
+  "metadata_only_reference": {
+    "path": "outputs/diagnostics/v2/phase2b3/state-clone-audit-contact-free-90cd0da.json",
+    "scene_seed": 69000,
+    "task": {
+      "target_object": "blue_cube",
+      "target_region": "left",
+      "difficulty": "standard"
+    },
+    "reference_total_action_count": 156,
+    "selected_action_start_index": 88,
+    "fixed_action_count": 12,
+    "first_target_contact_or_motion_index": 91,
+    "fixed_action_sequence_sha256": "081aec1500ba1e03d13e4c6214af7c75a62a9c809d64766aea8808adc1ba6ef7f",
+    "contains_executable_numeric_action_array": false
+  },
+  "insufficient_fields": [
+    "every original native action submitted from episode step zero",
+    "complete content-verifiable action prefix",
+    "complete original environment call sequence",
+    "content-bound live boundary states paired with those original actions"
+  ],
+  "prohibited_substitutes_not_used": [
+    "geometric waypoints",
+    "planner target poses",
+    "regenerated expert actions",
+    "rounded or reconstructed arrays",
+    "historical Phase 2B v1 collection episodes"
+  ],
+  "simulator_execution_permitted": false,
+  "physical_nondeterminism_conclusion": false,
+  "reason": "Only action counts, indices, and hashes survive for the relevant diagnostic trace; the exact executable float32[8] action arrays do not."
+}

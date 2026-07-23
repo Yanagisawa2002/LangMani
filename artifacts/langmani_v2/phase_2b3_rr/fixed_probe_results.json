@@ -1,0 +1,10 @@
+{
+  "schema_version": "langmani-v2-phase2b3-rr-fixed-probe-v0",
+  "status": "not_run_historical_prefix_unavailable",
+  "probe_horizon_steps": 12,
+  "boundaries_attempted": 0,
+  "probe_steps_executed": 0,
+  "stepwise_comparisons": [],
+  "first_divergence_step": null,
+  "simulator_started": false
+}

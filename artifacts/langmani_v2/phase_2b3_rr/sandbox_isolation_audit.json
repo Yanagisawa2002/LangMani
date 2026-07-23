@@ -1,0 +1,12 @@
+{
+  "schema_version": "langmani-v2-phase2b3-rr-sandbox-isolation-v0",
+  "status": "not_run_historical_prefix_unavailable",
+  "sandboxes_created": 0,
+  "live_environment_created": false,
+  "live_state_unchanged": null,
+  "other_sandbox_unchanged": null,
+  "artifact_cross_trial_isolation": true,
+  "sandbox_isolation_validated": false,
+  "prior_phase2b3_isolation_result_reused_as_current_evidence": false,
+  "simulator_started": false
+}

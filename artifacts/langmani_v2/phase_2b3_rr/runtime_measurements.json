@@ -1,0 +1,17 @@
+{
+  "schema_version": "langmani-v2-phase2b3-rr-runtime-measurements-v0",
+  "status": "not_measured_historical_prefix_unavailable",
+  "environment_construction_seconds": null,
+  "reset_seconds": null,
+  "replay_step_seconds": null,
+  "prefix_25_seconds": null,
+  "prefix_100_seconds": null,
+  "prefix_250_seconds": null,
+  "probe_12_step_seconds": null,
+  "two_sandbox_boundary_seconds": null,
+  "memory_usage_bytes": null,
+  "gpu_memory_bytes": null,
+  "cpu_utilization": null,
+  "simulator_started": false,
+  "gpu_workload_started": false
+}

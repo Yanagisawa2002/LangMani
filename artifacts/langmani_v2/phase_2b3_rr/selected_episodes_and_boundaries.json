@@ -1,0 +1,11 @@
+{
+  "schema_version": "langmani-v2-phase2b3-rr-selection-v0",
+  "status": "not_run_historical_prefix_unavailable",
+  "selected_episode_count": 0,
+  "selected_boundary_count": 0,
+  "episodes": [],
+  "formal_seed_range_accessed": false,
+  "future_development_seed_accessed": false,
+  "new_collection_identity_created": false,
+  "reason": "Episodes and boundaries cannot be selected for executable replay without complete original native action prefixes."
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": "langmani-v2-phase2b3-rr-categorical-summary-v0",
+  "status": "not_measured_historical_prefix_unavailable",
+  "comparisons_performed": 0,
+  "cold_sandbox_agreement": null,
+  "live_reset_replay_agreement": null,
+  "contact_identity_agreement": null,
+  "required_agreement": 1.0,
+  "passed": false,
+  "note": "False means not validated; no physical comparison failed because none was run."
+}

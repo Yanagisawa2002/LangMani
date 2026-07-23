@@ -3063,3 +3063,33 @@ development pilot, prediction-agreement evaluation, repair, or formal 100-episod
 66300--66399 remain untouched. `phase2b4_collection_authorized=false`,
 `phase2c2_training_authorized=false`, and `smolvla_started=false`; no raw archive, dataset,
 checkpoint, backward pass, or optimizer step was produced.
+
+## D-124 - Stop reset-replay feasibility at the historical transcript gate
+
+Phase 2B.3.1-RR began from exact MPC Result C commit
+`cc31ced97e66220626ef39374b3e3acf84ccd463` in the isolated
+`codex/langmani-v2-phase2b3-reset-replay-equivalence` worktree. The independent geometry result
+`ae6aae49c61d96c68de434e08dc1167461a29543` remained external: neither result commit is an ancestor
+of the other, their merge base is `8476a72b3ce7504e7fef0a08114c6c567da77ba7`, and no geometry
+artifact was copied into the MPC package.
+
+Direct SHA-256 checks of immutable Git blob bytes passed all 19 MPC and all ten geometry manifest
+entries. The latest no-GPU evidence node was clean at `cc31ced...`; the idle RTX 5090 node held
+older source and was not updated or used. Targeted inspection found no complete original
+`float32[8]` `pd_joint_pos` transcript for the required diagnostic boundaries. The surviving clone
+report records seed/task identity, action counts and indices, and a 12-action content hash, but not
+the numeric actions or a complete call-sequence identity bound to them.
+
+The existing compact Result C verifier now treats only CRLF-to-LF checkout translation as the
+canonical Git text bytes and reports which entries needed that normalization. This makes the
+immutable Linux-produced hashes portable to a Windows worktree; arbitrary byte changes, including
+added whitespace, still fail the manifest.
+
+The predeclared hard stop therefore classifies the phase
+`RESULT_D / HISTORICAL_PREFIX_UNAVAILABLE`. This does not overturn the historical Result C and is
+not a new physical nondeterminism result. No executable protocol, episode/boundary selection,
+environment, reset, sandbox, replay, probe, transition comparison, isolation trial, or runtime
+measurement was created. `mpc_pilot_eligible=false`, `mpc_pilot_authorized=false`,
+`expert_qualification_authorized=false`, `data_collection_authorized=false`,
+`smolvla_training_authorized=false`, `training_started=false`, and
+`demonstration_source_validated=false`.

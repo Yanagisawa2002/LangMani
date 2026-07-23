@@ -1,0 +1,11 @@
+{
+  "schema_version": "langmani-v2-phase2b3-rr-reset-identity-v0",
+  "status": "not_run_historical_prefix_unavailable",
+  "episodes_attempted": 0,
+  "live_environments_created": 0,
+  "cold_sandboxes_created": 0,
+  "numeric_comparisons": 0,
+  "categorical_comparisons": 0,
+  "reset_identity_validated": false,
+  "simulator_started": false
+}

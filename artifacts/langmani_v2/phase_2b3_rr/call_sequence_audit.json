@@ -1,0 +1,15 @@
+{
+  "schema_version": "langmani-v2-phase2b3-rr-call-sequence-audit-v0",
+  "status": "insufficient_historical_identity",
+  "complete_reset_options_available": false,
+  "complete_environment_creation_sequence_available": false,
+  "complete_controller_initialization_sequence_available": false,
+  "complete_observation_timing_available": false,
+  "complete_sensor_or_render_timing_available": false,
+  "complete_action_submission_order_available": false,
+  "physics_only_replay_defined": false,
+  "full_call_sequence_replay_defined": false,
+  "material_ambiguity": true,
+  "simulator_execution_permitted": false,
+  "reason": "The surviving reports do not bind the full historical call sequence to executable original action arrays."
+}

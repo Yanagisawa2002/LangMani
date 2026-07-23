@@ -1,0 +1,81 @@
+{
+  "schema_version": "langmani-v2-phase2b3-rr-artifact-manifest-v0",
+  "result": "RESULT_D",
+  "label": "HISTORICAL_PREFIX_UNAVAILABLE",
+  "file_count": 18,
+  "hash_algorithm": "sha256_file_bytes",
+  "files": [
+    {
+      "path": "authorization_state.json",
+      "sha256": "5f3a2fcd0880b6e51fe58f3dcf4654d38286d809b0f5efbb8d5901913f2b432c"
+    },
+    {
+      "path": "call_sequence_audit.json",
+      "sha256": "3cf461592aefb2783956679003e1bbfb620a118bac0ee8acc3f5453e46484834"
+    },
+    {
+      "path": "categorical_agreement_summary.json",
+      "sha256": "22c8a296c5128aca06e3f8e5587779308ae5682717bbdeb6bb216b71e7cd433d"
+    },
+    {
+      "path": "continuous_error_summary.json",
+      "sha256": "fa33a81dd1aea1f9744d70e85e67305b3c7d9f1305d4affce6b8917105c551a4"
+    },
+    {
+      "path": "first_divergence_report.json",
+      "sha256": "fdbdfc5d478f74fed9dd04e1e0f2e51ac0c03a941f9335d7db0f9f67384d1437"
+    },
+    {
+      "path": "fixed_probe_results.json",
+      "sha256": "fee6dc4be71d2702054bebf62be05c78a81fa87538691da5b35f0e80d6b48df6"
+    },
+    {
+      "path": "frozen_protocol.json",
+      "sha256": "ae3cb59029f52fda605822febc2fde10b993318c2b8b5705baac0ff837cccf68"
+    },
+    {
+      "path": "prefix_replay_stepwise_comparisons.json",
+      "sha256": "e7debcd37a059898de1f7cdd4e191b98ca5ccf02ac2ad8f8f00e2299dc255be8"
+    },
+    {
+      "path": "prior_evidence_verification.json",
+      "sha256": "3f24dc532fe793778cbdd3a0cfae5d53d619167b4e5ff4649be86c393d928083"
+    },
+    {
+      "path": "remote_execution_audit.json",
+      "sha256": "be3b0336fb62bd09389d621eaa8dd172c5f796a41ec0b6fa532d0d5f977cf01b"
+    },
+    {
+      "path": "repository_isolation_audit.json",
+      "sha256": "36daf88b2239bb85412322157bde34ecaead46f0977e777fb946faefb99bde18"
+    },
+    {
+      "path": "reset_identity_results.json",
+      "sha256": "93317116b3ff0bd09dfdb9c04af606a6fb55cc1ddd7f8da812c4f16326a78070"
+    },
+    {
+      "path": "result_classification.json",
+      "sha256": "52aefc3f473684e2b005ce984bc57301dc63ea643ffa2dc6f3281a799984f511"
+    },
+    {
+      "path": "runtime_measurements.json",
+      "sha256": "100a6f5f77ade336bc19691495e9bb3c156b95c05da4414214e4b68a93656c5f"
+    },
+    {
+      "path": "runtime_projections.json",
+      "sha256": "31a216d5026ff0cb0634ea4e6a235d549b2f8a6bc3124f512564c810006e6b88"
+    },
+    {
+      "path": "sandbox_isolation_audit.json",
+      "sha256": "a57c9c19dfb8c1bebe996603661ce61e70ce9099e742224cd414edb3eb9bf6a8"
+    },
+    {
+      "path": "selected_episodes_and_boundaries.json",
+      "sha256": "b11f8427225fbaca2fcbfeff518e76fe3a6ded3098997741d3b4f1b96ef8b032"
+    },
+    {
+      "path": "transcript_availability_audit.json",
+      "sha256": "6ceebc6b5d45e2fc3fbad2db769543c021c9517318cf53a372f95798bd8f800e"
+    }
+  ]
+}

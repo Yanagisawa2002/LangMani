@@ -56,6 +56,15 @@ formal seeds 66300--66399 remain sealed, and Phase 2B.4 collection, Phase 2C.2 t
 remain unauthorized. A future attempt requires a new state/transition architecture rather than
 another configuration adjustment.
 
+Phase 2B.3.1-RR was a separately isolated feasibility audit of reset plus complete historical
+prefix replay. It stopped at its transcript prerequisite: the compact diagnostic evidence contains
+action counts, indices, and hashes, but no original executable `float32[8]` action arrays from step
+zero and no complete call-sequence identity bound to them. It is closed as
+`RESULT_D / HISTORICAL_PREFIX_UNAVAILABLE`. No protocol was frozen for execution, no historical
+episode or boundary was selected, and no GPU, simulator, reset, replay, probe, runtime measurement,
+expert, collection, or training ran. Result D is not a new physical transition result and leaves
+the Phase 2B.3 Result C evidence unchanged.
+
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected

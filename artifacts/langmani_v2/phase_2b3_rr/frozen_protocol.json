@@ -1,0 +1,18 @@
+{
+  "schema_version": "langmani-v2-phase2b3-rr-protocol-status-v0",
+  "status": "not_frozen_historical_prefix_unavailable",
+  "protocol_identity": null,
+  "simulator_trials_before_protocol_freeze": 0,
+  "selected_historical_episodes": [],
+  "selected_boundaries": [],
+  "fixed_probe_actions": [],
+  "sandbox_count": 0,
+  "strict_target_translation_tolerance_m": 0.00002,
+  "required_categorical_agreement": 1.0,
+  "runtime_limits_if_a_future_protocol_is_authorized": {
+    "projected_p95_episode_wall_time_seconds": 600,
+    "projected_400_episode_production_hours": 72
+  },
+  "stop_condition_triggered": "complete_original_action_prefix_unavailable",
+  "note": "Execution order stops at transcript availability. This file records that no simulator protocol became executable; it is not a frozen trial protocol."
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": "langmani-v2-phase2b3-rr-continuous-summary-v0",
+  "status": "not_measured_historical_prefix_unavailable",
+  "comparisons_performed": 0,
+  "strict_target_translation_tolerance_m": 0.00002,
+  "maximum_errors": {
+    "robot_qpos": null,
+    "robot_qvel": null,
+    "end_effector_translation_m": null,
+    "end_effector_orientation_rad": null,
+    "target_translation_m": null,
+    "target_orientation_rad": null,
+    "target_linear_velocity": null,
+    "target_angular_velocity": null,
+    "distractor_state": null
+  },
+  "passed": false,
+  "note": "No tolerance was weakened and no new transition error was observed."
+}

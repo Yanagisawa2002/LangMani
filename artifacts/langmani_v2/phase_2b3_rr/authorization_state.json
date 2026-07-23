@@ -1,0 +1,18 @@
+{
+  "schema_version": "langmani-v2-phase2b3-rr-authorization-v0",
+  "result": "RESULT_D",
+  "mpc_pilot_eligible": false,
+  "mpc_pilot_authorized": false,
+  "expert_qualification_authorized": false,
+  "data_collection_authorized": false,
+  "smolvla_training_authorized": false,
+  "training_started": false,
+  "demonstration_source_validated": false,
+  "development_pilot_started": false,
+  "formal_qualification_started": false,
+  "collection_started": false,
+  "raw_archives_created": 0,
+  "lerobot_datasets_created": 0,
+  "model_checkpoints_created": 0,
+  "optimizer_steps": 0
+}

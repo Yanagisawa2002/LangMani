@@ -1,0 +1,17 @@
+{
+  "schema_version": "langmani-v2-phase2b3-rr-runtime-projections-v0",
+  "status": "not_projected_without_measured_reset_replay_inputs",
+  "projection_configuration": {
+    "candidates_per_decision": 6,
+    "candidate_horizon_steps": 12,
+    "executed_prefix_steps": 3,
+    "episode_step_budget": 250,
+    "decision_reference_prefix_steps": 100
+  },
+  "projected_decision_seconds": null,
+  "projected_episode_seconds": null,
+  "projected_100_episode_hours": null,
+  "projected_400_episode_hours": null,
+  "runtime_viability_validated": false,
+  "reason": "A numerical MPC projection would be fabricated because reset-replay runtime was never measured."
+}
