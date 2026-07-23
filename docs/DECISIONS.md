@@ -3258,3 +3258,39 @@ privilege, LeRobot, and split-design gates. Even Result A grants only
 `smolvla_training_authorized=false`, `vla_jepa_training_authorized=false`,
 `student_policy_training_started=false`, and `custom_push_expert_route_active=false` remain
 mandatory, and no policy training follows automatically.
+
+## D-130 - Accept the three-source official demonstration package as Phase 2B.5 Result A
+
+The native qualification finished from clean execution commit
+`0b7f4d5e3b6fc909ee370aad5048ea7cc3ab9b17` on the RTX 5090 host. The run used ManiSkill 3.0.1,
+SAPIEN 3.0.3, Python 3.12.13, Torch 2.11.0+cu128, driver 595.71.05, and the documented
+`/etc/vulkan/icd.d/my_nvidia_icd.json` Vulkan binding. One launch without that required binding
+failed before environment construction and is retained only as an infrastructure diagnostic; it
+did not contribute to source or replay evidence.
+
+Five Apache-2.0 official archives from immutable Hugging Face revision
+`d674485bbffdd533914e52d272fdda34c0515608` were retained outside Git. Their combined size is
+138,681,813 bytes and every ZIP member passed traversal/symlink checks. The accepted
+motion-planning sources are `PickCube-v1`, `StackCube-v1`, and `PushCube-v1`, representing pick and
+place, stacking, and planar pushing. They contain 3,000/3,000 successful trajectories and 254,374
+transitions with zero malformed records, duplicate action hashes, non-finite actions, or native-
+bound violations. Poke and Pull are rejected from the common contract because the downloaded
+official packages expose only delta-action RL sources; no conversion or repair was attempted.
+
+Each selected source passed both 20-episode and 100-episode deterministic length/reset-stratified
+replay. Across all six gates, categorical outcome agreement and action/frame alignment were 100%,
+with zero invalid actions and zero simulator exceptions. The stronger task-object terminal
+translation diagnostics had maxima of 0.397 mm for Pick, 2.589 mm for Stack, and 4.919 mm for Push;
+these continuous values do not replace the unchanged official categorical predicates.
+
+The bounded nonprivileged pilot contains 15 episodes and 1,546 aligned policy frames. An isolated
+LeRobot 0.6.0 / Torch 2.11.0+cu128 / PyAV 15.1.0 environment wrote it with the public API and read
+back every frame with zero image, state, action, task, index, or timestamp failure. The compact
+28-file evidence package and fresh no-simulator verifier pass.
+
+Phase 2B.5 is therefore `RESULT_A`: `official_demo_source_validated=true` and
+`phase2b6_dataset_production_eligible=true`. The package is a source qualification and pilot, not
+a full dataset or policy result. `full_dataset_production_started=false`,
+`act_training_authorized=false`, `smolvla_training_authorized=false`,
+`vla_jepa_training_authorized=false`, `student_policy_training_started=false`, and
+`custom_push_expert_route_active=false`. Phase 2B.6 may start only by a separate instruction.

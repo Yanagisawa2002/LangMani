@@ -84,6 +84,17 @@ PPO teacher route is frozen for this task formulation. No third probe, reward re
 Stage 1/2, full curriculum, formal qualification, collection, dataset export, SmolVLA, or student
 training is authorized.
 
+Phase 2B.5 completed as Result A without reopening that custom route. Five pinned official
+ManiSkill archives were retained and audited; direct `pd_joint_pos` sources for PickCube,
+StackCube, and PushCube supplied three genuine skill families, 3,000 successful trajectories, and
+254,374 transitions. Both the 20-episode and stronger 100-episode stratified replay gates passed
+for every selected task with 100% categorical agreement and action/frame alignment, zero invalid
+actions, and zero simulator errors. A nonprivileged 15-episode/1,546-frame pilot passed isolated
+LeRobot 0.6 conversion and full readback. This sets only
+`official_demo_source_validated=true` and `phase2b6_dataset_production_eligible=true`. Full
+production, ACT, SmolVLA, VLA-JEPA, student training, and custom-expert reactivation remain
+unstarted and unauthorized.
+
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected

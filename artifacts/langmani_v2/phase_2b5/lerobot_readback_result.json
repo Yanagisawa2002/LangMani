@@ -1,0 +1,114 @@
+{
+  "action_shape_or_value_failures": 0,
+  "created_at_utc": "2026-07-23T11:34:40.360864+00:00",
+  "dataset_length": 1546,
+  "expected_episode_count": 15,
+  "expected_frame_count": 1546,
+  "fingerprint": "sha256:ec400391cf968839c062b7c8ac48c36561f33d1f74507f7b18f07d1906c70722",
+  "image_decode_failures": 0,
+  "index_or_timestamp_failures": 0,
+  "lerobot_version": "0.6.0",
+  "metadata_episode_count": 15,
+  "metadata_frame_count": 1546,
+  "observed_task_ids": [
+    "PickCube-v1",
+    "PushCube-v1",
+    "StackCube-v1"
+  ],
+  "passed": true,
+  "sampled_random_access_rows": [
+    {
+      "action_shape": [
+        8
+      ],
+      "episode_index": 0,
+      "frame_index": 0,
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "index": 0,
+      "state_shape": [
+        9
+      ],
+      "task_id": "PickCube-v1",
+      "timestamp": 0.0
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "episode_index": 5,
+      "frame_index": 0,
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "index": 386,
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1",
+      "timestamp": 0.0
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "episode_index": 7,
+      "frame_index": 167,
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "index": 773,
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1",
+      "timestamp": 8.350000381469727
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "episode_index": 9,
+      "frame_index": 61,
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "index": 1159,
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1",
+      "timestamp": 3.049999952316284
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "episode_index": 14,
+      "frame_index": 80,
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "index": 1545,
+      "state_shape": [
+        9
+      ],
+      "task_id": "PushCube-v1",
+      "timestamp": 4.0
+    }
+  ],
+  "schema_version": "langmani-v2-phase2b5-lerobot-readback-v0",
+  "state_shape_or_value_failures": 0,
+  "task_id_failures": 0
+}

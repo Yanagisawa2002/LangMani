@@ -1,0 +1,27 @@
+{
+  "backward_passes": 0,
+  "created_at_utc": "2026-07-23T11:53:12.628092+00:00",
+  "custom_expert_started": false,
+  "execution_commit": "0b7f4d5e3b6fc909ee370aad5048ea7cc3ab9b17",
+  "fingerprint": "sha256:6129dae737e129f3b4a7717d03161f1d0a0ef733da0ddab8b837a42c8de49732",
+  "full_dataset_export_started": false,
+  "gpu": {
+    "available": true,
+    "driver": "595.71.05",
+    "memory_total_mib": 32607,
+    "memory_used_mib": 2,
+    "name": "NVIDIA GeForce RTX 5090",
+    "uuid": "GPU-e72d1ea7-5fcb-a83f-ba21-88f316be5a4b"
+  },
+  "hostname": "autodl-container-xpe9q58l10-db426ce5",
+  "maniskill_version": "3.0.1",
+  "network_turbo_sourced": true,
+  "official_source_download_only": true,
+  "optimizer_created": false,
+  "planner_started": false,
+  "recorded_action_replay_only": true,
+  "runtime_python": "3.12.13",
+  "schema_version": "langmani-v2-phase2b5-remote-execution-audit-v0",
+  "torch_version": "2.11.0+cu128",
+  "training_started": false
+}

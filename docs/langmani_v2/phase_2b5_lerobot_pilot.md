@@ -22,3 +22,14 @@ Historical ACT used a different frozen data distribution and `H=50`. The officia
 tasks, reset distribution, camera content, lengths, and language supervision differ, so a fair
 future LeRobot 0.6 comparison requires retraining under one identical contract; no ACT retraining
 occurs here.
+
+The isolated environment was
+`/root/autodl-tmp/conda-envs/langmani-lerobot060-phase2b5`, with Python 3.12.13, LeRobot 0.6.0,
+Torch 2.11.0+cu128, and PyAV 15.1.0. The public writer produced 15 episodes and 1,546 frames. PyAV
+readback decoded and checked every frame; image, state, action, task ID, index, and timestamp
+failure counts were all zero.
+
+For a future explicit `action_is_pad` mask, `H=10` would pad 135/1,546 chunks and 675/15,460
+timesteps, while `H=50` would pad 735/1,546 chunks and 18,375/77,300 timesteps. This arithmetic
+does not authorize or execute training. Historical ACT remains context only and would require a
+new same-contract training run before comparison.

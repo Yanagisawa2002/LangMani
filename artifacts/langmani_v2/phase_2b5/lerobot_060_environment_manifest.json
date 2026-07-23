@@ -1,0 +1,34 @@
+{
+  "created_at_utc": "2026-07-23T11:53:09.474052+00:00",
+  "cuda_available": true,
+  "cuda_runtime_reported_by_torch": "12.8",
+  "environment_prefix": "/root/autodl-tmp/conda-envs/langmani-lerobot060-phase2b5",
+  "fingerprint": "sha256:74394e86a44e9d7d47c65f0b9b7aca5bd3d0519e8ad6199e7003f417c5ccb821",
+  "isolated_from_planner_environment": true,
+  "lerobot_commit": "installed PyPI sdist/wheel 0.6.0; no Git checkout",
+  "lerobot_tag": "v0.6.0",
+  "package_installation_into_planner_or_ppo_environment": false,
+  "packages": {
+    "av": "15.1.0",
+    "datasets": "4.8.5",
+    "diffusers": "not_installed",
+    "lerobot": "0.6.0",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "pillow": "12.3.0",
+    "pyarrow": "25.0.0",
+    "torch": "2.11.0+cu128",
+    "transformers": "5.4.0"
+  },
+  "pyav_libraries": {
+    "libavcodec": "61.19.101",
+    "libavdevice": "61.3.100",
+    "libavfilter": "10.4.100",
+    "libavformat": "61.7.100",
+    "libavutil": "59.39.100",
+    "libswresample": "5.3.100",
+    "libswscale": "8.3.100"
+  },
+  "python": "3.12.13",
+  "schema_version": "langmani-v2-phase2b5-lerobot-060-environment-v0"
+}

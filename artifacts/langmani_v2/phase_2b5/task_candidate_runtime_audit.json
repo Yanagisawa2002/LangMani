@@ -1,0 +1,634 @@
+{
+  "created_at_utc": "2026-07-23T11:49:17.840162+00:00",
+  "fingerprint": "sha256:4d4dcc1fb39912f7180a552130e51731ab4909cce792da6af69efbe96a5555c3",
+  "schema_version": "langmani-v2-phase2b5-task-candidate-runtime-audit-v0",
+  "selected_skill_families": [
+    "pick_and_place",
+    "stacking",
+    "planar_pushing"
+  ],
+  "selected_task_ids": [
+    "PickCube-v1",
+    "StackCube-v1",
+    "PushCube-v1"
+  ],
+  "tasks": [
+    {
+      "base_camera_256_rgb_available": true,
+      "common_panda_actuation": true,
+      "compatibility": "directly_compatible",
+      "direct_pd_joint_pos_source_count": 2,
+      "downloaded_source_count": 5,
+      "environment_registered": true,
+      "incompatibility_reason": null,
+      "license": "Apache-2.0",
+      "maximum_episode_length_registered": 50,
+      "official_source_repository": "haosulab/ManiSkill_Demonstrations",
+      "official_source_revision": "d674485bbffdd533914e52d272fdda34c0515608",
+      "pd_joint_pos_action_space": {
+        "dtype": "float32",
+        "high": [
+          2.8973000049591064,
+          1.7627999782562256,
+          2.8973000049591064,
+          -0.0697999969124794,
+          2.8973000049591064,
+          3.752500057220459,
+          2.8973000049591064,
+          1.0
+        ],
+        "low": [
+          -2.8973000049591064,
+          -1.7627999782562256,
+          -2.8973000049591064,
+          -3.0717999935150146,
+          -2.8973000049591064,
+          -0.017500000074505806,
+          -2.8973000049591064,
+          -1.0
+        ],
+        "shape": [
+          8
+        ]
+      },
+      "required_assets": "built-in procedural rigid-body task assets",
+      "reset_randomization_summary": "cube xy pose and goal pose vary by reset seed",
+      "rgb_camera_names": [
+        "base_camera"
+      ],
+      "sources": [
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            8
+          ],
+          "control_mode": "pd_joint_pos",
+          "h5_relative_path": "motionplanning/trajectory.h5",
+          "h5_sha256": "sha256:03ca60546541a7f18321d9d32721f0254bc75217828c0cadacd217d0c014576a",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "motionplanning/trajectory.json",
+          "metadata_sha256": "sha256:16e403cb77bfbdda28c243b96eb90adbae1c0edf42854283be57ee47076a2e90",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "auto",
+          "source_type": "motionplanning",
+          "successful_trajectory_count": 1000,
+          "total_transitions": 77976,
+          "trajectory_count": 1000
+        },
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            4
+          ],
+          "control_mode": "pd_ee_delta_pos",
+          "h5_relative_path": "rl/trajectory.none.pd_ee_delta_pos.physx_cuda.h5",
+          "h5_sha256": "sha256:e4c6c9b9a327217c186171060c5495e2a1acac80c2627e7267df1fabb7735b49",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "rl/trajectory.none.pd_ee_delta_pos.physx_cuda.json",
+          "metadata_sha256": "sha256:4665c6a9cdb342f13c348de2315995905109ae41246355bec8cbfbac108d9661",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "physx_cuda",
+          "source_type": "rl",
+          "successful_trajectory_count": 1022,
+          "total_transitions": 51001,
+          "trajectory_count": 1022
+        },
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            7
+          ],
+          "control_mode": "pd_ee_delta_pose",
+          "h5_relative_path": "rl/trajectory.none.pd_ee_delta_pose.physx_cuda.h5",
+          "h5_sha256": "sha256:5a560b8b73d4b2446cbb49f0dcb470b6a00f35236bc660da9a6e519dadbf6530",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "rl/trajectory.none.pd_ee_delta_pose.physx_cuda.json",
+          "metadata_sha256": "sha256:920fe2fc06c0a5efd879e1735e6b5e3710293fd05af9b52f5caa5e4b97226d5a",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "physx_cuda",
+          "source_type": "rl",
+          "successful_trajectory_count": 1013,
+          "total_transitions": 50360,
+          "trajectory_count": 1013
+        },
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            8
+          ],
+          "control_mode": "pd_joint_delta_pos",
+          "h5_relative_path": "rl/trajectory.none.pd_joint_delta_pos.physx_cuda.h5",
+          "h5_sha256": "sha256:b05851319021c290ed5e5055c03c776b434af5c9af98e13db2ab9159752b89c8",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "rl/trajectory.none.pd_joint_delta_pos.physx_cuda.json",
+          "metadata_sha256": "sha256:f6bb8a6a94ff165fdcb65e6a47cd8c3f6ac8fa01d0ae77bc05613b88e27916d1",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "physx_cuda",
+          "source_type": "rl",
+          "successful_trajectory_count": 997,
+          "total_transitions": 49539,
+          "trajectory_count": 997
+        },
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            8
+          ],
+          "control_mode": "pd_joint_pos",
+          "h5_relative_path": "teleop/trajectory.h5",
+          "h5_sha256": "sha256:0e6285c5e7a9293fbb1c10590a1be4fc115792cb816e00b37e9914369a0c3c94",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "teleop/trajectory.json",
+          "metadata_sha256": "sha256:ed867dd733d307ba2cf50151625060a0728224fcb574713b0298232ac4ea789a",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "physx_cpu_inferred",
+          "source_type": "teleop",
+          "successful_trajectory_count": 10,
+          "total_transitions": 1058,
+          "trajectory_count": 10
+        }
+      ],
+      "state_observation_available": true,
+      "success_predicate_modified": false,
+      "success_predicate_summary": "cube position within 0.025 m of goal and robot static",
+      "supported_robot_uid": "panda",
+      "task_id": "PickCube-v1"
+    },
+    {
+      "base_camera_256_rgb_available": true,
+      "common_panda_actuation": true,
+      "compatibility": "directly_compatible",
+      "direct_pd_joint_pos_source_count": 1,
+      "downloaded_source_count": 4,
+      "environment_registered": true,
+      "incompatibility_reason": null,
+      "license": "Apache-2.0",
+      "maximum_episode_length_registered": 50,
+      "official_source_repository": "haosulab/ManiSkill_Demonstrations",
+      "official_source_revision": "d674485bbffdd533914e52d272fdda34c0515608",
+      "pd_joint_pos_action_space": {
+        "dtype": "float32",
+        "high": [
+          2.8973000049591064,
+          1.7627999782562256,
+          2.8973000049591064,
+          -0.0697999969124794,
+          2.8973000049591064,
+          3.752500057220459,
+          2.8973000049591064,
+          1.0
+        ],
+        "low": [
+          -2.8973000049591064,
+          -1.7627999782562256,
+          -2.8973000049591064,
+          -3.0717999935150146,
+          -2.8973000049591064,
+          -0.017500000074505806,
+          -2.8973000049591064,
+          -1.0
+        ],
+        "shape": [
+          8
+        ]
+      },
+      "required_assets": "built-in procedural rigid-body task assets",
+      "reset_randomization_summary": "both cube xy poses vary by reset seed",
+      "rgb_camera_names": [
+        "base_camera",
+        "hand_camera"
+      ],
+      "sources": [
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            8
+          ],
+          "control_mode": "pd_joint_pos",
+          "h5_relative_path": "motionplanning/trajectory.h5",
+          "h5_sha256": "sha256:61d07df7b52f303d2088e977df5f863be7d2274348ff05791f3a815359815523",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "motionplanning/trajectory.json",
+          "metadata_sha256": "sha256:48cb1119c9f5a8f0d7187fc83674a2c401b41466cb1930b2a5c26b706ba3bd81",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "auto",
+          "source_type": "motionplanning",
+          "successful_trajectory_count": 1000,
+          "total_transitions": 107420,
+          "trajectory_count": 1000
+        },
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            4
+          ],
+          "control_mode": "pd_ee_delta_pos",
+          "h5_relative_path": "rl/trajectory.none.pd_ee_delta_pos.physx_cuda.h5",
+          "h5_sha256": "sha256:92566bce8046ccb8c602c1d929d61d7a77734fc07d7111c3d01d9ad6b80376df",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "rl/trajectory.none.pd_ee_delta_pos.physx_cuda.json",
+          "metadata_sha256": "sha256:3b1cc7a591f0330d5b32ac319aa002116d043dfa84436e75472a6efdaa2f37bd",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "physx_cuda",
+          "source_type": "rl",
+          "successful_trajectory_count": 902,
+          "total_transitions": 44318,
+          "trajectory_count": 902
+        },
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            7
+          ],
+          "control_mode": "pd_ee_delta_pose",
+          "h5_relative_path": "rl/trajectory.none.pd_ee_delta_pose.physx_cuda.h5",
+          "h5_sha256": "sha256:6b045c6ef0cbc47fcdd2e9a36dfafbeb187805881f2c4594959e4c0a1054da43",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "rl/trajectory.none.pd_ee_delta_pose.physx_cuda.json",
+          "metadata_sha256": "sha256:88373dce9b6cc914f047b4194f2175b9f8819c6e9ae45972dfd2aaa1616dfe4f",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "physx_cuda",
+          "source_type": "rl",
+          "successful_trajectory_count": 995,
+          "total_transitions": 39316,
+          "trajectory_count": 995
+        },
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            8
+          ],
+          "control_mode": "pd_joint_delta_pos",
+          "h5_relative_path": "rl/trajectory.none.pd_joint_delta_pos.physx_cuda.h5",
+          "h5_sha256": "sha256:1f21bf527a4036ccc693ff9adc34993029d3570beda57cd693a0d53bf0dfbb03",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "rl/trajectory.none.pd_joint_delta_pos.physx_cuda.json",
+          "metadata_sha256": "sha256:f2c5418a04ffca6455f6b145190c8f440051d30aeba56ec511e1d8f8f6e06c04",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "physx_cuda",
+          "source_type": "rl",
+          "successful_trajectory_count": 932,
+          "total_transitions": 40697,
+          "trajectory_count": 932
+        }
+      ],
+      "state_observation_available": true,
+      "success_predicate_modified": false,
+      "success_predicate_summary": "cube A stably stacked on cube B and robot static",
+      "supported_robot_uid": "panda_wristcam",
+      "task_id": "StackCube-v1"
+    },
+    {
+      "base_camera_256_rgb_available": true,
+      "common_panda_actuation": true,
+      "compatibility": "directly_compatible",
+      "direct_pd_joint_pos_source_count": 1,
+      "downloaded_source_count": 4,
+      "environment_registered": true,
+      "incompatibility_reason": null,
+      "license": "Apache-2.0",
+      "maximum_episode_length_registered": 50,
+      "official_source_repository": "haosulab/ManiSkill_Demonstrations",
+      "official_source_revision": "d674485bbffdd533914e52d272fdda34c0515608",
+      "pd_joint_pos_action_space": {
+        "dtype": "float32",
+        "high": [
+          2.8973000049591064,
+          1.7627999782562256,
+          2.8973000049591064,
+          -0.0697999969124794,
+          2.8973000049591064,
+          3.752500057220459,
+          2.8973000049591064,
+          1.0
+        ],
+        "low": [
+          -2.8973000049591064,
+          -1.7627999782562256,
+          -2.8973000049591064,
+          -3.0717999935150146,
+          -2.8973000049591064,
+          -0.017500000074505806,
+          -2.8973000049591064,
+          -1.0
+        ],
+        "shape": [
+          8
+        ]
+      },
+      "required_assets": "built-in procedural rigid-body task assets",
+      "reset_randomization_summary": "cube and goal xy poses vary by reset seed",
+      "rgb_camera_names": [
+        "base_camera"
+      ],
+      "sources": [
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            8
+          ],
+          "control_mode": "pd_joint_pos",
+          "h5_relative_path": "motionplanning/trajectory.h5",
+          "h5_sha256": "sha256:d74a4c0efdbf68cb5512dabfc9dfa2759fb53c7f221b15ded92b0d03533f3f2b",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "motionplanning/trajectory.json",
+          "metadata_sha256": "sha256:b33b5fadbdf5fd9e6c739d414d77a0ba61ae0dc05453e76392c2fd7d48e4522c",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "auto",
+          "source_type": "motionplanning",
+          "successful_trajectory_count": 1000,
+          "total_transitions": 68978,
+          "trajectory_count": 1000
+        },
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            4
+          ],
+          "control_mode": "pd_ee_delta_pos",
+          "h5_relative_path": "rl/trajectory.none.pd_ee_delta_pos.physx_cuda.h5",
+          "h5_sha256": "sha256:8b1f6f41b2d9a539efd98a1d7daaa9fd5dca322302f04b555ffe0107a752f312",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "rl/trajectory.none.pd_ee_delta_pos.physx_cuda.json",
+          "metadata_sha256": "sha256:23a3308629477ba86a9c3f29fc8dc47c1ac5d610a8550e046ada50ba17d090e5",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "physx_cuda",
+          "source_type": "rl",
+          "successful_trajectory_count": 1021,
+          "total_transitions": 22116,
+          "trajectory_count": 1021
+        },
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            7
+          ],
+          "control_mode": "pd_ee_delta_pose",
+          "h5_relative_path": "rl/trajectory.none.pd_ee_delta_pose.physx_cuda.h5",
+          "h5_sha256": "sha256:9975ca1094f9c3ceaf04ac8c7975130cb25bcd5666370355cbf187cd54bae098",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "rl/trajectory.none.pd_ee_delta_pose.physx_cuda.json",
+          "metadata_sha256": "sha256:fc2f096918612188e34720848681dfd50d8fc82b332fb98875d1659d0d17cfe9",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "physx_cuda",
+          "source_type": "rl",
+          "successful_trajectory_count": 1018,
+          "total_transitions": 32019,
+          "trajectory_count": 1018
+        },
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            8
+          ],
+          "control_mode": "pd_joint_delta_pos",
+          "h5_relative_path": "rl/trajectory.none.pd_joint_delta_pos.physx_cuda.h5",
+          "h5_sha256": "sha256:10a9c7f311a86f85ff34d507dc3031fc11149ff715b67011cc5b947eecf059b9",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "rl/trajectory.none.pd_joint_delta_pos.physx_cuda.json",
+          "metadata_sha256": "sha256:8f7f7918e6e015f590b193ee5502f89a511569df5415e11adaa62dd4cb60ad50",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "physx_cuda",
+          "source_type": "rl",
+          "successful_trajectory_count": 1023,
+          "total_transitions": 24988,
+          "trajectory_count": 1023
+        }
+      ],
+      "state_observation_available": true,
+      "success_predicate_modified": false,
+      "success_predicate_summary": "cube center within 0.05 m of goal region",
+      "supported_robot_uid": "panda",
+      "task_id": "PushCube-v1"
+    },
+    {
+      "base_camera_256_rgb_available": true,
+      "common_panda_actuation": true,
+      "compatibility": "incompatible",
+      "direct_pd_joint_pos_source_count": 0,
+      "downloaded_source_count": 3,
+      "environment_registered": true,
+      "incompatibility_reason": "Downloaded official sources contain only delta-action RL trajectories; Phase 2B.5 does not convert or repair them.",
+      "license": "Apache-2.0",
+      "maximum_episode_length_registered": 50,
+      "official_source_repository": "haosulab/ManiSkill_Demonstrations",
+      "official_source_revision": "d674485bbffdd533914e52d272fdda34c0515608",
+      "pd_joint_pos_action_space": {
+        "dtype": "float32",
+        "high": [
+          2.8973000049591064,
+          1.7627999782562256,
+          2.8973000049591064,
+          -0.0697999969124794,
+          2.8973000049591064,
+          3.752500057220459,
+          2.8973000049591064,
+          1.0
+        ],
+        "low": [
+          -2.8973000049591064,
+          -1.7627999782562256,
+          -2.8973000049591064,
+          -3.0717999935150146,
+          -2.8973000049591064,
+          -0.017500000074505806,
+          -2.8973000049591064,
+          -1.0
+        ],
+        "shape": [
+          8
+        ]
+      },
+      "required_assets": "built-in procedural rigid-body task assets",
+      "reset_randomization_summary": "cube, peg/tool, and goal placements vary by reset seed",
+      "rgb_camera_names": [
+        "base_camera"
+      ],
+      "sources": [
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            4
+          ],
+          "control_mode": "pd_ee_delta_pos",
+          "h5_relative_path": "rl/trajectory.none.pd_ee_delta_pos.physx_cuda.h5",
+          "h5_sha256": "sha256:4561a6e53f6a8fa312f58c6a1b25e2df3d6883ee54e60bc70e3d730d97a2652b",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "rl/trajectory.none.pd_ee_delta_pos.physx_cuda.json",
+          "metadata_sha256": "sha256:2d800e6871ef90d61ad21ac7ed9b983366eba4da0876231bd41e13945ddfee10",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "physx_cuda",
+          "source_type": "rl",
+          "successful_trajectory_count": 761,
+          "total_transitions": 30144,
+          "trajectory_count": 761
+        },
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            7
+          ],
+          "control_mode": "pd_ee_delta_pose",
+          "h5_relative_path": "rl/trajectory.none.pd_ee_delta_pose.physx_cuda.h5",
+          "h5_sha256": "sha256:d1663a4464555d46c6021e0602fda0ca462049de2de58ce8695760a99ecd77f9",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "rl/trajectory.none.pd_ee_delta_pose.physx_cuda.json",
+          "metadata_sha256": "sha256:cbe4b9f6b0c570833f817630008d19f6c6e771a2f08d2b113955327f4833d803",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "physx_cuda",
+          "source_type": "rl",
+          "successful_trajectory_count": 579,
+          "total_transitions": 20768,
+          "trajectory_count": 579
+        },
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            8
+          ],
+          "control_mode": "pd_joint_delta_pos",
+          "h5_relative_path": "rl/trajectory.none.pd_joint_delta_pos.physx_cuda.h5",
+          "h5_sha256": "sha256:0fb7b1ff1a463c240e809f107adc27a6d97748cd4c7893907de8ef2e318e2365",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "rl/trajectory.none.pd_joint_delta_pos.physx_cuda.json",
+          "metadata_sha256": "sha256:82901a1a643a919882187c6bcaf3d5d647747914dc2fd0ab3b07da44ebef89e3",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "physx_cuda",
+          "source_type": "rl",
+          "successful_trajectory_count": 960,
+          "total_transitions": 46238,
+          "trajectory_count": 960
+        }
+      ],
+      "state_observation_available": true,
+      "success_predicate_modified": false,
+      "success_predicate_summary": "cube center within 0.05 m of goal after tool-mediated contact",
+      "supported_robot_uid": "panda",
+      "task_id": "PokeCube-v1"
+    },
+    {
+      "base_camera_256_rgb_available": true,
+      "common_panda_actuation": true,
+      "compatibility": "incompatible",
+      "direct_pd_joint_pos_source_count": 0,
+      "downloaded_source_count": 3,
+      "environment_registered": true,
+      "incompatibility_reason": "Downloaded official sources contain only delta-action RL trajectories; Phase 2B.5 does not convert or repair them.",
+      "license": "Apache-2.0",
+      "maximum_episode_length_registered": 50,
+      "official_source_repository": "haosulab/ManiSkill_Demonstrations",
+      "official_source_revision": "d674485bbffdd533914e52d272fdda34c0515608",
+      "pd_joint_pos_action_space": {
+        "dtype": "float32",
+        "high": [
+          2.8973000049591064,
+          1.7627999782562256,
+          2.8973000049591064,
+          -0.0697999969124794,
+          2.8973000049591064,
+          3.752500057220459,
+          2.8973000049591064,
+          1.0
+        ],
+        "low": [
+          -2.8973000049591064,
+          -1.7627999782562256,
+          -2.8973000049591064,
+          -3.0717999935150146,
+          -2.8973000049591064,
+          -0.017500000074505806,
+          -2.8973000049591064,
+          -1.0
+        ],
+        "shape": [
+          8
+        ]
+      },
+      "required_assets": "built-in procedural rigid-body task assets",
+      "reset_randomization_summary": "cube and goal placements vary by reset seed",
+      "rgb_camera_names": [
+        "base_camera"
+      ],
+      "sources": [
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            4
+          ],
+          "control_mode": "pd_ee_delta_pos",
+          "h5_relative_path": "rl/trajectory.none.pd_ee_delta_pos.physx_cuda.h5",
+          "h5_sha256": "sha256:9c53063d390b6f465b0111bcaacf620cdb640c406aab18a498b040042384ffe4",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "rl/trajectory.none.pd_ee_delta_pos.physx_cuda.json",
+          "metadata_sha256": "sha256:56487cf86740dccd6ffcdce084a0049abb847d6f7390e0cf6dd25a1fa77d17fc",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "physx_cuda",
+          "source_type": "rl",
+          "successful_trajectory_count": 1024,
+          "total_transitions": 17303,
+          "trajectory_count": 1024
+        },
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            7
+          ],
+          "control_mode": "pd_ee_delta_pose",
+          "h5_relative_path": "rl/trajectory.none.pd_ee_delta_pose.physx_cuda.h5",
+          "h5_sha256": "sha256:8e6cfab91bf2a3a8e29a0a5b30c0a3f33bc2ee8081d5f1da4fd260db7df97202",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "rl/trajectory.none.pd_ee_delta_pose.physx_cuda.json",
+          "metadata_sha256": "sha256:3726932dda702b509259295e219b4bdbd74102258622ed76595d40cbb725b679",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "physx_cuda",
+          "source_type": "rl",
+          "successful_trajectory_count": 1024,
+          "total_transitions": 10720,
+          "trajectory_count": 1024
+        },
+        {
+          "action_dtype": "float32",
+          "action_shape": [
+            "T",
+            8
+          ],
+          "control_mode": "pd_joint_delta_pos",
+          "h5_relative_path": "rl/trajectory.none.pd_joint_delta_pos.physx_cuda.h5",
+          "h5_sha256": "sha256:4cf8d03c1e61427f36d660aa01087effc6aec5b4239559cc2f83d4028076cf5d",
+          "max_episode_steps": 50,
+          "metadata_relative_path": "rl/trajectory.none.pd_joint_delta_pos.physx_cuda.json",
+          "metadata_sha256": "sha256:99ee6a8058e9e087df6d0763ddfd5efd4bde6f624554af1f761340bdfdc7f3a9",
+          "official_replay_tooling_supported": true,
+          "sim_backend": "physx_cuda",
+          "source_type": "rl",
+          "successful_trajectory_count": 1024,
+          "total_transitions": 21638,
+          "trajectory_count": 1024
+        }
+      ],
+      "state_observation_available": true,
+      "success_predicate_modified": false,
+      "success_predicate_summary": "cube center within 0.05 m of goal behind the initial object",
+      "supported_robot_uid": "panda",
+      "task_id": "PullCube-v1"
+    }
+  ]
+}

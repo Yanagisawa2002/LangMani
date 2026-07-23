@@ -1,0 +1,42 @@
+{
+  "diagnostic_privileged_state_separate": true,
+  "fingerprint": "sha256:94103a33c4630949da8183ce0c38237bf5808dc1767ce411e4384887c651fea6",
+  "frame_timing": "each frame is captured immediately before its recorded action",
+  "passed": true,
+  "privileged_fields_in_student_schema": [],
+  "reconstruction": "semantic reset plus official first env-state anchor, then pre-action base_camera RGB and Panda active-joint extraction",
+  "schema_version": "langmani-v2-phase2b5-observation-contract-audit-v0",
+  "source_compressed_observation": "none",
+  "student_contract": {
+    "image": {
+      "camera": "base_camera",
+      "crop": "none",
+      "dtype": "uint8",
+      "layout": "HWC_RGB",
+      "shape": [
+        256,
+        256,
+        3
+      ]
+    },
+    "language": "one canonical task instruction",
+    "state": {
+      "components": [
+        "panda_joint1",
+        "panda_joint2",
+        "panda_joint3",
+        "panda_joint4",
+        "panda_joint5",
+        "panda_joint6",
+        "panda_joint7",
+        "panda_finger_joint1",
+        "panda_finger_joint2"
+      ],
+      "dtype": "float32",
+      "schema": "PandaPolicyStateV0",
+      "shape": [
+        9
+      ]
+    }
+  }
+}

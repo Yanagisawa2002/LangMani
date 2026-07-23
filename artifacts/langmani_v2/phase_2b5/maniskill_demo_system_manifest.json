@@ -1,0 +1,22 @@
+{
+  "action_storage": "actual executed float32 action arrays",
+  "camera_rendering": "sensor_configs and render backend during replay",
+  "control_mode_conversion": "official tool supports selected conversions on CPU, but Phase 2B.5 did not convert the accepted direct pd_joint_pos sources",
+  "dataset_license": "Apache-2.0",
+  "download_cli_sha256": "sha256:1eef894a4c50a6ca0b87165e33e9b6348783881500d9832803a7091f41eb55a1",
+  "environment_state_storage": "recursive actor/articulation arrays",
+  "fingerprint": "sha256:1bc36de1b084173c4fd671f9c0e66840357bfe0a478d7977a1d8a3e727cae17e",
+  "gpu_cpu_limitations": "CPU/GPU reset physics may differ; official --use-first-env-state anchors the stored initial state. Control-mode conversion is unavailable in parallel GPU replay.",
+  "maniskill_source_revision": "a4a4f9272ad64b1564035874b605ceb687b63ed8",
+  "maniskill_version": "3.0.1",
+  "metadata_format": "JSON env_info plus per-episode reset/control/success records",
+  "observation_conversion": "--obs-mode can generate RGB while replaying actions or stored states",
+  "official_dataset_repository": "haosulab/ManiSkill_Demonstrations",
+  "official_dataset_revision": "d674485bbffdd533914e52d272fdda34c0515608",
+  "official_replay_tool": "python -m mani_skill.trajectory.replay_trajectory",
+  "reset_metadata": "episode reset_kwargs plus seed",
+  "schema_version": "langmani-v2-phase2b5-maniskill-demo-system-v0",
+  "source_type_metadata": "archive directory identity such as motionplanning/rl/teleop",
+  "success_verification": "unmodified environment info['success']",
+  "trajectory_format": "HDF5 traj_<episode_id> groups with actions, T transition arrays, and T+1 recursive env_states"
+}

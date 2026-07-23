@@ -1,0 +1,10 @@
+{
+  "conversion_scope": "pilot_only",
+  "fingerprint": "sha256:2b57f9d9dfca7d1ed429b08ef10ef20688b8c3f7439e6c2cb90701e5a1a51c30",
+  "full_dataset_produced": false,
+  "official_multi_skill_source_validated": true,
+  "reason": "Three genuinely distinct official skill families passed immutable-source, direct action, bounded and 100-trajectory replay, nonprivileged visual/state, LeRobot 0.6 conversion/readback, and split-design gates.",
+  "result": "RESULT_A",
+  "schema_version": "langmani-v2-phase2b5-result-classification-v0",
+  "training_started": false
+}

@@ -1,0 +1,28 @@
+{
+  "diagnostic_env_states_remain_external": true,
+  "environment_state_in_student_fields": false,
+  "fingerprint": "sha256:bdc2d92f63a141108e930f2bfbe48ef596b354397d104c1ffc0e615a9e8d5d9b",
+  "goal_pose_in_student_fields": false,
+  "object_pose_in_student_fields": false,
+  "panda_state_components": [
+    "panda_joint1",
+    "panda_joint2",
+    "panda_joint3",
+    "panda_joint4",
+    "panda_joint5",
+    "panda_joint6",
+    "panda_joint7",
+    "panda_finger_joint1",
+    "panda_finger_joint2"
+  ],
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b5-privilege-exclusion-v0",
+  "student_field_allowlist": [
+    "rgb",
+    "state",
+    "action",
+    "task_instruction",
+    "task_id",
+    "timestamp"
+  ]
+}

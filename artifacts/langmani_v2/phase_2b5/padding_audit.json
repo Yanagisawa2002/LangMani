@@ -1,0 +1,47 @@
+{
+  "audits": {
+    "10": {
+      "chunk_length": 10,
+      "padded_chunk_percentage": 8.732212160413972,
+      "padded_chunks": 135,
+      "padded_timestep_percentage": 4.366106080206986,
+      "padded_timesteps": 675,
+      "required_mask_field": "action_is_pad",
+      "total_chunk_timesteps": 15460,
+      "total_chunks": 1546
+    },
+    "50": {
+      "chunk_length": 50,
+      "padded_chunk_percentage": 47.54204398447607,
+      "padded_chunks": 735,
+      "padded_timestep_percentage": 23.771021992238033,
+      "padded_timesteps": 18375,
+      "required_mask_field": "action_is_pad",
+      "total_chunk_timesteps": 77300,
+      "total_chunks": 1546
+    }
+  },
+  "episode_count": 15,
+  "episode_lengths": [
+    49,
+    78,
+    84,
+    103,
+    72,
+    106,
+    114,
+    412,
+    80,
+    99,
+    66,
+    72,
+    69,
+    61,
+    81
+  ],
+  "fingerprint": "sha256:f6215a2dd0978ee0977ebb7bcd31904c665c06a202d72176138bbc2f0fd49fc0",
+  "historical_act_comparison": "historical_act_retrain_required",
+  "historical_act_reason": "Historical ACT used the frozen LangMani M3B distribution and H=50. Official multi-skill tasks, reset distribution, camera content, episode lengths, and language supervision differ, so old results are context only until retrained under an identical data and runtime contract.",
+  "lerobot_060_loss_mask_behavior": "Dataset storage does not define model loss masking; future policy adapters must materialize and consume action_is_pad explicitly.",
+  "schema_version": "langmani-v2-phase2b5-padding-audit-v0"
+}

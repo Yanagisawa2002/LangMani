@@ -1,0 +1,163 @@
+{
+  "created_at_utc": "2026-07-23T11:32:45.126428+00:00",
+  "dataset_root": "/root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608/lerobot_pilot_v0",
+  "dataset_root_committed": false,
+  "episode_count": 15,
+  "episodes": [
+    {
+      "canonical_instruction": "Pick up the cube and move it to the target location.",
+      "converted_episode_index": 0,
+      "frame_count": 49,
+      "source_episode_id": 8,
+      "task_id": "PickCube-v1"
+    },
+    {
+      "canonical_instruction": "Pick up the cube and move it to the target location.",
+      "converted_episode_index": 1,
+      "frame_count": 78,
+      "source_episode_id": 340,
+      "task_id": "PickCube-v1"
+    },
+    {
+      "canonical_instruction": "Pick up the cube and move it to the target location.",
+      "converted_episode_index": 2,
+      "frame_count": 84,
+      "source_episode_id": 514,
+      "task_id": "PickCube-v1"
+    },
+    {
+      "canonical_instruction": "Pick up the cube and move it to the target location.",
+      "converted_episode_index": 3,
+      "frame_count": 103,
+      "source_episode_id": 954,
+      "task_id": "PickCube-v1"
+    },
+    {
+      "canonical_instruction": "Pick up the cube and move it to the target location.",
+      "converted_episode_index": 4,
+      "frame_count": 72,
+      "source_episode_id": 976,
+      "task_id": "PickCube-v1"
+    },
+    {
+      "canonical_instruction": "Pick up one cube and stack it on top of the other cube.",
+      "converted_episode_index": 5,
+      "frame_count": 106,
+      "source_episode_id": 103,
+      "task_id": "StackCube-v1"
+    },
+    {
+      "canonical_instruction": "Pick up one cube and stack it on top of the other cube.",
+      "converted_episode_index": 6,
+      "frame_count": 114,
+      "source_episode_id": 287,
+      "task_id": "StackCube-v1"
+    },
+    {
+      "canonical_instruction": "Pick up one cube and stack it on top of the other cube.",
+      "converted_episode_index": 7,
+      "frame_count": 412,
+      "source_episode_id": 413,
+      "task_id": "StackCube-v1"
+    },
+    {
+      "canonical_instruction": "Pick up one cube and stack it on top of the other cube.",
+      "converted_episode_index": 8,
+      "frame_count": 80,
+      "source_episode_id": 581,
+      "task_id": "StackCube-v1"
+    },
+    {
+      "canonical_instruction": "Pick up one cube and stack it on top of the other cube.",
+      "converted_episode_index": 9,
+      "frame_count": 99,
+      "source_episode_id": 778,
+      "task_id": "StackCube-v1"
+    },
+    {
+      "canonical_instruction": "Push the cube onto the target region.",
+      "converted_episode_index": 10,
+      "frame_count": 66,
+      "source_episode_id": 98,
+      "task_id": "PushCube-v1"
+    },
+    {
+      "canonical_instruction": "Push the cube onto the target region.",
+      "converted_episode_index": 11,
+      "frame_count": 72,
+      "source_episode_id": 416,
+      "task_id": "PushCube-v1"
+    },
+    {
+      "canonical_instruction": "Push the cube onto the target region.",
+      "converted_episode_index": 12,
+      "frame_count": 69,
+      "source_episode_id": 605,
+      "task_id": "PushCube-v1"
+    },
+    {
+      "canonical_instruction": "Push the cube onto the target region.",
+      "converted_episode_index": 13,
+      "frame_count": 61,
+      "source_episode_id": 676,
+      "task_id": "PushCube-v1"
+    },
+    {
+      "canonical_instruction": "Push the cube onto the target region.",
+      "converted_episode_index": 14,
+      "frame_count": 81,
+      "source_episode_id": 801,
+      "task_id": "PushCube-v1"
+    }
+  ],
+  "features": {
+    "action": {
+      "dtype": "float32",
+      "shape": [
+        8
+      ]
+    },
+    "episode_index": {
+      "managed_by_lerobot": true
+    },
+    "frame_index": {
+      "managed_by_lerobot": true
+    },
+    "observation.images.base_camera": {
+      "dtype": "video",
+      "shape": [
+        256,
+        256,
+        3
+      ]
+    },
+    "observation.state": {
+      "dtype": "float32",
+      "shape": [
+        9
+      ]
+    },
+    "task": {
+      "semantic": "canonical natural-language instruction"
+    },
+    "task_id": {
+      "dtype": "string"
+    },
+    "timestamp": {
+      "managed_by_lerobot": true
+    }
+  },
+  "fingerprint": "sha256:ccb63f0800eb76c93c3cb6c5f3b40e231de4f6a4fe7dbe6907372d3db21ce95f",
+  "frame_count": 1546,
+  "full_dataset_production_started": false,
+  "passed": true,
+  "processor_compatibility": "Dataset features use public LeRobot 0.6 conventions; no policy processor was loaded because model loading and training are outside this phase.",
+  "repo_id": "langmani/phase2b5-official-pilot-v0",
+  "schema_version": "langmani-v2-phase2b5-lerobot-conversion-pilot-v0",
+  "scope": "bounded conversion pilot; not full dataset production",
+  "task_ids": [
+    "PickCube-v1",
+    "PushCube-v1",
+    "StackCube-v1"
+  ]
+}

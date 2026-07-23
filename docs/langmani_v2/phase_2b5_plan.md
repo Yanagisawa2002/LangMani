@@ -10,6 +10,15 @@ pilot, and round-trip only that pilot through LeRobot 0.6.
 It does not create a planner or expert, repair official actions, change official success
 predicates, export a full dataset, create an optimizer, run a backward pass, or train a policy.
 
+## Completion
+
+Phase 2B.5 completed as `RESULT_A` at execution commit
+`0b7f4d5e3b6fc909ee370aad5048ea7cc3ab9b17`. Three direct official sources passed every frozen
+gate: `PickCube-v1`, `StackCube-v1`, and `PushCube-v1`. The compact 28-file artifact package and
+independent no-simulator verifier both pass. This result validates only the official source and
+makes a separately invoked Phase 2B.6 dataset-production phase eligible; no full dataset or policy
+training was started.
+
 ## Immutable start and isolation
 
 - Parent: `codex/langmani-v2-phase2b4-f1-ppo-diagnosis` at

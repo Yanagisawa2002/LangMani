@@ -1,0 +1,431 @@
+{
+  "action_contract": {
+    "control_mode": "pd_joint_pos",
+    "dtype": "float32",
+    "shape": [
+      8
+    ],
+    "timing": "each frame is captured immediately before its recorded action"
+  },
+  "created_at_utc": "2026-07-23T11:28:20.317852+00:00",
+  "episode_count": 15,
+  "fingerprint": "sha256:8ec674eb0ae8062cae783487b16178563b0785dee161b833aef8324ab07e30d8",
+  "image_contract": {
+    "camera": "base_camera",
+    "crop": "none",
+    "dtype": "uint8",
+    "layout": "HWC_RGB",
+    "shape": [
+      256,
+      256,
+      3
+    ]
+  },
+  "passed": true,
+  "pilot_root": "/root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608/pilot_raw_v0",
+  "pilot_root_committed": false,
+  "policy_frame_count": 1546,
+  "privileged_fields_in_student_schema": [],
+  "schema_version": "langmani-v2-phase2b5-visual-pilot-manifest-v0",
+  "state_contract": {
+    "components": [
+      "panda_joint1",
+      "panda_joint2",
+      "panda_joint3",
+      "panda_joint4",
+      "panda_joint5",
+      "panda_joint6",
+      "panda_joint7",
+      "panda_finger_joint1",
+      "panda_finger_joint2"
+    ],
+    "dtype": "float32",
+    "schema": "PandaPolicyStateV0",
+    "shape": [
+      9
+    ]
+  },
+  "tasks": [
+    {
+      "camera_name": "base_camera",
+      "episodes": [
+        {
+          "contact_sheet_relative_path": "contact_sheets/PickCube-v1_episode_000008.png",
+          "contact_sheet_sha256": "sha256:0da232cad5466f27d6969dca5b74720bbf7902aecb311c671ca66d70f5179ffa",
+          "episode_id": 8,
+          "first_frame_semantics": "pre-action state for action[0]",
+          "frame_action_aligned": true,
+          "last_policy_frame_semantics": "pre-action state for the final recorded action",
+          "npz_relative_path": "PickCube-v1/episode_000008.npz",
+          "npz_sha256": "sha256:c88549656e873b7c2a1fee058783b7012f935ea36056680ad5f809135df2e3de",
+          "policy_frame_count": 49,
+          "privileged_fields": [],
+          "source_length": 49,
+          "student_fields": [
+            "rgb",
+            "state",
+            "action",
+            "task_instruction",
+            "task_id",
+            "timestamp"
+          ],
+          "success": true,
+          "terminal_diagnostic_frame_count": 1,
+          "terminal_frame_semantics": "post-final-action diagnostic only; excluded from training frames"
+        },
+        {
+          "contact_sheet_relative_path": "contact_sheets/PickCube-v1_episode_000340.png",
+          "contact_sheet_sha256": "sha256:6815e8f34c828e8b2570cf75ff9abb127dba70afd9ab957fda9a6048becd6741",
+          "episode_id": 340,
+          "first_frame_semantics": "pre-action state for action[0]",
+          "frame_action_aligned": true,
+          "last_policy_frame_semantics": "pre-action state for the final recorded action",
+          "npz_relative_path": "PickCube-v1/episode_000340.npz",
+          "npz_sha256": "sha256:b0a92f14c351201435764fbf3260527cd9fe933c909c95f04cc8efecc2bb2fe4",
+          "policy_frame_count": 78,
+          "privileged_fields": [],
+          "source_length": 78,
+          "student_fields": [
+            "rgb",
+            "state",
+            "action",
+            "task_instruction",
+            "task_id",
+            "timestamp"
+          ],
+          "success": true,
+          "terminal_diagnostic_frame_count": 1,
+          "terminal_frame_semantics": "post-final-action diagnostic only; excluded from training frames"
+        },
+        {
+          "contact_sheet_relative_path": "contact_sheets/PickCube-v1_episode_000514.png",
+          "contact_sheet_sha256": "sha256:29056bcbd93e0240bdd9fe538a1ebc3428e5fe97a412ee3e9d697d8e3aa61125",
+          "episode_id": 514,
+          "first_frame_semantics": "pre-action state for action[0]",
+          "frame_action_aligned": true,
+          "last_policy_frame_semantics": "pre-action state for the final recorded action",
+          "npz_relative_path": "PickCube-v1/episode_000514.npz",
+          "npz_sha256": "sha256:80d3c54fbb2e40752aff570e3259b35be5d5b4fcbcf9de36f2f18f32572f395e",
+          "policy_frame_count": 84,
+          "privileged_fields": [],
+          "source_length": 84,
+          "student_fields": [
+            "rgb",
+            "state",
+            "action",
+            "task_instruction",
+            "task_id",
+            "timestamp"
+          ],
+          "success": true,
+          "terminal_diagnostic_frame_count": 1,
+          "terminal_frame_semantics": "post-final-action diagnostic only; excluded from training frames"
+        },
+        {
+          "contact_sheet_relative_path": "contact_sheets/PickCube-v1_episode_000954.png",
+          "contact_sheet_sha256": "sha256:780b554b460199523aa99cff8cd7351bbe329313f244722c302f7032bee11149",
+          "episode_id": 954,
+          "first_frame_semantics": "pre-action state for action[0]",
+          "frame_action_aligned": true,
+          "last_policy_frame_semantics": "pre-action state for the final recorded action",
+          "npz_relative_path": "PickCube-v1/episode_000954.npz",
+          "npz_sha256": "sha256:16ee8b6e7f5526488c628b28c5c537fcb032913db81e8c5e5bad78eb7792a9f4",
+          "policy_frame_count": 103,
+          "privileged_fields": [],
+          "source_length": 103,
+          "student_fields": [
+            "rgb",
+            "state",
+            "action",
+            "task_instruction",
+            "task_id",
+            "timestamp"
+          ],
+          "success": true,
+          "terminal_diagnostic_frame_count": 1,
+          "terminal_frame_semantics": "post-final-action diagnostic only; excluded from training frames"
+        },
+        {
+          "contact_sheet_relative_path": "contact_sheets/PickCube-v1_episode_000976.png",
+          "contact_sheet_sha256": "sha256:63fa3aa48570cb6c4fb8907450a39214374c0a6144e691864a1553337cf4a1e7",
+          "episode_id": 976,
+          "first_frame_semantics": "pre-action state for action[0]",
+          "frame_action_aligned": true,
+          "last_policy_frame_semantics": "pre-action state for the final recorded action",
+          "npz_relative_path": "PickCube-v1/episode_000976.npz",
+          "npz_sha256": "sha256:4df513eed1bfa493a35d6e678c42255113e35670e812c8e69a51c24cb8dabf41",
+          "policy_frame_count": 72,
+          "privileged_fields": [],
+          "source_length": 72,
+          "student_fields": [
+            "rgb",
+            "state",
+            "action",
+            "task_instruction",
+            "task_id",
+            "timestamp"
+          ],
+          "success": true,
+          "terminal_diagnostic_frame_count": 1,
+          "terminal_frame_semantics": "post-final-action diagnostic only; excluded from training frames"
+        }
+      ],
+      "robot_uid": "panda",
+      "task_id": "PickCube-v1"
+    },
+    {
+      "camera_name": "base_camera",
+      "episodes": [
+        {
+          "contact_sheet_relative_path": "contact_sheets/StackCube-v1_episode_000103.png",
+          "contact_sheet_sha256": "sha256:66660d8e6906bf81850c5b2a390686bc8ca19d725015255d354114daad9fc1a4",
+          "episode_id": 103,
+          "first_frame_semantics": "pre-action state for action[0]",
+          "frame_action_aligned": true,
+          "last_policy_frame_semantics": "pre-action state for the final recorded action",
+          "npz_relative_path": "StackCube-v1/episode_000103.npz",
+          "npz_sha256": "sha256:d304535db345a9afd8d6ffd777a90282550bf93f0beec45b7f740ea8df621553",
+          "policy_frame_count": 106,
+          "privileged_fields": [],
+          "source_length": 106,
+          "student_fields": [
+            "rgb",
+            "state",
+            "action",
+            "task_instruction",
+            "task_id",
+            "timestamp"
+          ],
+          "success": true,
+          "terminal_diagnostic_frame_count": 1,
+          "terminal_frame_semantics": "post-final-action diagnostic only; excluded from training frames"
+        },
+        {
+          "contact_sheet_relative_path": "contact_sheets/StackCube-v1_episode_000287.png",
+          "contact_sheet_sha256": "sha256:4a17fb2a7678791569be8eaf1d462de3c3f7f62fd44169ea3c3b214fe383c64a",
+          "episode_id": 287,
+          "first_frame_semantics": "pre-action state for action[0]",
+          "frame_action_aligned": true,
+          "last_policy_frame_semantics": "pre-action state for the final recorded action",
+          "npz_relative_path": "StackCube-v1/episode_000287.npz",
+          "npz_sha256": "sha256:6a7b714aea05d1256bcb8c79a01b5226c3b751f203c0a5b741ff976f7bf248a2",
+          "policy_frame_count": 114,
+          "privileged_fields": [],
+          "source_length": 114,
+          "student_fields": [
+            "rgb",
+            "state",
+            "action",
+            "task_instruction",
+            "task_id",
+            "timestamp"
+          ],
+          "success": true,
+          "terminal_diagnostic_frame_count": 1,
+          "terminal_frame_semantics": "post-final-action diagnostic only; excluded from training frames"
+        },
+        {
+          "contact_sheet_relative_path": "contact_sheets/StackCube-v1_episode_000413.png",
+          "contact_sheet_sha256": "sha256:5e9f1eba8f5363358d4bb440030a9819dea3f53191d279c9852131cec2e15662",
+          "episode_id": 413,
+          "first_frame_semantics": "pre-action state for action[0]",
+          "frame_action_aligned": true,
+          "last_policy_frame_semantics": "pre-action state for the final recorded action",
+          "npz_relative_path": "StackCube-v1/episode_000413.npz",
+          "npz_sha256": "sha256:489a53c2b4e9069ba77d87491691ab26740e865a9c61602e17f5224a59efa15a",
+          "policy_frame_count": 412,
+          "privileged_fields": [],
+          "source_length": 412,
+          "student_fields": [
+            "rgb",
+            "state",
+            "action",
+            "task_instruction",
+            "task_id",
+            "timestamp"
+          ],
+          "success": true,
+          "terminal_diagnostic_frame_count": 1,
+          "terminal_frame_semantics": "post-final-action diagnostic only; excluded from training frames"
+        },
+        {
+          "contact_sheet_relative_path": "contact_sheets/StackCube-v1_episode_000581.png",
+          "contact_sheet_sha256": "sha256:bc0b61ef427a77fc9c2bfd33afe688af655f3b8a3744ba3f9856979c91918501",
+          "episode_id": 581,
+          "first_frame_semantics": "pre-action state for action[0]",
+          "frame_action_aligned": true,
+          "last_policy_frame_semantics": "pre-action state for the final recorded action",
+          "npz_relative_path": "StackCube-v1/episode_000581.npz",
+          "npz_sha256": "sha256:244eb5bd5335849696075f450b01bff30a7d6128d71c6d998028948c8f700968",
+          "policy_frame_count": 80,
+          "privileged_fields": [],
+          "source_length": 80,
+          "student_fields": [
+            "rgb",
+            "state",
+            "action",
+            "task_instruction",
+            "task_id",
+            "timestamp"
+          ],
+          "success": true,
+          "terminal_diagnostic_frame_count": 1,
+          "terminal_frame_semantics": "post-final-action diagnostic only; excluded from training frames"
+        },
+        {
+          "contact_sheet_relative_path": "contact_sheets/StackCube-v1_episode_000778.png",
+          "contact_sheet_sha256": "sha256:333712a4202578f42df9540fc27c52f25d93ae49a3b79a57fb14d1b2bf332599",
+          "episode_id": 778,
+          "first_frame_semantics": "pre-action state for action[0]",
+          "frame_action_aligned": true,
+          "last_policy_frame_semantics": "pre-action state for the final recorded action",
+          "npz_relative_path": "StackCube-v1/episode_000778.npz",
+          "npz_sha256": "sha256:87ee9841b2c5f1bc85aba05afa0de33403fae06e8192fd6442520baf8eac0e07",
+          "policy_frame_count": 99,
+          "privileged_fields": [],
+          "source_length": 99,
+          "student_fields": [
+            "rgb",
+            "state",
+            "action",
+            "task_instruction",
+            "task_id",
+            "timestamp"
+          ],
+          "success": true,
+          "terminal_diagnostic_frame_count": 1,
+          "terminal_frame_semantics": "post-final-action diagnostic only; excluded from training frames"
+        }
+      ],
+      "robot_uid": "panda_wristcam",
+      "task_id": "StackCube-v1"
+    },
+    {
+      "camera_name": "base_camera",
+      "episodes": [
+        {
+          "contact_sheet_relative_path": "contact_sheets/PushCube-v1_episode_000098.png",
+          "contact_sheet_sha256": "sha256:1f584edfd065b7ffae04a47548667dec70138741dc0356002f1ba95d3be2c6b7",
+          "episode_id": 98,
+          "first_frame_semantics": "pre-action state for action[0]",
+          "frame_action_aligned": true,
+          "last_policy_frame_semantics": "pre-action state for the final recorded action",
+          "npz_relative_path": "PushCube-v1/episode_000098.npz",
+          "npz_sha256": "sha256:d13521f9f80bbfc86b6cc5bd91e3330df1c9f9d0736aab13d19f22f0d062b9bc",
+          "policy_frame_count": 66,
+          "privileged_fields": [],
+          "source_length": 66,
+          "student_fields": [
+            "rgb",
+            "state",
+            "action",
+            "task_instruction",
+            "task_id",
+            "timestamp"
+          ],
+          "success": true,
+          "terminal_diagnostic_frame_count": 1,
+          "terminal_frame_semantics": "post-final-action diagnostic only; excluded from training frames"
+        },
+        {
+          "contact_sheet_relative_path": "contact_sheets/PushCube-v1_episode_000416.png",
+          "contact_sheet_sha256": "sha256:26305d43debb7ab9c13c7ca732507417cd4f180c82e6435803613f7664822387",
+          "episode_id": 416,
+          "first_frame_semantics": "pre-action state for action[0]",
+          "frame_action_aligned": true,
+          "last_policy_frame_semantics": "pre-action state for the final recorded action",
+          "npz_relative_path": "PushCube-v1/episode_000416.npz",
+          "npz_sha256": "sha256:c2721880183be770e8b1283608aa3e1406f49b3226f685e75fe9f32e22b7a04c",
+          "policy_frame_count": 72,
+          "privileged_fields": [],
+          "source_length": 72,
+          "student_fields": [
+            "rgb",
+            "state",
+            "action",
+            "task_instruction",
+            "task_id",
+            "timestamp"
+          ],
+          "success": true,
+          "terminal_diagnostic_frame_count": 1,
+          "terminal_frame_semantics": "post-final-action diagnostic only; excluded from training frames"
+        },
+        {
+          "contact_sheet_relative_path": "contact_sheets/PushCube-v1_episode_000605.png",
+          "contact_sheet_sha256": "sha256:98d9782dc0b2413b719bd231e886f69977c06ba2af4edf6f8625b45e5bd3ace5",
+          "episode_id": 605,
+          "first_frame_semantics": "pre-action state for action[0]",
+          "frame_action_aligned": true,
+          "last_policy_frame_semantics": "pre-action state for the final recorded action",
+          "npz_relative_path": "PushCube-v1/episode_000605.npz",
+          "npz_sha256": "sha256:53de0bce142930764e3557c641279addc48b5abd9186c753329a3672b598ea83",
+          "policy_frame_count": 69,
+          "privileged_fields": [],
+          "source_length": 69,
+          "student_fields": [
+            "rgb",
+            "state",
+            "action",
+            "task_instruction",
+            "task_id",
+            "timestamp"
+          ],
+          "success": true,
+          "terminal_diagnostic_frame_count": 1,
+          "terminal_frame_semantics": "post-final-action diagnostic only; excluded from training frames"
+        },
+        {
+          "contact_sheet_relative_path": "contact_sheets/PushCube-v1_episode_000676.png",
+          "contact_sheet_sha256": "sha256:95aad57484fbb9dad28b4f4f721771b9dcdd0c0947aa56754407d3ad2e3c60a7",
+          "episode_id": 676,
+          "first_frame_semantics": "pre-action state for action[0]",
+          "frame_action_aligned": true,
+          "last_policy_frame_semantics": "pre-action state for the final recorded action",
+          "npz_relative_path": "PushCube-v1/episode_000676.npz",
+          "npz_sha256": "sha256:066426f1b9e7901b48b84c49fde4caa30d71b90a8ca3f3b3f903daeaf16be2d4",
+          "policy_frame_count": 61,
+          "privileged_fields": [],
+          "source_length": 61,
+          "student_fields": [
+            "rgb",
+            "state",
+            "action",
+            "task_instruction",
+            "task_id",
+            "timestamp"
+          ],
+          "success": true,
+          "terminal_diagnostic_frame_count": 1,
+          "terminal_frame_semantics": "post-final-action diagnostic only; excluded from training frames"
+        },
+        {
+          "contact_sheet_relative_path": "contact_sheets/PushCube-v1_episode_000801.png",
+          "contact_sheet_sha256": "sha256:23f62a947fe670b8618e607891c486b84a617f2a100cc7ccc28c6235e5818e45",
+          "episode_id": 801,
+          "first_frame_semantics": "pre-action state for action[0]",
+          "frame_action_aligned": true,
+          "last_policy_frame_semantics": "pre-action state for the final recorded action",
+          "npz_relative_path": "PushCube-v1/episode_000801.npz",
+          "npz_sha256": "sha256:dc804a6e8a3877f5d8cee967968e12d4b8a05cc6a0a9a90728b344c575d21b5f",
+          "policy_frame_count": 81,
+          "privileged_fields": [],
+          "source_length": 81,
+          "student_fields": [
+            "rgb",
+            "state",
+            "action",
+            "task_instruction",
+            "task_id",
+            "timestamp"
+          ],
+          "success": true,
+          "terminal_diagnostic_frame_count": 1,
+          "terminal_frame_semantics": "post-final-action diagnostic only; excluded from training frames"
+        }
+      ],
+      "robot_uid": "panda",
+      "task_id": "PushCube-v1"
+    }
+  ]
+}

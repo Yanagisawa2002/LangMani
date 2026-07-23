@@ -1,0 +1,47 @@
+{
+  "fingerprint": "sha256:09a405bb566b3bc430fd7a4b5df1268fee96f904bbebe57b10fdaf57b9adcf19",
+  "independent_of_privileged_state": true,
+  "large_paraphrase_set_created": false,
+  "schema_version": "langmani-v2-phase2b5-language-contract-v0",
+  "tasks": [
+    {
+      "canonical_instruction": "Pick up the cube and move it to the target location.",
+      "object_relation_metadata": {
+        "object": "cube",
+        "relation": "at target location",
+        "tool": null
+      },
+      "official_demo_registered": true,
+      "preferred": true,
+      "skill_family": "pick_and_place",
+      "source_description": "official ManiSkill task objective",
+      "task_id": "PickCube-v1"
+    },
+    {
+      "canonical_instruction": "Pick up one cube and stack it on top of the other cube.",
+      "object_relation_metadata": {
+        "object": "one cube",
+        "relation": "on top of the other cube",
+        "tool": null
+      },
+      "official_demo_registered": true,
+      "preferred": true,
+      "skill_family": "stacking",
+      "source_description": "official ManiSkill task objective",
+      "task_id": "StackCube-v1"
+    },
+    {
+      "canonical_instruction": "Push the cube onto the target region.",
+      "object_relation_metadata": {
+        "object": "cube",
+        "relation": "on target region",
+        "tool": "robot end effector"
+      },
+      "official_demo_registered": true,
+      "preferred": true,
+      "skill_family": "planar_pushing",
+      "source_description": "official ManiSkill task objective",
+      "task_id": "PushCube-v1"
+    }
+  ]
+}

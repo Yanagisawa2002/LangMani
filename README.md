@@ -144,6 +144,17 @@ episodes per selected task, and round-trips only that bounded pilot through an i
 [`Phase 2B.5 plan`](docs/langmani_v2/phase_2b5_plan.md) and
 [`demonstration mechanism audit`](docs/langmani_v2/phase_2b5_maniskill_demo_audit.md).
 
+Phase 2B.5 completed as `RESULT_A`. The direct official PickCube, StackCube, and PushCube sources
+contain 3,000 successful trajectories and 254,374 transitions under the common Panda
+`pd_joint_pos float32[8]` contract. The 20-episode and 100-episode stratified replay gates passed
+for all three tasks with 100% categorical agreement, 100% action/frame alignment, zero invalid
+actions, and zero simulator errors. The 15-episode/1,546-frame nonprivileged visual pilot also
+passed isolated LeRobot 0.6 conversion and all-frame PyAV readback. PokeCube and PullCube were not
+forced into the contract because their downloaded official sources contain no direct
+`pd_joint_pos` trajectories. `official_demo_source_validated=true` and
+`phase2b6_dataset_production_eligible=true`; full production and every policy-training
+authorization remain false.
+
 The native no-training stages are explicitly separate:
 
 ```bash
@@ -159,6 +170,7 @@ python environment/run_v2_phase2b5_official_demos.py convert \
 python environment/run_v2_phase2b5_official_demos.py readback \
   --dataset-root <lerobot-pilot-root>
 python environment/run_v2_phase2b5_official_demos.py padding
+python environment/run_v2_phase2b5_official_demos.py lerobot-environment
 ```
 
 Compact finalized evidence is independently checked without simulation or policy loading:

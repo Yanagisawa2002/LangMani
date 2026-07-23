@@ -1,0 +1,54 @@
+{
+  "branch": "codex/langmani-v2-phase2b5-official-demos",
+  "fingerprint": "sha256:7b04f4529c729d6ee0ae2fa5611f899d023135ebcd640af22d8fbefc14c6ea2a",
+  "formal_historical_seed_sets_accessed": false,
+  "implementation_head": "0b7f4d5e3b6fc909ee370aad5048ea7cc3ab9b17",
+  "implementation_worktree_clean_before_finalization": true,
+  "official_bytes_mixed_into_custom_v1_or_v2_identity": false,
+  "parent_commit": "6ca3786702ada4e92be607a5293b9c3c31d2a7d4",
+  "passed": true,
+  "prior_authorization_flags": {
+    "phase2b4_collection_authorized": false,
+    "phase2c2_training_authorized": false
+  },
+  "remote": "https://github.com/Yanagisawa2002/LangMani.git",
+  "repository": "https://github.com/Yanagisawa2002/LangMani.git",
+  "runtime_environments": {
+    "lerobot_pilot": "/root/autodl-tmp/conda-envs/langmani-lerobot060-phase2b5",
+    "main": "langmani Python 3.12 / ManiSkill 3.0.1",
+    "planner": "unchanged planner overlay; not invoked"
+  },
+  "schema_version": "langmani-v2-phase2b5-repository-environment-audit-v0",
+  "server_state": {
+    "backward_passes": 0,
+    "created_at_utc": "2026-07-23T11:53:12.628092+00:00",
+    "custom_expert_started": false,
+    "execution_commit": "0b7f4d5e3b6fc909ee370aad5048ea7cc3ab9b17",
+    "fingerprint": "sha256:6129dae737e129f3b4a7717d03161f1d0a0ef733da0ddab8b837a42c8de49732",
+    "full_dataset_export_started": false,
+    "gpu": {
+      "available": true,
+      "driver": "595.71.05",
+      "memory_total_mib": 32607,
+      "memory_used_mib": 2,
+      "name": "NVIDIA GeForce RTX 5090",
+      "uuid": "GPU-e72d1ea7-5fcb-a83f-ba21-88f316be5a4b"
+    },
+    "hostname": "autodl-container-xpe9q58l10-db426ce5",
+    "maniskill_version": "3.0.1",
+    "network_turbo_sourced": true,
+    "official_source_download_only": true,
+    "optimizer_created": false,
+    "planner_started": false,
+    "recorded_action_replay_only": true,
+    "runtime_python": "3.12.13",
+    "schema_version": "langmani-v2-phase2b5-remote-execution-audit-v0",
+    "torch_version": "2.11.0+cu128",
+    "training_started": false
+  },
+  "source_branch": "codex/langmani-v2-phase2b4-f1-ppo-diagnosis",
+  "source_worktree_clean_before_editing": true,
+  "upstream": "origin/codex/langmani-v2-phase2b5-official-demos",
+  "upstream_and_github_source_sha_verified": true,
+  "worktree": "D:/LangMani-worktrees/phase2b5-official-demos"
+}

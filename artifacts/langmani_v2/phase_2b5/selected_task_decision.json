@@ -1,0 +1,19 @@
+{
+  "PokeCube-v1_selected": false,
+  "PullCube-v1_selected": false,
+  "accepted_skill_families": [
+    "pick_and_place",
+    "stacking",
+    "planar_pushing"
+  ],
+  "common_embodiment": "Panda active-joint and 8D action contract; StackCube's panda_wristcam adds an unused wrist camera while preserving the base-camera/student allowlist",
+  "decision_for_nonselected": "no deterministic conversion was attempted because direct pd_joint_pos official bytes were unavailable",
+  "fingerprint": "sha256:7911014abf0a78993ed308581f20fc9f8c249f3ce21067affefbdba5dc49bedc",
+  "genuinely_distinct_skill_family_count": 3,
+  "schema_version": "langmani-v2-phase2b5-selected-task-decision-v0",
+  "selected_task_ids": [
+    "PickCube-v1",
+    "StackCube-v1",
+    "PushCube-v1"
+  ]
+}

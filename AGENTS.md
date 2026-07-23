@@ -125,6 +125,18 @@ for this task formulation; there is no PPO F2, Probe C, reward retry, sweep, res
 increase. Formal seeds 66300--66399, Stage 1/2, full PPO training, expert qualification, collection,
 LeRobot, SmolVLA, and all student training remain sealed and unauthorized.
 
+Phase 2B.5 completed as Result A without reopening the custom source route. The pinned official
+PickCube, StackCube, and PushCube motion-planning sources contributed three skill families, 3,000
+successful source trajectories, and 254,374 transitions under one direct Panda
+`pd_joint_pos float32[8]` contract. Each task passed 20/20 bounded and 100/100 stronger recorded-
+action replays with exact categorical agreement and action/frame alignment, zero invalid actions,
+and zero simulator errors. The nonprivileged 15-episode/1,546-frame pilot passed isolated LeRobot
+0.6 conversion and all-frame readback. PokeCube and PullCube were not converted because their
+downloaded official packages contain only delta-action sources. This sets
+`official_demo_source_validated=true` and `phase2b6_dataset_production_eligible=true` only. Full
+dataset production, ACT, SmolVLA, VLA-JEPA, student training, and custom-expert reactivation remain
+unstarted and unauthorized.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
@@ -306,6 +318,10 @@ CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_f1.py --compare-action
 # Probe A is allowed only after the three diagnostics pass. Probe B is allowed only
 # when its explicit --probe-a-evaluation report passes every frozen gate.
 CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_f1.py --train-probe-a
+
+# Phase 2B.5 official-source qualification; stages remain explicitly separate.
+python environment/run_v2_phase2b5_official_demos.py --help
+python environment/verify_v2_phase2b5.py
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,
@@ -506,6 +522,11 @@ The exact environment creation commands are maintained in `README.md`.
   third probe, resume or sweep a failed probe, or create demonstration/dataset/student artifacts.
   Probe A retains F0 reward revision 0. Any Probe B reward revision requires an explicit
   diagnosis-bound decision artifact and cannot be chosen merely because F0 success was zero.
+- Phase 2B.5 official source bytes, extracted work files, visual pilots, LeRobot data, videos, and
+  runtime logs remain outside source control. Compact evidence may record hashes, schemas,
+  replay outcomes, and bounded pilot metadata only. Result A authorizes only a separately invoked
+  Phase 2B.6 dataset-production decision; it must not start full production, load a policy, create
+  an optimizer, or authorize ACT, SmolVLA, VLA-JEPA, or other training.
 
 ## Definition of done
 

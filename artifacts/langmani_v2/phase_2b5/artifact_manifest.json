@@ -1,0 +1,146 @@
+{
+  "files": [
+    {
+      "path": "accepted_official_demo_source_package.json",
+      "sha256": "sha256:22e93d609fc4564d0bdb3e5fc7571cf8971c8a86b3cf3bdaa910108621bcbcc2",
+      "size_bytes": 1931
+    },
+    {
+      "path": "action_contract_audit.json",
+      "sha256": "sha256:82569d22731797e66651ad402ed5b2db5f095aef34d350d30b65cdc58d06d6b9",
+      "size_bytes": 7390
+    },
+    {
+      "path": "authorization_state.json",
+      "sha256": "sha256:7551c98cefd0514c7662ef7c076ea7dff96e5bcdf64c30ccaa770c38e76fa162",
+      "size_bytes": 556
+    },
+    {
+      "path": "bounded_replay_results.json",
+      "sha256": "sha256:2c9a4fdd266ecfceb21c6775b0a27eee38c673c8ce94cf4e87000dd83f394a0a",
+      "size_bytes": 283123
+    },
+    {
+      "path": "conversion_pilot_manifest.json",
+      "sha256": "sha256:d6d45fede7d37c806ebefe5e8175aac40278ed4056cceba9c359bd64a12182bf",
+      "size_bytes": 4845
+    },
+    {
+      "path": "custom_push_route_closure.json",
+      "sha256": "sha256:e98c462d7efb64f38603d95535b59aab40d3495f2881c640c1caa982b123bdee",
+      "size_bytes": 1317
+    },
+    {
+      "path": "language_contract_manifest.json",
+      "sha256": "sha256:93bcd6a00e6fc93add28fea47fc836f82aa848bc7a679ca5c1c90f637f78d74f",
+      "size_bytes": 1573
+    },
+    {
+      "path": "lerobot_060_environment_manifest.json",
+      "sha256": "sha256:e6bbbb1cfb079eec3d8085bce1bdef61da3abbf07ab9f0662b0d008786ff68ba",
+      "size_bytes": 1125
+    },
+    {
+      "path": "lerobot_readback_result.json",
+      "sha256": "sha256:9a612acfee27c254f986fddbf23ddb7318f24ec12871014787cb62762242204c",
+      "size_bytes": 2201
+    },
+    {
+      "path": "maniskill_demo_system_manifest.json",
+      "sha256": "sha256:1e8156315ab84a38231eb66152d16f1d0ae1942a72e019bfe78888175333a1af",
+      "size_bytes": 1696
+    },
+    {
+      "path": "observation_contract_audit.json",
+      "sha256": "sha256:292d1b27247fbb49a4fd67fd80050fc771f3a1df5f94f6913943bc2ede7602b1",
+      "size_bytes": 1194
+    },
+    {
+      "path": "padding_audit.json",
+      "sha256": "sha256:b3864d9b521df33e0389c040aeabdbd1be701b1b21f72496191b51a090e0b48a",
+      "size_bytes": 1535
+    },
+    {
+      "path": "prior_evidence_verification.json",
+      "sha256": "sha256:0e8d82decfa42c83928ae047ef246fe74a1f2639ffa4a99ba3e50a0b0b527126",
+      "size_bytes": 1633
+    },
+    {
+      "path": "privilege_exclusion_audit.json",
+      "sha256": "sha256:774d9f1fa851c31aabe78635243a3d60e042e9fe10383cab0e8124b503e3b33b",
+      "size_bytes": 716
+    },
+    {
+      "path": "remote_execution_audit.json",
+      "sha256": "sha256:55daa4444cb7d4c50aaa5514335f014b80978352062cc94db515b711f142046a",
+      "size_bytes": 954
+    },
+    {
+      "path": "replay_protocol.json",
+      "sha256": "sha256:290f428db00cf5f37c569863968b326377598806c83a8067280d23ddbabbf90b",
+      "size_bytes": 979
+    },
+    {
+      "path": "repository_environment_audit.json",
+      "sha256": "sha256:aa14251679ce634e191391fd21fa0a1d8f70e8f717f141604a3f1d9ea02a7adf",
+      "size_bytes": 2347
+    },
+    {
+      "path": "result_classification.json",
+      "sha256": "sha256:bf19ee418f57bfaa88f4b81fbe4dbb70a6cc739bfa8a11a3d75ccfa57a7cec62",
+      "size_bytes": 560
+    },
+    {
+      "path": "selected_task_decision.json",
+      "sha256": "sha256:3f9eeb388aed08a426ef38179f4b09bc4ce5ccd45f09efa2a5b54546fcf5c18d",
+      "size_bytes": 769
+    },
+    {
+      "path": "source_download_manifest.json",
+      "sha256": "sha256:b2dd7f28bce1a36f403ec51805e554b3e12d7394844e2fa60bdf5c9e7ac0437f",
+      "size_bytes": 17760
+    },
+    {
+      "path": "source_hash_index.json",
+      "sha256": "sha256:f0f0e4636665977a306c250f02ec50eb9b368caefb89e17b8dc97256daad40a8",
+      "size_bytes": 1464
+    },
+    {
+      "path": "source_schema_statistics.json",
+      "sha256": "sha256:a9e4e653f0c13134e95ace845c3678f15e11d2d121f97601f9cf1980992829d8",
+      "size_bytes": 10142
+    },
+    {
+      "path": "split_design_manifest.json",
+      "sha256": "sha256:33bb1d6882266fb7f6e34b4a80d959ed915aaeffdfb01b447dda4d0c2c4c3b9c",
+      "size_bytes": 1247
+    },
+    {
+      "path": "strong_replay_results.json",
+      "sha256": "sha256:72b917970b91767b1df64921ec6be550083c49c8e5fd33e9bdec25242003c0d2",
+      "size_bytes": 1387220
+    },
+    {
+      "path": "task_candidate_audit.json",
+      "sha256": "sha256:cf9cdcf96ac23bd36eae109e09a162788adffbebd7a5ab9d322bbfd4ea81a68b",
+      "size_bytes": 24927
+    },
+    {
+      "path": "task_candidate_runtime_audit.json",
+      "sha256": "sha256:c4d8792cdec0cbf1f1249e9f44886d8fab611a06fb7065cf6e96e809af1b1311",
+      "size_bytes": 24497
+    },
+    {
+      "path": "visual_pilot_manifest.json",
+      "sha256": "sha256:e1a905102baeb7cd36b5cab52ff3624a03420d5a2fb393db9812f86484eb8a90",
+      "size_bytes": 17855
+    }
+  ],
+  "fingerprint": "sha256:e65adf42d3329066f52ee440fa95b095946274dd54833c04fc7c5f6aa36838c4",
+  "large_official_sources_committed": false,
+  "lerobot_pilot_dataset_committed": false,
+  "result": "RESULT_A",
+  "schema_version": "langmani-v2-phase2b5-artifact-manifest-v0",
+  "text_byte_contract": "UTF-8 JSON with Git LF-normalized text bytes",
+  "visual_pilot_dataset_committed": false
+}

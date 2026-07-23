@@ -1,0 +1,53 @@
+{
+  "action_contract": "action_contract_audit.json",
+  "camera_state_pilot": "visual_pilot_manifest.json",
+  "contains_trained_model": false,
+  "conversion_scope": "five-episode-per-task pilot only",
+  "environment_source_revision": "a4a4f9272ad64b1564035874b605ceb687b63ed8",
+  "environment_version": "3.0.1",
+  "fingerprint": "sha256:222aab646082519d3e761f1c71557f8a6b9236dd02eed5814edb5ee9f80af91a",
+  "gates": {
+    "common_action_contract": true,
+    "lerobot_conversion": true,
+    "lerobot_readback": true,
+    "observation_generation": true,
+    "privilege_exclusion": true,
+    "replay": true,
+    "source_identity": true,
+    "source_schema": true,
+    "split_design": true
+  },
+  "known_limitations": [
+    "only a five-episode-per-task visual/LeRobot pilot was produced",
+    "strong replay covers 100/1000 trajectories per selected task, not 100%",
+    "PokeCube-v1 and PullCube-v1 lack a direct pd_joint_pos official source",
+    "full dataset production and every policy training path remain unauthorized"
+  ],
+  "language_contract": "language_contract_manifest.json",
+  "lerobot_conversion_pilot": "conversion_pilot_manifest.json",
+  "lerobot_readback": "lerobot_readback_result.json",
+  "licenses": [
+    "Apache-2.0"
+  ],
+  "observation_contract": "observation_contract_audit.json",
+  "official_source_repository": "haosulab/ManiSkill_Demonstrations",
+  "official_source_revision": "d674485bbffdd533914e52d272fdda34c0515608",
+  "padding_audit": "padding_audit.json",
+  "replay_results": [
+    "bounded_replay_results.json",
+    "strong_replay_results.json"
+  ],
+  "schema_version": "langmani-v2-phase2b5-accepted-official-source-package-v0",
+  "selected_task_ids": [
+    "PickCube-v1",
+    "StackCube-v1",
+    "PushCube-v1"
+  ],
+  "skill_families": [
+    "pick_and_place",
+    "planar_pushing",
+    "stacking"
+  ],
+  "source_hash_index": "source_hash_index.json",
+  "split_design": "split_design_manifest.json"
+}

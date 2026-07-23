@@ -35,6 +35,16 @@ qualification separately records semantic-reset error. It keeps an official
 `--use-first-env-state`-equivalent fallback for a mismatching reset, but does not overwrite an
 already exact same-backend reset before replaying actions on `physx_cpu`.
 
+The five immutable ZIP files total 138,681,813 bytes. Their individual SHA-256 values and safe
+member inventories are frozen in `source_download_manifest.json`. The direct motion-planning
+sources provide `pd_joint_pos float32[T,8]` actions for Pick, Stack, and Push. The downloaded Poke
+and Pull packages provide only delta-action RL trajectories, so Phase 2B.5 classifies them
+incompatible and performs no conversion.
+
+The runtime-registered episode limits recovered from the official metadata are 50 for Pick, Push,
+Poke, and Pull, and 550 for Stack. All selected sources use 20 Hz control with five simulation
+substeps per action.
+
 ## Boundaries
 
 Official replay success is read from each unmodified task's own `info["success"]`. A source is not

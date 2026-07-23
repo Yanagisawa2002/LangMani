@@ -1,0 +1,24 @@
+{
+  "bounded_sample_per_task": 20,
+  "continuous_diagnostics": [
+    "semantic reset state maximum/mean absolute error",
+    "terminal state maximum/mean absolute error",
+    "source versus replay first-success step"
+  ],
+  "fingerprint": "sha256:61dafcc302b462f07ff3aee9316e25cc2796dbd759b12e29729e488783eaa8ae",
+  "gates": {
+    "action_frame_alignment_rate": 1.0,
+    "categorical_outcome_agreement_rate": 0.99,
+    "invalid_action_count": 0,
+    "simulator_error_count": 0
+  },
+  "official_first_state_anchor": "fallback only when semantic reset does not exactly reconstruct source state",
+  "planner_or_expert_invoked": false,
+  "schema_version": "langmani-v2-phase2b5-replay-protocol-v0",
+  "selection": "deterministic length-spanning sample with distinct reset identities",
+  "semantic_reset_first": true,
+  "sim_backend": "physx_cpu",
+  "source_actions": "official recorded actions only",
+  "strong_sample_per_selected_task": 100,
+  "success_predicate_modified": false
+}

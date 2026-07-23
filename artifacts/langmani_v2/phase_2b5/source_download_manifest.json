@@ -1,0 +1,518 @@
+{
+  "files": [
+    {
+      "downloaded_at_utc": "2026-07-23T10:39:19.065696+00:00",
+      "file_name": "PickCube-v1.zip",
+      "license": "Apache-2.0",
+      "member_count": 22,
+      "members": [
+        {
+          "compressed_size_bytes": 0,
+          "path": "PickCube-v1/",
+          "size_bytes": 0
+        },
+        {
+          "compressed_size_bytes": 0,
+          "path": "PickCube-v1/rl/",
+          "size_bytes": 0
+        },
+        {
+          "compressed_size_bytes": 10577,
+          "path": "PickCube-v1/rl/trajectory.none.pd_joint_delta_pos.physx_cuda.json",
+          "size_bytes": 190445
+        },
+        {
+          "compressed_size_bytes": 1066595,
+          "path": "PickCube-v1/rl/ppo_pd_ee_delta_pos_ckpt.pt",
+          "size_bytes": 1152034
+        },
+        {
+          "compressed_size_bytes": 47680,
+          "path": "PickCube-v1/rl/sample_pd_ee_delta_pos.mp4",
+          "size_bytes": 48637
+        },
+        {
+          "compressed_size_bytes": 1069465,
+          "path": "PickCube-v1/rl/ppo_pd_ee_delta_pose_ckpt.pt",
+          "size_bytes": 1155106
+        },
+        {
+          "compressed_size_bytes": 6954725,
+          "path": "PickCube-v1/rl/trajectory.none.pd_ee_delta_pos.physx_cuda.h5",
+          "size_bytes": 19287452
+        },
+        {
+          "compressed_size_bytes": 10717,
+          "path": "PickCube-v1/rl/trajectory.none.pd_ee_delta_pose.physx_cuda.json",
+          "size_bytes": 191461
+        },
+        {
+          "compressed_size_bytes": 52217,
+          "path": "PickCube-v1/rl/sample_pd_ee_delta_pose.mp4",
+          "size_bytes": 53166
+        },
+        {
+          "compressed_size_bytes": 7589716,
+          "path": "PickCube-v1/rl/trajectory.none.pd_ee_delta_pose.physx_cuda.h5",
+          "size_bytes": 19989526
+        },
+        {
+          "compressed_size_bytes": 10746,
+          "path": "PickCube-v1/rl/trajectory.none.pd_ee_delta_pos.physx_cuda.json",
+          "size_bytes": 192132
+        },
+        {
+          "compressed_size_bytes": 1070508,
+          "path": "PickCube-v1/rl/ppo_pd_joint_delta_pos_ckpt.pt",
+          "size_bytes": 1156130
+        },
+        {
+          "compressed_size_bytes": 51113,
+          "path": "PickCube-v1/rl/sample_pd_joint_delta_pos.mp4",
+          "size_bytes": 52033
+        },
+        {
+          "compressed_size_bytes": 7627555,
+          "path": "PickCube-v1/rl/trajectory.none.pd_joint_delta_pos.physx_cuda.h5",
+          "size_bytes": 19707932
+        },
+        {
+          "compressed_size_bytes": 0,
+          "path": "PickCube-v1/teleop/",
+          "size_bytes": 0
+        },
+        {
+          "compressed_size_bytes": 149843,
+          "path": "PickCube-v1/teleop/trajectory.h5",
+          "size_bytes": 383621
+        },
+        {
+          "compressed_size_bytes": 91501,
+          "path": "PickCube-v1/teleop/sample.mp4",
+          "size_bytes": 93089
+        },
+        {
+          "compressed_size_bytes": 449,
+          "path": "PickCube-v1/teleop/trajectory.json",
+          "size_bytes": 2702
+        },
+        {
+          "compressed_size_bytes": 0,
+          "path": "PickCube-v1/motionplanning/",
+          "size_bytes": 0
+        },
+        {
+          "compressed_size_bytes": 10695037,
+          "path": "PickCube-v1/motionplanning/trajectory.h5",
+          "size_bytes": 29349195
+        },
+        {
+          "compressed_size_bytes": 75281,
+          "path": "PickCube-v1/motionplanning/sample.mp4",
+          "size_bytes": 76486
+        },
+        {
+          "compressed_size_bytes": 11611,
+          "path": "PickCube-v1/motionplanning/trajectory.json",
+          "size_bytes": 228218
+        }
+      ],
+      "motionplanning_pd_joint_pos_present": true,
+      "official_url": "https://huggingface.co/datasets/haosulab/ManiSkill_Demonstrations/resolve/d674485bbffdd533914e52d272fdda34c0515608/demos/PickCube-v1.zip",
+      "repository": "haosulab/ManiSkill_Demonstrations",
+      "revision": "d674485bbffdd533914e52d272fdda34c0515608",
+      "sha256": "sha256:b2d4afb30fa309755862b98c342e6ee18918253c93f3bbac16ed6670748f26d8",
+      "size_bytes": 36590010,
+      "task_id": "PickCube-v1"
+    },
+    {
+      "downloaded_at_utc": "2026-07-23T10:40:51.671943+00:00",
+      "file_name": "StackCube-v1.zip",
+      "license": "Apache-2.0",
+      "member_count": 18,
+      "members": [
+        {
+          "compressed_size_bytes": 0,
+          "path": "StackCube-v1/",
+          "size_bytes": 0
+        },
+        {
+          "compressed_size_bytes": 0,
+          "path": "StackCube-v1/rl/",
+          "size_bytes": 0
+        },
+        {
+          "compressed_size_bytes": 11638,
+          "path": "StackCube-v1/rl/trajectory.none.pd_joint_delta_pos.physx_cuda.json",
+          "size_bytes": 178068
+        },
+        {
+          "compressed_size_bytes": 1077905,
+          "path": "StackCube-v1/rl/ppo_pd_ee_delta_pos_ckpt.pt",
+          "size_bytes": 1164322
+        },
+        {
+          "compressed_size_bytes": 50399,
+          "path": "StackCube-v1/rl/sample_pd_ee_delta_pos.mp4",
+          "size_bytes": 51391
+        },
+        {
+          "compressed_size_bytes": 1080942,
+          "path": "StackCube-v1/rl/ppo_pd_ee_delta_pose_ckpt.pt",
+          "size_bytes": 1167394
+        },
+        {
+          "compressed_size_bytes": 7758925,
+          "path": "StackCube-v1/rl/trajectory.none.pd_ee_delta_pos.physx_cuda.h5",
+          "size_bytes": 16804514
+        },
+        {
+          "compressed_size_bytes": 12570,
+          "path": "StackCube-v1/rl/trajectory.none.pd_ee_delta_pose.physx_cuda.json",
+          "size_bytes": 188071
+        },
+        {
+          "compressed_size_bytes": 55112,
+          "path": "StackCube-v1/rl/sample_pd_ee_delta_pose.mp4",
+          "size_bytes": 55867
+        },
+        {
+          "compressed_size_bytes": 7534465,
+          "path": "StackCube-v1/rl/trajectory.none.pd_ee_delta_pose.physx_cuda.h5",
+          "size_bytes": 16094487
+        },
+        {
+          "compressed_size_bytes": 9912,
+          "path": "StackCube-v1/rl/trajectory.none.pd_ee_delta_pos.physx_cuda.json",
+          "size_bytes": 169636
+        },
+        {
+          "compressed_size_bytes": 1082050,
+          "path": "StackCube-v1/rl/ppo_pd_joint_delta_pos_ckpt.pt",
+          "size_bytes": 1168418
+        },
+        {
+          "compressed_size_bytes": 60512,
+          "path": "StackCube-v1/rl/sample_pd_joint_delta_pos.mp4",
+          "size_bytes": 61255
+        },
+        {
+          "compressed_size_bytes": 8018282,
+          "path": "StackCube-v1/rl/trajectory.none.pd_joint_delta_pos.physx_cuda.h5",
+          "size_bytes": 16629431
+        },
+        {
+          "compressed_size_bytes": 0,
+          "path": "StackCube-v1/motionplanning/",
+          "size_bytes": 0
+        },
+        {
+          "compressed_size_bytes": 16624808,
+          "path": "StackCube-v1/motionplanning/trajectory.h5",
+          "size_bytes": 38745164
+        },
+        {
+          "compressed_size_bytes": 92924,
+          "path": "StackCube-v1/motionplanning/sample.mp4",
+          "size_bytes": 94538
+        },
+        {
+          "compressed_size_bytes": 11777,
+          "path": "StackCube-v1/motionplanning/trajectory.json",
+          "size_bytes": 229183
+        }
+      ],
+      "motionplanning_pd_joint_pos_present": true,
+      "official_url": "https://huggingface.co/datasets/haosulab/ManiSkill_Demonstrations/resolve/d674485bbffdd533914e52d272fdda34c0515608/demos/StackCube-v1.zip",
+      "repository": "haosulab/ManiSkill_Demonstrations",
+      "revision": "d674485bbffdd533914e52d272fdda34c0515608",
+      "sha256": "sha256:f9b7d34b9aa418a04aa8e4322d4dea5aa27e8ae81757f60b210c1ffc54bf9c1b",
+      "size_bytes": 43486191,
+      "task_id": "StackCube-v1"
+    },
+    {
+      "downloaded_at_utc": "2026-07-23T10:42:15.074379+00:00",
+      "file_name": "PushCube-v1.zip",
+      "license": "Apache-2.0",
+      "member_count": 18,
+      "members": [
+        {
+          "compressed_size_bytes": 0,
+          "path": "PushCube-v1/",
+          "size_bytes": 0
+        },
+        {
+          "compressed_size_bytes": 0,
+          "path": "PushCube-v1/rl/",
+          "size_bytes": 0
+        },
+        {
+          "compressed_size_bytes": 12708,
+          "path": "PushCube-v1/rl/trajectory.none.pd_joint_delta_pos.physx_cuda.json",
+          "size_bytes": 195392
+        },
+        {
+          "compressed_size_bytes": 1053330,
+          "path": "PushCube-v1/rl/ppo_pd_ee_delta_pos_ckpt.pt",
+          "size_bytes": 1137698
+        },
+        {
+          "compressed_size_bytes": 54674,
+          "path": "PushCube-v1/rl/sample_pd_ee_delta_pos.mp4",
+          "size_bytes": 55696
+        },
+        {
+          "compressed_size_bytes": 1056162,
+          "path": "PushCube-v1/rl/ppo_pd_ee_delta_pose_ckpt.pt",
+          "size_bytes": 1140770
+        },
+        {
+          "compressed_size_bytes": 3059281,
+          "path": "PushCube-v1/rl/trajectory.none.pd_ee_delta_pos.physx_cuda.h5",
+          "size_bytes": 10503966
+        },
+        {
+          "compressed_size_bytes": 12250,
+          "path": "PushCube-v1/rl/trajectory.none.pd_ee_delta_pose.physx_cuda.json",
+          "size_bytes": 192310
+        },
+        {
+          "compressed_size_bytes": 85663,
+          "path": "PushCube-v1/rl/sample_pd_ee_delta_pose.mp4",
+          "size_bytes": 86518
+        },
+        {
+          "compressed_size_bytes": 4779098,
+          "path": "PushCube-v1/rl/trajectory.none.pd_ee_delta_pose.physx_cuda.h5",
+          "size_bytes": 13888122
+        },
+        {
+          "compressed_size_bytes": 12686,
+          "path": "PushCube-v1/rl/trajectory.none.pd_ee_delta_pos.physx_cuda.json",
+          "size_bytes": 191646
+        },
+        {
+          "compressed_size_bytes": 1056993,
+          "path": "PushCube-v1/rl/ppo_pd_joint_delta_pos_ckpt.pt",
+          "size_bytes": 1141794
+        },
+        {
+          "compressed_size_bytes": 50765,
+          "path": "PushCube-v1/rl/sample_pd_joint_delta_pos.mp4",
+          "size_bytes": 51413
+        },
+        {
+          "compressed_size_bytes": 4072190,
+          "path": "PushCube-v1/rl/trajectory.none.pd_joint_delta_pos.physx_cuda.h5",
+          "size_bytes": 11880168
+        },
+        {
+          "compressed_size_bytes": 0,
+          "path": "PushCube-v1/motionplanning/",
+          "size_bytes": 0
+        },
+        {
+          "compressed_size_bytes": 9183884,
+          "path": "PushCube-v1/motionplanning/trajectory.h5",
+          "size_bytes": 26480047
+        },
+        {
+          "compressed_size_bytes": 68601,
+          "path": "PushCube-v1/motionplanning/sample.mp4",
+          "size_bytes": 69769
+        },
+        {
+          "compressed_size_bytes": 11358,
+          "path": "PushCube-v1/motionplanning/trajectory.json",
+          "size_bytes": 228243
+        }
+      ],
+      "motionplanning_pd_joint_pos_present": true,
+      "official_url": "https://huggingface.co/datasets/haosulab/ManiSkill_Demonstrations/resolve/d674485bbffdd533914e52d272fdda34c0515608/demos/PushCube-v1.zip",
+      "repository": "haosulab/ManiSkill_Demonstrations",
+      "revision": "d674485bbffdd533914e52d272fdda34c0515608",
+      "sha256": "sha256:1ce24408bf93658501faaa0ef164a0cdc29539cc412612a413fac746697eeab2",
+      "size_bytes": 24573577,
+      "task_id": "PushCube-v1"
+    },
+    {
+      "downloaded_at_utc": "2026-07-23T10:42:21.774254+00:00",
+      "file_name": "PokeCube-v1.zip",
+      "license": "Apache-2.0",
+      "member_count": 14,
+      "members": [
+        {
+          "compressed_size_bytes": 0,
+          "path": "PokeCube-v1/",
+          "size_bytes": 0
+        },
+        {
+          "compressed_size_bytes": 0,
+          "path": "PokeCube-v1/rl/",
+          "size_bytes": 0
+        },
+        {
+          "compressed_size_bytes": 11137,
+          "path": "PokeCube-v1/rl/trajectory.none.pd_joint_delta_pos.physx_cuda.json",
+          "size_bytes": 183400
+        },
+        {
+          "compressed_size_bytes": 1089520,
+          "path": "PokeCube-v1/rl/ppo_pd_ee_delta_pos_ckpt.pt",
+          "size_bytes": 1176610
+        },
+        {
+          "compressed_size_bytes": 72292,
+          "path": "PokeCube-v1/rl/sample_pd_ee_delta_pos.mp4",
+          "size_bytes": 73168
+        },
+        {
+          "compressed_size_bytes": 1092239,
+          "path": "PokeCube-v1/rl/ppo_pd_ee_delta_pose_ckpt.pt",
+          "size_bytes": 1179682
+        },
+        {
+          "compressed_size_bytes": 5750873,
+          "path": "PokeCube-v1/rl/trajectory.none.pd_ee_delta_pos.physx_cuda.h5",
+          "size_bytes": 13791472
+        },
+        {
+          "compressed_size_bytes": 7319,
+          "path": "PokeCube-v1/rl/trajectory.none.pd_ee_delta_pose.physx_cuda.json",
+          "size_bytes": 109683
+        },
+        {
+          "compressed_size_bytes": 77961,
+          "path": "PokeCube-v1/rl/sample_pd_ee_delta_pose.mp4",
+          "size_bytes": 78833
+        },
+        {
+          "compressed_size_bytes": 4221896,
+          "path": "PokeCube-v1/rl/trajectory.none.pd_ee_delta_pose.physx_cuda.h5",
+          "size_bytes": 9982438
+        },
+        {
+          "compressed_size_bytes": 9447,
+          "path": "PokeCube-v1/rl/trajectory.none.pd_ee_delta_pos.physx_cuda.json",
+          "size_bytes": 143222
+        },
+        {
+          "compressed_size_bytes": 1093518,
+          "path": "PokeCube-v1/rl/ppo_pd_joint_delta_pos_ckpt.pt",
+          "size_bytes": 1180706
+        },
+        {
+          "compressed_size_bytes": 77676,
+          "path": "PokeCube-v1/rl/sample_pd_joint_delta_pos.mp4",
+          "size_bytes": 78529
+        },
+        {
+          "compressed_size_bytes": 9384019,
+          "path": "PokeCube-v1/rl/trajectory.none.pd_joint_delta_pos.physx_cuda.h5",
+          "size_bytes": 21281244
+        }
+      ],
+      "motionplanning_pd_joint_pos_present": false,
+      "official_url": "https://huggingface.co/datasets/haosulab/ManiSkill_Demonstrations/resolve/d674485bbffdd533914e52d272fdda34c0515608/demos/PokeCube-v1.zip",
+      "repository": "haosulab/ManiSkill_Demonstrations",
+      "revision": "d674485bbffdd533914e52d272fdda34c0515608",
+      "sha256": "sha256:e682d878123da9156d655a948df356c6d35bbe3d2b9527335647233ffea70675",
+      "size_bytes": 22891027,
+      "task_id": "PokeCube-v1"
+    },
+    {
+      "downloaded_at_utc": "2026-07-23T11:06:57.887713+00:00",
+      "file_name": "PullCube-v1.zip",
+      "license": "Apache-2.0",
+      "member_count": 14,
+      "members": [
+        {
+          "compressed_size_bytes": 0,
+          "path": "PullCube-v1/",
+          "size_bytes": 0
+        },
+        {
+          "compressed_size_bytes": 0,
+          "path": "PullCube-v1/rl/",
+          "size_bytes": 0
+        },
+        {
+          "compressed_size_bytes": 12492,
+          "path": "PullCube-v1/rl/trajectory.none.pd_joint_delta_pos.physx_cuda.json",
+          "size_bytes": 195582
+        },
+        {
+          "compressed_size_bytes": 1053094,
+          "path": "PullCube-v1/rl/ppo_pd_ee_delta_pos_ckpt.pt",
+          "size_bytes": 1137698
+        },
+        {
+          "compressed_size_bytes": 30808,
+          "path": "PullCube-v1/rl/sample_pd_ee_delta_pos.mp4",
+          "size_bytes": 31311
+        },
+        {
+          "compressed_size_bytes": 1055915,
+          "path": "PullCube-v1/rl/ppo_pd_ee_delta_pose_ckpt.pt",
+          "size_bytes": 1140770
+        },
+        {
+          "compressed_size_bytes": 2559104,
+          "path": "PullCube-v1/rl/trajectory.none.pd_ee_delta_pos.physx_cuda.h5",
+          "size_bytes": 9097366
+        },
+        {
+          "compressed_size_bytes": 12078,
+          "path": "PullCube-v1/rl/trajectory.none.pd_ee_delta_pose.physx_cuda.json",
+          "size_bytes": 193062
+        },
+        {
+          "compressed_size_bytes": 28262,
+          "path": "PullCube-v1/rl/sample_pd_ee_delta_pose.mp4",
+          "size_bytes": 28750
+        },
+        {
+          "compressed_size_bytes": 1836589,
+          "path": "PullCube-v1/rl/trajectory.none.pd_ee_delta_pose.physx_cuda.h5",
+          "size_bytes": 7331638
+        },
+        {
+          "compressed_size_bytes": 12506,
+          "path": "PullCube-v1/rl/trajectory.none.pd_ee_delta_pos.physx_cuda.json",
+          "size_bytes": 192342
+        },
+        {
+          "compressed_size_bytes": 1056934,
+          "path": "PullCube-v1/rl/ppo_pd_joint_delta_pos_ckpt.pt",
+          "size_bytes": 1141794
+        },
+        {
+          "compressed_size_bytes": 53040,
+          "path": "PullCube-v1/rl/sample_pd_joint_delta_pos.mp4",
+          "size_bytes": 53651
+        },
+        {
+          "compressed_size_bytes": 3427056,
+          "path": "PullCube-v1/rl/trajectory.none.pd_joint_delta_pos.physx_cuda.h5",
+          "size_bytes": 10868017
+        }
+      ],
+      "motionplanning_pd_joint_pos_present": false,
+      "official_url": "https://huggingface.co/datasets/haosulab/ManiSkill_Demonstrations/resolve/d674485bbffdd533914e52d272fdda34c0515608/demos/PullCube-v1.zip",
+      "repository": "haosulab/ManiSkill_Demonstrations",
+      "revision": "d674485bbffdd533914e52d272fdda34c0515608",
+      "sha256": "sha256:582ca678e1d28691d408cb738fa1723e8ec28d8c6390715eacc33c5dd740cbd7",
+      "size_bytes": 11141008,
+      "task_id": "PullCube-v1"
+    }
+  ],
+  "fingerprint": "sha256:20acfe2aa8c22fba7939fe29e8653b2b59623aef2f6ae7beda2bbd98eb9a72c9",
+  "license": "Apache-2.0",
+  "repository": "haosulab/ManiSkill_Demonstrations",
+  "revision": "d674485bbffdd533914e52d272fdda34c0515608",
+  "schema_version": "langmani-v2-phase2b5-source-download-manifest-v0",
+  "source_files_modified": false,
+  "source_root": "/root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608",
+  "source_root_committed": false,
+  "total_downloaded_bytes": 138681813
+}

@@ -1,0 +1,39 @@
+{
+  "files": [
+    {
+      "file_name": "PickCube-v1.zip",
+      "sha256": "sha256:b2d4afb30fa309755862b98c342e6ee18918253c93f3bbac16ed6670748f26d8",
+      "size_bytes": 36590010,
+      "task_id": "PickCube-v1"
+    },
+    {
+      "file_name": "StackCube-v1.zip",
+      "sha256": "sha256:f9b7d34b9aa418a04aa8e4322d4dea5aa27e8ae81757f60b210c1ffc54bf9c1b",
+      "size_bytes": 43486191,
+      "task_id": "StackCube-v1"
+    },
+    {
+      "file_name": "PushCube-v1.zip",
+      "sha256": "sha256:1ce24408bf93658501faaa0ef164a0cdc29539cc412612a413fac746697eeab2",
+      "size_bytes": 24573577,
+      "task_id": "PushCube-v1"
+    },
+    {
+      "file_name": "PokeCube-v1.zip",
+      "sha256": "sha256:e682d878123da9156d655a948df356c6d35bbe3d2b9527335647233ffea70675",
+      "size_bytes": 22891027,
+      "task_id": "PokeCube-v1"
+    },
+    {
+      "file_name": "PullCube-v1.zip",
+      "sha256": "sha256:582ca678e1d28691d408cb738fa1723e8ec28d8c6390715eacc33c5dd740cbd7",
+      "size_bytes": 11141008,
+      "task_id": "PullCube-v1"
+    }
+  ],
+  "fingerprint": "sha256:367dbc4255df53d695715578f3e42087e8c82eacf6b7e8dc116b1d6268313916",
+  "recovery": "Download the named files from the exact Hugging Face dataset revision, then verify byte size and SHA-256 before safe extraction.",
+  "repository": "haosulab/ManiSkill_Demonstrations",
+  "revision": "d674485bbffdd533914e52d272fdda34c0515608",
+  "schema_version": "langmani-v2-phase2b5-content-addressed-source-index-v0"
+}

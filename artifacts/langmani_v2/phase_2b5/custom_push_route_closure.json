@@ -1,0 +1,48 @@
+{
+  "custom_push_expert_reactivation_authorized": false,
+  "custom_push_expert_route_active": false,
+  "custom_task_identity": "LangMani-PushToRegion-v0",
+  "custom_v2_dataset": {
+    "accepted_episodes": 0,
+    "attempted_episodes": 0,
+    "bytes": 0,
+    "frames": 0
+  },
+  "f2_authorized": false,
+  "fingerprint": "sha256:30796b74ab2b932a33c0caf050fe66712f8c6caa6c3a6ada85bdea280402bf26",
+  "geometry_closed_loop": "COMPLETE_REJECTED",
+  "historical_v1_bytes_available": false,
+  "new_custom_expert_authorized": false,
+  "ppo_f0": {
+    "episodes": 48,
+    "result": "RESULT_C",
+    "successes": 0
+  },
+  "ppo_f1_probe_a": {
+    "correct_contacts": 0,
+    "episodes": 32,
+    "probe_b_ran": false,
+    "result": "RESULT_C",
+    "successes": 0,
+    "unsafe_wrong_object_interactions": true
+  },
+  "probe_c_authorized": false,
+  "reset_replay": "RESULT_D_ORIGINAL_EXECUTED_PREFIX_UNAVAILABLE",
+  "schema_version": "langmani-v2-phase2b5-custom-route-closure-v0",
+  "scripted_expert": {
+    "candidate_e_formal": {
+      "episodes": 100,
+      "gate": 95,
+      "successes": 75
+    },
+    "candidate_f_formal": {
+      "episodes": 100,
+      "successes": 11
+    },
+    "candidate_p_diagnostic": {
+      "episodes": 5,
+      "successes": 2
+    }
+  },
+  "simulator_mpc": "RESULT_C_INFRASTRUCTURE_PRECONDITION_FAILURE"
+}

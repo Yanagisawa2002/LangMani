@@ -1,0 +1,13 @@
+{
+  "act_training_authorized": false,
+  "custom_push_expert_reactivation_authorized": false,
+  "custom_push_expert_route_active": false,
+  "fingerprint": "sha256:43d43fa0b55d2a461df9619fd385566dd8d1153d8a270cc07e6e27da3dbc9a95",
+  "full_dataset_production_started": false,
+  "official_demo_source_validated": true,
+  "phase2b6_dataset_production_eligible": true,
+  "schema_version": "langmani-v2-phase2b5-authorization-state-v0",
+  "smolvla_training_authorized": false,
+  "student_policy_training_started": false,
+  "vla_jepa_training_authorized": false
+}

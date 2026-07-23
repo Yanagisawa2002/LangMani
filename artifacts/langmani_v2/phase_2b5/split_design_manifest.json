@@ -1,0 +1,30 @@
+{
+  "fingerprint": "sha256:569ae39cd35d920c5ce2d2d37b065b9c9badc1f678b76f5fd7f77da60802f404",
+  "frame_level_random_split_prohibited": true,
+  "identity_keys": [
+    "source_sha256",
+    "task_id",
+    "source_episode_id",
+    "reset_identity",
+    "scene_group",
+    "language_template_group"
+  ],
+  "leakage_checks": {
+    "episode_identity_overlap_count": 0,
+    "frame_level_entries": 0,
+    "passed": true,
+    "required_splits_present": true
+  },
+  "materialized": false,
+  "schema_version": "langmani-v2-phase2b5-future-split-design-v0",
+  "split_unit": "whole official episode",
+  "splits": {
+    "test_cross_skill": "a future explicitly held-out skill family; no cross-skill claim is allowed when every selected task is in training",
+    "test_unseen_reset": "seen tasks with held-out reset identities",
+    "test_unseen_task_language": "seen task semantics with later separately frozen language-template groups; not an unseen-task claim",
+    "test_visual_shift": "optional, only after a separately specified camera/appearance shift",
+    "train": "seen tasks and reset groups; no test identities",
+    "validation": "seen task families, held-out episode/reset groups"
+  },
+  "unseen_task_claim_without_held_out_task_prohibited": true
+}

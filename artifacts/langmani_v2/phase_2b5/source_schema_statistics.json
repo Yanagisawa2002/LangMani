@@ -1,0 +1,294 @@
+{
+  "all_selected_sources_valid": true,
+  "created_at_utc": "2026-07-23T11:49:13.293314+00:00",
+  "fingerprint": "sha256:ccd018d69d18acf36c81ef1299d364b54ea3fcd86277036aeeda2a81612bc0e9",
+  "schema_version": "langmani-v2-phase2b5-source-schema-statistics-v0",
+  "source_manifest_fingerprint": "sha256:20acfe2aa8c22fba7939fe29e8653b2b59623aef2f6ae7beda2bbd98eb9a72c9",
+  "tasks": [
+    {
+      "action": {
+        "arm_units": "radians absolute joint-position targets",
+        "bound_violation_rate": 0.0,
+        "bound_violation_values": 0,
+        "bounds_high": [
+          2.8973000049591064,
+          1.7627999782562256,
+          2.8973000049591064,
+          -0.0697999969124794,
+          2.8973000049591064,
+          3.752500057220459,
+          2.8973000049591064,
+          1.0
+        ],
+        "bounds_low": [
+          -2.8973000049591064,
+          -1.7627999782562256,
+          -2.8973000049591064,
+          -3.0717999935150146,
+          -2.8973000049591064,
+          -0.017500000074505806,
+          -2.8973000049591064,
+          -1.0
+        ],
+        "control_mode": "pd_joint_pos",
+        "dtype": "float32",
+        "finite_value_rate": 1.0,
+        "frequency_hz": 20,
+        "gripper_semantics": "normalized mimic command in [-1,1]",
+        "joint_order": [
+          "panda_joint1_position_target",
+          "panda_joint2_position_target",
+          "panda_joint3_position_target",
+          "panda_joint4_position_target",
+          "panda_joint5_position_target",
+          "panda_joint6_position_target",
+          "panda_joint7_position_target",
+          "panda_gripper_normalized_command"
+        ],
+        "maximum": [
+          0.29251915216445923,
+          0.954268753528595,
+          0.21649086475372314,
+          -1.3772913217544556,
+          0.18632978200912476,
+          2.8199148178100586,
+          1.686010479927063,
+          1.0
+        ],
+        "minimum": [
+          -0.3116139769554138,
+          -0.08630277216434479,
+          -0.20903605222702026,
+          -2.368969678878784,
+          -0.18330387771129608,
+          1.882381558418274,
+          -0.13761861622333527,
+          -1.0
+        ],
+        "nonfinite_values": 0,
+        "padding_in_source": false,
+        "posthoc_clipping_or_repair": false,
+        "shape": [
+          "T",
+          8
+        ],
+        "simulator_substeps_per_action": 5,
+        "terminal_action_handling": "The final recorded action remains an executed transition; there is no synthetic terminal action."
+      },
+      "duplicate_action_trajectory_hashes": 0,
+      "failed_trajectories": 0,
+      "fingerprint": "sha256:9f62397cdff1c45623c5f2d471b0cdc12b21d60502d261493a0bf3ae6504a7f1",
+      "h5_sha256": "sha256:03ca60546541a7f18321d9d32721f0254bc75217828c0cadacd217d0c014576a",
+      "h5_size_bytes": 29349195,
+      "length": {
+        "maximum": 103,
+        "median": 78.0,
+        "minimum": 49
+      },
+      "malformed_or_incomplete_count": 0,
+      "malformed_or_incomplete_trajectories": [],
+      "metadata_sha256": "sha256:16e403cb77bfbdda28c243b96eb90adbae1c0edf42854283be57ee47076a2e90",
+      "metadata_size_bytes": 228218,
+      "source_h5_relative_path": "expanded/PickCube-v1/motionplanning/trajectory.h5",
+      "source_json_relative_path": "expanded/PickCube-v1/motionplanning/trajectory.json",
+      "source_schema_valid": true,
+      "successful_trajectories": 1000,
+      "task_id": "PickCube-v1",
+      "terminal_metadata_h5_agreement_count": 1000,
+      "total_trajectories": 1000,
+      "total_transitions": 77976,
+      "unique_episode_ids": 1000,
+      "unique_reset_identities": 1000
+    },
+    {
+      "action": {
+        "arm_units": "radians absolute joint-position targets",
+        "bound_violation_rate": 0.0,
+        "bound_violation_values": 0,
+        "bounds_high": [
+          2.8973000049591064,
+          1.7627999782562256,
+          2.8973000049591064,
+          -0.0697999969124794,
+          2.8973000049591064,
+          3.752500057220459,
+          2.8973000049591064,
+          1.0
+        ],
+        "bounds_low": [
+          -2.8973000049591064,
+          -1.7627999782562256,
+          -2.8973000049591064,
+          -3.0717999935150146,
+          -2.8973000049591064,
+          -0.017500000074505806,
+          -2.8973000049591064,
+          -1.0
+        ],
+        "control_mode": "pd_joint_pos",
+        "dtype": "float32",
+        "finite_value_rate": 1.0,
+        "frequency_hz": 20,
+        "gripper_semantics": "normalized mimic command in [-1,1]",
+        "joint_order": [
+          "panda_joint1_position_target",
+          "panda_joint2_position_target",
+          "panda_joint3_position_target",
+          "panda_joint4_position_target",
+          "panda_joint5_position_target",
+          "panda_joint6_position_target",
+          "panda_joint7_position_target",
+          "panda_gripper_normalized_command"
+        ],
+        "maximum": [
+          0.5213524699211121,
+          1.474416732788086,
+          0.23018206655979156,
+          -0.38181185722351074,
+          0.36067888140678406,
+          2.9835205078125,
+          0.9366947412490845,
+          1.0
+        ],
+        "minimum": [
+          -0.5499738454818726,
+          0.05203799903392792,
+          -0.36180999875068665,
+          -2.658363103866577,
+          -0.21164120733737946,
+          1.8290787935256958,
+          -1.9936093091964722,
+          -1.0
+        ],
+        "nonfinite_values": 0,
+        "padding_in_source": false,
+        "posthoc_clipping_or_repair": false,
+        "shape": [
+          "T",
+          8
+        ],
+        "simulator_substeps_per_action": 5,
+        "terminal_action_handling": "The final recorded action remains an executed transition; there is no synthetic terminal action."
+      },
+      "duplicate_action_trajectory_hashes": 0,
+      "failed_trajectories": 0,
+      "fingerprint": "sha256:1270fab12bed0621fbd58b78ca1d830d486c4b5d86a2bbefee1c8869a2024bde",
+      "h5_sha256": "sha256:61d07df7b52f303d2088e977df5f863be7d2274348ff05791f3a815359815523",
+      "h5_size_bytes": 38745164,
+      "length": {
+        "maximum": 412,
+        "median": 106.0,
+        "minimum": 80
+      },
+      "malformed_or_incomplete_count": 0,
+      "malformed_or_incomplete_trajectories": [],
+      "metadata_sha256": "sha256:48cb1119c9f5a8f0d7187fc83674a2c401b41466cb1930b2a5c26b706ba3bd81",
+      "metadata_size_bytes": 229183,
+      "source_h5_relative_path": "expanded/StackCube-v1/motionplanning/trajectory.h5",
+      "source_json_relative_path": "expanded/StackCube-v1/motionplanning/trajectory.json",
+      "source_schema_valid": true,
+      "successful_trajectories": 1000,
+      "task_id": "StackCube-v1",
+      "terminal_metadata_h5_agreement_count": 1000,
+      "total_trajectories": 1000,
+      "total_transitions": 107420,
+      "unique_episode_ids": 1000,
+      "unique_reset_identities": 1000
+    },
+    {
+      "action": {
+        "arm_units": "radians absolute joint-position targets",
+        "bound_violation_rate": 0.0,
+        "bound_violation_values": 0,
+        "bounds_high": [
+          2.8973000049591064,
+          1.7627999782562256,
+          2.8973000049591064,
+          -0.0697999969124794,
+          2.8973000049591064,
+          3.752500057220459,
+          2.8973000049591064,
+          1.0
+        ],
+        "bounds_low": [
+          -2.8973000049591064,
+          -1.7627999782562256,
+          -2.8973000049591064,
+          -3.0717999935150146,
+          -2.8973000049591064,
+          -0.017500000074505806,
+          -2.8973000049591064,
+          -1.0
+        ],
+        "control_mode": "pd_joint_pos",
+        "dtype": "float32",
+        "finite_value_rate": 1.0,
+        "frequency_hz": 20,
+        "gripper_semantics": "normalized mimic command in [-1,1]",
+        "joint_order": [
+          "panda_joint1_position_target",
+          "panda_joint2_position_target",
+          "panda_joint3_position_target",
+          "panda_joint4_position_target",
+          "panda_joint5_position_target",
+          "panda_joint6_position_target",
+          "panda_joint7_position_target",
+          "panda_gripper_normalized_command"
+        ],
+        "maximum": [
+          0.18785063922405243,
+          1.424160361289978,
+          0.0903148278594017,
+          -0.5664257407188416,
+          0.1663631647825241,
+          3.035336971282959,
+          1.0643285512924194,
+          -1.0
+        ],
+        "minimum": [
+          -0.18133866786956787,
+          0.31256020069122314,
+          -0.06640923768281937,
+          -2.5343050956726074,
+          -0.11676519364118576,
+          1.9378637075424194,
+          0.5095108151435852,
+          -1.0
+        ],
+        "nonfinite_values": 0,
+        "padding_in_source": false,
+        "posthoc_clipping_or_repair": false,
+        "shape": [
+          "T",
+          8
+        ],
+        "simulator_substeps_per_action": 5,
+        "terminal_action_handling": "The final recorded action remains an executed transition; there is no synthetic terminal action."
+      },
+      "duplicate_action_trajectory_hashes": 0,
+      "failed_trajectories": 0,
+      "fingerprint": "sha256:59826417b0799d1fa4477a0bc77efcfb3744269f3c9bc8382b6a264ee4be04c4",
+      "h5_sha256": "sha256:d74a4c0efdbf68cb5512dabfc9dfa2759fb53c7f221b15ded92b0d03533f3f2b",
+      "h5_size_bytes": 26480047,
+      "length": {
+        "maximum": 81,
+        "median": 69.0,
+        "minimum": 61
+      },
+      "malformed_or_incomplete_count": 0,
+      "malformed_or_incomplete_trajectories": [],
+      "metadata_sha256": "sha256:b33b5fadbdf5fd9e6c739d414d77a0ba61ae0dc05453e76392c2fd7d48e4522c",
+      "metadata_size_bytes": 228243,
+      "source_h5_relative_path": "expanded/PushCube-v1/motionplanning/trajectory.h5",
+      "source_json_relative_path": "expanded/PushCube-v1/motionplanning/trajectory.json",
+      "source_schema_valid": true,
+      "successful_trajectories": 1000,
+      "task_id": "PushCube-v1",
+      "terminal_metadata_h5_agreement_count": 1000,
+      "total_trajectories": 1000,
+      "total_transitions": 68978,
+      "unique_episode_ids": 1000,
+      "unique_reset_identities": 1000
+    }
+  ]
+}

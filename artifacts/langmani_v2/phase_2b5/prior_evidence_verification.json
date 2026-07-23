@@ -1,0 +1,40 @@
+{
+  "custom_route_frozen": true,
+  "fingerprint": "sha256:b5d8d6337dadf853b9a9ca75a01035a505af457e856f70053807b183374691cd",
+  "formal_historical_seed_sets_accessed": false,
+  "historical_v1_bytes_available": false,
+  "historical_v1_metadata_used_as_trainable_data": false,
+  "passed": true,
+  "phase2b4_f1": {
+    "all_valid": true,
+    "artifact_count": 24,
+    "artifact_manifest_fingerprint": "sha256:95c3c9c330c1d68c42c50959c795c0f406b3e2ae5fea7e1a217ccc797af95beb",
+    "hash_and_size_checks": {
+      "authorization_state.json": true,
+      "contact_credit_audit.json": true,
+      "exploration_distribution_audit.json": true,
+      "f0_f1_comparison.json": true,
+      "f0_learning_dynamics_audit.json": true,
+      "failure_taxonomy.json": true,
+      "global_versus_residual_comparison.json": true,
+      "operation_boundary.json": true,
+      "prior_evidence_verification.json": true,
+      "probe_a_configuration.json": true,
+      "probe_a_evaluation.json": true,
+      "probe_a_training_metrics.json": true,
+      "probe_b_not_authorized.json": true,
+      "remote_execution_audit.json": true,
+      "repository_environment_audit.json": true,
+      "residual_action_legality_audit.json": true,
+      "residual_action_transform_manifest.json": true,
+      "result_classification.json": true,
+      "reward_decision.json": true,
+      "runtime_summary.json": true,
+      "safe_curriculum_manifest.json": true,
+      "seed_disjointness_audit.json": true,
+      "termination_bootstrap_audit.json": true,
+      "test_summary.json": true
+    }
+  },
+  "schema_version": "langmani-v2-phase2b5-prior-evidence-verification-v0"
+}
