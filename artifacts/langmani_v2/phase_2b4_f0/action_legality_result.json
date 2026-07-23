@@ -1,0 +1,31 @@
+{
+  "action_schema": "langmani-v2-phase2b4-f0-tanh-affine-action-v0",
+  "fingerprint": "sha256:c45066266c4719a9e3d0284990f07abababb5a4d7b4056fb89437a2587457e7c",
+  "hidden_clipping_events": 0,
+  "hidden_projection_events": 0,
+  "nonfinite_actions": 0,
+  "observed_max": [
+    2.895317554473877,
+    1.7615740299224854,
+    2.89540958404541,
+    -0.07078325748443604,
+    2.895217180252075,
+    3.751176357269287,
+    2.895550489425659,
+    -0.8130784034729004
+  ],
+  "observed_min": [
+    -2.895125389099121,
+    -1.7615371942520142,
+    -2.8955163955688477,
+    -3.0706968307495117,
+    -2.8954148292541504,
+    -0.016172051429748535,
+    -2.8950934410095215,
+    -0.9519569277763367
+  ],
+  "out_of_bounds_actions": 0,
+  "passed": true,
+  "sample_count": 100000,
+  "schema_version": "langmani-v2-phase2b4-f0-action-legality-v0"
+}

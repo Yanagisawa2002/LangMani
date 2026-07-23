@@ -1,0 +1,36 @@
+{
+  "bounds_source": "active environment single_action_space",
+  "clipping": false,
+  "control_mode": "pd_joint_pos",
+  "dtype": "float32",
+  "fallback": false,
+  "fingerprint": "sha256:6b93ed95c5b4197c06bbdd69952fcdf0d0f918c2152f1a4f739a4566829173e4",
+  "high": [
+    2.8973000049591064,
+    1.7627999782562256,
+    2.8973000049591064,
+    -0.0697999969124794,
+    2.8973000049591064,
+    3.752500057220459,
+    2.8973000049591064,
+    1.0
+  ],
+  "low": [
+    -2.8973000049591064,
+    -1.7627999782562256,
+    -2.8973000049591064,
+    -3.0717999935150146,
+    -2.8973000049591064,
+    -0.017500000074505806,
+    -2.8973000049591064,
+    -1.0
+  ],
+  "projection": false,
+  "rejection_sampling": false,
+  "schema_version": "langmani-v2-phase2b4-f0-tanh-affine-action-v0",
+  "shape": [
+    8
+  ],
+  "stochastic_and_deterministic_transform_shared": true,
+  "transform": "Normal latent -> tanh -> affine(low, high)"
+}

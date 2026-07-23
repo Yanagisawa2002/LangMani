@@ -1,0 +1,13 @@
+{
+  "action_valid": true,
+  "feasibility_development_ran": false,
+  "fingerprint": "sha256:b9731ef5a20c6525bb9cabe123ab034267c7b50e541a4f2d1a85c46a9e6d5790",
+  "micro_gate_passed": false,
+  "not_an_rl_impossibility_claim": true,
+  "pipeline_valid": true,
+  "reason": "valid pipeline but frozen micro-learning and zero-tolerance gates failed",
+  "result": "RESULT_C",
+  "reward_repair_used": false,
+  "reward_valid": true,
+  "schema_version": "langmani-v2-phase2b4-f0-result-classification-v0"
+}

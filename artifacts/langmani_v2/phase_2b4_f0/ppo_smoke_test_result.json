@@ -1,0 +1,118 @@
+{
+  "action_shape": [
+    128,
+    8
+  ],
+  "checkpoint_global_step": 1024,
+  "checkpoint_path": "/root/autodl-tmp/langmani/outputs/diagnostics/v2/phase2b4_f0/smoke/smoke_checkpoint.pt",
+  "checkpoint_sha256": "sha256:d80a02874fd38731d86d754edcc6c2a6847fd4cd07d6623fda9d9c8b2b3ad8ab",
+  "checkpoint_size_bytes": 3755973,
+  "completed_episodes": 2,
+  "completed_successes": 0,
+  "config": {
+    "batch_size": 1024,
+    "clip_coef": 0.2,
+    "entropy_coef": 0.001,
+    "gae_lambda": 0.95,
+    "gamma": 0.99,
+    "hidden_dim": 256,
+    "initial_log_std": -2.5,
+    "iterations": 1,
+    "learning_rate": 0.0003,
+    "max_grad_norm": 0.5,
+    "minibatch_size": 256,
+    "num_envs": 128,
+    "num_minibatches": 4,
+    "num_steps": 8,
+    "seed": 240402,
+    "target_kl": 0.1,
+    "total_timesteps": 1024,
+    "update_epochs": 1,
+    "value_coef": 0.5
+  },
+  "demonstrations_generated": false,
+  "deterministic_action_executed": true,
+  "deterministic_reload_max_abs_error": 0.0,
+  "elapsed_seconds": 4.8105600364506245,
+  "environment_steps_per_second": 212.86502865382343,
+  "final_loss": {
+    "actor": 0.03925605118274689,
+    "approximate_kl": 0.16189923882484436,
+    "clip_fraction": 0.65625,
+    "critic": 1.7371631860733032,
+    "entropy": -4.8975629806518555,
+    "total": 0.9127351641654968
+  },
+  "fingerprint": "sha256:be3b975dea8311a42d04865248937e54e9606f6f518ca728e7649dcf8252c2f2",
+  "finite_gradients": true,
+  "finite_losses": true,
+  "first_quartile_progress_mean": 0.021378040313720703,
+  "first_quartile_return_mean": -23.624771118164062,
+  "global_step": 1024,
+  "last_quartile_progress_mean": -0.3332769274711609,
+  "last_quartile_return_mean": -18.881465911865234,
+  "learning_evidence": {
+    "return_improvement_threshold": 0.5,
+    "target_distance_progress_improved_materially": false,
+    "target_distance_progress_improvement_threshold_metres": 0.01,
+    "training_return_improved_materially": true,
+    "training_success_nonzero": false
+  },
+  "metrics": [
+    {
+      "advantage_max": 0.33485859632492065,
+      "advantage_min": -23.645591735839844,
+      "completed_episodes": 2,
+      "completed_successes": 0,
+      "global_step": 1024,
+      "gradient_norm_max": 17.44189453125,
+      "iteration": 1,
+      "last_loss": {
+        "actor": 0.03925605118274689,
+        "approximate_kl": 0.16189923882484436,
+        "clip_fraction": 0.65625,
+        "critic": 1.7371631860733032,
+        "entropy": -4.8975629806518555,
+        "total": 0.9127351641654968
+      },
+      "reward_max": 0.13210371136665344,
+      "reward_mean": -0.05948544293642044,
+      "reward_min": -23.61528778076172,
+      "rollout_seconds": 0.49466400407254696,
+      "rollout_steps_per_second": 2070.092005016442,
+      "update_samples_per_second": 2638.203492438684,
+      "update_seconds": 0.19407145865261555
+    }
+  ],
+  "mode": "smoke",
+  "observation_shape": [
+    128,
+    87
+  ],
+  "optimizer_steps": 2,
+  "peak_cpu_memory_mib": 2998.5390625,
+  "peak_vram_mib": 24.708984375,
+  "physical_environment_stepped": true,
+  "pipeline_execution_passed": true,
+  "reset_count": 130,
+  "rollout_buffer_shape": [
+    8,
+    128
+  ],
+  "runtime": {
+    "cuda": "12.8",
+    "cuda_available": true,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "gymnasium": "1.2.3",
+    "hostname": "autodl-container-8me3mxapw7-7e387606",
+    "mani_skill": "3.0.1",
+    "numpy": "2.2.6",
+    "platform": "Linux-5.15.0-78-generic-x86_64-with-glibc2.35",
+    "python": "3.12.13",
+    "sapien": "3.0.3",
+    "torch": "2.11.0+cu128"
+  },
+  "schema_version": "langmani-v2-phase2b4-f0-ppo-smoke-v0",
+  "simulator_exceptions": 0,
+  "student_policy_training_started": false
+}

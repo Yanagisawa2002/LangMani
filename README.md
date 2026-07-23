@@ -99,8 +99,16 @@ CUDA_VISIBLE_DEVICES=0 python environment/run_v2_phase2b4_ppo.py \
   --evaluate-micro outputs/diagnostics/v2/phase2b4_f0/micro/micro_checkpoint.pt
 ```
 
-The development evaluation is allowed only when the immutable micro report passes. F0 never
-starts full PPO training, expert qualification, data collection, SmolVLA, or student training.
+The completed F0 pipeline passed its vector, reward, action, smoke, and checkpoint gates, but the
+frozen PPO run did not learn: deterministic micro evaluation was 0/48 with 22 wrong-object
+displacements and 12 workspace exits. F0 is therefore Result C and stopped before development.
+Full PPO training is not eligible or authorized; expert qualification, data collection, SmolVLA,
+and student training also remain unauthorized. Recheck the compact evidence package without
+starting the simulator:
+
+```bash
+python environment/verify_v2_phase2b4_f0.py
+```
 
 The completed Phase 2B archive can be independently re-audited without starting training:
 

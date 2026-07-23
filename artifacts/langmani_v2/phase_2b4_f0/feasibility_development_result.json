@@ -1,0 +1,9 @@
+{
+  "development_seeds_accessed": false,
+  "episode_count": 0,
+  "fingerprint": "sha256:d34dd1372f5eb26a004eb8ef928b2904a50727b67037df8d3334d94a40c3fa54",
+  "formal_seeds_accessed": false,
+  "ran": false,
+  "reason": "micro_gate_failed_hard_stop",
+  "schema_version": "langmani-v2-phase2b4-f0-development-evaluation-v0"
+}

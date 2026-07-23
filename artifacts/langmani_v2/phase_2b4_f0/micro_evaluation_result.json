@@ -1,0 +1,1772 @@
+{
+  "action_integrity": {
+    "action_count": 5462,
+    "clipping": 0,
+    "component_std": [
+      0.5707838535308838,
+      0.3489095866680145,
+      2.169667959213257,
+      0.6171275973320007,
+      1.3284891843795776,
+      0.5712274312973022,
+      2.096390962600708,
+      0.015189705416560173
+    ],
+    "nonconstant": true,
+    "nonfinite": 0,
+    "out_of_bounds": 0,
+    "projection": 0
+  },
+  "checkpoint_global_step": 1048576,
+  "checkpoint_sha256": "sha256:3528003bcb9ce1ae12904f0025eb7cffe3edd9836b24e3e4ef6becfcb672bcff",
+  "demonstrations_generated": false,
+  "elapsed_seconds": 172.21972622908652,
+  "fingerprint": "sha256:ceab91b0a6bf9ac158802c399e377d1246b9b4e4d9e2bc9df930031c86bb4608",
+  "formal_seed_accessed": false,
+  "gate": {
+    "cube_at_least_70_percent": false,
+    "cylinder_at_least_50_percent": false,
+    "episode_count_40_to_60": true,
+    "overall_at_least_70_percent": false,
+    "success_in_every_included_direction": false,
+    "zero_tolerance_safety_clean": false
+  },
+  "mode": "micro",
+  "passed": false,
+  "records": [
+    {
+      "episode_index": 0,
+      "final_target_distance": 0.35844019055366516,
+      "latency_seconds": 7.418525664135814,
+      "outcome": "timeout",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800000,
+      "steps": 250,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 1,
+      "final_target_distance": 0.42970791459083557,
+      "latency_seconds": 7.889223828911781,
+      "outcome": "timeout",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800001,
+      "steps": 250,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 2,
+      "final_target_distance": 0.3992517292499542,
+      "latency_seconds": 8.084643924608827,
+      "outcome": "timeout",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800002,
+      "steps": 250,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 3,
+      "final_target_distance": 0.4231150150299072,
+      "latency_seconds": 7.599605619907379,
+      "outcome": "timeout",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800003,
+      "steps": 250,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 4,
+      "final_target_distance": 0.3379175662994385,
+      "latency_seconds": 0.9357266798615456,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800004,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 5,
+      "final_target_distance": 0.43173089623451233,
+      "latency_seconds": 0.9293039068579674,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800005,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 6,
+      "final_target_distance": 0.33573052287101746,
+      "latency_seconds": 7.605894088745117,
+      "outcome": "timeout",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800006,
+      "steps": 250,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 7,
+      "final_target_distance": 0.6068341732025146,
+      "latency_seconds": 2.846689462661743,
+      "outcome": "target_outside_workspace",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": true,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800007,
+      "steps": 93,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 8,
+      "final_target_distance": 0.3982103765010834,
+      "latency_seconds": 0.9627786576747894,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800008,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 9,
+      "final_target_distance": 0.3997447192668915,
+      "latency_seconds": 0.9607013203203678,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800009,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 10,
+      "final_target_distance": 0.3469688296318054,
+      "latency_seconds": 8.002781685441732,
+      "outcome": "timeout",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800010,
+      "steps": 250,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 11,
+      "final_target_distance": 0.42566412687301636,
+      "latency_seconds": 8.233594380319118,
+      "outcome": "timeout",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800011,
+      "steps": 250,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 12,
+      "final_target_distance": 0.38311442732810974,
+      "latency_seconds": 1.1451323665678501,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800012,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 13,
+      "final_target_distance": 0.4254361093044281,
+      "latency_seconds": 1.0614378694444895,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800013,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 14,
+      "final_target_distance": 0.6430605053901672,
+      "latency_seconds": 2.737159591168165,
+      "outcome": "target_outside_workspace",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": true,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800014,
+      "steps": 92,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 15,
+      "final_target_distance": 0.42411133646965027,
+      "latency_seconds": 7.855391681194305,
+      "outcome": "timeout",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800015,
+      "steps": 250,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 16,
+      "final_target_distance": 0.3304119408130646,
+      "latency_seconds": 0.9595043435692787,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800016,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 17,
+      "final_target_distance": 0.3680344521999359,
+      "latency_seconds": 0.945447064936161,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800017,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 18,
+      "final_target_distance": 0.29484984278678894,
+      "latency_seconds": 7.68254030123353,
+      "outcome": "timeout",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800018,
+      "steps": 250,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 19,
+      "final_target_distance": 0.5632860064506531,
+      "latency_seconds": 6.078338460996747,
+      "outcome": "target_outside_workspace",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": true,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800019,
+      "steps": 180,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 20,
+      "final_target_distance": 0.41593021154403687,
+      "latency_seconds": 0.94487539306283,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800020,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 21,
+      "final_target_distance": 0.3968053162097931,
+      "latency_seconds": 0.9331955201923847,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800021,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 22,
+      "final_target_distance": 0.4626125395298004,
+      "latency_seconds": 2.526134569197893,
+      "outcome": "target_outside_workspace",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": true,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800022,
+      "steps": 80,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 23,
+      "final_target_distance": 0.6085220575332642,
+      "latency_seconds": 2.275586986914277,
+      "outcome": "target_outside_workspace",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": true,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800023,
+      "steps": 76,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 24,
+      "final_target_distance": 0.36341387033462524,
+      "latency_seconds": 0.9333035182207823,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800024,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 25,
+      "final_target_distance": 0.41500577330589294,
+      "latency_seconds": 0.9417147114872932,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800025,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 26,
+      "final_target_distance": 0.382383793592453,
+      "latency_seconds": 7.873859016224742,
+      "outcome": "timeout",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800026,
+      "steps": 250,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 27,
+      "final_target_distance": 0.578582763671875,
+      "latency_seconds": 2.333935549482703,
+      "outcome": "target_outside_workspace",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": true,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800027,
+      "steps": 76,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 28,
+      "final_target_distance": 0.36927732825279236,
+      "latency_seconds": 0.9333938993513584,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800028,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 29,
+      "final_target_distance": 0.4514865279197693,
+      "latency_seconds": 0.942144900560379,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800029,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 30,
+      "final_target_distance": 0.329699844121933,
+      "latency_seconds": 2.6901573594659567,
+      "outcome": "target_outside_workspace",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": true,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800030,
+      "steps": 90,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 31,
+      "final_target_distance": 0.580992579460144,
+      "latency_seconds": 7.685355486348271,
+      "outcome": "timeout",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800031,
+      "steps": 250,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 32,
+      "final_target_distance": 0.3927846848964691,
+      "latency_seconds": 0.937039203941822,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800032,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 33,
+      "final_target_distance": 0.43663108348846436,
+      "latency_seconds": 0.9389769919216633,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800033,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 34,
+      "final_target_distance": 0.6721314191818237,
+      "latency_seconds": 2.357808480039239,
+      "outcome": "target_outside_workspace",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": true,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800034,
+      "steps": 77,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 35,
+      "final_target_distance": 0.6063590049743652,
+      "latency_seconds": 2.91073789447546,
+      "outcome": "target_outside_workspace",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": true,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800035,
+      "steps": 96,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 36,
+      "final_target_distance": 0.4261507987976074,
+      "latency_seconds": 0.9385314490646124,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800036,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 37,
+      "final_target_distance": 0.4100068211555481,
+      "latency_seconds": 0.9527539312839508,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800037,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 38,
+      "final_target_distance": 0.28861790895462036,
+      "latency_seconds": 7.953769331797957,
+      "outcome": "timeout",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800038,
+      "steps": 250,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 39,
+      "final_target_distance": 0.7134079337120056,
+      "latency_seconds": 3.5729257110506296,
+      "outcome": "target_outside_workspace",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": true,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800039,
+      "steps": 109,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 40,
+      "final_target_distance": 0.3824165463447571,
+      "latency_seconds": 0.9302170425653458,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800040,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 41,
+      "final_target_distance": 0.43511897325515747,
+      "latency_seconds": 0.9436530526727438,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800041,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 42,
+      "final_target_distance": 0.3337160348892212,
+      "latency_seconds": 7.993184566497803,
+      "outcome": "timeout",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800042,
+      "steps": 250,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 43,
+      "final_target_distance": 0.45599862933158875,
+      "latency_seconds": 8.391547199338675,
+      "outcome": "timeout",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800043,
+      "steps": 250,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 44,
+      "final_target_distance": 0.35517993569374084,
+      "latency_seconds": 0.9517552144825459,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800044,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 45,
+      "final_target_distance": 0.4700421392917633,
+      "latency_seconds": 0.9455575160682201,
+      "outcome": "wrong_object_displaced",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": false,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": true
+      },
+      "seed": 800045,
+      "steps": 32,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "episode_index": 46,
+      "final_target_distance": 0.6764580607414246,
+      "latency_seconds": 2.1046795211732388,
+      "outcome": "target_outside_workspace",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": true,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800046,
+      "steps": 69,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "episode_index": 47,
+      "final_target_distance": 0.4487963914871216,
+      "latency_seconds": 7.399976631626487,
+      "outcome": "target_outside_workspace",
+      "safety": {
+        "action_out_of_bounds": false,
+        "invalid_action": false,
+        "robot_collision": false,
+        "target_is_grasped": false,
+        "target_lifted": false,
+        "target_outside_workspace": true,
+        "target_toppled": false,
+        "wrong_object_contact": false,
+        "wrong_object_displaced": false
+      },
+      "seed": 800047,
+      "steps": 220,
+      "success": false,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    }
+  ],
+  "runtime": {
+    "cuda": "12.8",
+    "cuda_available": true,
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "gymnasium": "1.2.3",
+    "hostname": "autodl-container-8me3mxapw7-7e387606",
+    "mani_skill": "3.0.1",
+    "numpy": "2.2.6",
+    "platform": "Linux-5.15.0-78-generic-x86_64-with-glibc2.35",
+    "python": "3.12.13",
+    "sapien": "3.0.3",
+    "torch": "2.11.0+cu128"
+  },
+  "schedule": [
+    {
+      "seed": 800000,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800001,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800002,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800003,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800004,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800005,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800006,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800007,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800008,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800009,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800010,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800011,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800012,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800013,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800014,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800015,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800016,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800017,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800018,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800019,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800020,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800021,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800022,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800023,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800024,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800025,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800026,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800027,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800028,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800029,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800030,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800031,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800032,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800033,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800034,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800035,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800036,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800037,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800038,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800039,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800040,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800041,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800042,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800043,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800044,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800045,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "blue_cube",
+        "target_region_id": "forward_right"
+      }
+    },
+    {
+      "seed": 800046,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "left"
+      }
+    },
+    {
+      "seed": 800047,
+      "task": {
+        "difficulty": "standard",
+        "instruction_template_id": "canonical_push_v0",
+        "target_object_id": "orange_cylinder",
+        "target_region_id": "forward_right"
+      }
+    }
+  ],
+  "schema_version": "langmani-v2-phase2b4-f0-micro-evaluation-v0",
+  "summary": {
+    "average_episode_length": 113.79166666666667,
+    "average_latency_seconds": 3.5660664905638746,
+    "cube_episodes": 24,
+    "cube_success_rate": 0.0,
+    "cube_successes": 0,
+    "cylinder_episodes": 24,
+    "cylinder_success_rate": 0.0,
+    "cylinder_successes": 0,
+    "direction_episodes": {
+      "forward_right": 24,
+      "left": 24
+    },
+    "direction_successes": {
+      "forward_right": 0,
+      "left": 0
+    },
+    "episode_count": 48,
+    "hard_episodes": 0,
+    "hard_success_rate": 0.0,
+    "hard_successes": 0,
+    "safety_counts": {
+      "action_out_of_bounds": 0,
+      "invalid_action": 0,
+      "robot_collision": 0,
+      "target_is_grasped": 0,
+      "target_lifted": 0,
+      "target_outside_workspace": 12,
+      "target_toppled": 0,
+      "wrong_object_contact": 0,
+      "wrong_object_displaced": 22
+    },
+    "standard_episodes": 48,
+    "standard_success_rate": 0.0,
+    "standard_successes": 0,
+    "success_rate": 0.0,
+    "successes": 0
+  }
+}

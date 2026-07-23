@@ -1,0 +1,25 @@
+{
+  "checkout_clean_before_and_after": true,
+  "collection_started": false,
+  "compact_transfer_sha256": "sha256:42889a12370c31639772a762250b9ae37cec36034532dd00b3b1c504800a7d70",
+  "concurrent_project_jobs": 0,
+  "development_started": false,
+  "execution_commit": "0740c2fcaf5a34405130f3e3a8a3fac6e9a5d406",
+  "fingerprint": "sha256:9dd0537b6d99332be7af28892837bab63e7507afddcd3aac0ad2df722aa78448",
+  "formal_qualification_started": false,
+  "gpu_free_before_launch": true,
+  "hostname": "autodl-container-8me3mxapw7-7e387606",
+  "micro_evaluation_exit_code": 2,
+  "micro_evaluation_exit_code_expected_for_failed_gate": true,
+  "micro_training_exit_code": 0,
+  "post_run_gpu_jobs": 0,
+  "schema_version": "langmani-v2-phase2b4-f0-remote-execution-audit-v0",
+  "screen_sessions": [
+    "langmani_phase2b4_f0_smoke",
+    "langmani_phase2b4_f0_micro",
+    "langmani_phase2b4_f0_micro_eval"
+  ],
+  "server_shutdown_requested_or_run": false,
+  "smoke_exit_code": 0,
+  "student_training_started": false
+}

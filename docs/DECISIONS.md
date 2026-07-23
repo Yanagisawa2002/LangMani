@@ -3123,3 +3123,35 @@ dataset package. Even Result A sets only `ppo_full_training_eligible=true`;
 `ppo_full_training_authorized`, `expert_qualification_authorized`,
 `data_collection_authorized`, `smolvla_training_authorized`,
 `training_started_for_student_policy`, and `demonstration_source_validated` remain false.
+
+## D-126 - Close Phase 2B.4-F0 as Result C at the micro gate
+
+The native RTX 5090 execution used clean source commit
+`0740c2fcaf5a34405130f3e3a8a3fac6e9a5d406`. Target installation, prior Result C/Result D
+verification, the 128-environment vector audit, reward/action audits, one real PPO update,
+checkpoint reconstruction, and the 100,000-sample action legality audit all passed.
+
+The single frozen micro configuration ran exactly 1,048,576 environment steps in 944.172 seconds
+(1,110.577 environment steps per second), executed 8,118 optimizer steps and 21,162 resets, and
+reported zero simulator exceptions. Its reconstructed checkpoint produced exactly the same
+deterministic action as the in-memory policy. Across 21,034 completed training episodes it recorded
+zero successes. Mean return improved by only 0.265 between the first and last quartiles, below the
+predeclared 0.5 gate; mean target progress improved by only 0.00224 m, below the 0.01 m gate, and
+both quartile means remained negative.
+
+The fixed deterministic micro evaluation therefore ran exactly 48 episodes and reached 0
+successes: 14 timeouts, 22 wrong-object displacements, and 12 target workspace exits. All 5,462
+actions were finite, within the native bounds, and nonconstant; no clip or projection path ran.
+The failure is therefore an expert-learning failure under this frozen PPO design, not an action
+pipeline or simulator-infrastructure failure.
+
+Reward revision 0 was not repaired. The unsafe evaluation outcomes received their declared large
+negative reward terms and did not expose a profitable reward exploit or a success-comparable
+unsafe return. The one allowed repair was therefore inapplicable, and parameter tuning or a sweep
+was prohibited.
+
+The predeclared hard stop classifies F0 as Result C. The broader 60-episode development evaluation
+did not run. Formal seeds 66300--66399, full PPO training, the 95/100 qualification, data
+collection, datasets, SmolVLA, and student training remain unaccessed and unauthorized.
+`ppo_full_training_eligible=false`, and every authorization flag remains false. This result rejects
+the frozen F0 teacher design; it is not a claim that reinforcement learning cannot solve the task.

@@ -1,0 +1,38 @@
+{
+  "changed_module_mypy": {
+    "errors": 0,
+    "modules": 7
+  },
+  "cpu_safe_final": {
+    "collected": 1619,
+    "deselected": 18,
+    "duration_seconds": 197.9,
+    "failed": 0,
+    "passed": 1585,
+    "selected": 1601,
+    "skipped": 16
+  },
+  "fingerprint": "sha256:024f07b6495524422cc9cbb528ca10d3a7694a3fe7d1745d62182f4e1bed4cb8",
+  "full_mypy_baseline": {
+    "current_errors": 551,
+    "current_files": 63,
+    "new_errors": 0,
+    "source_errors": 551,
+    "source_files": 63
+  },
+  "isolated_sdist_wheel_build": {
+    "passed": true
+  },
+  "ruff_check": {
+    "passed": true
+  },
+  "ruff_format_check": {
+    "files": 361,
+    "passed": true
+  },
+  "schema_version": "langmani-v2-phase2b4-f0-test-summary-v0",
+  "targeted_phase2b4_tests": {
+    "failed": 0,
+    "passed": 23
+  }
+}

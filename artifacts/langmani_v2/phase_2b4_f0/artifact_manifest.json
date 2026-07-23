@@ -1,0 +1,149 @@
+{
+  "checkpoint": {
+    "committed": false,
+    "path": "/root/autodl-tmp/langmani/outputs/diagnostics/v2/phase2b4_f0/micro/micro_checkpoint.pt",
+    "sha256": "sha256:3528003bcb9ce1ae12904f0025eb7cffe3edd9836b24e3e4eef6becfcb672bcff",
+    "size_bytes": 3755973
+  },
+  "execution_commit": "0740c2fcaf5a34405130f3e3a8a3fac6e9a5d406",
+  "files": [
+    {
+      "path": "action_legality_result.json",
+      "sha256": "sha256:76de93adfd5aec275022430a0187a0762cd3bd2c7a541a298cf0091a5690ff7c",
+      "size_bytes": 831
+    },
+    {
+      "path": "action_transform_manifest.json",
+      "sha256": "sha256:ecb635aacbb02135a263f7a2be959e3d2034d29d74b9aefb446edea4a5d6b440",
+      "size_bytes": 914
+    },
+    {
+      "path": "authorization_state.json",
+      "sha256": "sha256:2e8cb3f6e429132dc9bdf026f1f709bc86c2e04754e704489b98e0ab361e4d16",
+      "size_bytes": 536
+    },
+    {
+      "path": "failure_taxonomy.json",
+      "sha256": "sha256:f40a31adb3ed789e024d3cd7f1ab4764d6db3527387c3d4cf3a233e2d6e3b116",
+      "size_bytes": 671
+    },
+    {
+      "path": "feasibility_development_result.json",
+      "sha256": "sha256:cafe7ea6d4f6720c92d07496c522c8167d6bac82abc269cf81b8625cec94b43a",
+      "size_bytes": 331
+    },
+    {
+      "path": "micro_evaluation_result.json",
+      "sha256": "sha256:9ca1b883761336d685771d54350d4565f9287e6aa94faa7af7579ba53ef4953c",
+      "size_bytes": 51738
+    },
+    {
+      "path": "micro_training_configuration.json",
+      "sha256": "sha256:71a3fe326786083eec0bc39cd59cbd0678579ac0a0ca457433b650c5dbf27440",
+      "size_bytes": 1701
+    },
+    {
+      "path": "micro_training_metrics.json",
+      "sha256": "sha256:a2ace7d7e55b1431a922dc928446a992d01b58301f6ef87b3ace621726a91c06",
+      "size_bytes": 30928
+    },
+    {
+      "path": "operation_boundary.json",
+      "sha256": "sha256:0a8043ecd4d7e38b0af905309da2dedac3b91ae8a865f7c75c132b887ecd4eca",
+      "size_bytes": 763
+    },
+    {
+      "path": "ppo_implementation_audit.json",
+      "sha256": "sha256:26ebc25d678c4691973a00d32e522cde34c6a58992cd7b5a4da0648bd43eea33",
+      "size_bytes": 1565
+    },
+    {
+      "path": "ppo_smoke_test_result.json",
+      "sha256": "sha256:c0f0803ff3443b8d6f11c9ff7a75e63a9461efab72aca7204775c9f93aec27db",
+      "size_bytes": 3646
+    },
+    {
+      "path": "prior_evidence_verification.json",
+      "sha256": "sha256:7e21e705c26ee000d5de0706bffec37dfaa572924ff3a86cfa344965ffb1d19c",
+      "size_bytes": 509
+    },
+    {
+      "path": "prior_phase2b3_rr_verification.json",
+      "sha256": "sha256:2917fc20b893800b4bd5921cd2b816eaedc4fc5a3a505549084e7242ca1ee6b2",
+      "size_bytes": 2562
+    },
+    {
+      "path": "prior_phase2b3_verification.json",
+      "sha256": "sha256:d647c5c7ccaf0b22ac61af564e2a9bfa43f514d14568c0d0bd1adb95b37af1ea",
+      "size_bytes": 2720
+    },
+    {
+      "path": "remote_execution_audit.json",
+      "sha256": "sha256:4c2ee7329f455449541330693bd2b62c7e084bc28a1e7bcedd5a973d4766870b",
+      "size_bytes": 1027
+    },
+    {
+      "path": "repository_environment_audit.json",
+      "sha256": "sha256:b437a8ee9337074a7d6765e3291909b07120a4cd81109a4c426f60e13bf89d9b",
+      "size_bytes": 1565
+    },
+    {
+      "path": "result_classification.json",
+      "sha256": "sha256:813760d6adc0441f2c57c769433a64932bcf70fefb77e0fd8cd4c56d217a1674",
+      "size_bytes": 508
+    },
+    {
+      "path": "reward_hacking_audit.json",
+      "sha256": "sha256:bbf8b92f3625a2ff8e674749349eb51ffa0dce66a1701e458ec75a3ab339ae5c",
+      "size_bytes": 1160
+    },
+    {
+      "path": "reward_manifest.json",
+      "sha256": "sha256:c4b17f4e1ad2acec4deb935bf1be561a2c27c36a22246ef8df4c21fdcfbb6b3f",
+      "size_bytes": 1393
+    },
+    {
+      "path": "reward_repair.json",
+      "sha256": "sha256:17074a16feeba2dddc2ac6c78275b5cb92a4e25af8b8470557eef0046ddcf406",
+      "size_bytes": 480
+    },
+    {
+      "path": "runtime_summary.json",
+      "sha256": "sha256:0577df172be9c2948788bda001bd85f000406b138b2d5dfd9890178f1a210c15",
+      "size_bytes": 1160
+    },
+    {
+      "path": "seed_disjointness_audit.json",
+      "sha256": "sha256:f3a510811b433c52991f9f8f072a9d13982c7fe0bd259da88587bf824be1748d",
+      "size_bytes": 1128
+    },
+    {
+      "path": "state_normalization_manifest.json",
+      "sha256": "sha256:cf883c1078558fa8c38e2aa249a3b5ff516cd0efca97e6ebcf13318e736072a6",
+      "size_bytes": 2192
+    },
+    {
+      "path": "student_privilege_exclusion_audit.json",
+      "sha256": "sha256:73e78ddae1b53384c895540ae8c6d4d359f783b14c7aaf515ba57b7bdf07e62a",
+      "size_bytes": 993
+    },
+    {
+      "path": "teacher_observation_manifest.json",
+      "sha256": "sha256:56f8362c4bbb624d0c435c3e068a34c5c70e0d70275f676ecf7bb837f657527c",
+      "size_bytes": 4332
+    },
+    {
+      "path": "test_summary.json",
+      "sha256": "sha256:53257e78d461980deced444c265b60817ef426407e5de94b9dc4b03c61d0e338",
+      "size_bytes": 832
+    },
+    {
+      "path": "vectorized_environment_audit.json",
+      "sha256": "sha256:50f8d6f1ea7a69c94e3d8d337820cf96238690492151399af8e31b3f617be7e4",
+      "size_bytes": 984
+    }
+  ],
+  "fingerprint": "sha256:6a264ed83c74ed0e76c7a25c67617987ffceea6096aaf976ec616061e16792f5",
+  "result": "RESULT_C",
+  "schema_version": "langmani-v2-phase2b4-f0-artifact-manifest-v0"
+}

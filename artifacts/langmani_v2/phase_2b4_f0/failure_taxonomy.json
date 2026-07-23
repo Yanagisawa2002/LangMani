@@ -1,0 +1,20 @@
+{
+  "action_integrity_failure": false,
+  "broader_generalization_unverified": true,
+  "checkpoint_reconstruction_failure": false,
+  "expert_algorithm_failure": false,
+  "fingerprint": "sha256:0385516100dbb6104e233b8295cf150ebf06147d831fbe24b048a6e212f2116f",
+  "micro_outcomes": {
+    "success": 0,
+    "target_outside_workspace": 12,
+    "timeout": 14,
+    "wrong_object_displaced": 22
+  },
+  "pipeline_failure": false,
+  "ppo_micro_learning_failure": true,
+  "reward_invalid": false,
+  "schema_version": "langmani-v2-phase2b4-f0-failure-taxonomy-v0",
+  "simulator_failure": false,
+  "training_completed_episodes": 21034,
+  "training_successes": 0
+}

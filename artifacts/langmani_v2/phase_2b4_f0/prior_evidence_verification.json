@@ -1,0 +1,17 @@
+{
+  "fingerprint": "sha256:b805738313442be5dea37c5fe5a621aeaebaf1f06624e9f2b79beffd7be5b73b",
+  "geometry_history": {
+    "development_or_formal_result": false,
+    "episodes": 12,
+    "successes": 2,
+    "timeouts": 9,
+    "wrong_object_displacements": 1
+  },
+  "mpc_passed": true,
+  "mpc_result": "RESULT_C",
+  "passed": true,
+  "prior_evidence_immutable": true,
+  "rr_passed": true,
+  "rr_result": "RESULT_D",
+  "schema_version": "langmani-v2-phase2b4-f0-prior-evidence-verification-v0"
+}

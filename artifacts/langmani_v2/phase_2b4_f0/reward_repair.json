@@ -1,0 +1,9 @@
+{
+  "available_revisions_before_micro": 1,
+  "fingerprint": "sha256:2bbb5791beaae06abebfd760e8222d94b329e5e90234945eccced503a84b74af",
+  "reason": "Safety violations incurred large negative terminal penalties and no comparable positive return; evidence shows failure to learn rather than a profitable reward exploit.",
+  "rerun_started": false,
+  "schema_version": "langmani-v2-phase2b4-f0-reward-repair-v0",
+  "specific_reward_defect_observed": false,
+  "used": false
+}

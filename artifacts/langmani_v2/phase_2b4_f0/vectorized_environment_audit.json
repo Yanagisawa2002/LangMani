@@ -1,0 +1,33 @@
+{
+  "checks": {
+    "counters_reset": true,
+    "finite_observations": true,
+    "gpu_vectorization": true,
+    "no_motion_planning": true,
+    "observation_shape": true,
+    "partial_reset_changed_selected_slot": true,
+    "partial_reset_preserved_other_slots": true,
+    "seed_uniqueness": true
+  },
+  "cpu_motion_planner_calls": 0,
+  "elapsed_seconds": 3.9213450215756893,
+  "elapsed_step_max": 0,
+  "elapsed_step_min": 0,
+  "expected_unique_scene_seeds": 128,
+  "fingerprint": "sha256:a2f5f2e0b1fe2ee79fb76a4938325e1d0933c0bd26364e361941c6c2e017f601",
+  "finite_observations": true,
+  "num_envs": 128,
+  "observation_shape": [
+    128,
+    87
+  ],
+  "passed": true,
+  "per_environment_counter_valid": true,
+  "reset_slot_changed": true,
+  "schema_version": "langmani-v2-phase2b4-f0-vectorized-environment-audit-v0",
+  "sim_backend": "physx_cuda",
+  "simulator_exceptions": 0,
+  "state_leakage_detected": false,
+  "unique_scene_seeds": 128,
+  "untouched_slot_max_abs_error": 0.0
+}
