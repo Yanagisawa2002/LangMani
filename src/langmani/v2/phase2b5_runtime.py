@@ -14,6 +14,7 @@ import os
 import platform
 import statistics
 import subprocess
+import sys
 import time
 import zipfile
 from collections.abc import Mapping, Sequence
@@ -419,6 +420,7 @@ def inspect_candidate_task_sources(*, source_root: Path) -> dict[str, object]:
                     "h5_relative_path": h5_path.relative_to(task_root).as_posix(),
                     "h5_sha256": "sha256:" + sha256_file(h5_path),
                     "control_mode": env_kwargs.get("control_mode"),
+                    "max_episode_steps": env_info.get("max_episode_steps"),
                     "sim_backend": env_kwargs.get("sim_backend", "physx_cpu_inferred"),
                     "action_shape": action_shape,
                     "action_dtype": action_dtype,
@@ -457,6 +459,22 @@ def inspect_candidate_task_sources(*, source_root: Path) -> dict[str, object]:
             and source["action_shape"] == ["T", 8]
             and source["action_dtype"] == "float32"
         ]
+        source_episode_limits = sorted(
+            {
+                int(source["max_episode_steps"])
+                for source in sources
+                if isinstance(source["max_episode_steps"], int)
+            }
+        )
+        registered_episode_limit = (
+            int(max_episode_steps)
+            if isinstance(max_episode_steps, int)
+            else (
+                source_episode_limits[0]
+                if len(source_episode_limits) == 1
+                else source_episode_limits
+            )
+        )
         task_reports.append(
             {
                 "task_id": task_id,
@@ -472,7 +490,7 @@ def inspect_candidate_task_sources(*, source_root: Path) -> dict[str, object]:
                     "low": [float(value) for value in action_space.low],
                     "high": [float(value) for value in action_space.high],
                 },
-                "maximum_episode_length_registered": max_episode_steps,
+                "maximum_episode_length_registered": registered_episode_limit,
                 "success_predicate_summary": objective[task_id],
                 "success_predicate_modified": False,
                 "reset_randomization_summary": randomization[task_id],
@@ -558,6 +576,7 @@ def _state_error(reference: object, observed: object) -> dict[str, object]:
     missing = sorted(set(expected) - set(actual))
     unexpected = sorted(set(actual) - set(expected))
     errors: list[np.ndarray] = []
+    per_leaf: dict[str, dict[str, float | int]] = {}
     shape_mismatches: list[str] = []
     for key in common:
         lhs = expected[key]
@@ -566,17 +585,76 @@ def _state_error(reference: object, observed: object) -> dict[str, object]:
             shape_mismatches.append(key)
             continue
         if np.issubdtype(lhs.dtype, np.number) and np.issubdtype(rhs.dtype, np.number):
-            errors.append(np.abs(lhs.astype(np.float64) - rhs.astype(np.float64)).reshape(-1))
+            leaf_error = np.abs(lhs.astype(np.float64) - rhs.astype(np.float64)).reshape(-1)
+            errors.append(leaf_error)
+            per_leaf[key] = {
+                "compared_values": int(leaf_error.size),
+                "maximum_absolute_error": float(np.max(leaf_error)),
+                "mean_absolute_error": float(np.mean(leaf_error)),
+            }
     concatenated = np.concatenate(errors) if errors else np.asarray([], dtype=np.float64)
     return {
         "matched_leaf_count": len(common) - len(shape_mismatches),
         "missing_leaves": missing,
         "unexpected_leaves": unexpected,
         "shape_mismatch_leaves": shape_mismatches,
+        "per_numeric_leaf": per_leaf,
         "compared_numeric_values": int(concatenated.size),
         "maximum_absolute_error": (float(np.max(concatenated)) if concatenated.size else None),
         "mean_absolute_error": (float(np.mean(concatenated)) if concatenated.size else None),
         "structures_match": not missing and not unexpected and not shape_mismatches,
+    }
+
+
+def _task_object_raw_poses(base: Any, task_id: str) -> dict[str, np.ndarray]:
+    names = {
+        "PickCube-v1": ("obj",),
+        "StackCube-v1": ("cubeA", "cubeB"),
+        "PushCube-v1": ("obj",),
+    }.get(task_id)
+    if names is None:
+        raise Phase2B5RuntimeError(f"unsupported object-pose diagnostic task: {task_id}")
+    poses: dict[str, np.ndarray] = {}
+    for name in names:
+        actor = getattr(base, name, None)
+        pose = getattr(actor, "pose", None)
+        raw_pose = getattr(pose, "raw_pose", None)
+        if raw_pose is None:
+            raise Phase2B5RuntimeError(f"{task_id} has no public pose for {name}")
+        array = _to_numpy(raw_pose)
+        if array.ndim == 2 and array.shape[0] == 1:
+            array = array[0]
+        if array.shape != (7,):
+            raise Phase2B5RuntimeError(
+                f"{task_id} {name} public pose must have shape (7,), got {array.shape}"
+            )
+        poses[name] = np.array(array, dtype=np.float64, copy=True)
+    return poses
+
+
+def _task_object_pose_error(
+    reference: Mapping[str, np.ndarray], observed: Mapping[str, np.ndarray]
+) -> dict[str, object]:
+    if set(reference) != set(observed):
+        raise Phase2B5RuntimeError("task-object pose names differ")
+    objects: dict[str, dict[str, float]] = {}
+    for name in sorted(reference):
+        expected = reference[name]
+        actual = observed[name]
+        translation_error = float(np.linalg.norm(expected[:3] - actual[:3]))
+        direct_quaternion_error = float(np.linalg.norm(expected[3:] - actual[3:]))
+        negated_quaternion_error = float(np.linalg.norm(expected[3:] + actual[3:]))
+        objects[name] = {
+            "translation_l2_m": translation_error,
+            "quaternion_sign_invariant_l2": min(direct_quaternion_error, negated_quaternion_error),
+        }
+    return {
+        "objects": objects,
+        "maximum_translation_l2_m": max(value["translation_l2_m"] for value in objects.values()),
+        "maximum_quaternion_sign_invariant_l2": max(
+            value["quaternion_sign_invariant_l2"] for value in objects.values()
+        ),
+        "diagnostic_only": True,
     }
 
 
@@ -684,6 +762,7 @@ def run_official_action_replays(
                     first_state_anchor_used = False
                     first_state_anchor_error: dict[str, object] | None = None
                     terminal_error: dict[str, object] | None = None
+                    terminal_object_pose_error: dict[str, object] | None = None
                     episode_error: dict[str, object] | None = None
                     try:
                         (
@@ -703,7 +782,14 @@ def run_official_action_replays(
                             if current_success and replay_success_step is None:
                                 replay_success_step = step
                             replay_success = current_success
+                        replay_terminal_object_poses = _task_object_raw_poses(base, task_id)
                         terminal_error = _state_error(source_terminal, base.get_state_dict())
+                        base.set_state_dict(source_terminal)
+                        source_terminal_object_poses = _task_object_raw_poses(base, task_id)
+                        terminal_object_pose_error = _task_object_pose_error(
+                            source_terminal_object_poses,
+                            replay_terminal_object_poses,
+                        )
                     except Exception as caught:
                         simulator_error_count = 1
                         episode_error = {
@@ -737,6 +823,7 @@ def run_official_action_replays(
                             "first_state_anchor_used": first_state_anchor_used,
                             "first_state_anchor_error": first_state_anchor_error,
                             "terminal_state_error": terminal_error,
+                            "terminal_object_pose_error": terminal_object_pose_error,
                             "action_validation": action_report,
                             "error": episode_error,
                             **comparison,
@@ -1070,7 +1157,11 @@ def lerobot_environment_manifest() -> dict[str, object]:
         {
             "schema_version": "langmani-v2-phase2b5-lerobot-060-environment-v0",
             "created_at_utc": _timestamp(),
-            "environment_prefix": os.environ.get("CONDA_PREFIX") or os.environ.get("VIRTUAL_ENV"),
+            "environment_prefix": (
+                os.environ.get("CONDA_PREFIX")
+                or os.environ.get("VIRTUAL_ENV")
+                or Path(sys.executable).resolve().parents[1].as_posix()
+            ),
             "python": platform.python_version(),
             "packages": versions,
             "cuda_runtime_reported_by_torch": torch.version.cuda,

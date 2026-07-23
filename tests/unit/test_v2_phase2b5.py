@@ -31,6 +31,7 @@ from langmani.v2.phase2b5 import (
     validate_split_disjointness,
     validate_transition_lengths,
 )
+from langmani.v2.phase2b5_runtime import _state_error, _task_object_pose_error
 
 
 def _metadata() -> dict[str, object]:
@@ -169,6 +170,26 @@ def test_hdf5_transition_length_contract() -> None:
             transition_lengths={"success": 3},
             env_state_lengths=(3,),
         )
+
+
+def test_diagnostic_state_and_object_pose_errors_are_explicit() -> None:
+    state_report = _state_error(
+        {"actor": {"pose": np.asarray([1.0, 2.0], dtype=np.float32)}},
+        {"actor": {"pose": np.asarray([1.0, 2.25], dtype=np.float32)}},
+    )
+    assert state_report["maximum_absolute_error"] == 0.25
+    assert state_report["per_numeric_leaf"]["actor/pose"] == {
+        "compared_values": 2,
+        "maximum_absolute_error": 0.25,
+        "mean_absolute_error": 0.125,
+    }
+    pose_report = _task_object_pose_error(
+        {"obj": np.asarray([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0])},
+        {"obj": np.asarray([0.003, 0.004, 0.0, -1.0, 0.0, 0.0, 0.0])},
+    )
+    assert pose_report["maximum_translation_l2_m"] == pytest.approx(0.005)
+    assert pose_report["maximum_quaternion_sign_invariant_l2"] == 0.0
+    assert pose_report["diagnostic_only"] is True
 
 
 def test_replay_outcome_comparison_and_frozen_gate() -> None:

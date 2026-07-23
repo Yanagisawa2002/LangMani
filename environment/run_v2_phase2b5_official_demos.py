@@ -10,6 +10,7 @@ from langmani.v2.phase2b5_runtime import (
     convert_visual_pilot_to_lerobot,
     generate_visual_policy_pilot,
     inspect_official_sources,
+    lerobot_environment_manifest,
     readback_lerobot_pilot,
     run_official_action_replays,
     runtime_audit,
@@ -32,6 +33,7 @@ def parse_args() -> argparse.Namespace:
             "convert",
             "readback",
             "padding",
+            "lerobot-environment",
             "runtime-audit",
         ),
     )
@@ -94,6 +96,13 @@ def main() -> int:
         report = write_padding_report(
             visual_manifest_path=output_root / "visual_pilot_manifest.json",
             output_root=output_root,
+        )
+    elif args.stage == "lerobot-environment":
+        report = lerobot_environment_manifest()
+        target = output_root / "lerobot_060_environment_manifest.json"
+        target.write_text(
+            json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n",
+            encoding="utf-8",
         )
     else:
         if not args.execution_commit:
