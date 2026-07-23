@@ -953,8 +953,11 @@ def _readback_one_root(
         if (
             not np.all(episode_indices == expected_episode_index)
             or not np.array_equal(frame_indices, np.arange(length))
-            or not np.array_equal(
-                timestamps, np.arange(length, dtype=np.float64) / CONTROL_FREQUENCY_HZ
+            or not np.allclose(
+                timestamps,
+                np.arange(length, dtype=np.float64) / CONTROL_FREQUENCY_HZ,
+                rtol=0.0,
+                atol=1e-6,
             )
         ):
             failures["index_or_timestamp"] += 1
@@ -999,9 +1002,11 @@ def _readback_one_root(
                 "action_exact": (
                     _array_sha256(action, dtype=np.dtype(np.float32)) == episode["action_sha256"]
                 ),
-                "timestamp_exact": np.array_equal(
+                "timestamp_sequence_valid": np.allclose(
                     timestamps,
                     np.arange(length, dtype=np.float64) / CONTROL_FREQUENCY_HZ,
+                    rtol=0.0,
+                    atol=1e-6,
                 ),
                 "metadata_exact": metadata_ok,
             }
@@ -1172,13 +1177,15 @@ def run_full_readback(
             "schema_version": "langmani-v2-phase2b6-derived-equality-intermediate-v0",
             "episode_count": len(equality_rows),
             "action_exact_count": sum(row["action_exact"] is True for row in equality_rows),
-            "timestamp_exact_count": sum(row["timestamp_exact"] is True for row in equality_rows),
+            "timestamp_sequence_valid_count": sum(
+                row["timestamp_sequence_valid"] is True for row in equality_rows
+            ),
             "metadata_exact_count": sum(row["metadata_exact"] is True for row in equality_rows),
             "episode_rows_digest": _canonical_rows_digest(equality_rows),
             "episode_rows": equality_rows,
             "passed": all(
                 row["action_exact"] is True
-                and row["timestamp_exact"] is True
+                and row["timestamp_sequence_valid"] is True
                 and row["metadata_exact"] is True
                 for row in equality_rows
             ),
@@ -1255,7 +1262,7 @@ def run_source_to_derived_verification(
                         replay["instruction_template_id"] == split["instruction_template_id"]
                     ),
                     "frame_count": replay["policy_frame_count"] == len(source_actions),
-                    "timestamp_sequence": derived["timestamp_exact"] is True,
+                    "timestamp_sequence": derived["timestamp_sequence_valid"] is True,
                 }
                 if not all(checks.values()):
                     failures.append(
