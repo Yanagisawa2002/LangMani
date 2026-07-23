@@ -31,8 +31,9 @@ python -m mani_skill.trajectory.replay_trajectory
 It can replay actions, use the first stored environment state, replay state sequences, render
 cameras, record a changed observation mode, and perform supported CPU-side control-mode conversion.
 Phase 2B.5 uses no conversion. CPU and GPU simulation can randomize or continue differently, so the
-qualification separately records semantic-reset error and then uses the official
-`--use-first-env-state` equivalent before replaying actions on `physx_cpu`.
+qualification separately records semantic-reset error. It keeps an official
+`--use-first-env-state`-equivalent fallback for a mismatching reset, but does not overwrite an
+already exact same-backend reset before replaying actions on `physx_cpu`.
 
 ## Boundaries
 

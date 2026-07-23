@@ -580,6 +580,28 @@ def _state_error(reference: object, observed: object) -> dict[str, object]:
     }
 
 
+def _prepare_replay_initial_state(
+    *,
+    env: Any,
+    base: Any,
+    reset_kwargs: Mapping[str, Any],
+    source_initial: Mapping[str, object],
+) -> tuple[dict[str, object], bool, dict[str, object] | None]:
+    """Prefer an exact semantic reset and use the official state anchor only as fallback."""
+    env.reset(**reset_kwargs)
+    semantic_error = _state_error(source_initial, base.get_state_dict())
+    semantic_exact = semantic_error["structures_match"] is True and semantic_error[
+        "maximum_absolute_error"
+    ] in {0.0, None}
+    if semantic_exact:
+        return semantic_error, False, None
+    base.set_state_dict(source_initial)
+    anchor_error = _state_error(source_initial, base.get_state_dict())
+    if anchor_error["structures_match"] is not True:
+        raise Phase2B5RuntimeError("official first-state anchor structure differs")
+    return semantic_error, True, anchor_error
+
+
 def _load_episode_metadata(json_path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     document = _read_json(json_path)
     task_id = str(document.get("env_info", {}).get("env_id"))
@@ -659,19 +681,21 @@ def run_official_action_replays(
                     replay_success = False
                     replay_success_step: int | None = None
                     semantic_reset_error: dict[str, object] | None = None
+                    first_state_anchor_used = False
+                    first_state_anchor_error: dict[str, object] | None = None
                     terminal_error: dict[str, object] | None = None
                     episode_error: dict[str, object] | None = None
                     try:
-                        env.reset(**episode["reset_kwargs"])
-                        semantic_reset_error = _state_error(source_initial, base.get_state_dict())
-                        base.set_state_dict(source_initial)
-                        anchor_error = _state_error(source_initial, base.get_state_dict())
-                        if anchor_error["structures_match"] is not True or anchor_error[
-                            "maximum_absolute_error"
-                        ] not in {0.0, None}:
-                            raise Phase2B5RuntimeError(
-                                "official first-state anchor did not restore exactly"
-                            )
+                        (
+                            semantic_reset_error,
+                            first_state_anchor_used,
+                            first_state_anchor_error,
+                        ) = _prepare_replay_initial_state(
+                            env=env,
+                            base=base,
+                            reset_kwargs=cast(Mapping[str, Any], episode["reset_kwargs"]),
+                            source_initial=source_initial,
+                        )
                         for step, action in enumerate(actions, start=1):
                             _, _, _, _, info = env.step(action)
                             replayed_actions += 1
@@ -710,7 +734,8 @@ def run_official_action_replays(
                                 else None
                             ),
                             "semantic_reset_state_error": semantic_reset_error,
-                            "first_state_anchor_used": True,
+                            "first_state_anchor_used": first_state_anchor_used,
+                            "first_state_anchor_error": first_state_anchor_error,
                             "terminal_state_error": terminal_error,
                             "action_validation": action_report,
                             "error": episode_error,
@@ -729,8 +754,9 @@ def run_official_action_replays(
                     ),
                     "selected_episode_ids": list(selected_ids),
                     "first_state_anchor": (
-                        "Official stored env_states[0] is applied after semantic reset, matching "
-                        "ManiSkill replay's --use-first-env-state mechanism."
+                        "Semantic reset is used when public state values match exactly; "
+                        "ManiSkill's official first-state mechanism is a recorded fallback "
+                        "only when reset reconstruction differs."
                     ),
                     "success_predicate_modified": False,
                     "planner_or_expert_invoked": False,
@@ -840,8 +866,12 @@ def generate_visual_policy_pilot(
                     group = trajectories[f"traj_{episode_id}"]
                     actions = np.asarray(group["actions"], dtype=np.float32)
                     source_initial = _h5_state_at(group["env_states"], 0)
-                    env.reset(**episode["reset_kwargs"])
-                    base.set_state_dict(source_initial)
+                    _prepare_replay_initial_state(
+                        env=env,
+                        base=base,
+                        reset_kwargs=cast(Mapping[str, Any], episode["reset_kwargs"]),
+                        source_initial=source_initial,
+                    )
                     images: list[np.ndarray] = []
                     states: list[np.ndarray] = []
                     timestamps: list[float] = []

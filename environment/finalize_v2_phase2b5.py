@@ -231,7 +231,9 @@ def _replay_protocol() -> dict[str, object]:
             "planner_or_expert_invoked": False,
             "sim_backend": "physx_cpu",
             "semantic_reset_first": True,
-            "official_first_state_anchor": True,
+            "official_first_state_anchor": (
+                "fallback only when semantic reset does not exactly reconstruct source state"
+            ),
             "success_predicate_modified": False,
             "bounded_sample_per_task": 20,
             "strong_sample_per_selected_task": 100,
