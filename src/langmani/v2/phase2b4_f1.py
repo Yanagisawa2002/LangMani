@@ -12,6 +12,7 @@ import numpy as np
 import torch
 from torch import nn
 from torch.distributions import Normal
+from torch.nn import functional as functional
 
 from langmani.v2.phase2b4_ppo import (
     PANDA_QPOS_SLICE,
@@ -28,6 +29,8 @@ ACTION_SCHEMA_VERSION: Final = "langmani-v2-phase2b4-f1-state-centered-residual-
 SEED_SCHEMA_VERSION: Final = "langmani-v2-phase2b4-f1-seeds-v0"
 CURRICULUM_SCHEMA_VERSION: Final = "langmani-v2-phase2b4-f1-safe-curriculum-v0"
 PANDA_FINGER_OPEN_QPOS: Final = 0.04
+SAFE_ATANH_EPSILON: Final = 1e-6
+ZERO_RESIDUAL_IDENTITY_TOLERANCE: Final = 2e-6
 DEFAULT_RESIDUAL_SCALES: Final = (0.08,) * 7 + (0.25,)
 F1_ALLOWED_OPERATIONS: Final = frozenset(
     {
@@ -142,13 +145,22 @@ def seed_disjointness_audit() -> dict[str, object]:
     return payload
 
 
-def safe_atanh(value: torch.Tensor, *, epsilon: float = 1e-5) -> torch.Tensor:
+def safe_atanh(
+    value: torch.Tensor,
+    *,
+    epsilon: float = SAFE_ATANH_EPSILON,
+) -> torch.Tensor:
     """Map normalized current state to finite inverse-tanh coordinates."""
     if not 0.0 < epsilon < 0.1:
         raise ValueError("safe-atanh epsilon must be in (0, 0.1)")
     if not torch.isfinite(value).all():
         raise ValueError("safe-atanh input must be finite")
     return torch.atanh(value.clamp(min=-1.0 + epsilon, max=1.0 - epsilon))
+
+
+def _log_tanh_derivative(pre_tanh: torch.Tensor) -> torch.Tensor:
+    """Return the exact, numerically stable log derivative of tanh."""
+    return 2.0 * (math.log(2.0) - pre_tanh - functional.softplus(-2.0 * pre_tanh))
 
 
 def _validate_bounds(
@@ -275,12 +287,13 @@ class StateCenteredResidualActorCritic(nn.Module):
         latent: torch.Tensor,
     ) -> torch.Tensor:
         residual_unit = torch.tanh(latent)
-        action_unit = self.action_unit_from_latent(observation, latent)
+        current_coordinate = safe_atanh(self.current_action_unit(observation))
+        action_coordinate = current_coordinate + self.residual_scale * residual_unit
         log_jacobian = (
             torch.log(self.action_scale)
-            + torch.log1p(-action_unit.square() + 1e-6)
             + torch.log(self.residual_scale)
-            + torch.log1p(-residual_unit.square() + 1e-6)
+            + _log_tanh_derivative(action_coordinate)
+            + _log_tanh_derivative(latent)
         )
         return (distribution.log_prob(latent) - log_jacobian).sum(dim=1)
 
@@ -324,7 +337,7 @@ class StateCenteredResidualActorCritic(nn.Module):
             "arm_reference": "current Panda qpos[0:7]",
             "gripper_reference": "current mean finger qpos mapped from [0,0.04] to [-1,1]",
             "zero_residual_identity": True,
-            "current_coordinate_boundary_guard": "clamp to [-1+1e-5,1-1e-5] before atanh",
+            "current_coordinate_boundary_guard": ("clamp to [-1+1e-6,1-1e-6] before atanh"),
             "stochastic_and_deterministic_transform_shared": True,
             "exact_change_of_variables_log_probability": True,
             "clipping_emitted_action": False,
@@ -387,10 +400,14 @@ def audit_residual_action_legality(
         "clipping_events": 0,
         "projection_events": 0,
         "maximum_zero_residual_identity_error": maximum_zero_identity_error,
-        "zero_residual_tolerance": 1e-5,
+        "zero_residual_tolerance": ZERO_RESIDUAL_IDENTITY_TOLERANCE,
         "observed_min": observed_min.detach().cpu().tolist(),
         "observed_max": observed_max.detach().cpu().tolist(),
-        "passed": (nonfinite == 0 and out_of_bounds == 0 and maximum_zero_identity_error <= 1e-5),
+        "passed": (
+            nonfinite == 0
+            and out_of_bounds == 0
+            and maximum_zero_identity_error <= ZERO_RESIDUAL_IDENTITY_TOLERANCE
+        ),
     }
     payload["fingerprint"] = canonical_json_sha256(payload)
     return payload
@@ -783,8 +800,10 @@ __all__ = [
     "FORMAL_QUALIFICATION_SEEDS",
     "Phase2B4F1Result",
     "ProbeEvaluation",
+    "SAFE_ATANH_EPSILON",
     "SOURCE_COMMIT",
     "StateCenteredResidualActorCritic",
+    "ZERO_RESIDUAL_IDENTITY_TOLERANCE",
     "assert_f1_operation_allowed",
     "assert_f1_seed_allowed",
     "audit_residual_action_legality",

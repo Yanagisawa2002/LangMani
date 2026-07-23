@@ -176,6 +176,22 @@ def test_residual_transform_and_log_probability_are_reproducible() -> None:
     )
 
 
+def test_residual_log_probability_matches_autograd_change_of_variables() -> None:
+    policy = _policy()
+    observation = _observations(count=1)
+    latent = torch.linspace(-0.7, 0.7, 8, requires_grad=True)
+    distribution = policy.distribution(observation)
+    observed = policy.log_prob(distribution, observation, latent[None, :])[0]
+    jacobian = torch.autograd.functional.jacobian(
+        lambda value: policy.action_from_latent(observation, value[None, :])[0],
+        latent,
+    )
+    sign, log_absolute_determinant = torch.linalg.slogdet(jacobian)
+    expected = distribution.log_prob(latent[None, :]).sum() - log_absolute_determinant
+    assert sign.item() > 0
+    assert observed.item() == pytest.approx(expected.item(), abs=1e-5)
+
+
 def test_residual_scale_configuration_and_100000_action_legality() -> None:
     policy = _policy(hidden_dim=16)
     manifest = policy.action_manifest()

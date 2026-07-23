@@ -390,6 +390,7 @@ def audit_initial_exploration(*, sample_count: int = 100_000) -> dict[str, objec
                 - float(residual_arm_tensor.mean().item())
                 / max(float(global_arm_tensor.mean().item()), 1e-12)
             ),
+            "passed": legality["passed"] is True,
         }
         payload["fingerprint"] = canonical_json_sha256(payload)
         return payload
