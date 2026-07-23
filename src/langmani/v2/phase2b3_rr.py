@@ -533,6 +533,7 @@ def verify_phase2b3_rr_result_artifacts(root: Path) -> dict[str, object]:
         raise Phase2B3RRContractError("artifact manifest files must be a list")
 
     hash_checks: dict[str, bool] = {}
+    crlf_normalized_hash_checks: dict[str, bool] = {}
     for entry in entries:
         if not isinstance(entry, Mapping):
             raise Phase2B3RRContractError("artifact manifest entries must be objects")
@@ -545,8 +546,16 @@ def verify_phase2b3_rr_result_artifacts(root: Path) -> dict[str, object]:
         path = (root / relative).resolve()
         if path.parent != root:
             raise Phase2B3RRContractError("artifact path escapes Result D root")
-        actual = hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else ""
-        hash_checks[relative] = actual == expected
+        contents = path.read_bytes() if path.is_file() else b""
+        actual = hashlib.sha256(contents).hexdigest()
+        matched = actual == expected
+        normalized_match = False
+        if not matched and path.suffix == ".json" and b"\r\n" in contents:
+            normalized = contents.replace(b"\r\n", b"\n")
+            normalized_match = hashlib.sha256(normalized).hexdigest() == expected
+            matched = normalized_match
+        hash_checks[relative] = matched
+        crlf_normalized_hash_checks[relative] = normalized_match
 
     isolation = _load_json_object(root / "repository_isolation_audit.json")
     isolation_valid = True
@@ -601,6 +610,7 @@ def verify_phase2b3_rr_result_artifacts(root: Path) -> dict[str, object]:
         "result": "RESULT_D",
         "checks": checks,
         "artifact_hash_checks": hash_checks,
+        "crlf_normalized_hash_checks": crlf_normalized_hash_checks,
         **expected_authorization,
     }
 

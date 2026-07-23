@@ -3080,10 +3080,10 @@ older source and was not updated or used. Targeted inspection found no complete 
 report records seed/task identity, action counts and indices, and a 12-action content hash, but not
 the numeric actions or a complete call-sequence identity bound to them.
 
-The existing compact Result C verifier now treats only CRLF-to-LF checkout translation as the
-canonical Git text bytes and reports which entries needed that normalization. This makes the
+The compact Result C and Result D verifiers treat only CRLF-to-LF checkout translation as the
+canonical Git text bytes and report which entries needed that normalization. This makes the
 immutable Linux-produced hashes portable to a Windows worktree; arbitrary byte changes, including
-added whitespace, still fail the manifest.
+added whitespace, still fail the manifests.
 
 The predeclared hard stop therefore classifies the phase
 `RESULT_D / HISTORICAL_PREFIX_UNAVAILABLE`. This does not overturn the historical Result C and is
