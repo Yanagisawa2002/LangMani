@@ -1267,6 +1267,7 @@ def readback_lerobot_pilot(
         repo_id=str(conversion["repo_id"]),
         root=dataset_root,
         download_videos=False,
+        video_backend="pyav",
     )
     row_count = len(dataset)
     image_failures = 0
