@@ -24,6 +24,11 @@ def test_result_c_artifacts_verify_and_detect_tampering(tmp_path: Path) -> None:
 
     manifest = json.loads((copied / "artifact_manifest.json").read_text(encoding="utf-8"))
     assert {entry["path"] for entry in manifest["files"]} == REQUIRED_ARTIFACTS
+    authorization = copied / "authorization_state.json"
+    lf_bytes = authorization.read_bytes().replace(b"\r\n", b"\n")
+    authorization.write_bytes(lf_bytes.replace(b"\n", b"\r\n"))
+    assert verify_phase2b4_f0_artifacts(copied)["passed"] is True
+
     evaluation = copied / "micro_evaluation_result.json"
     evaluation.write_bytes(evaluation.read_bytes() + b" ")
     tampered = verify_phase2b4_f0_artifacts(copied)

@@ -62,6 +62,15 @@ def _safe_artifact_path(root: Path, relative: str) -> Path:
     return path
 
 
+def canonical_git_text_bytes(path: Path) -> bytes:
+    """Return the LF-normalized bytes Git stores for compact JSON evidence."""
+    raw = path.read_bytes()
+    normalized = raw.replace(b"\r\n", b"\n")
+    if b"\r" in normalized:
+        raise ValueError(f"{path.name} contains a non-CRLF carriage return")
+    return normalized
+
+
 def verify_phase2b4_f0_artifacts(root: Path) -> dict[str, object]:
     root = root.resolve()
     manifest = _read_json(root / "artifact_manifest.json")
@@ -78,9 +87,10 @@ def verify_phase2b4_f0_artifacts(root: Path) -> dict[str, object]:
             raise ValueError(f"duplicate artifact path {relative!r}")
         declared.add(relative)
         path = _safe_artifact_path(root, relative)
-        digest = "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+        canonical_bytes = canonical_git_text_bytes(path)
+        digest = "sha256:" + hashlib.sha256(canonical_bytes).hexdigest()
         hash_checks[relative] = digest == entry.get("sha256")
-        size_checks[relative] = path.stat().st_size == entry.get("size_bytes")
+        size_checks[relative] = len(canonical_bytes) == entry.get("size_bytes")
 
     documents = {name: _read_json(root / name) for name in REQUIRED_ARTIFACTS}
     action_audit = documents["action_legality_result.json"]
@@ -187,4 +197,8 @@ def verify_phase2b4_f0_artifacts(root: Path) -> dict[str, object]:
     }
 
 
-__all__ = ["REQUIRED_ARTIFACTS", "verify_phase2b4_f0_artifacts"]
+__all__ = [
+    "REQUIRED_ARTIFACTS",
+    "canonical_git_text_bytes",
+    "verify_phase2b4_f0_artifacts",
+]

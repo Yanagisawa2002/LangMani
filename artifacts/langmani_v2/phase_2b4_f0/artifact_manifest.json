@@ -19,18 +19,18 @@
     },
     {
       "path": "authorization_state.json",
-      "sha256": "sha256:2e8cb3f6e429132dc9bdf026f1f709bc86c2e04754e704489b98e0ab361e4d16",
-      "size_bytes": 536
+      "sha256": "sha256:2f2ef10a154e47c5341eb5d465e16699038a53f230a31b3aaab631db212a3542",
+      "size_bytes": 523
     },
     {
       "path": "failure_taxonomy.json",
-      "sha256": "sha256:f40a31adb3ed789e024d3cd7f1ab4764d6db3527387c3d4cf3a233e2d6e3b116",
-      "size_bytes": 671
+      "sha256": "sha256:500cfb82481b52c784c9b4752663d39236dc3ea3102a701a24f8075168711902",
+      "size_bytes": 651
     },
     {
       "path": "feasibility_development_result.json",
-      "sha256": "sha256:cafe7ea6d4f6720c92d07496c522c8167d6bac82abc269cf81b8625cec94b43a",
-      "size_bytes": 331
+      "sha256": "sha256:557c0dcc53ced98e645ce9082536f82e42eb14bf5fd536d3c1296cdfe5030d48",
+      "size_bytes": 322
     },
     {
       "path": "micro_evaluation_result.json",
@@ -39,8 +39,8 @@
     },
     {
       "path": "micro_training_configuration.json",
-      "sha256": "sha256:71a3fe326786083eec0bc39cd59cbd0678579ac0a0ca457433b650c5dbf27440",
-      "size_bytes": 1701
+      "sha256": "sha256:5f0e67b9d51602ea9e2839ec3930811b83609ce9bdf6535daead3d50ac41458a",
+      "size_bytes": 1638
     },
     {
       "path": "micro_training_metrics.json",
@@ -49,13 +49,13 @@
     },
     {
       "path": "operation_boundary.json",
-      "sha256": "sha256:0a8043ecd4d7e38b0af905309da2dedac3b91ae8a865f7c75c132b887ecd4eca",
-      "size_bytes": 763
+      "sha256": "sha256:0b032d832f41711e1044e59ea445bac9796e5478a48fabc30f904cfd876d3834",
+      "size_bytes": 737
     },
     {
       "path": "ppo_implementation_audit.json",
-      "sha256": "sha256:26ebc25d678c4691973a00d32e522cde34c6a58992cd7b5a4da0648bd43eea33",
-      "size_bytes": 1565
+      "sha256": "sha256:9184030377bcc1d5af6ba1b8e3ec6c3e0ef9d662c26a892f047e9864641957db",
+      "size_bytes": 1536
     },
     {
       "path": "ppo_smoke_test_result.json",
@@ -64,8 +64,8 @@
     },
     {
       "path": "prior_evidence_verification.json",
-      "sha256": "sha256:7e21e705c26ee000d5de0706bffec37dfaa572924ff3a86cfa344965ffb1d19c",
-      "size_bytes": 509
+      "sha256": "sha256:7860162d4964c194240f1701c211bd9184e5de236e468dffb8d91eec0b02b31b",
+      "size_bytes": 492
     },
     {
       "path": "prior_phase2b3_rr_verification.json",
@@ -79,63 +79,63 @@
     },
     {
       "path": "remote_execution_audit.json",
-      "sha256": "sha256:4c2ee7329f455449541330693bd2b62c7e084bc28a1e7bcedd5a973d4766870b",
-      "size_bytes": 1027
+      "sha256": "sha256:7d16faf545da153a934ef5da4a8b17948d0b52e7153d313660ad04064b0d6c78",
+      "size_bytes": 1002
     },
     {
       "path": "repository_environment_audit.json",
-      "sha256": "sha256:b437a8ee9337074a7d6765e3291909b07120a4cd81109a4c426f60e13bf89d9b",
-      "size_bytes": 1565
+      "sha256": "sha256:1f33f86f8231d2c7986fd70724d7f702c045e28003888bf7d0ac2179cee2aa2e",
+      "size_bytes": 1531
     },
     {
       "path": "result_classification.json",
-      "sha256": "sha256:813760d6adc0441f2c57c769433a64932bcf70fefb77e0fd8cd4c56d217a1674",
-      "size_bytes": 508
+      "sha256": "sha256:205cfd61a31dffb1dfd3543df25fd207d22b2d98df03568fe0d34d2c6792da00",
+      "size_bytes": 495
     },
     {
       "path": "reward_hacking_audit.json",
-      "sha256": "sha256:bbf8b92f3625a2ff8e674749349eb51ffa0dce66a1701e458ec75a3ab339ae5c",
-      "size_bytes": 1160
+      "sha256": "sha256:cb277952e4731676cd8d59f3ef8ac7ac8d287ada9a3163a5e6f624bdca54ea7c",
+      "size_bytes": 1130
     },
     {
       "path": "reward_manifest.json",
-      "sha256": "sha256:c4b17f4e1ad2acec4deb935bf1be561a2c27c36a22246ef8df4c21fdcfbb6b3f",
-      "size_bytes": 1393
+      "sha256": "sha256:62758b2536e474c49617cf7c5a66dfb770c53483104af198d49674ede9c0a9a3",
+      "size_bytes": 1358
     },
     {
       "path": "reward_repair.json",
-      "sha256": "sha256:17074a16feeba2dddc2ac6c78275b5cb92a4e25af8b8470557eef0046ddcf406",
-      "size_bytes": 480
+      "sha256": "sha256:d9963dc13aab0f260162891fbc6f1df82027c46051287f37f3db040aa7e78581",
+      "size_bytes": 471
     },
     {
       "path": "runtime_summary.json",
-      "sha256": "sha256:0577df172be9c2948788bda001bd85f000406b138b2d5dfd9890178f1a210c15",
-      "size_bytes": 1160
+      "sha256": "sha256:a356f43258fb8a4e92195d0b8d833c1040f825171064af8183802efaba981c5e",
+      "size_bytes": 1135
     },
     {
       "path": "seed_disjointness_audit.json",
-      "sha256": "sha256:f3a510811b433c52991f9f8f072a9d13982c7fe0bd259da88587bf824be1748d",
-      "size_bytes": 1128
+      "sha256": "sha256:8c7fc484ad2f35e18489b86087d5ecbbfb21d58b012b6f65d1267b700b68c51a",
+      "size_bytes": 1084
     },
     {
       "path": "state_normalization_manifest.json",
-      "sha256": "sha256:cf883c1078558fa8c38e2aa249a3b5ff516cd0efca97e6ebcf13318e736072a6",
-      "size_bytes": 2192
+      "sha256": "sha256:15fa231381bcd2e06612df1b999ce763dac192a6cadd5e27e28af76046b5c385",
+      "size_bytes": 2053
     },
     {
       "path": "student_privilege_exclusion_audit.json",
-      "sha256": "sha256:73e78ddae1b53384c895540ae8c6d4d359f783b14c7aaf515ba57b7bdf07e62a",
-      "size_bytes": 993
+      "sha256": "sha256:994f8462620cd590e811921374a45c86fb10a18049e8e5d6735c37ba2f265383",
+      "size_bytes": 959
     },
     {
       "path": "teacher_observation_manifest.json",
-      "sha256": "sha256:56f8362c4bbb624d0c435c3e068a34c5c70e0d70275f676ecf7bb837f657527c",
-      "size_bytes": 4332
+      "sha256": "sha256:a6daaac12a23abca97f325a1ee95507b0c2d1883f8611a28c89507ab8e8223ff",
+      "size_bytes": 4078
     },
     {
       "path": "test_summary.json",
-      "sha256": "sha256:53257e78d461980deced444c265b60817ef426407e5de94b9dc4b03c61d0e338",
-      "size_bytes": 832
+      "sha256": "sha256:4eca043a37cee3f71ce48541f9e372d4c18566485466948166f665397c6d5693",
+      "size_bytes": 794
     },
     {
       "path": "vectorized_environment_audit.json",
@@ -143,7 +143,8 @@
       "size_bytes": 984
     }
   ],
-  "fingerprint": "sha256:6a264ed83c74ed0e76c7a25c67617987ffceea6096aaf976ec616061e16792f5",
+  "fingerprint": "sha256:026e577c9e1583a81479faefe59d30f56e2fd99d0932528b62b611a57e34c7a6",
   "result": "RESULT_C",
-  "schema_version": "langmani-v2-phase2b4-f0-artifact-manifest-v0"
+  "schema_version": "langmani-v2-phase2b4-f0-artifact-manifest-v0",
+  "text_byte_contract": "UTF-8 JSON with CRLF normalized to LF, matching Git text bytes"
 }

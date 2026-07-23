@@ -9,7 +9,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from langmani.v2.phase2b4_evidence import REQUIRED_ARTIFACTS
+from langmani.v2.phase2b4_evidence import REQUIRED_ARTIFACTS, canonical_git_text_bytes
 from langmani.v2.phase2b4_ppo import (
     EXCLUDED_GEOMETRY_COMMIT,
     SOURCE_COMMIT,
@@ -311,11 +311,12 @@ def _write_manifest(root: Path) -> None:
     files = []
     for name in sorted(REQUIRED_ARTIFACTS):
         path = root / name
+        canonical_bytes = canonical_git_text_bytes(path)
         files.append(
             {
                 "path": name,
-                "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest(),
-                "size_bytes": path.stat().st_size,
+                "sha256": "sha256:" + hashlib.sha256(canonical_bytes).hexdigest(),
+                "size_bytes": len(canonical_bytes),
             }
         )
     checkpoint = {
@@ -330,6 +331,7 @@ def _write_manifest(root: Path) -> None:
         "schema_version": "langmani-v2-phase2b4-f0-artifact-manifest-v0",
         "result": "RESULT_C",
         "execution_commit": EXECUTION_COMMIT,
+        "text_byte_contract": "UTF-8 JSON with CRLF normalized to LF, matching Git text bytes",
         "files": files,
         "checkpoint": checkpoint,
     }

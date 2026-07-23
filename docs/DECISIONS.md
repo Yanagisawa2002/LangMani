@@ -3155,3 +3155,7 @@ did not run. Formal seeds 66300--66399, full PPO training, the 95/100 qualificat
 collection, datasets, SmolVLA, and student training remain unaccessed and unauthorized.
 `ppo_full_training_eligible=false`, and every authorization flag remains false. This result rejects
 the frozen F0 teacher design; it is not a claim that reinforcement learning cannot solve the task.
+
+The compact manifest hashes and sizes use Git-canonical UTF-8 JSON bytes: CRLF is normalized to LF,
+while any other carriage return is rejected. This keeps the same immutable evidence independently
+verifiable from Windows and Linux checkouts without accepting arbitrary whitespace changes.
