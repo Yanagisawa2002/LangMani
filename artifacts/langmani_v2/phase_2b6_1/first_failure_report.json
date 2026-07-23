@@ -1,0 +1,13 @@
+{
+  "fingerprint": "sha256:b2f6d768fea5237b3879c29f3917dc529630122476515ea4d3b2a7623c54dd68",
+  "fresh_run_first_failures": [],
+  "historical_exact_subgate": null,
+  "historical_exact_subgate_status": "not_recorded",
+  "passed": false,
+  "primary_failure_classification": "insufficient_evidence",
+  "result": "RESULT_D",
+  "schema_version": "langmani-v2-phase2b6-1-first-failure-v0",
+  "secondary_contributing_factors": [
+    "environment_construction_failure"
+  ]
+}

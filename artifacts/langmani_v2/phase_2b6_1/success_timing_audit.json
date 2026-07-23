@@ -1,0 +1,19 @@
+{
+  "fingerprint": "sha256:ebb130667891abe864df7a01b3972fecc8274e25f07dc6f2b29cc203a0172595",
+  "passed": true,
+  "producer_has_separate_stable_success_gate": false,
+  "producer_requires_final_step_success": true,
+  "replays": [],
+  "schema_version": "langmani-v2-phase2b6-1-success-timing-audit-v0",
+  "source": {
+    "final_step_success": true,
+    "first_success_action_index": 99,
+    "first_success_step_1_based": 100,
+    "longest_consecutive_success_steps": 6,
+    "producer_success_rule": "final_step_canonical_success",
+    "separate_stable_success_gate_present_in_producer": false,
+    "step_count": 105,
+    "successful_step_count": 6,
+    "trailing_consecutive_success_steps": 6
+  }
+}

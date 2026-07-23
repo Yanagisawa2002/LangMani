@@ -166,6 +166,16 @@ partial bytes are preserved diagnostics and are not `LangManiOfficialMultiSkill-
 [`dataset card`](docs/langmani_v2/phase_2b6_dataset_card.md). ACT, SmolVLA, VLA-JEPA, and all other
 training remain ineligible, unstarted, and unauthorized.
 
+Phase 2B.6.1 then attempted the separately isolated StackCube episode-938 replay forensics. Exact
+source/action identity and all frozen prior evidence passed, but the first new control (episode
+936, physics-only Mode A) failed during SAPIEN Vulkan environment construction before reset or any
+action. The registered control-failure hard stop prevented control 937, target 938, and Modes B/C.
+The phase is therefore `RESULT_D / insufficient_evidence`, with
+`environment_construction_failure` as the secondary factor; it is not a new judgment about the
+official trajectory or the historical rejection. See the
+[`Phase 2B.6.1 result`](docs/langmani_v2/phase_2b6_1_result.md). Production, accepted-package
+creation, and every training path remain closed.
+
 The native no-training stages are explicitly separate:
 
 ```bash
@@ -195,6 +205,13 @@ LeRobot media, source archives, or model loading:
 
 ```bash
 python environment/verify_v2_phase2b6.py
+```
+
+The compact Phase 2B.6.1 Result D evidence can likewise be checked without constructing a
+simulator:
+
+```bash
+python environment/verify_v2_phase2b6_1.py
 ```
 
 The completed Phase 2B archive can be independently re-audited without starting training:

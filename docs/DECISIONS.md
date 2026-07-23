@@ -3376,3 +3376,33 @@ restore validation were not started. The partial bytes remain diagnostics outsid
 be used as an implicit training or failure corpus. ACT, SmolVLA, and VLA-JEPA eligibility and
 authorization are all false; no model or checkpoint was loaded, no optimizer was created, no
 backward pass ran, `student_policy_training_started=false`, and `optimizer_steps=0`.
+
+## D-133 - Close Phase 2B.6.1 as Result D at the first control environment-construction failure
+
+Phase 2B.6.1 rehashed all 21 immutable Phase 2B.6 artifacts, the accepted Phase 2B.5 package, the
+official StackCube ZIP, and exact source episodes 936--938. Target episode 938 is proven as seed
+962 with native `float32[105,8]` actions whose SHA-256 is
+`5fc50bc7beeb91e55b2eeccf3f016414811d314142e7a80ad6037d4f83d92eb8`. Its reset and source
+trajectory identities also match the frozen Phase 2B.6 inventory. The historical generic
+rejection, missing returned inner replay record, and absent episode-938 NPZ remain unchanged.
+
+The first preregistered fresh-process run was accepted control episode 936 in physics-only Mode A.
+`gym.make` failed with `vk::createInstanceUnique: ErrorIncompatibleDriver` before reset and before
+any action submission. In the imported SAPIEN process, its selected packaged ICD and the system
+legacy GLX ICD both failed `vulkaninfo --summary`; the separately pinned EGL ICD at
+`/etc/vulkan/icd.d/my_nvidia_icd.json` passed. This localizes the new failure to environment
+construction/runtime ICD selection, not to StackCube physics or task success. The preflight's GPU
+presence check did not include Vulkan instance construction.
+
+The mandatory control-failure hard stop prohibited a retry of 936 and prevented control 937,
+target episode 938, observation Mode B, and writer Mode C. Phase 2B.6.1 therefore closes as
+`RESULT_D`, with `insufficient_evidence` primary and `environment_construction_failure` secondary.
+Episode-938 replay compatibility, determinism, canonical success, source agreement, alignment,
+state/timestamp production, serialization, and writer behavior remain unverified. No clean
+production rerun, protocol revision, or source-exclusion review is eligible from this evidence.
+
+Phase 2B.6 remains immutable `RESULT_C`. The partial 1,938-episode output was not modified or
+promoted. `phase2b6_production_resume_authorized=false`,
+`accepted_multiskill_dataset_validated=false`, all ACT/SmolVLA/VLA-JEPA eligibility and
+authorization fields remain false, no policy or optimizer was instantiated, no backward pass ran,
+and `optimizer_steps=0`.

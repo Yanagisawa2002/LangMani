@@ -1,0 +1,131 @@
+{
+  "authorization": {
+    "accepted_dataset_package_created": false,
+    "accepted_multiskill_dataset_validated": false,
+    "act_training_authorized": false,
+    "act_training_eligible": false,
+    "backward_passes": 0,
+    "fingerprint": "sha256:2e5999aa9c55285692845202207e79fd87cfe79bbd13c9477b34317d51ad574e",
+    "optimizer_created": false,
+    "optimizer_steps": 0,
+    "partial_phase2b6_output_promoted": false,
+    "passed": true,
+    "phase2b6_production_resume_authorized": false,
+    "schema_version": "langmani-v2-phase2b6-1-authorization-state-v0",
+    "smolvla_training_authorized": false,
+    "smolvla_training_eligible": false,
+    "student_policy_training_started": false,
+    "vla_jepa_training_authorized": false,
+    "vla_jepa_training_eligible": false
+  },
+  "control_episodes": [
+    936,
+    937
+  ],
+  "fingerprint": "sha256:435410acd62c8f91551153e2f548060a5eb5e1b571a4033b20509868e13f29ee",
+  "fresh_process_per_run": true,
+  "gate_order": [
+    "reset_identity_gate",
+    "action_contract_gate",
+    "step_execution_gate",
+    "simulator_exception_gate",
+    "canonical_terminal_success_gate",
+    "stable_success_gate",
+    "source_replay_outcome_agreement_gate",
+    "action_count_gate",
+    "pre_action_frame_count_gate",
+    "observation_action_alignment_gate",
+    "rgb_completeness_gate",
+    "state_completeness_gate",
+    "timestamp_monotonicity_gate",
+    "temporary_writer_gate",
+    "episode_serialization_gate"
+  ],
+  "modes": {
+    "A": {
+      "description": "independent physics-only diagnostic replay",
+      "policy_state": false,
+      "required_gates": [
+        "reset_identity_gate",
+        "action_contract_gate",
+        "step_execution_gate",
+        "simulator_exception_gate",
+        "canonical_terminal_success_gate",
+        "source_replay_outcome_agreement_gate",
+        "action_count_gate"
+      ],
+      "rgb": false,
+      "writer": false
+    },
+    "B": {
+      "description": "producer-like pre-action observation replay",
+      "policy_state": true,
+      "required_gates": [
+        "reset_identity_gate",
+        "action_contract_gate",
+        "step_execution_gate",
+        "simulator_exception_gate",
+        "canonical_terminal_success_gate",
+        "source_replay_outcome_agreement_gate",
+        "action_count_gate",
+        "pre_action_frame_count_gate",
+        "observation_action_alignment_gate",
+        "rgb_completeness_gate",
+        "state_completeness_gate",
+        "timestamp_monotonicity_gate"
+      ],
+      "rgb": true,
+      "writer": false
+    },
+    "C": {
+      "description": "producer-like observation plus isolated NPZ writer",
+      "policy_state": true,
+      "required_gates": [
+        "reset_identity_gate",
+        "action_contract_gate",
+        "step_execution_gate",
+        "simulator_exception_gate",
+        "canonical_terminal_success_gate",
+        "source_replay_outcome_agreement_gate",
+        "action_count_gate",
+        "pre_action_frame_count_gate",
+        "observation_action_alignment_gate",
+        "rgb_completeness_gate",
+        "state_completeness_gate",
+        "timestamp_monotonicity_gate",
+        "temporary_writer_gate",
+        "episode_serialization_gate"
+      ],
+      "rgb": true,
+      "writer": true
+    }
+  },
+  "no_acceptance_policy_change": true,
+  "passed": true,
+  "producer_success_rule": "final_step_canonical_success",
+  "repetition_budgets": {
+    "A": {
+      "936": 1,
+      "937": 1,
+      "938": 3
+    },
+    "B": {
+      "938": 2
+    },
+    "C": {
+      "938": 1
+    }
+  },
+  "schema_version": "langmani-v2-phase2b6-1-forensic-protocol-v0",
+  "separate_stable_success_gate_in_producer": false,
+  "stop_rules": [
+    "stop if either control fails",
+    "stop after three Mode A runs if any Mode A run fails or outcomes differ",
+    "Mode B permitted only after all Mode A runs pass",
+    "Mode C permitted only after all Mode B runs pass",
+    "stop when the first failing sub-gate is localized",
+    "never process StackCube 939+ or PushCube"
+  ],
+  "target_episode": 938,
+  "task_id": "StackCube-v1"
+}

@@ -1,0 +1,8 @@
+{
+  "canonical_outcomes": [],
+  "controls": [],
+  "fingerprint": "sha256:14f1ea93afa478a3c35cbb74ffcbcd6e34f5e3534d0b27f5fe947af67e9d0cc4",
+  "passed": false,
+  "schema_version": "langmani-v2-phase2b6-1-physical-state-comparison-v0",
+  "target_runs": []
+}

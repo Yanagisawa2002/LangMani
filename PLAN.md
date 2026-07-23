@@ -106,6 +106,14 @@ The partial bytes are diagnostics, not an accepted dataset. All training eligibi
 authorization flags remain false, `student_policy_training_started=false`, and
 `optimizer_steps=0`.
 
+Phase 2B.6.1 completed as Result D without changing Phase 2B.6. Exact StackCube episode-938 source
+and action identities were proven, but the first fresh Mode-A control failed SAPIEN Vulkan
+environment construction before reset and before any action. The mandatory control-failure hard
+stop left control 937, target 938, Modes B/C, production, conversion, packaging, and training
+unrun. Episode-938 physical compatibility, determinism, canonical replay success, alignment, and
+writer behavior remain unverified. No production-reproduction, protocol-revision, or
+source-exclusion eligibility was granted.
+
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected

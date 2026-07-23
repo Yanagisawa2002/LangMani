@@ -148,6 +148,15 @@ partial output is diagnostic only and must not be treated as an accepted dataset
 training corpus. All model-training eligibility and authorization flags remain false,
 `student_policy_training_started=false`, and `optimizer_steps=0`.
 
+Phase 2B.6.1 is the completed, strictly bounded StackCube episode-938 forensic attempt. Exact
+source/action identity and frozen prior evidence passed, but accepted control 936 failed during
+SAPIEN Vulkan environment construction before reset or action submission. The hard stop prevented
+control 937, target 938, Modes B/C, and all later work. Phase 2B.6.1 is Result D with
+`insufficient_evidence` primary and `environment_construction_failure` secondary. It does not
+reclassify the frozen Phase 2B.6 Result C or establish any episode-938 physical, determinism,
+alignment, or writer claim. Production resume, package acceptance, all training eligibility and
+authorization, optimizer creation, backward, and optimizer steps remain false or zero.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
@@ -337,6 +346,9 @@ python environment/verify_v2_phase2b5.py
 # Phase 2B.6 compact Result A or fail-closed Result C evidence verification.
 # This command reads only tracked JSON artifacts and starts no simulator or model.
 python environment/verify_v2_phase2b6.py
+
+# Phase 2B.6.1 compact Result D evidence verification; no simulator execution.
+python environment/verify_v2_phase2b6_1.py
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,

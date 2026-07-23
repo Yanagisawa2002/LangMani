@@ -1,0 +1,11 @@
+{
+  "eligibility_is_authorization": false,
+  "fingerprint": "sha256:2f5df4ad20a278709748ee0688b0c780d9b737c6b137005ff96577cab0d590f8",
+  "passed": true,
+  "phase2b6_protocol_revision_eligible": false,
+  "phase2b6_reproduction_run_eligible": false,
+  "result": "RESULT_D",
+  "schema_version": "langmani-v2-phase2b6-1-eligibility-state-v0",
+  "source_episode_exclusion_review_eligible": false,
+  "source_replay_determinism_validated": false
+}

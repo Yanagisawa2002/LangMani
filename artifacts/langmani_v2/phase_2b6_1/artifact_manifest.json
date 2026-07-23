@@ -1,0 +1,130 @@
+{
+  "file_count": 24,
+  "files": [
+    {
+      "path": "authorization_state.json",
+      "sha256": "sha256:83040cf5bd7f9553c675550b2e1a58dcf8eb43c55a0e62e77bacc1f295eb09d5",
+      "size_bytes": 722
+    },
+    {
+      "path": "authorization_state_final.json",
+      "sha256": "sha256:83040cf5bd7f9553c675550b2e1a58dcf8eb43c55a0e62e77bacc1f295eb09d5",
+      "size_bytes": 722
+    },
+    {
+      "path": "control_episode_results.json",
+      "sha256": "sha256:fa855535e31ed9638823d34d66b5ed40e12e7fbd51dbde3f5bb364a065249e9d",
+      "size_bytes": 6606
+    },
+    {
+      "path": "eligibility_state.json",
+      "sha256": "sha256:060d060a50a7f8778b57f484f8db741fd2136573dc89482ce61e8c0a82d4c053",
+      "size_bytes": 441
+    },
+    {
+      "path": "episode_938_mode_a_results.json",
+      "sha256": "sha256:98f2c0d22cfd0c8eab7462a56019882ebaf2c908ddc83cb99f3ed23b8b2d647c",
+      "size_bytes": 192
+    },
+    {
+      "path": "episode_938_mode_b_results.json",
+      "sha256": "sha256:bca3b19319e8e7dec62ca62ec5759ce68186a7891ad97fcc351dc90c1a3304d5",
+      "size_bytes": 210
+    },
+    {
+      "path": "episode_938_mode_c_result.json",
+      "sha256": "sha256:31e589690eb6db714f8c0f892bc7ed967240d0fe6511ec8af5b5d8233f78dfd8",
+      "size_bytes": 209
+    },
+    {
+      "path": "first_failure_report.json",
+      "sha256": "sha256:7bdb0eaa6283b02a5a53ea1d3c113082d52bc9069fe3f7aa60a863dda316c1d4",
+      "size_bytes": 467
+    },
+    {
+      "path": "forensic_protocol.json",
+      "sha256": "sha256:7ffa557e5721ab683b19953366e48fd60a6933a6d8d38e890617a41b6c1268cf",
+      "size_bytes": 4056
+    },
+    {
+      "path": "frozen_partial_output_inventory.json",
+      "sha256": "sha256:b6f9dca7d721ccbe8aa882a0d77cdf97cd35a241937a1dc3bfb78097d9e976f0",
+      "size_bytes": 2200
+    },
+    {
+      "path": "historical_evidence_audit.json",
+      "sha256": "sha256:5240c5b480f07b9488c6d0b4066edce6ce3fe4f65df3157bfd024d3f98d4e4b4",
+      "size_bytes": 14648
+    },
+    {
+      "path": "infrastructure_failure_report.json",
+      "sha256": "sha256:05c1b0511d600586223371e39a8720fae726683a3d3da24f08b7a03c150abe9e",
+      "size_bytes": 6058
+    },
+    {
+      "path": "observation_action_alignment_audit.json",
+      "sha256": "sha256:f95031d9481f94c6dcf3f99b80787c570eec786bbd890f45017e67ec2d171537",
+      "size_bytes": 228
+    },
+    {
+      "path": "phase2b5_source_package_verification.json",
+      "sha256": "sha256:f49f61ad136f1e975783bdaf8ff4b2eebb3cd789a011d7af1b3e31367cd7f8ef",
+      "size_bytes": 3121
+    },
+    {
+      "path": "phase2b6_prior_evidence_verification.json",
+      "sha256": "sha256:aa98128fc7396ba0f73e1f27e94dcbbbe1cb309ce3a89df7ace4fb588866c063",
+      "size_bytes": 1466
+    },
+    {
+      "path": "physical_state_comparison.json",
+      "sha256": "sha256:789ff66e378401846ba38df11bc9234f8637d213e9d6099fc9a4d238cfc8c379",
+      "size_bytes": 256
+    },
+    {
+      "path": "preflight_result.json",
+      "sha256": "sha256:25c76bf081835b6c4e92ee630c5d5476539bddda75d3b1f96aa1889d5a51ded5",
+      "size_bytes": 665
+    },
+    {
+      "path": "producer_forensic_call_sequence_audit.json",
+      "sha256": "sha256:bfbd6c261dc89725fbce399309d4409f16d7eece360277f260a0e9b6ac06b548",
+      "size_bytes": 2145
+    },
+    {
+      "path": "remote_execution_audit.json",
+      "sha256": "sha256:aebc33a920b95f786ec077a6bccc537942306bb643c8271c36fb82a0075323c0",
+      "size_bytes": 7496
+    },
+    {
+      "path": "repository_environment_audit.json",
+      "sha256": "sha256:56e844e0fd760c43f2b87c4717e758b0694a76a7081b11b20ab6cbf3045888aa",
+      "size_bytes": 3370
+    },
+    {
+      "path": "result_classification.json",
+      "sha256": "sha256:938590c21707a23067bd6789bcf3c2eb45443105a8de40b1bb8e8b403641e765",
+      "size_bytes": 603
+    },
+    {
+      "path": "source_episode_identity_manifest.json",
+      "sha256": "sha256:c0609ec1c1a9b2035db9581fa1e1af3dbfe6a862a3fafe56ca8fa4a3a88b5939",
+      "size_bytes": 12619
+    },
+    {
+      "path": "success_timing_audit.json",
+      "sha256": "sha256:c20bb557cc4581f2d455d41e5bbb4c8ef538c48b0b67a70f7910dc38c596c2a2",
+      "size_bytes": 697
+    },
+    {
+      "path": "writer_filesystem_audit.json",
+      "sha256": "sha256:bcf854f96af1e1bdc483a1c69585e28b84b3cc38a402a2af3623a1d3e49613c9",
+      "size_bytes": 298
+    }
+  ],
+  "fingerprint": "sha256:17427bdf2dda9ad4dcebd92e678b695f89b7f2fe147725a1daf5d6cf818ca826",
+  "full_episode_media_committed": false,
+  "large_npz_arrays_committed": false,
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b6-1-artifact-manifest-v0"
+}

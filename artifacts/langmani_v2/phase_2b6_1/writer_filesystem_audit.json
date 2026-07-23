@@ -1,0 +1,9 @@
+{
+  "fingerprint": "sha256:b78dd7ea830f1ddf4064023d71c2df034c398c642506d7e4a3ad8636ca94a857",
+  "frozen_output_modified": false,
+  "mode_c_run_count": 0,
+  "old_writer_failure_proven": false,
+  "passed": true,
+  "runs": [],
+  "schema_version": "langmani-v2-phase2b6-1-writer-filesystem-audit-v0"
+}

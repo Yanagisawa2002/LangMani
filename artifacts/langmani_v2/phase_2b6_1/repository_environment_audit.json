@@ -1,0 +1,89 @@
+{
+  "authorization_state": {
+    "accepted_dataset_package_created": false,
+    "accepted_multiskill_dataset_validated": false,
+    "act_training_authorized": false,
+    "act_training_eligible": false,
+    "backward_passes": 0,
+    "fingerprint": "sha256:2e5999aa9c55285692845202207e79fd87cfe79bbd13c9477b34317d51ad574e",
+    "optimizer_created": false,
+    "optimizer_steps": 0,
+    "partial_phase2b6_output_promoted": false,
+    "passed": true,
+    "phase2b6_production_resume_authorized": false,
+    "schema_version": "langmani-v2-phase2b6-1-authorization-state-v0",
+    "smolvla_training_authorized": false,
+    "smolvla_training_eligible": false,
+    "student_policy_training_started": false,
+    "vla_jepa_training_authorized": false,
+    "vla_jepa_training_eligible": false
+  },
+  "branch": "codex/langmani-v2-phase2b6-1-replay-failure-forensics",
+  "checks": {
+    "forensic_output_is_distinct": true,
+    "frozen_root_exists": true,
+    "github_matches_head": true,
+    "network_turbo_sourced": true,
+    "no_prohibited_process": true,
+    "producer_commit_exists": true,
+    "source_commit_is_ancestor": true,
+    "source_zip_hash": true,
+    "space_for_small_forensics": true,
+    "target_branch": true,
+    "upstream_matches_head": true,
+    "worktree_clean": true
+  },
+  "created_at_utc": "2026-07-23T17:23:35.443435+00:00",
+  "fingerprint": "sha256:addae4ad30e0639f0664151b407d1974ce78e92a1bc2f8220c4a31bf64a77eb0",
+  "github_branch_sha": "09ed59b1bcf34e5192447676ca5d6a31b5eaded4",
+  "gpu_state": {
+    "available": true,
+    "devices": [
+      {
+        "driver_version": "595.71.05",
+        "memory_total_mib": 32607,
+        "memory_used_mib": 2,
+        "name": "NVIDIA GeForce RTX 5090",
+        "utilization_percent": 0,
+        "uuid": "GPU-e72d1ea7-5fcb-a83f-ba21-88f316be5a4b"
+      }
+    ]
+  },
+  "head": "09ed59b1bcf34e5192447676ca5d6a31b5eaded4",
+  "official_source_identities": {
+    "maniskill_source_revision": "a4a4f9272ad64b1564035874b605ceb687b63ed8",
+    "official_source_revision": "d674485bbffdd533914e52d272fdda34c0515608",
+    "stackcube_source_zip_sha256": "sha256:f9b7d34b9aa418a04aa8e4322d4dea5aa27e8ae81757f60b210c1ffc54bf9c1b"
+  },
+  "passed": true,
+  "process_state": {
+    "passed": true,
+    "prohibited_active_processes": [],
+    "query_succeeded": true
+  },
+  "producer_commit": "73b2cd1517e7c3d2bfc08bd2898e46a3195eb1c9",
+  "remote": "git@github.com:Yanagisawa2002/LangMani.git",
+  "repository": "git@github.com:Yanagisawa2002/LangMani.git",
+  "runtime_environment": {
+    "executable": "/root/autodl-tmp/conda-envs/langmani/bin/python3.12",
+    "packages": {
+      "h5py": "3.16.0",
+      "mani-skill": "3.0.1",
+      "numpy": "2.2.6",
+      "sapien": "3.0.3",
+      "torch": "2.11.0+cu128"
+    },
+    "prefix": "/root/autodl-tmp/conda-envs/langmani",
+    "python": "3.12.13"
+  },
+  "schema_version": "langmani-v2-phase2b6-1-repository-environment-audit-v0",
+  "source_commit": "617e222b706ac8ba40410f817b71fd4b014bf41f",
+  "source_package_identity": "sha256:22e93d609fc4564d0bdb3e5fc7571cf8971c8a86b3cf3bdaa910108621bcbcc2",
+  "storage": {
+    "forensic_output_root": "/root/autodl-tmp/langmani-external/phase2b6_1/stack938_forensics_v1",
+    "free_bytes": 86658666496,
+    "minimum_required_bytes": 4294967296
+  },
+  "upstream": "09ed59b1bcf34e5192447676ca5d6a31b5eaded4",
+  "worktree": "/root/autodl-tmp/langmani"
+}

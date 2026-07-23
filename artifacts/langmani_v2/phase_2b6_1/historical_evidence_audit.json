@@ -1,0 +1,349 @@
+{
+  "controls": [
+    {
+      "action_clipping_or_projection": false,
+      "action_frame_alignment": true,
+      "attempt_index": 0,
+      "categorical_outcome_agreement": true,
+      "derived_action_sha256": "sha256:5df33ca1f1542e2773797aea9e6c0c1e8bda8a100404a608e055d1fe3369e406",
+      "derived_episode_identity": "sha256:915d0a56dc28c11c362ffd48760766d444ccb205e1ecf191a7fc6e1210de1ade",
+      "error": null,
+      "fabricated_terminal_action": false,
+      "first_frame_semantics": "pre-action observation for action[0]",
+      "first_state_anchor_error": null,
+      "first_state_anchor_used": false,
+      "instruction": "Build a two-cube stack.",
+      "instruction_template_id": "phase2b6:StackCube-v1:train:02:47c7923b3c4ad5c8",
+      "invalid_action_count": 0,
+      "last_policy_frame_semantics": "pre-action observation for the final recorded action",
+      "nonfinite_value_count": 0,
+      "passed": true,
+      "planner_or_expert_invoked": false,
+      "policy_frame_count": 82,
+      "post_terminal_frame_policy_dataset": false,
+      "primary_split": "train",
+      "raw_relative_path": "work/raw/stackcube/episode_000936.npz",
+      "raw_sha256": "sha256:6b1e94f8189a2f9b8d58d291c638e8d066bef3f7014405cd25970c4eb00c3fc9",
+      "replay_success": true,
+      "replayed_action_count": 82,
+      "reset_identity": "sha256:b0687c14c23dcb8aa0baba8899d5dac4428eb4496c79783201d7a4f3edb28f73",
+      "retry": false,
+      "retry_reason": null,
+      "rgb_sha256": "sha256:b3c82074b401bfaf26f8a3dddb0a9b57a95116875a302859ed06e32f406ef908",
+      "semantic_reset_state_error": {
+        "compared_numeric_values": 70,
+        "matched_leaf_count": 4,
+        "maximum_absolute_error": 0.0,
+        "mean_absolute_error": 0.0,
+        "missing_leaves": [],
+        "per_numeric_leaf": {
+          "actors/cubeA": {
+            "compared_values": 13,
+            "maximum_absolute_error": 0.0,
+            "mean_absolute_error": 0.0
+          },
+          "actors/cubeB": {
+            "compared_values": 13,
+            "maximum_absolute_error": 0.0,
+            "mean_absolute_error": 0.0
+          },
+          "actors/table-workspace": {
+            "compared_values": 13,
+            "maximum_absolute_error": 0.0,
+            "mean_absolute_error": 0.0
+          },
+          "articulations/panda_wristcam": {
+            "compared_values": 31,
+            "maximum_absolute_error": 0.0,
+            "mean_absolute_error": 0.0
+          }
+        },
+        "shape_mismatch_leaves": [],
+        "structures_match": true,
+        "unexpected_leaves": []
+      },
+      "simulator_error_count": 0,
+      "skill_family": "stacking",
+      "source_action_count": 82,
+      "source_action_sha256": "sha256:5df33ca1f1542e2773797aea9e6c0c1e8bda8a100404a608e055d1fe3369e406",
+      "source_episode_id": 936,
+      "source_success": true,
+      "source_trajectory_identity": "sha256:80c2f1302b4e1439f434291060109967003de358724277d6334e60a50c501b0a",
+      "state_sha256": "sha256:fab0e062a0ddc96ffbc41e09c577ee475e526d7a5c12a68e934dfc01cca84d1d",
+      "success_predicate_modified": false,
+      "task_id": "StackCube-v1",
+      "terminal_diagnostic_frame_count": 1,
+      "terminal_object_pose_error": {
+        "diagnostic_only": true,
+        "maximum_quaternion_sign_invariant_l2": 0.004692836298903922,
+        "maximum_translation_l2_m": 0.000891851153280804,
+        "objects": {
+          "cubeA": {
+            "quaternion_sign_invariant_l2": 0.004692836298903922,
+            "translation_l2_m": 0.000891851153280804
+          },
+          "cubeB": {
+            "quaternion_sign_invariant_l2": 8.158774329444718e-06,
+            "translation_l2_m": 1.2363264207318537e-06
+          }
+        }
+      },
+      "terminal_rgb_sha256": "sha256:77a930d35de93739bdfc0967676d392093e1eada49d3386a590da633086ee14e",
+      "terminal_state_error": {
+        "compared_numeric_values": 70,
+        "matched_leaf_count": 4,
+        "maximum_absolute_error": 0.026088221464306116,
+        "mean_absolute_error": 0.001553168538810366,
+        "missing_leaves": [],
+        "per_numeric_leaf": {
+          "actors/cubeA": {
+            "compared_values": 13,
+            "maximum_absolute_error": 0.023125633131712675,
+            "mean_absolute_error": 0.003946768934523648
+          },
+          "actors/cubeB": {
+            "compared_values": 13,
+            "maximum_absolute_error": 0.026088221464306116,
+            "mean_absolute_error": 0.004412824671450066
+          },
+          "actors/table-workspace": {
+            "compared_values": 13,
+            "maximum_absolute_error": 0.0,
+            "mean_absolute_error": 0.0
+          },
+          "articulations/panda_wristcam": {
+            "compared_values": 31,
+            "maximum_absolute_error": 1.1499971151351929e-05,
+            "mean_absolute_error": 1.518736744108009e-06
+          }
+        },
+        "shape_mismatch_leaves": [],
+        "structures_match": true,
+        "unexpected_leaves": []
+      },
+      "terminated_signal_count": 6,
+      "timestamp_sha256": "sha256:e2a28d6bb36631e33a7531e00c61b8ff01c71664e9422e970ce2bb3210bfc277",
+      "truncated_signal_count": 33,
+      "wall_clock_seconds": 0.4761347509920597
+    },
+    {
+      "action_clipping_or_projection": false,
+      "action_frame_alignment": true,
+      "attempt_index": 0,
+      "categorical_outcome_agreement": true,
+      "derived_action_sha256": "sha256:4ebd85a8a0d68db04af42b29e609795bc942605052fc6cf8c40066a3a813da3d",
+      "derived_episode_identity": "sha256:e6aec50a497236f0304354795c08f2a9ce8d0c6df0e2fee216d400c9840e75bb",
+      "error": null,
+      "fabricated_terminal_action": false,
+      "first_frame_semantics": "pre-action observation for action[0]",
+      "first_state_anchor_error": null,
+      "first_state_anchor_used": false,
+      "instruction": "Put one block on top of the other block.",
+      "instruction_template_id": "phase2b6:StackCube-v1:validation:00:b6ecaa51ef8527a8",
+      "invalid_action_count": 0,
+      "last_policy_frame_semantics": "pre-action observation for the final recorded action",
+      "nonfinite_value_count": 0,
+      "passed": true,
+      "planner_or_expert_invoked": false,
+      "policy_frame_count": 92,
+      "post_terminal_frame_policy_dataset": false,
+      "primary_split": "test_unseen_reset",
+      "raw_relative_path": "work/raw/stackcube/episode_000937.npz",
+      "raw_sha256": "sha256:65d8100972d19ffbf7b40eb0d4cd0983aaf3b9be78e94b96a2e14ef252636daa",
+      "replay_success": true,
+      "replayed_action_count": 92,
+      "reset_identity": "sha256:a7da0881cd791f4f2fd9dfe1baf0ee2b7b660cd9249f9e810ac59f1e986503cb",
+      "retry": false,
+      "retry_reason": null,
+      "rgb_sha256": "sha256:d31c149ed1efea2a2322a1c872cea52c0b2b511e26ff5910c9310611a07dccb8",
+      "semantic_reset_state_error": {
+        "compared_numeric_values": 70,
+        "matched_leaf_count": 4,
+        "maximum_absolute_error": 0.0,
+        "mean_absolute_error": 0.0,
+        "missing_leaves": [],
+        "per_numeric_leaf": {
+          "actors/cubeA": {
+            "compared_values": 13,
+            "maximum_absolute_error": 0.0,
+            "mean_absolute_error": 0.0
+          },
+          "actors/cubeB": {
+            "compared_values": 13,
+            "maximum_absolute_error": 0.0,
+            "mean_absolute_error": 0.0
+          },
+          "actors/table-workspace": {
+            "compared_values": 13,
+            "maximum_absolute_error": 0.0,
+            "mean_absolute_error": 0.0
+          },
+          "articulations/panda_wristcam": {
+            "compared_values": 31,
+            "maximum_absolute_error": 0.0,
+            "mean_absolute_error": 0.0
+          }
+        },
+        "shape_mismatch_leaves": [],
+        "structures_match": true,
+        "unexpected_leaves": []
+      },
+      "simulator_error_count": 0,
+      "skill_family": "stacking",
+      "source_action_count": 92,
+      "source_action_sha256": "sha256:4ebd85a8a0d68db04af42b29e609795bc942605052fc6cf8c40066a3a813da3d",
+      "source_episode_id": 937,
+      "source_success": true,
+      "source_trajectory_identity": "sha256:33e8d86f9c66f8af8207ef4a0093ec72080b55613a3b2deeecb250497eea760f",
+      "state_sha256": "sha256:6887dcb16ab14f802440c4bf16a9cb22b60e858a374377b5bd3415a5715510dd",
+      "success_predicate_modified": false,
+      "task_id": "StackCube-v1",
+      "terminal_diagnostic_frame_count": 1,
+      "terminal_object_pose_error": {
+        "diagnostic_only": true,
+        "maximum_quaternion_sign_invariant_l2": 0.0,
+        "maximum_translation_l2_m": 0.0,
+        "objects": {
+          "cubeA": {
+            "quaternion_sign_invariant_l2": 0.0,
+            "translation_l2_m": 0.0
+          },
+          "cubeB": {
+            "quaternion_sign_invariant_l2": 0.0,
+            "translation_l2_m": 0.0
+          }
+        }
+      },
+      "terminal_rgb_sha256": "sha256:e8cd956de1825612e28a95fafff4d941b9eaa9d875e34a1b57d9519584be08bf",
+      "terminal_state_error": {
+        "compared_numeric_values": 70,
+        "matched_leaf_count": 4,
+        "maximum_absolute_error": 0.0,
+        "mean_absolute_error": 0.0,
+        "missing_leaves": [],
+        "per_numeric_leaf": {
+          "actors/cubeA": {
+            "compared_values": 13,
+            "maximum_absolute_error": 0.0,
+            "mean_absolute_error": 0.0
+          },
+          "actors/cubeB": {
+            "compared_values": 13,
+            "maximum_absolute_error": 0.0,
+            "mean_absolute_error": 0.0
+          },
+          "actors/table-workspace": {
+            "compared_values": 13,
+            "maximum_absolute_error": 0.0,
+            "mean_absolute_error": 0.0
+          },
+          "articulations/panda_wristcam": {
+            "compared_values": 31,
+            "maximum_absolute_error": 0.0,
+            "mean_absolute_error": 0.0
+          }
+        },
+        "shape_mismatch_leaves": [],
+        "structures_match": true,
+        "unexpected_leaves": []
+      },
+      "terminated_signal_count": 6,
+      "timestamp_sha256": "sha256:c635cbee45c62afdc2104387024d7dbdf6f571e3784b8d264e858717c5c8f0dd",
+      "truncated_signal_count": 43,
+      "wall_clock_seconds": 0.5443454820197076
+    }
+  ],
+  "exact_failed_subgate_inferred_from_generic_label": false,
+  "fields": {
+    "action_identity": {
+      "status": "reconstructed_from_committed_metadata",
+      "value": "sha256:5fc50bc7beeb91e55b2eeccf3f016414811d314142e7a80ad6037d4f83d92eb8"
+    },
+    "aggregate_rejection": {
+      "status": "observed",
+      "value": "episode replay gate failed"
+    },
+    "episode_npz": {
+      "status": "missing",
+      "value": null
+    },
+    "exact_failed_inner_subgate": {
+      "status": "missing",
+      "value": null
+    },
+    "frame_count": {
+      "status": "not_recorded",
+      "value": null
+    },
+    "internal_returned_replay_record": {
+      "status": "not_recorded",
+      "value": null
+    },
+    "observed_simulator_exception": {
+      "status": "not_recorded",
+      "value": null
+    },
+    "producer_process_stop": {
+      "status": "observed",
+      "value": "hard stop after rejected replay"
+    },
+    "source_identity": {
+      "status": "reconstructed_from_committed_metadata",
+      "value": "sha256:f5c25c7b4f1f7f5ed0cd8b3641f7a451f758c1a47eb9aa31bf96b0081848f7a3"
+    },
+    "terminal_state": {
+      "status": "not_recorded",
+      "value": null
+    },
+    "timestamps": {
+      "status": "not_recorded",
+      "value": null
+    },
+    "writer_status": {
+      "status": "not_recorded",
+      "value": null
+    }
+  },
+  "fingerprint": "sha256:685a6586e2e632bd9594ce61aaf90fcb869619244d4abe6998ced116e1b96fee",
+  "passed": true,
+  "producer_commit": "73b2cd1517e7c3d2bfc08bd2898e46a3195eb1c9",
+  "producer_log_fragments": [
+    {
+      "matching_lines": [
+        "langmani.v2.phase2b6_runtime.Phase2B6RuntimeError: full production hard stop at StackCube-v1/938"
+      ],
+      "path": "/root/autodl-tmp/langmani-external/phase2b6/logs/produce.log",
+      "sha256": "sha256:17d31606bde09f5022830fea8f0610356fda932bb634da1b2841bd79c06de7e4"
+    },
+    {
+      "matching_lines": [
+        "src/langmani/policies/act_factor_film_types.py:938: error: Argument 1 to \"FactorFiLMValidationResult\" has incompatible type \"**dict[str, object]\"; expected \"str\"  [arg-type]",
+        "src/langmani/policies/act_factor_film_types.py:938: error: Argument 1 to \"FactorFiLMValidationResult\" has incompatible type \"**dict[str, object]\"; expected \"int\"  [arg-type]",
+        "src/langmani/policies/act_factor_film_types.py:938: error: Argument 1 to \"FactorFiLMValidationResult\" has incompatible type \"**dict[str, object]\"; expected \"float\"  [arg-type]"
+      ],
+      "path": "/root/autodl-tmp/langmani-external/phase2b6/logs/mypy-scope-current.log",
+      "sha256": "sha256:acf3e19f3df282da7e9e3513b42ecdea8aaba3633077421122d6be904cbe0b79"
+    },
+    {
+      "matching_lines": [
+        "src/langmani/policies/act_factor_film_types.py:938: error: Argument 1 to \"FactorFiLMValidationResult\" has incompatible type \"**dict[str, object]\"; expected \"str\"  [arg-type]",
+        "src/langmani/policies/act_factor_film_types.py:938: error: Argument 1 to \"FactorFiLMValidationResult\" has incompatible type \"**dict[str, object]\"; expected \"int\"  [arg-type]",
+        "src/langmani/policies/act_factor_film_types.py:938: error: Argument 1 to \"FactorFiLMValidationResult\" has incompatible type \"**dict[str, object]\"; expected \"float\"  [arg-type]"
+      ],
+      "path": "/root/autodl-tmp/langmani-external/phase2b6/logs/mypy-scope-source-baseline.log",
+      "sha256": "sha256:b975a3943752e0532dcfe44805d670253bb3dd87fbf4bca25d57d93ad1fcb103"
+    },
+    {
+      "matching_lines": [
+        "src/langmani/policies/act_factor_film_types.py:938: error: Argument 1 to \"FactorFiLMValidationResult\" has incompatible type \"**dict[str, object]\"; expected \"str\"  [arg-type]",
+        "src/langmani/policies/act_factor_film_types.py:938: error: Argument 1 to \"FactorFiLMValidationResult\" has incompatible type \"**dict[str, object]\"; expected \"int\"  [arg-type]",
+        "src/langmani/policies/act_factor_film_types.py:938: error: Argument 1 to \"FactorFiLMValidationResult\" has incompatible type \"**dict[str, object]\"; expected \"float\"  [arg-type]"
+      ],
+      "path": "/root/autodl-tmp/langmani-external/phase2b6/logs/mypy-scope-current-final.log",
+      "sha256": "sha256:496cac8af074a03137dc2ffa4bda7a6dfa7dddc0fe06f87946535fa2f5e8ab55"
+    }
+  ],
+  "schema_version": "langmani-v2-phase2b6-1-historical-evidence-audit-v0",
+  "surrogate_simulator_error_is_observed_exception": false,
+  "target_episode": 938
+}

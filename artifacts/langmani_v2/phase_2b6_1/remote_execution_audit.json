@@ -1,0 +1,137 @@
+{
+  "controls_run_count": 0,
+  "fingerprint": "sha256:4302d1020847bc7fba899bda028cd72258768ae659906c6f1c9e2a2c90ea6ef6",
+  "gpu": {
+    "available": true,
+    "devices": [
+      {
+        "driver_version": "595.71.05",
+        "memory_total_mib": 32607,
+        "memory_used_mib": 2,
+        "name": "NVIDIA GeForce RTX 5090",
+        "utilization_percent": 0,
+        "uuid": "GPU-e72d1ea7-5fcb-a83f-ba21-88f316be5a4b"
+      }
+    ]
+  },
+  "infrastructure_failure": {
+    "attempt_result": {
+      "environment_creation_started": true,
+      "environment_creation_succeeded": false,
+      "error_message": "vk::createInstanceUnique: ErrorIncompatibleDriver",
+      "error_type": "RuntimeError",
+      "evidence_status": "observed_terminal_output_and_empty_run_directory",
+      "observed_renderer_messages": [
+        "Extension VK_KHR_external_memory_capabilities is not available",
+        "Extension VK_KHR_external_semaphore_capabilities is not available",
+        "Your GPU driver does not support Vulkan"
+      ],
+      "original_exit_code": 1,
+      "original_stderr_log_file_created": false,
+      "reset_started": false,
+      "source_action_submissions": 0,
+      "source_episode_936_physical_outcome_observed": false
+    },
+    "attempted_run": {
+      "episode_id": 936,
+      "fresh_process": true,
+      "mode": "A",
+      "repetition": 1,
+      "task_id": "StackCube-v1"
+    },
+    "control_rerun_performed": false,
+    "created_at_utc": "2026-07-23T17:34:11.695107+00:00",
+    "diagnosis": {
+      "categorization": "infrastructure_runtime_configuration",
+      "inference": "the failed SAPIEN invocation did not select the working Vulkan ICD; this is an infrastructure/configuration result, not a StackCube replay outcome",
+      "legacy_glx_icd_is_incompatible": true,
+      "preflight_gap": "the original preflight recorded GPU presence but did not construct a Vulkan instance",
+      "primary_layer": "environment_construction",
+      "runtime_selected_loader_is_incompatible": true,
+      "working_vulkan_loader_path_exists": true
+    },
+    "diagnostics": {
+      "default_loader": {
+        "command": [
+          "vulkaninfo",
+          "--summary"
+        ],
+        "exit_code": 1,
+        "passed": false,
+        "stderr": "ERROR: [Loader Message] Code 0 : loader_scanned_icd_add: Could not get 'vkCreateInstance' via 'vk_icdGetInstanceProcAddr' for ICD libGLX_nvidia.so.0\nCannot create Vulkan instance.\nThis problem is often caused by a faulty installation of the Vulkan driver or attempting to use a GPU that does not support Vulkan.\nERROR at ./vulkaninfo/vulkaninfo.h:649:vkCreateInstance failed with ERROR_INCOMPATIBLE_DRIVER\n",
+        "stdout": ""
+      },
+      "egl_icd": {
+        "command": [
+          "vulkaninfo",
+          "--summary"
+        ],
+        "exit_code": 0,
+        "passed": true,
+        "stderr": "'DISPLAY' environment variable not set... skipping surface info\nerror: XDG_RUNTIME_DIR not set in the environment.\n",
+        "stdout": "==========\nVULKANINFO\n==========\n\nVulkan Instance Version: 1.3.204\n\n\nInstance Extensions: count = 20\n-------------------------------\nVK_EXT_acquire_drm_display             : extension revision 1\nVK_EXT_acquire_xlib_display            : extension revision 1\nVK_EXT_debug_report                    : extension revision 10\nVK_EXT_debug_utils                     : extension revision 2\nVK_EXT_direct_mode_display             : extension revision 1\nVK_EXT_display_surface_counter         : extension revision 1\nVK_EXT_swapchain_colorspace            : extension revision 5\nVK_KHR_device_group_creation           : extension revision 1\nVK_KHR_display                         : extension revision 23\nVK_KHR_external_fence_capabilities     : extension revision 1\nVK_KHR_external_memory_capabilities    : extension revision 1\nVK_KHR_external_semaphore_capabilities : extension revision 1\nVK_KHR_get_display_properties2         : extension revision 1\nVK_KHR_get_physical_device_properties2 : extension revision 2\nVK_KHR_get_surface_capabilities2       : extension revision 1\nVK_KHR_surface                         : extension revision 25\nVK_KHR_surface_protected_capabilities  : extension revision 1\nVK_KHR_wayland_surface                 : extension revision 6\nVK_KHR_xcb_surface                     : extension revision 6\nVK_KHR_xlib_surface                    : extension revision 6\n\nInstance Layers: count = 2\n--------------------------\nVK_LAYER_NV_optimus NVIDIA Optimus layer      1.4.329  version 1\nVK_LAYER_NV_present NVIDIA Presentation Layer 1.4.329  version 1\n\nDevices:\n========\nGPU0:\n\tapiVersion         = 4211017 (1.4.329)\n\tdriverVersion      = 2496774464 (0x94d1c140)\n\tvendorID           = 0x10de\n\tdeviceID           = 0x2b85\n\tdeviceType         = PHYSICAL_DEVICE_TYPE_DISCRETE_GPU\n\tdeviceName         = NVIDIA GeForce RTX 5090\n\tdriverID           = DRIVER_ID_NVIDIA_PROPRIETARY\n\tdriverName         = NVIDIA\n\tdriverInfo         = 595.71.05\n\tconformanceVersion = 1.4.3.3\n\tdeviceUUID         = e72d1ea7-5fcb-a83f-ba21-88f316be5a4b\n\tdriverUUID         = eec1eba6-4484-5d12-ab32-1ef922507ba0\n"
+      },
+      "gpu": {
+        "available": true,
+        "devices": [
+          {
+            "driver_version": "595.71.05",
+            "memory_total_mib": 32607,
+            "memory_used_mib": 2,
+            "name": "NVIDIA GeForce RTX 5090",
+            "utilization_percent": 2,
+            "uuid": "GPU-e72d1ea7-5fcb-a83f-ba21-88f316be5a4b"
+          }
+        ]
+      },
+      "legacy_glx_icd": {
+        "command": [
+          "vulkaninfo",
+          "--summary"
+        ],
+        "exit_code": 1,
+        "passed": false,
+        "stderr": "ERROR: [Loader Message] Code 0 : loader_scanned_icd_add: Could not get 'vkCreateInstance' via 'vk_icdGetInstanceProcAddr' for ICD libGLX_nvidia.so.0\nCannot create Vulkan instance.\nThis problem is often caused by a faulty installation of the Vulkan driver or attempting to use a GPU that does not support Vulkan.\nERROR at ./vulkaninfo/vulkaninfo.h:649:vkCreateInstance failed with ERROR_INCOMPATIBLE_DRIVER\n",
+        "stdout": ""
+      },
+      "runtime_environment_vk_icd_filenames": "/root/autodl-tmp/conda-envs/langmani/lib/python3.12/site-packages/sapien/vulkan_library/nvidia_icd.json"
+    },
+    "episode_937_run": false,
+    "episode_938_run_count": 0,
+    "fingerprint": "sha256:82f2c03f034052dcc85e11287062a7db3278f7d5a91439f0091251ec45af4362",
+    "hard_stop_triggered": true,
+    "mode_b_run_count": 0,
+    "mode_c_run_count": 0,
+    "optimizer_steps": 0,
+    "passed": true,
+    "production_resumed": false,
+    "schema_version": "langmani-v2-phase2b6-1-infrastructure-hard-stop-v0"
+  },
+  "mode_a_run_count": 0,
+  "mode_b_run_count": 0,
+  "mode_c_run_count": 0,
+  "optimizer_steps": 0,
+  "passed": true,
+  "process_state_after_runs": {
+    "passed": true,
+    "prohibited_active_processes": [],
+    "query_succeeded": true
+  },
+  "production_resumed": false,
+  "pushcube_processed": false,
+  "runtime_environment": {
+    "executable": "/root/autodl-tmp/conda-envs/langmani/bin/python3.12",
+    "packages": {
+      "h5py": "3.16.0",
+      "mani-skill": "3.0.1",
+      "numpy": "2.2.6",
+      "sapien": "3.0.3",
+      "torch": "2.11.0+cu128"
+    },
+    "prefix": "/root/autodl-tmp/conda-envs/langmani",
+    "python": "3.12.13"
+  },
+  "schema_version": "langmani-v2-phase2b6-1-remote-execution-audit-v0",
+  "stack_939_or_later_processed": false,
+  "training_started": false
+}

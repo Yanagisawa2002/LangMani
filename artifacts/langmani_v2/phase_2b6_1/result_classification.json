@@ -1,0 +1,16 @@
+{
+  "accepted_controls_passed": false,
+  "classification_complete": false,
+  "fingerprint": "sha256:9ed8d7edb98217dcc407f8306c3f76279e48338428205217062bfb6506efdc23",
+  "historical_producer_final_success": false,
+  "official_source_episode_938_physically_valid": null,
+  "passed": true,
+  "phase2b6_result_unchanged": "RESULT_C",
+  "primary_failure_classification": "insufficient_evidence",
+  "result": "RESULT_D",
+  "schema_version": "langmani-v2-phase2b6-1-result-classification-v0",
+  "secondary_contributing_factors": [
+    "environment_construction_failure"
+  ],
+  "source_identity_proven": true
+}

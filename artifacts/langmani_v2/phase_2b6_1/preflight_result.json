@@ -1,0 +1,19 @@
+{
+  "controls_available": true,
+  "documents": [
+    "authorization_state.json",
+    "forensic_protocol.json",
+    "frozen_partial_output_inventory.json",
+    "historical_evidence_audit.json",
+    "phase2b5_source_package_verification.json",
+    "phase2b6_prior_evidence_verification.json",
+    "producer_forensic_call_sequence_audit.json",
+    "repository_environment_audit.json",
+    "source_episode_identity_manifest.json"
+  ],
+  "fingerprint": "sha256:2d94bd873b979bbe5a484a0aecc5726df1ce295385be93e963263e98aff486d0",
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b6-1-preflight-v0",
+  "simulator_started": false,
+  "source_identity_proven": true
+}
