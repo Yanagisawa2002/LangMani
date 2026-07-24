@@ -7,6 +7,7 @@ from typing import cast
 import pytest
 
 from langmani.v2.phase2b6 import PRIMARY_SPLITS, TASK_IDS, build_task_balance_manifest
+from langmani.v2.phase2b6_lerobot import create_archive
 from langmani.v2.phase2b6_v2 import (
     EXPECTED_SOURCE_EPISODES,
     PACKAGE_ID,
@@ -70,6 +71,26 @@ def test_v2_spec_and_policy_are_frozen() -> None:
     assert spec["source_authorization"]["target_branch"] == TARGET_BRANCH
     assert spec["_policy"]["_sha256"] == policy["_sha256"]
     assert spec["authorization"]["optimizer_steps"] == 0
+
+
+def test_v2_archive_reports_the_runnable_v2_restore_entrypoint(tmp_path: Path) -> None:
+    production_root = tmp_path / "production"
+    evidence_root = tmp_path / "evidence"
+    (production_root / "primary").mkdir(parents=True)
+    (production_root / "primary" / "marker.json").write_text("{}", encoding="utf-8")
+
+    report = create_archive(
+        production_root=production_root,
+        archive_root=tmp_path / "archive",
+        evidence_root=evidence_root,
+        spec_path=SPEC,
+    )
+
+    assert report["passed"] is True
+    assert "environment/run_v2_phase2b6_v2.py restore" in report["recovery_command"]
+    assert f"--production-root {production_root.as_posix()}" in report["recovery_command"]
+    assert f"--evidence-root {evidence_root.as_posix()}" in report["recovery_command"]
+    assert "--restore-root <clean-scratch>" in report["recovery_command"]
 
 
 def test_episode_938_is_registered_for_review_not_automatic_exclusion() -> None:

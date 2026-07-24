@@ -1530,6 +1530,11 @@ def create_archive(
         archive_path=archive_path,
         prefix=str(cast(Mapping[str, object], spec["archive"])["prefix"]),
     )
+    entrypoint = (
+        "environment/run_v2_phase2b6_v2.py"
+        if package_id == "LangManiOfficialMultiSkill-v2"
+        else "environment/run_v2_phase2b6.py"
+    )
     report = fingerprinted(
         {
             "schema_version": "langmani-v2-phase2b6-archive-manifest-v0",
@@ -1549,8 +1554,10 @@ def create_archive(
             "primary_and_archive_distinct": primary.parent != archive_directory,
             "symlinks_in_primary": False,
             "recovery_command": (
-                "python environment/run_v2_phase2b6.py restore "
-                f"--archive {archive_path.as_posix()} --destination <clean-scratch>"
+                f"python {entrypoint} restore "
+                f"--production-root {production_root.resolve().as_posix()} "
+                f"--evidence-root {evidence_root.resolve().as_posix()} "
+                "--restore-root <clean-scratch>"
             ),
             "passed": (
                 created["source_tree_digest"] == tree["tree_digest"] and archive_path.is_file()
