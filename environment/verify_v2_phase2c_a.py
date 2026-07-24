@@ -13,9 +13,7 @@ from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ARTIFACT_ROOT = PROJECT_ROOT / "artifacts" / "langmani_v2" / "phase_2c_a"
-CANONICAL_PACKAGE = (
-    "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04"
-)
+CANONICAL_PACKAGE = "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04"
 DIAGNOSTIC_COMMIT = "a3a09d30cba8a1f85c79953dc0c39e22712e4e9a"
 TRAINING_COMMIT = "c0b5106cb1fff5b43f46500321264cec33613673"
 
@@ -25,27 +23,21 @@ EXPECTED_RUNS: dict[str, dict[str, object]] = {
         "steps": 2680,
         "examples": 1_092_160,
         "task_samples": {"PickCube-v1": 1_092_160, "StackCube-v1": 0, "PushCube-v1": 0},
-        "selected": (
-            "sha256:da7128d019689d190523c1f4c6f7f1e4060371ef24f203821afd98dbe316e0f3"
-        ),
+        "selected": ("sha256:da7128d019689d190523c1f4c6f7f1e4060371ef24f203821afd98dbe316e0f3"),
     },
     "stack": {
         "report": "train-stack-c0b5106.json",
         "steps": 3680,
         "examples": 1_497_820,
         "task_samples": {"PickCube-v1": 0, "StackCube-v1": 1_497_820, "PushCube-v1": 0},
-        "selected": (
-            "sha256:9458aa3c9e499526282e3c48534de0562306d4a346973e0c594e7e7097415a61"
-        ),
+        "selected": ("sha256:9458aa3c9e499526282e3c48534de0562306d4a346973e0c594e7e7097415a61"),
     },
     "push": {
         "report": "train-push-c0b5106.json",
         "steps": 2380,
         "examples": 964_380,
         "task_samples": {"PickCube-v1": 0, "StackCube-v1": 0, "PushCube-v1": 964_380},
-        "selected": (
-            "sha256:6b51e3af0d4d42dc20c1175e6196b1eb3f7a2b15895555ee71e24ae0d0c167bd"
-        ),
+        "selected": ("sha256:6b51e3af0d4d42dc20c1175e6196b1eb3f7a2b15895555ee71e24ae0d0c167bd"),
     },
     "shared_seed0": {
         "report": "train-shared-seed0-c0b5106.json",
@@ -56,9 +48,7 @@ EXPECTED_RUNS: dict[str, dict[str, object]] = {
             "StackCube-v1": 1_184_832,
             "PushCube-v1": 1_184_832,
         },
-        "selected": (
-            "sha256:ada3cb1bd9dd9f752f60f2c9059746c8d0e2ae902fa4c5a04c88b8e96242d870"
-        ),
+        "selected": ("sha256:ada3cb1bd9dd9f752f60f2c9059746c8d0e2ae902fa4c5a04c88b8e96242d870"),
     },
 }
 
@@ -84,9 +74,7 @@ def _read_jsonl(path: Path) -> list[dict[str, object]]:
             for line_number, line in enumerate(stream, start=1):
                 value = json.loads(line)
                 if not isinstance(value, dict):
-                    raise Phase2CAVerificationError(
-                        f"{path}:{line_number} must contain one object"
-                    )
+                    raise Phase2CAVerificationError(f"{path}:{line_number} must contain one object")
                 rows.append(value)
     except (OSError, UnicodeError, json.JSONDecodeError) as error:
         raise Phase2CAVerificationError(f"could not read {path}: {error}") from error
@@ -183,9 +171,8 @@ def _verify_checkpoint_bytes(
         path = (checkpoint / path_value).resolve()
         if checkpoint not in path.parents:
             raise Phase2CAVerificationError("checkpoint artifact escapes checkpoint root")
-        if (
-            path.stat().st_size != values.get("size_bytes")
-            or _sha256_file(path) != values.get("sha256")
+        if path.stat().st_size != values.get("size_bytes") or _sha256_file(path) != values.get(
+            "sha256"
         ):
             raise Phase2CAVerificationError(f"checkpoint artifact differs: {path}")
 
