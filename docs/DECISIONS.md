@@ -3443,3 +3443,42 @@ writer behavior remain untested in this phase. `phase2b6_1_forensic_restart_auth
 `accepted_multiskill_dataset_validated=false`, all ACT/SmolVLA/VLA-JEPA eligibility and
 authorization fields remain false, no policy or optimizer was loaded or created, no backward pass
 ran, `student_policy_training_started=false`, and `optimizer_steps=0`.
+
+## D-135 - Close Phase 2B.6.1-v2 as reproducible Result B
+
+Phase 2B.6.1-v2 starts from immutable Vulkan-recovery commit
+`799e62cc9f7d5590116d236242c4328af1812e1c`. It rehashed the 21-file Phase 2B.6,
+24-file Phase 2B.6.1, and 19-file Phase 2B.6.1-R evidence sets, the official StackCube source
+archive, and directly relevant frozen partial-production files. Exact episode-938 reset,
+trajectory, and native `float32[105,8]` action identities were proven before construction.
+
+The recovered explicit EGL/Vulkan contract passed `vulkaninfo`, a minimal SAPIEN probe, and one
+zero-step StackCube construction on the RTX 5090. Accepted controls 936 and 937 then passed their
+single fresh-process Mode A runs with final canonical success. No default-loader negative control
+was rerun.
+
+Three fresh-process Mode A runs for episode 938 produced identical results. Every run submitted
+all 105 actions without simulator exception. Source canonical success starts at step 100 and
+occupies the six terminal steps. Replay canonical success started at step 101, occupied four
+steps, and was false at the final action. All three runs had the same task-transition sequence,
+first-event indices, and terminal object-pose diagnostics. The replay classification is
+`deterministic_failure`; the exact earliest failed sub-gate is
+`canonical_terminal_success_gate`, with primary category `canonical_success_failure`.
+
+The producer code uses `final_step_canonical_success` and contains no separate stable-success
+acceptance gate. The four-step replay interval is therefore a diagnostic, and
+`stable_success_gate=not_applicable`; no threshold or success predicate changed. The later
+source/replay categorical agreement gate also fails because source final success is true and
+replay final success is false.
+
+Phase 2B.6.1-v2 is therefore `RESULT_B`. The hard stop prohibited observation Mode B and writer
+Mode C. The historical Phase 2B.6 aggregate wrapper still lacks its inner rejection record, so
+this decision does not claim that the old wrapper's exact hidden sub-gate was recovered. It does
+establish a reproducible explicit frozen replay failure for the exact input.
+
+`source_episode_exclusion_review_eligible=true` opens only a separately authorized project-level
+decision. No source was excluded. `phase2b6_clean_reproduction_eligible=false`,
+`phase2b6_production_resume_authorized=false`,
+`accepted_multiskill_dataset_validated=false`, every ACT/SmolVLA/VLA-JEPA eligibility and
+authorization field remains false, no policy or optimizer was loaded or created, no backward pass
+ran, and `optimizer_steps=0`.

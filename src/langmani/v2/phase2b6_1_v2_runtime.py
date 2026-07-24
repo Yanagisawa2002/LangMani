@@ -1007,5 +1007,5 @@ def write_artifact_manifest(evidence_root: Path) -> dict[str, object]:
             "passed": bool(rows),
         }
     )
-    _write_json(evidence_root / "artifact_manifest.json", report)
+    _write_json(evidence_root / "artifact_manifest.json", report, replace=True)
     return report

@@ -124,6 +124,15 @@ GPU-workload, or frozen-file leak occurred. This sets only
 separate authorization and new run identity; Phase 2B.6 production, dataset acceptance, and all
 training remain closed.
 
+Phase 2B.6.1-v2 completed the separately authorized bounded replay as Result B. The recovered
+launcher passed, exact source/action identity was proven, and accepted controls 936 and 937 both
+passed. Three fresh-process Mode A runs for episode 938 then reproduced the same failure: all 105
+actions executed, canonical success occurred at step 101 for four steps, but final-step success
+was false and source/replay final outcomes disagreed. The exact first failed gate is
+`canonical_terminal_success_gate`, and replay determinism is `deterministic_failure`. The Result B
+hard stop prohibited Modes B/C. Source-exclusion review is eligible only as a future decision;
+clean production, production resume, dataset acceptance, and all training remain closed.
+
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected

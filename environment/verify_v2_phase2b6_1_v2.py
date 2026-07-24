@@ -110,7 +110,6 @@ def verify(evidence_root: Path) -> dict[str, object]:
         (evidence_root / str(row["path"])).is_file()
         and "sha256:" + sha256_file(evidence_root / str(row["path"])) == row["sha256"]
         for row in rows
-        if row["path"] != "verification.json"
     )
     manifest_paths = {str(row["path"]) for row in rows}
     control_runs = [
@@ -158,7 +157,8 @@ def verify(evidence_root: Path) -> dict[str, object]:
         "artifact_manifest_hashes_valid": manifest_hashes_valid,
         "artifact_manifest_covers_required_nonself_files": set(required[:-1]).issubset(
             manifest_paths
-        ),
+        )
+        and "verification.json" in manifest_paths,
         "source_commit_exact": repository.get("source_commit") == SOURCE_COMMIT,
         "branch_exact": repository.get("branch") == TARGET_BRANCH,
         "prior_evidence_verified": documents["prior_evidence_verification.json"].get("passed")

@@ -1,0 +1,9 @@
+{
+  "fingerprint": "sha256:27be83813512f3fe53647a870141d12bf6e4f5cb97d37ac8fc9457d6abbeae83",
+  "frozen_root": "/root/autodl-tmp/langmani-external/phase2b6/production_v1",
+  "lerobot_root_created": false,
+  "passed": false,
+  "runs": [],
+  "schema_version": "langmani-v2-phase2b6-1-v2-writer-v0",
+  "writes_to_frozen_root": false
+}

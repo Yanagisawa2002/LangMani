@@ -1,0 +1,15 @@
+{
+  "controls_validated": true,
+  "exact_first_failed_sub_gate": "canonical_terminal_success_gate",
+  "fingerprint": "sha256:30b7b6226d2762a248edc1ec9d9f68030f38bd1b1e385f00a3534c7544af84de",
+  "official_source_episode_938_physically_valid": false,
+  "passed": true,
+  "phase2b6_clean_reproduction_eligible": false,
+  "phase2b6_protocol_revision_eligible": false,
+  "primary_failure_classification": "canonical_success_failure",
+  "result": "RESULT_B",
+  "schema_version": "langmani-v2-phase2b6-1-v2-result-v0",
+  "secondary_contributing_factors": [],
+  "source_episode_exclusion_review_eligible": true,
+  "source_replay_determinism_validated": false
+}

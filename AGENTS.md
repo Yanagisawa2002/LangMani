@@ -168,6 +168,16 @@ leak. Phase 2B.6.1-R is Result A and sets only
 Phase 2B.6 production remains closed, no accepted multi-skill dataset exists, and every training,
 optimizer, backward, and student-policy flag remains false or zero.
 
+Phase 2B.6.1-v2 is the completed bounded StackCube episode-938 replay forensic. The recovered
+Vulkan launcher, exact source/action identity, and accepted controls 936/937 passed. Episode 938
+then failed `canonical_terminal_success_gate` identically in all three fresh-process Mode A runs:
+all 105 actions executed, canonical success began at step 101 for four steps, and final success
+was false. The phase is Result B with `deterministic_failure`. The producer has no separate
+stable-success acceptance gate; consecutive success remains diagnostic only. Modes B/C were
+hard-stopped. `source_episode_exclusion_review_eligible=true` is not an exclusion or
+authorization. Clean production, production resume, dataset acceptance, and all training remain
+false.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
@@ -363,6 +373,9 @@ python environment/verify_v2_phase2b6_1.py
 
 # Phase 2B.6.1-R compact Result A evidence verification; no simulator execution.
 python environment/verify_v2_phase2b6_1r.py
+
+# Phase 2B.6.1-v2 compact Result B verification; no simulator execution.
+python environment/verify_v2_phase2b6_1_v2.py
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,
@@ -573,6 +586,10 @@ The exact environment creation commands are maintained in `README.md`.
   creates forensic-restart eligibility, never authorization. Episode 936/937/938 replay, Phase
   2B.6 production, writer/export/archive/restore work, accepted-dataset creation, policy loading,
   optimizer creation, backward, inference, and training require separate later authorization.
+- Phase 2B.6.1-v2 is closed at Result B. Its explicit episode-938 failure may open only a separate
+  source-exclusion policy review. It must not exclude the source, revise success/stability rules,
+  resume Phase 2B.6, reuse the 1,938 partial episodes, run Modes B/C after the Result B hard stop,
+  create LeRobot/package/archive outputs, or authorize any model or optimizer activity.
 
 ## Definition of done
 

@@ -1,0 +1,19 @@
+{
+  "documents": [
+    "action_identity.json",
+    "authorization_state.json",
+    "forensic_protocol.json",
+    "frozen_partial_output_inventory.json",
+    "historical_evidence_audit.json",
+    "prior_evidence_verification.json",
+    "producer_forensic_call_sequence_audit.json",
+    "repository_environment_audit.json",
+    "source_episode_identity.json",
+    "validated_launcher_binding.json"
+  ],
+  "fingerprint": "sha256:17e7fa233b197ed971d7a76eaaa93bae81f37825230b0b029377ec6552202f79",
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b6-1-v2-prepare-v0",
+  "simulator_started": false,
+  "source_identity_proven": true
+}

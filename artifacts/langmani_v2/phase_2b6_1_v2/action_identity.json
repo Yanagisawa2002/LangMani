@@ -1,0 +1,20 @@
+{
+  "action_count": 105,
+  "action_dtype": "float32",
+  "action_sha256": "sha256:5fc50bc7beeb91e55b2eeccf3f016414811d314142e7a80ad6037d4f83d92eb8",
+  "action_shape": [
+    105,
+    8
+  ],
+  "fingerprint": "sha256:dd1eed81f694da0af2665a431067506dec5b0d96dab0dc6415a0259bd3dfefd2",
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b6-1-v2-action-identity-v0",
+  "target_checks": {
+    "action_count": true,
+    "action_sha256": true,
+    "derived_episode_identity": true,
+    "reset_identity": true,
+    "trajectory_identity": true
+  },
+  "target_episode": 938
+}

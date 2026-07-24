@@ -1,0 +1,281 @@
+{
+  "episodes": [
+    {
+      "action_count": 82,
+      "action_dtype": "float32",
+      "action_sha256": "sha256:5df33ca1f1542e2773797aea9e6c0c1e8bda8a100404a608e055d1fe3369e406",
+      "action_shape": [
+        82,
+        8
+      ],
+      "checks": {
+        "environment_state_count_t_plus_one": true,
+        "inventory_action_hash": true,
+        "inventory_reset_identity": true,
+        "inventory_trajectory_identity": true,
+        "metadata_elapsed_matches": true,
+        "metadata_success": true,
+        "native_float32_t8": true,
+        "source_terminal_success": true
+      },
+      "environment_state_count": 83,
+      "episode_seed": 960,
+      "frozen_inventory_identity": {
+        "action_sha256": "sha256:5df33ca1f1542e2773797aea9e6c0c1e8bda8a100404a608e055d1fe3369e406",
+        "episode_seed": 960,
+        "initial_state_sha256": "sha256:a873987ccdcf8bcf4596c4dd170a11d136558d6b12a639af0821db19af4d7174",
+        "reset_identity": "sha256:b0687c14c23dcb8aa0baba8899d5dac4428eb4496c79783201d7a4f3edb28f73",
+        "reset_kwargs": {
+          "options": {},
+          "seed": 960
+        },
+        "reset_kwargs_sha256": "sha256:de3438fc397cbcb6a09b57b6c8cbacf8f32672a45063429d8f1698b790df4a25",
+        "skill_family": "stacking",
+        "source_episode_id": 936,
+        "source_success": true,
+        "source_trajectory_identity": "sha256:80c2f1302b4e1439f434291060109967003de358724277d6334e60a50c501b0a",
+        "task_id": "StackCube-v1",
+        "transition_count": 82
+      },
+      "frozen_split_assignment": {
+        "action_sha256": "sha256:5df33ca1f1542e2773797aea9e6c0c1e8bda8a100404a608e055d1fe3369e406",
+        "derived_episode_identity": "sha256:915d0a56dc28c11c362ffd48760766d444ccb205e1ecf191a7fc6e1210de1ade",
+        "initial_state_sha256": "sha256:a873987ccdcf8bcf4596c4dd170a11d136558d6b12a639af0821db19af4d7174",
+        "instruction": "Build a two-cube stack.",
+        "instruction_template_id": "phase2b6:StackCube-v1:train:02:47c7923b3c4ad5c8",
+        "language_bank": "train",
+        "media_namespace": "StackCube-v1/train",
+        "primary_split": "train",
+        "reset_identity": "sha256:b0687c14c23dcb8aa0baba8899d5dac4428eb4496c79783201d7a4f3edb28f73",
+        "skill_family": "stacking",
+        "source_episode_id": 936,
+        "source_trajectory_identity": "sha256:80c2f1302b4e1439f434291060109967003de358724277d6334e60a50c501b0a",
+        "task_id": "StackCube-v1",
+        "transition_count": 82
+      },
+      "passed": true,
+      "reset_identity": "sha256:b0687c14c23dcb8aa0baba8899d5dac4428eb4496c79783201d7a4f3edb28f73",
+      "reset_kwargs": {
+        "options": {},
+        "seed": 960
+      },
+      "reset_kwargs_sha256": "sha256:de3438fc397cbcb6a09b57b6c8cbacf8f32672a45063429d8f1698b790df4a25",
+      "source_elapsed_length": 82,
+      "source_episode_id": 936,
+      "source_success_metadata": true,
+      "source_success_timing": {
+        "final_step_success": true,
+        "first_success_action_index": 76,
+        "first_success_step_1_based": 77,
+        "longest_consecutive_success_steps": 6,
+        "producer_success_rule": "final_step_canonical_success",
+        "separate_stable_success_gate_present_in_producer": false,
+        "step_count": 82,
+        "successful_step_count": 6,
+        "trailing_consecutive_success_steps": 6
+      },
+      "source_terminal_success": true,
+      "source_trajectory_identity": "sha256:80c2f1302b4e1439f434291060109967003de358724277d6334e60a50c501b0a",
+      "task_id": "StackCube-v1",
+      "trajectory_key": "traj_936"
+    },
+    {
+      "action_count": 92,
+      "action_dtype": "float32",
+      "action_sha256": "sha256:4ebd85a8a0d68db04af42b29e609795bc942605052fc6cf8c40066a3a813da3d",
+      "action_shape": [
+        92,
+        8
+      ],
+      "checks": {
+        "environment_state_count_t_plus_one": true,
+        "inventory_action_hash": true,
+        "inventory_reset_identity": true,
+        "inventory_trajectory_identity": true,
+        "metadata_elapsed_matches": true,
+        "metadata_success": true,
+        "native_float32_t8": true,
+        "source_terminal_success": true
+      },
+      "environment_state_count": 93,
+      "episode_seed": 961,
+      "frozen_inventory_identity": {
+        "action_sha256": "sha256:4ebd85a8a0d68db04af42b29e609795bc942605052fc6cf8c40066a3a813da3d",
+        "episode_seed": 961,
+        "initial_state_sha256": "sha256:1f89872b812a0f6e0c769d59732591da336cee339c4e227bd4ea7310783793c2",
+        "reset_identity": "sha256:a7da0881cd791f4f2fd9dfe1baf0ee2b7b660cd9249f9e810ac59f1e986503cb",
+        "reset_kwargs": {
+          "options": {},
+          "seed": 961
+        },
+        "reset_kwargs_sha256": "sha256:0613d9f9cd37046c58aaf02baa7a28e729b34373702bb0a96e600002ab98385d",
+        "skill_family": "stacking",
+        "source_episode_id": 937,
+        "source_success": true,
+        "source_trajectory_identity": "sha256:33e8d86f9c66f8af8207ef4a0093ec72080b55613a3b2deeecb250497eea760f",
+        "task_id": "StackCube-v1",
+        "transition_count": 92
+      },
+      "frozen_split_assignment": {
+        "action_sha256": "sha256:4ebd85a8a0d68db04af42b29e609795bc942605052fc6cf8c40066a3a813da3d",
+        "derived_episode_identity": "sha256:e6aec50a497236f0304354795c08f2a9ce8d0c6df0e2fee216d400c9840e75bb",
+        "initial_state_sha256": "sha256:1f89872b812a0f6e0c769d59732591da336cee339c4e227bd4ea7310783793c2",
+        "instruction": "Put one block on top of the other block.",
+        "instruction_template_id": "phase2b6:StackCube-v1:validation:00:b6ecaa51ef8527a8",
+        "language_bank": "validation",
+        "media_namespace": "StackCube-v1/test_unseen_reset",
+        "primary_split": "test_unseen_reset",
+        "reset_identity": "sha256:a7da0881cd791f4f2fd9dfe1baf0ee2b7b660cd9249f9e810ac59f1e986503cb",
+        "skill_family": "stacking",
+        "source_episode_id": 937,
+        "source_trajectory_identity": "sha256:33e8d86f9c66f8af8207ef4a0093ec72080b55613a3b2deeecb250497eea760f",
+        "task_id": "StackCube-v1",
+        "transition_count": 92
+      },
+      "passed": true,
+      "reset_identity": "sha256:a7da0881cd791f4f2fd9dfe1baf0ee2b7b660cd9249f9e810ac59f1e986503cb",
+      "reset_kwargs": {
+        "options": {},
+        "seed": 961
+      },
+      "reset_kwargs_sha256": "sha256:0613d9f9cd37046c58aaf02baa7a28e729b34373702bb0a96e600002ab98385d",
+      "source_elapsed_length": 92,
+      "source_episode_id": 937,
+      "source_success_metadata": true,
+      "source_success_timing": {
+        "final_step_success": true,
+        "first_success_action_index": 86,
+        "first_success_step_1_based": 87,
+        "longest_consecutive_success_steps": 6,
+        "producer_success_rule": "final_step_canonical_success",
+        "separate_stable_success_gate_present_in_producer": false,
+        "step_count": 92,
+        "successful_step_count": 6,
+        "trailing_consecutive_success_steps": 6
+      },
+      "source_terminal_success": true,
+      "source_trajectory_identity": "sha256:33e8d86f9c66f8af8207ef4a0093ec72080b55613a3b2deeecb250497eea760f",
+      "task_id": "StackCube-v1",
+      "trajectory_key": "traj_937"
+    },
+    {
+      "action_count": 105,
+      "action_dtype": "float32",
+      "action_sha256": "sha256:5fc50bc7beeb91e55b2eeccf3f016414811d314142e7a80ad6037d4f83d92eb8",
+      "action_shape": [
+        105,
+        8
+      ],
+      "checks": {
+        "environment_state_count_t_plus_one": true,
+        "inventory_action_hash": true,
+        "inventory_reset_identity": true,
+        "inventory_trajectory_identity": true,
+        "metadata_elapsed_matches": true,
+        "metadata_success": true,
+        "native_float32_t8": true,
+        "source_terminal_success": true
+      },
+      "environment_state_count": 106,
+      "episode_seed": 962,
+      "frozen_inventory_identity": {
+        "action_sha256": "sha256:5fc50bc7beeb91e55b2eeccf3f016414811d314142e7a80ad6037d4f83d92eb8",
+        "episode_seed": 962,
+        "initial_state_sha256": "sha256:def1607fcaaaca5f0fcc89fd909c2028c2effccf40959405861f174d60e5a7c2",
+        "reset_identity": "sha256:e396b1aea2fe017ae24ab29115f5e3702fa1a37d6d34f0f9d0629f188f44410b",
+        "reset_kwargs": {
+          "options": {},
+          "seed": 962
+        },
+        "reset_kwargs_sha256": "sha256:b6351901698ab96c42cc069d3e5f8a96fc78456d26d2f68b1bc35c38995868e1",
+        "skill_family": "stacking",
+        "source_episode_id": 938,
+        "source_success": true,
+        "source_trajectory_identity": "sha256:f5c25c7b4f1f7f5ed0cd8b3641f7a451f758c1a47eb9aa31bf96b0081848f7a3",
+        "task_id": "StackCube-v1",
+        "transition_count": 105
+      },
+      "frozen_split_assignment": {
+        "action_sha256": "sha256:5fc50bc7beeb91e55b2eeccf3f016414811d314142e7a80ad6037d4f83d92eb8",
+        "derived_episode_identity": "sha256:1eefa0f33e0763a63960047ef7ee5b343fd4b84f355382d486b5918953de38d1",
+        "initial_state_sha256": "sha256:def1607fcaaaca5f0fcc89fd909c2028c2effccf40959405861f174d60e5a7c2",
+        "instruction": "Put one block on top of the other block.",
+        "instruction_template_id": "phase2b6:StackCube-v1:validation:00:b6ecaa51ef8527a8",
+        "language_bank": "validation",
+        "media_namespace": "StackCube-v1/test_unseen_reset",
+        "primary_split": "test_unseen_reset",
+        "reset_identity": "sha256:e396b1aea2fe017ae24ab29115f5e3702fa1a37d6d34f0f9d0629f188f44410b",
+        "skill_family": "stacking",
+        "source_episode_id": 938,
+        "source_trajectory_identity": "sha256:f5c25c7b4f1f7f5ed0cd8b3641f7a451f758c1a47eb9aa31bf96b0081848f7a3",
+        "task_id": "StackCube-v1",
+        "transition_count": 105
+      },
+      "passed": true,
+      "reset_identity": "sha256:e396b1aea2fe017ae24ab29115f5e3702fa1a37d6d34f0f9d0629f188f44410b",
+      "reset_kwargs": {
+        "options": {},
+        "seed": 962
+      },
+      "reset_kwargs_sha256": "sha256:b6351901698ab96c42cc069d3e5f8a96fc78456d26d2f68b1bc35c38995868e1",
+      "source_elapsed_length": 105,
+      "source_episode_id": 938,
+      "source_success_metadata": true,
+      "source_success_timing": {
+        "final_step_success": true,
+        "first_success_action_index": 99,
+        "first_success_step_1_based": 100,
+        "longest_consecutive_success_steps": 6,
+        "producer_success_rule": "final_step_canonical_success",
+        "separate_stable_success_gate_present_in_producer": false,
+        "step_count": 105,
+        "successful_step_count": 6,
+        "trailing_consecutive_success_steps": 6
+      },
+      "source_terminal_success": true,
+      "source_trajectory_identity": "sha256:f5c25c7b4f1f7f5ed0cd8b3641f7a451f758c1a47eb9aa31bf96b0081848f7a3",
+      "task_id": "StackCube-v1",
+      "trajectory_key": "traj_938"
+    }
+  ],
+  "fingerprint": "sha256:efe80170a826e3a14a7d9c653b851a18f82a88851a5cbc06f1263ef5040b6900",
+  "maniskill_source_revision": "a4a4f9272ad64b1564035874b605ceb687b63ed8",
+  "official_source_revision": "d674485bbffdd533914e52d272fdda34c0515608",
+  "passed": true,
+  "producer_input_identity_proven": true,
+  "schema_version": "langmani-v2-phase2b6-1-source-identity-v0",
+  "source_environment": {
+    "env_id": "StackCube-v1",
+    "env_kwargs": {
+      "control_mode": "pd_joint_pos",
+      "human_render_camera_configs": {
+        "shader_pack": "default"
+      },
+      "obs_mode": "none",
+      "render_mode": "rgb_array",
+      "reward_mode": "dense",
+      "sensor_configs": {
+        "shader_pack": "default"
+      },
+      "sim_backend": "auto",
+      "viewer_camera_configs": {
+        "shader_pack": "default"
+      }
+    },
+    "max_episode_steps": 50
+  },
+  "source_h5_path": "/root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608/expanded/StackCube-v1/motionplanning/trajectory.h5",
+  "source_h5_sha256": "sha256:61d07df7b52f303d2088e977df5f863be7d2274348ff05791f3a815359815523",
+  "source_json_path": "/root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608/expanded/StackCube-v1/motionplanning/trajectory.json",
+  "source_json_sha256": "sha256:48cb1119c9f5a8f0d7187fc83674a2c401b41466cb1930b2a5c26b706ba3bd81",
+  "source_zip_identity_passed": true,
+  "source_zip_path": "/root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608/sources/StackCube-v1.zip",
+  "source_zip_sha256": "sha256:f9b7d34b9aa418a04aa8e4322d4dea5aa27e8ae81757f60b210c1ffc54bf9c1b",
+  "target_checks": {
+    "action_count": true,
+    "action_sha256": true,
+    "derived_episode_identity": true,
+    "reset_identity": true,
+    "trajectory_identity": true
+  }
+}

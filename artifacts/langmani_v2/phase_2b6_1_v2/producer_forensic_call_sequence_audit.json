@@ -1,0 +1,80 @@
+{
+  "base_audit": {
+    "claim": "independent_diagnostic_replay",
+    "controller_initialization": "gym.make plus exact source reset",
+    "dtype_conversion": "np.asarray(source actions, dtype=float32), byte-equal identity required",
+    "exact_producer_path_reproduction_claimed": false,
+    "fingerprint": "sha256:b3a5beb3b08987cc101a59631432b7b9119225a8c448ea6ba531580501f09c33",
+    "known_differences": [
+      {
+        "difference": "each forensic run creates a fresh process and environment",
+        "material": true,
+        "reason": "the producer reused one StackCube environment across prior episodes"
+      },
+      {
+        "difference": "Mode A disables RGB observation and renderer work",
+        "material": true,
+        "reason": "required independent physics-layer isolation"
+      },
+      {
+        "difference": "the forensic runner retains every explicit sub-gate and step diagnostic",
+        "material": false,
+        "reason": "observability only; no action or success predicate change"
+      },
+      {
+        "difference": "Mode C writes only to a distinct forensic destination",
+        "material": false,
+        "reason": "frozen Phase 2B.6 output must remain immutable"
+      }
+    ],
+    "observation_before_action_order": true,
+    "passed": true,
+    "producer_commit": "73b2cd1517e7c3d2bfc08bd2898e46a3195eb1c9",
+    "schema_version": "langmani-v2-phase2b6-1-call-sequence-audit-v0",
+    "sensor_update_timing": "base.get_obs once immediately before each action in B/C",
+    "shared_steps": [
+      "load source actions as native float32 without clipping or projection",
+      "semantic reset followed by official first-state anchor only if needed",
+      "submit actions in recorded order",
+      "evaluate final canonical success from env.step info",
+      "Mode B/C acquire base.get_obs before each corresponding action",
+      "Mode B/C extract base_camera RGB and PandaPolicyStateV0",
+      "Mode C uses the Phase 2B.6 atomic compressed-NPZ writer"
+    ],
+    "stable_success_checking": "not present as a separate producer acceptance gate",
+    "termination_checking": "recorded after every env.step; actions are not shortened",
+    "writer_order": "np.savez_compressed, flush/fsync, atomic os.replace"
+  },
+  "differences": [
+    {
+      "classification": "known_semantic_difference",
+      "forensic": "fresh process and environment for every repetition",
+      "producer": "one StackCube environment reused across episodes",
+      "step": "environment_lifetime"
+    },
+    {
+      "classification": "known_semantic_difference",
+      "forensic": "physics-only, observations disabled",
+      "producer": "RGB observations acquired before every action",
+      "step": "Mode A observations"
+    },
+    {
+      "classification": "diagnostic_instrumentation_only",
+      "step": "explicit gates and task snapshots"
+    },
+    {
+      "classification": "diagnostic_instrumentation_only",
+      "forensic": "isolated NPZ outside frozen production root",
+      "step": "Mode C destination"
+    }
+  ],
+  "exact_producer_reproduction_claimed": false,
+  "fingerprint": "sha256:c6de1b1627234802cf15e6d5bca8260e01cc6911a706693c859c3a756a6f1885",
+  "passed": true,
+  "producer_commit": "73b2cd1517e7c3d2bfc08bd2898e46a3195eb1c9",
+  "schema_version": "langmani-v2-phase2b6-1-v2-call-sequence-v0",
+  "stable_success_evaluation": {
+    "producer_rule": "final_step_canonical_success",
+    "separate_gate_present": false
+  }
+}

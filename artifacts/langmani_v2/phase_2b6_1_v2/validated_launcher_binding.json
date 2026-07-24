@@ -1,0 +1,12 @@
+{
+  "accepted_launcher_path": "/root/autodl-tmp/langmani/environment/run_v2_phase2b6_1r_preflight.sh",
+  "accepted_launcher_sha256": "sha256:a5a3349d26f096a2a8800a6de40a7a127db8b254009d67735e968637b4f7d112",
+  "adapter_launcher_path": "/root/autodl-tmp/langmani/environment/run_v2_phase2b6_1_v2_forensic.sh",
+  "adapter_launcher_sha256": "sha256:9ac621150319f90a474c91e807e0ba49a9998a19c6b111ea3495e225fd140188",
+  "adapter_preserves_clean_process_contract": true,
+  "default_loader_negative_control_rerun": false,
+  "expected_accepted_launcher_sha256": "sha256:a5a3349d26f096a2a8800a6de40a7a127db8b254009d67735e968637b4f7d112",
+  "fingerprint": "sha256:05baacec44e8aa23e2ffa17f4e04249576105b238d131a94befa20271dfbbbab",
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b6-1-v2-launcher-binding-v0"
+}

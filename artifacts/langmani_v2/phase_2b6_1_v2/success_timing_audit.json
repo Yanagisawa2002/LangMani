@@ -1,0 +1,191 @@
+{
+  "actions_continue_after_first_success": true,
+  "fingerprint": "sha256:52098cc49a0f0fbdbb3df787340a26d9747c23c66dc1342d9db0ecb3cc0d9c8a",
+  "passed": true,
+  "producer_success_rule": "final_step_canonical_success",
+  "runs": [
+    {
+      "replay_success_timing": {
+        "final_step_success": true,
+        "first_success_action_index": 76,
+        "first_success_step_1_based": 77,
+        "longest_consecutive_success_steps": 6,
+        "producer_success_rule": "final_step_canonical_success",
+        "separate_stable_success_gate_present_in_producer": false,
+        "step_count": 82,
+        "successful_step_count": 6,
+        "trailing_consecutive_success_steps": 6
+      },
+      "run_identity": {
+        "episode_id": 936,
+        "fresh_process": {
+          "identity": "sha256:0c80dc87ce24ef802cea082c30283736c19c2118c90ad4d26df56e99686eeb7a",
+          "pid": 19540,
+          "process_start_time_ns": 1784869592526902275,
+          "run_nonce": "7f825ed560fd477ebae555953ece88fa"
+        },
+        "mode": "A",
+        "repetition": 1,
+        "task_id": "StackCube-v1"
+      },
+      "source_success_timing": {
+        "final_step_success": true,
+        "first_success_action_index": 76,
+        "first_success_step_1_based": 77,
+        "longest_consecutive_success_steps": 6,
+        "producer_success_rule": "final_step_canonical_success",
+        "separate_stable_success_gate_present_in_producer": false,
+        "step_count": 82,
+        "successful_step_count": 6,
+        "trailing_consecutive_success_steps": 6
+      }
+    },
+    {
+      "replay_success_timing": {
+        "final_step_success": true,
+        "first_success_action_index": 87,
+        "first_success_step_1_based": 88,
+        "longest_consecutive_success_steps": 5,
+        "producer_success_rule": "final_step_canonical_success",
+        "separate_stable_success_gate_present_in_producer": false,
+        "step_count": 92,
+        "successful_step_count": 5,
+        "trailing_consecutive_success_steps": 5
+      },
+      "run_identity": {
+        "episode_id": 937,
+        "fresh_process": {
+          "identity": "sha256:9f1d9053e6572dfeef6e11eb7bf49e9ae7c02094a9ac18527249b41fd7e1ea6d",
+          "pid": 19843,
+          "process_start_time_ns": 1784869624314017008,
+          "run_nonce": "226cfff481e54af689f7cab8e6fba597"
+        },
+        "mode": "A",
+        "repetition": 1,
+        "task_id": "StackCube-v1"
+      },
+      "source_success_timing": {
+        "final_step_success": true,
+        "first_success_action_index": 86,
+        "first_success_step_1_based": 87,
+        "longest_consecutive_success_steps": 6,
+        "producer_success_rule": "final_step_canonical_success",
+        "separate_stable_success_gate_present_in_producer": false,
+        "step_count": 92,
+        "successful_step_count": 6,
+        "trailing_consecutive_success_steps": 6
+      }
+    },
+    {
+      "replay_success_timing": {
+        "final_step_success": false,
+        "first_success_action_index": 100,
+        "first_success_step_1_based": 101,
+        "longest_consecutive_success_steps": 4,
+        "producer_success_rule": "final_step_canonical_success",
+        "separate_stable_success_gate_present_in_producer": false,
+        "step_count": 105,
+        "successful_step_count": 4,
+        "trailing_consecutive_success_steps": 0
+      },
+      "run_identity": {
+        "episode_id": 938,
+        "fresh_process": {
+          "identity": "sha256:55bee89ee97b3df572334c45441f643b4d7c615582be6b8f1491650461d55b0c",
+          "pid": 20148,
+          "process_start_time_ns": 1784869667709305922,
+          "run_nonce": "cc5af151a47248d7951f1308267fa6b4"
+        },
+        "mode": "A",
+        "repetition": 1,
+        "task_id": "StackCube-v1"
+      },
+      "source_success_timing": {
+        "final_step_success": true,
+        "first_success_action_index": 99,
+        "first_success_step_1_based": 100,
+        "longest_consecutive_success_steps": 6,
+        "producer_success_rule": "final_step_canonical_success",
+        "separate_stable_success_gate_present_in_producer": false,
+        "step_count": 105,
+        "successful_step_count": 6,
+        "trailing_consecutive_success_steps": 6
+      }
+    },
+    {
+      "replay_success_timing": {
+        "final_step_success": false,
+        "first_success_action_index": 100,
+        "first_success_step_1_based": 101,
+        "longest_consecutive_success_steps": 4,
+        "producer_success_rule": "final_step_canonical_success",
+        "separate_stable_success_gate_present_in_producer": false,
+        "step_count": 105,
+        "successful_step_count": 4,
+        "trailing_consecutive_success_steps": 0
+      },
+      "run_identity": {
+        "episode_id": 938,
+        "fresh_process": {
+          "identity": "sha256:9faa0170c2ac388c2734b0b279ee0c19828f1b2830c33aa1f8f2a8080959f1e7",
+          "pid": 20451,
+          "process_start_time_ns": 1784869698413338483,
+          "run_nonce": "cbe5f1b83adc49e08495ad466d4d2789"
+        },
+        "mode": "A",
+        "repetition": 2,
+        "task_id": "StackCube-v1"
+      },
+      "source_success_timing": {
+        "final_step_success": true,
+        "first_success_action_index": 99,
+        "first_success_step_1_based": 100,
+        "longest_consecutive_success_steps": 6,
+        "producer_success_rule": "final_step_canonical_success",
+        "separate_stable_success_gate_present_in_producer": false,
+        "step_count": 105,
+        "successful_step_count": 6,
+        "trailing_consecutive_success_steps": 6
+      }
+    },
+    {
+      "replay_success_timing": {
+        "final_step_success": false,
+        "first_success_action_index": 100,
+        "first_success_step_1_based": 101,
+        "longest_consecutive_success_steps": 4,
+        "producer_success_rule": "final_step_canonical_success",
+        "separate_stable_success_gate_present_in_producer": false,
+        "step_count": 105,
+        "successful_step_count": 4,
+        "trailing_consecutive_success_steps": 0
+      },
+      "run_identity": {
+        "episode_id": 938,
+        "fresh_process": {
+          "identity": "sha256:06d303d727e30877afc3c86ff5336d1cfac8a9b16db7bbe89b7ed265a71efbf0",
+          "pid": 20752,
+          "process_start_time_ns": 1784869729209283364,
+          "run_nonce": "06f179866a64435db510cfa725400a66"
+        },
+        "mode": "A",
+        "repetition": 3,
+        "task_id": "StackCube-v1"
+      },
+      "source_success_timing": {
+        "final_step_success": true,
+        "first_success_action_index": 99,
+        "first_success_step_1_based": 100,
+        "longest_consecutive_success_steps": 6,
+        "producer_success_rule": "final_step_canonical_success",
+        "separate_stable_success_gate_present_in_producer": false,
+        "step_count": 105,
+        "successful_step_count": 6,
+        "trailing_consecutive_success_steps": 6
+      }
+    }
+  ],
+  "schema_version": "langmani-v2-phase2b6-1-v2-success-timing-v0",
+  "separate_stable_success_gate_present_in_producer": false,
+  "stable_success_gate_status": "not_applicable"
+}

@@ -1,0 +1,154 @@
+{
+  "file_count": 29,
+  "files": [
+    {
+      "path": "action_identity.json",
+      "sha256": "sha256:616c26c032646d4b49f062bc42f21d8ac8425d76f452abaae49d609a0b0bed1e",
+      "size_bytes": 569
+    },
+    {
+      "path": "authorization_state.json",
+      "sha256": "sha256:6fa0c6ffebd6e2d3bfd140cdc340c51b7476a8807debb51d73077cbda53c8577",
+      "size_bytes": 656
+    },
+    {
+      "path": "authorization_state_final.json",
+      "sha256": "sha256:6fa0c6ffebd6e2d3bfd140cdc340c51b7476a8807debb51d73077cbda53c8577",
+      "size_bytes": 656
+    },
+    {
+      "path": "control_936_result.json",
+      "sha256": "sha256:6ad0aeea26a1d3d610000c3c8f40b1cea71c02cf5d9fc1b0f49d8b9e8be045b5",
+      "size_bytes": 79093
+    },
+    {
+      "path": "control_937_result.json",
+      "sha256": "sha256:f226b7d16a70be5b2fdb4a62d9116e9b13bf4b7ab05ff5935697f6c2ac879af3",
+      "size_bytes": 84622
+    },
+    {
+      "path": "determinism_audit.json",
+      "sha256": "sha256:bba692ea589498f729de8f08ddf86d6f31ee5b3b8176bbab539773933099fa73",
+      "size_bytes": 626
+    },
+    {
+      "path": "eligibility_state.json",
+      "sha256": "sha256:fad0c165531f359aeb6809c6bfdc231c029b15c4496f7f74bfb5791b5cb65ab0",
+      "size_bytes": 431
+    },
+    {
+      "path": "episode_938_mode_a_results.json",
+      "sha256": "sha256:7c03f34a339b47341cfcdca3d6507e2d20138d2f117437fe40efd242dfe0e57e",
+      "size_bytes": 309792
+    },
+    {
+      "path": "episode_938_mode_b_results.json",
+      "sha256": "sha256:e0ac08c252333bb40d8efd7de9fae99db1c30776a0d23f4a7ed254c1892464ca",
+      "size_bytes": 224
+    },
+    {
+      "path": "episode_938_mode_c_result.json",
+      "sha256": "sha256:46e7b909d8658608ad5fdf1abf28c50382486fb979fe73d1d460246b6c228ea1",
+      "size_bytes": 224
+    },
+    {
+      "path": "finalization_summary.json",
+      "sha256": "sha256:e7d5d5aca55d6ad545e466d74744939505b08d19c61b33b25fc5f5f0d387a20e",
+      "size_bytes": 1049
+    },
+    {
+      "path": "first_failure_report.json",
+      "sha256": "sha256:39ef373003d3ee10f479a09bf0f18059b0d67f838ef7d2bf7ef4378281ff2c27",
+      "size_bytes": 411
+    },
+    {
+      "path": "forensic_protocol.json",
+      "sha256": "sha256:5f64e5dab5c3bed3b6dce10562245c451c50b90e8c4a0e3cea69704e8da8776b",
+      "size_bytes": 4790
+    },
+    {
+      "path": "frozen_partial_output_inventory.json",
+      "sha256": "sha256:b6f9dca7d721ccbe8aa882a0d77cdf97cd35a241937a1dc3bfb78097d9e976f0",
+      "size_bytes": 2200
+    },
+    {
+      "path": "historical_evidence_audit.json",
+      "sha256": "sha256:a0e710e622c9f97a0dcd8442247440a7db9eed2b27406278cde228067ea69a21",
+      "size_bytes": 14648
+    },
+    {
+      "path": "observation_action_alignment_audit.json",
+      "sha256": "sha256:b097ae8fb8578faefb634470834f69f4988954ca9b22867b0c2d69d74767da28",
+      "size_bytes": 281
+    },
+    {
+      "path": "preflight_result.json",
+      "sha256": "sha256:e0bfc435766d346250ddf7639bb5d0fa83909a5d23b519f9f8517143c087c7be",
+      "size_bytes": 636
+    },
+    {
+      "path": "prior_evidence_verification.json",
+      "sha256": "sha256:fbaa2c063dbe154b340d4f9aa1c9fb42135ebcd43f79518eeb0ce671525dbcf1",
+      "size_bytes": 21313
+    },
+    {
+      "path": "producer_forensic_call_sequence_audit.json",
+      "sha256": "sha256:3ca009243ce20fddb7da37260d45c820b1d03974a541907b09d695bf86819551",
+      "size_bytes": 3458
+    },
+    {
+      "path": "remote_execution_audit.json",
+      "sha256": "sha256:35c42610c461e3b15c94069a1f61bc8b1a2855e9713b65f154cf044760956b31",
+      "size_bytes": 1107
+    },
+    {
+      "path": "repository_environment_audit.json",
+      "sha256": "sha256:c79b353233c0c7e2b385beebae7a1638659e051bb7e803c778f9ac4dd7c6effe",
+      "size_bytes": 2143
+    },
+    {
+      "path": "result_classification.json",
+      "sha256": "sha256:2dd66670f5e77261523079c0a21f79cdd752d9121a93ae0b5e878538b714a0ed",
+      "size_bytes": 653
+    },
+    {
+      "path": "source_episode_identity.json",
+      "sha256": "sha256:c0609ec1c1a9b2035db9581fa1e1af3dbfe6a862a3fafe56ca8fa4a3a88b5939",
+      "size_bytes": 12619
+    },
+    {
+      "path": "success_timing_audit.json",
+      "sha256": "sha256:0c3b2c5f5889bfd648d057593ba58ebe1ae3c68b854098a96e49de99e1213ffa",
+      "size_bytes": 7077
+    },
+    {
+      "path": "task_state_diagnostics.json",
+      "sha256": "sha256:d66e50e7a9c59818236c4d3f03a777f7af5497a29c4b2d1d098b54a90d3d8dce",
+      "size_bytes": 125461
+    },
+    {
+      "path": "validated_launcher_binding.json",
+      "sha256": "sha256:dc48c2ded2dee16495553b6ff1a05d5fe1f9c2a280a21795458691ad10c0a7c4",
+      "size_bytes": 809
+    },
+    {
+      "path": "validated_rendering_contract_manifest.json",
+      "sha256": "sha256:0eaa6f39548491031c47c8e4ad293747d0651ff043c77a7026c2b5b3213d1d65",
+      "size_bytes": 5163
+    },
+    {
+      "path": "verification.json",
+      "sha256": "sha256:4eb81b0e9c68a5e033428db9684349eb2971f5799c9213a13233ecf297cc9d26",
+      "size_bytes": 1320
+    },
+    {
+      "path": "writer_filesystem_audit.json",
+      "sha256": "sha256:009945c93d8e4dc93981ba1b64e87e4ae4e36972c948546dd8d620cb6472925e",
+      "size_bytes": 332
+    }
+  ],
+  "fingerprint": "sha256:c49558caa9f04d445f8e34acd6e71d17b0339a82c4a5273ac8f8827f35e15a6e",
+  "large_rgb_or_npz_committed": false,
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b6-1-v2-artifact-manifest-v0"
+}

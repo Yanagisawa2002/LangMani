@@ -1,0 +1,60 @@
+{
+  "branch": "codex/langmani-v2-phase2b6-1-v2-forensic-replay",
+  "checks": {
+    "branch_exact": true,
+    "frozen_root_exists": true,
+    "network_turbo_sourced": true,
+    "no_prohibited_process": true,
+    "origin_repository_exact": true,
+    "output_root_is_distinct": true,
+    "producer_commit_exists": true,
+    "source_commit_is_ancestor": true,
+    "source_root_exists": true,
+    "upstream_matches_head": true,
+    "worktree_clean": true
+  },
+  "created_at_utc": "2026-07-24T05:05:18.857154+00:00",
+  "disk": {
+    "/root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608": {
+      "free_bytes": 86656516096,
+      "total_bytes": 268435456000
+    },
+    "/root/autodl-tmp/langmani-external/phase2b6/production_v1": {
+      "free_bytes": 86656516096,
+      "total_bytes": 268435456000
+    },
+    "/root/autodl-tmp/langmani-external/phase2b6_1_v2": {
+      "free_bytes": 86656516096,
+      "total_bytes": 268435456000
+    }
+  },
+  "fingerprint": "sha256:5004893e7c040a17dd047534ed994829b41ea1e9e520f7066972f2d4d7450181",
+  "frozen_root": "/root/autodl-tmp/langmani-external/phase2b6/production_v1",
+  "gpu_audit": {
+    "available": true,
+    "devices": [
+      {
+        "driver_version": "580.76.05",
+        "memory_total_mib": 32607,
+        "memory_used_mib": 0,
+        "name": "NVIDIA GeForce RTX 5090",
+        "utilization_percent": 0,
+        "uuid": "GPU-27f8a10c-1b18-1109-85da-247ee1927024"
+      }
+    ]
+  },
+  "head": "60368f0cc54859eae7ee908ae7755684f59fe7f0",
+  "origin": "git@github.com:Yanagisawa2002/LangMani.git",
+  "output_root": "/root/autodl-tmp/langmani-external/phase2b6_1_v2/stack938_forensics_v1",
+  "passed": true,
+  "process_audit": {
+    "passed": true,
+    "prohibited_active_processes": [],
+    "query_succeeded": true
+  },
+  "schema_version": "langmani-v2-phase2b6-1-v2-repository-audit-v0",
+  "source_commit": "799e62cc9f7d5590116d236242c4328af1812e1c",
+  "source_root": "/root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608",
+  "status_porcelain": "",
+  "upstream_head": "60368f0cc54859eae7ee908ae7755684f59fe7f0"
+}

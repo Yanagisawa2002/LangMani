@@ -185,6 +185,15 @@ failure. The phase is [`RESULT_A`](docs/langmani_v2/phase_2b6_1r_result.md), but
 `phase2b6_1_forensic_restart_eligible=true`. Replay itself, Phase 2B.6 production, accepted-dataset
 creation, and all model training remain unauthorized.
 
+Phase 2B.6.1-v2 then used that recovered launcher for the separately authorized bounded replay.
+Both accepted controls passed. Episode 938 failed identically in all three fresh-process Mode A
+runs: canonical success began at replay step 101 and lasted four steps, but the final action lost
+success. The exact first failed gate is `canonical_terminal_success_gate`, so the phase is
+[`RESULT_B`](docs/langmani_v2/phase_2b6_1_v2_result.md) with
+`source_episode_exclusion_review_eligible=true`. This is review eligibility, not an exclusion or
+production authorization. The Result B hard stop prevented Modes B/C; production, accepted
+dataset creation, and all model training remain closed.
+
 The native no-training stages are explicitly separate:
 
 ```bash
@@ -228,6 +237,13 @@ simulator or loading a model:
 
 ```bash
 python environment/verify_v2_phase2b6_1r.py
+```
+
+The compact Phase 2B.6.1-v2 Result B evidence can be independently checked without constructing a
+simulator or loading a model:
+
+```bash
+python environment/verify_v2_phase2b6_1_v2.py
 ```
 
 The completed Phase 2B archive can be independently re-audited without starting training:

@@ -1,0 +1,8 @@
+{
+  "fabricated_terminal_action_added": false,
+  "fingerprint": "sha256:cfc94a920a34fa02f2fc69740b5190019fa441961217312193882dff43562025",
+  "passed": false,
+  "runs": [],
+  "schema_version": "langmani-v2-phase2b6-1-v2-alignment-v0",
+  "terminal_diagnostic_frame_excluded": true
+}

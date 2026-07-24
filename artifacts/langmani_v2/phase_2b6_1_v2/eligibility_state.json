@@ -1,0 +1,10 @@
+{
+  "all_model_training_authorized": false,
+  "all_model_training_eligible": false,
+  "eligibility_is_authorization": false,
+  "fingerprint": "sha256:07ee60a27ff0f1731b12b009ff25200d8f9a06e2e436015c5cdbebcfc2e72e01",
+  "phase2b6_clean_reproduction_eligible": false,
+  "phase2b6_protocol_revision_eligible": false,
+  "schema_version": "langmani-v2-phase2b6-1-v2-eligibility-v0",
+  "source_episode_exclusion_review_eligible": true
+}

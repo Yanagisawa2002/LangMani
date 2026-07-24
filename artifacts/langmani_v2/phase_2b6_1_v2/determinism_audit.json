@@ -1,0 +1,33 @@
+{
+  "action_counts": [
+    105,
+    105,
+    105
+  ],
+  "categorical_outcomes": [
+    false,
+    false,
+    false
+  ],
+  "classification": "deterministic_failure",
+  "fingerprint": "sha256:34ea73de70a8685438e98c32e7036a0c6800e146868072eb4b3c78b4b124e4ce",
+  "first_success_steps_1_based": [
+    101,
+    101,
+    101
+  ],
+  "first_transition_divergence_action_index": null,
+  "maximum_terminal_pose_absolute_drift": 0.0,
+  "passed": false,
+  "run_gate_outcomes": [
+    false,
+    false,
+    false
+  ],
+  "schema_version": "langmani-v2-phase2b6-1-v2-determinism-v0",
+  "trailing_success_durations": [
+    0,
+    0,
+    0
+  ]
+}

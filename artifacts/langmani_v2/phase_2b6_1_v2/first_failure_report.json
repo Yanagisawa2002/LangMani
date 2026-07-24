@@ -1,0 +1,9 @@
+{
+  "exact_first_failed_sub_gate": "canonical_terminal_success_gate",
+  "fingerprint": "sha256:4e1c7658827f7898ed8fc459155ddbeb7f9b176de99120618a01b2880cb8ec93",
+  "historical_aggregate_failure_subgate_available": false,
+  "passed": true,
+  "primary_failure_classification": "canonical_success_failure",
+  "schema_version": "langmani-v2-phase2b6-1-v2-first-failure-v0",
+  "secondary_contributing_factors": []
+}
