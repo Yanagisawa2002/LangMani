@@ -1,0 +1,296 @@
+"""Run resumable real closed-loop evaluation for one Phase 2C-A ACT policy."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+from typing import Any
+
+from langmani.datasets.identity import sha256_hex
+from langmani.v2.phase2c_a import (
+    PACKAGE_FINGERPRINT,
+    TASK_IDS,
+)
+from langmani.v2.phase2c_a_adapter import Phase2CAActPolicyAdapter
+from langmani.v2.phase2c_a_evaluator import (
+    OfficialManiSkillPolicyEvaluator,
+    append_episode_jsonl,
+    summarize_evaluation,
+    write_video,
+)
+
+
+def _read_object(path: Path) -> dict[str, object]:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise RuntimeError(f"{path} must contain one object")
+    return value
+
+
+def _read_jsonl(path: Path) -> list[dict[str, object]]:
+    if not path.exists():
+        return []
+    rows = []
+    with path.open(encoding="utf-8") as stream:
+        for line_number, line in enumerate(stream, start=1):
+            value = json.loads(line)
+            if not isinstance(value, dict):
+                raise RuntimeError(f"{path}:{line_number} is not an object")
+            rows.append(value)
+    return rows
+
+
+def _write_new_or_equal(path: Path, value: dict[str, object]) -> None:
+    if path.exists():
+        if _read_object(path) != value:
+            raise RuntimeError(f"existing immutable artifact differs: {path}")
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
+def _source_document(source_root: Path, task_id: str) -> dict[str, object]:
+    path = source_root / "expanded" / task_id / "motionplanning" / "trajectory.json"
+    document = _read_object(path)
+    if not isinstance(document.get("env_info"), dict):
+        raise RuntimeError(f"source document lacks env_info: {path}")
+    return document
+
+
+def _environment_kwargs(document: dict[str, object]) -> dict[str, object]:
+    env_info = document["env_info"]
+    assert isinstance(env_info, dict)
+    source_kwargs = env_info.get("env_kwargs")
+    if not isinstance(source_kwargs, dict):
+        raise RuntimeError("source env_info lacks env_kwargs")
+    kwargs = dict(source_kwargs)
+    kwargs.update(
+        {
+            "obs_mode": "rgb",
+            "reward_mode": "none",
+            "render_mode": None,
+            "sim_backend": "physx_cpu",
+            "render_backend": "sapien_cuda",
+            "sensor_configs": {"width": 256, "height": 256},
+            "num_envs": 1,
+        }
+    )
+    return kwargs
+
+
+def _scheduled_rows(
+    schedule: dict[str, object],
+    *,
+    split: str,
+    task_id: str,
+    limit: int | None,
+) -> list[dict[str, object]]:
+    schedules = schedule.get("schedules")
+    if not isinstance(schedules, dict):
+        raise RuntimeError("evaluation schedule lacks schedules")
+    split_value = schedules.get(split)
+    if not isinstance(split_value, dict):
+        raise RuntimeError(f"evaluation schedule lacks split {split}")
+    task_value = split_value.get(task_id)
+    if not isinstance(task_value, list) or not all(isinstance(item, dict) for item in task_value):
+        raise RuntimeError(f"evaluation schedule lacks {task_id}/{split}")
+    rows = list(task_value)
+    if limit is not None:
+        if limit < 1 or limit > len(rows):
+            raise ValueError("--limit lies outside the frozen schedule")
+        rows = rows[:limit]
+    return rows
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source-root", type=Path, required=True)
+    parser.add_argument("--schedule", type=Path, required=True)
+    parser.add_argument("--run-root", type=Path, required=True)
+    parser.add_argument("--checkpoint-relative-path", required=True)
+    parser.add_argument("--execution-horizon", type=int, choices=(1, 4, 8), required=True)
+    parser.add_argument("--task-id", choices=TASK_IDS, required=True)
+    parser.add_argument(
+        "--split",
+        choices=("validation", "test_unseen_reset", "test_visual_shift"),
+        required=True,
+    )
+    parser.add_argument("--limit", type=int)
+    parser.add_argument("--maximum-steps", type=int, default=200)
+    parser.add_argument("--task-condition-id", choices=TASK_IDS)
+    parser.add_argument("--output-root", type=Path, required=True)
+    parser.add_argument("--capture-representatives", action="store_true")
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    import gymnasium as gym
+    import mani_skill.envs  # type: ignore[import-untyped]  # noqa: F401
+
+    output_root = args.output_root.resolve()
+    output_root.mkdir(parents=True, exist_ok=True)
+    schedule_document = _read_object(args.schedule.resolve())
+    if schedule_document.get("package_fingerprint") != PACKAGE_FINGERPRINT:
+        raise RuntimeError("evaluation schedule uses a noncanonical package fingerprint")
+    rows = _scheduled_rows(
+        schedule_document,
+        split=args.split,
+        task_id=args.task_id,
+        limit=args.limit,
+    )
+    adapter = Phase2CAActPolicyAdapter.from_checkpoint(
+        run_root=args.run_root,
+        checkpoint_relative_path=args.checkpoint_relative_path,
+        execution_horizon=args.execution_horizon,
+        device="cuda",
+    )
+    if args.task_condition_id is None and args.task_id not in adapter.identity.compatible_task_ids:
+        raise RuntimeError("policy is incompatible with the scheduled environment task")
+    source_document = _source_document(args.source_root.resolve(), args.task_id)
+    kwargs = _environment_kwargs(source_document)
+    environment: Any = gym.make(args.task_id, **kwargs)
+    evaluator = OfficialManiSkillPolicyEvaluator(
+        environment,
+        task_id=args.task_id,
+        maximum_steps=args.maximum_steps,
+    )
+    manifest_semantic = {
+        "schema_version": "langmani-v2-phase2c-a-evaluation-run-v0",
+        "package_fingerprint": PACKAGE_FINGERPRINT,
+        "schedule_fingerprint": schedule_document.get("fingerprint"),
+        "source_root": args.source_root.resolve().as_posix(),
+        "task_id": args.task_id,
+        "split": args.split,
+        "scheduled_episode_count": len(rows),
+        "maximum_steps": args.maximum_steps,
+        "task_condition_id": args.task_condition_id or args.task_id,
+        "policy_runtime": dict(adapter.runtime_manifest),
+        "environment_kwargs": kwargs,
+        "action_clipping": False,
+        "action_projection": False,
+        "invalid_output_policy": "hard_reject",
+        "visual_shift": (
+            "langmani-v2-phase2b6-postrender-appearance-v0"
+            if args.split == "test_visual_shift"
+            else None
+        ),
+    }
+    manifest = {
+        **manifest_semantic,
+        "fingerprint": f"sha256:{sha256_hex(manifest_semantic)}",
+    }
+    _write_new_or_equal(output_root / "runtime_manifest.json", manifest)
+    episodes_path = output_root / "episodes.jsonl"
+    existing = _read_jsonl(episodes_path)
+    expected_ids = [str(row["evaluation_id"]) for row in rows]
+    existing_ids = [str(row.get("evaluation_id")) for row in existing]
+    if (
+        len(existing_ids) != len(set(existing_ids))
+        or existing_ids != expected_ids[: len(existing_ids)]
+    ):
+        raise RuntimeError("existing evaluation log is not a valid schedule prefix")
+    video_registry_path = output_root / "representative_videos.json"
+    video_registry = (
+        _read_object(video_registry_path)
+        if video_registry_path.exists()
+        else {
+            "schema_version": "langmani-v2-phase2c-a-representative-videos-v0",
+            "videos": [],
+        }
+    )
+    videos = video_registry.get("videos")
+    if not isinstance(videos, list):
+        raise RuntimeError("representative video registry is malformed")
+    filled_roles = {
+        str(item.get("role")) for item in videos if isinstance(item, dict) and item.get("role")
+    }
+    try:
+        for row in rows[len(existing) :]:
+            capture = args.capture_representatives and (
+                args.task_condition_id is not None
+                or f"{args.task_id}:success" not in filled_roles
+                or f"{args.task_id}:failure" not in filled_roles
+                or (
+                    args.split == "test_visual_shift"
+                    and f"{args.task_id}:visual_shift" not in filled_roles
+                )
+            )
+            evaluated = evaluator.run_episode(
+                policy=adapter,
+                schedule=row,
+                task_condition_id=args.task_condition_id,
+                capture_video=capture,
+            )
+            append_episode_jsonl(episodes_path, evaluated.result)
+            existing.append(evaluated.result.to_dict())
+            if capture and evaluated.frames:
+                if args.task_condition_id is not None:
+                    role = f"{args.task_id}:wrong_task_condition"
+                elif args.split == "test_visual_shift":
+                    role = f"{args.task_id}:visual_shift"
+                else:
+                    role = (
+                        f"{args.task_id}:success"
+                        if evaluated.result.success
+                        else f"{args.task_id}:failure"
+                    )
+                if role not in filled_roles:
+                    video_name = role.replace(":", "__") + ".mp4"
+                    record = write_video(
+                        output_root / "videos" / video_name,
+                        evaluated.frames,
+                    )
+                    videos.append(
+                        {
+                            **record,
+                            "role": role,
+                            "evaluation_id": evaluated.result.evaluation_id,
+                            "outcome": evaluated.result.outcome,
+                        }
+                    )
+                    filled_roles.add(role)
+                    staging = video_registry_path.with_name(f".{video_registry_path.name}.staging")
+                    staging.write_text(
+                        json.dumps(video_registry, indent=2, sort_keys=True) + "\n",
+                        encoding="utf-8",
+                    )
+                    os.replace(staging, video_registry_path)
+    finally:
+        adapter.close()
+        environment.close()
+    if len(existing) != len(rows):
+        raise RuntimeError("evaluation did not complete its frozen schedule")
+    summary = {
+        **summarize_evaluation(existing),
+        "execution_horizon": args.execution_horizon,
+        "split": args.split,
+        "task_id": args.task_id,
+        "task_condition_id": args.task_condition_id or args.task_id,
+        "runtime_manifest_fingerprint": manifest["fingerprint"],
+        "completed": True,
+    }
+    _write_new_or_equal(output_root / "summary.json", summary)
+    complete = {
+        "schema_version": "langmani-v2-phase2c-a-evaluation-complete-v0",
+        "episode_count": len(existing),
+        "runtime_manifest": "runtime_manifest.json",
+        "episodes": "episodes.jsonl",
+        "summary": "summary.json",
+        "representative_videos": (
+            "representative_videos.json" if video_registry_path.exists() else None
+        ),
+    }
+    _write_new_or_equal(output_root / "complete.json", complete)
+    print(json.dumps(summary, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -210,6 +210,15 @@ passed, so the phase is
 eligibility is true, but every training authorization remains false and no optimizer or training
 work started.
 
+Phase 2C-A is the separately authorized ACT-only consumer of that frozen package. It trains three
+task-specific ACT baselines and one shared three-way Task-ID ACT, then evaluates them in real
+closed-loop official ManiSkill tasks. The phase keeps maintained LeRobot 0.6 ACT, chunk size 16,
+explicit padding masks, accepted train-only statistics, strict shared task balancing, and a
+validation-only checkpoint/execution-horizon lock. Learned actions are hard-rejected when invalid;
+they are never clipped or projected. See the
+[`Phase 2C-A plan`](docs/langmani_v2/phase_2c_a_plan.md). SmolVLA and VLA-JEPA remain outside this
+authorization.
+
 The no-training v2 production entry point is:
 
 ```bash

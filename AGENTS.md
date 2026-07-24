@@ -189,6 +189,16 @@ Result A. Dataset eligibility for ACT-baseline, SmolVLA, and VLA-JEPA is true; e
 authorization remains false, no policy was loaded, and optimizer/backward/training counts remain
 zero.
 
+Phase 2C-A is the active separately authorized ACT-only consumer milestone. It may create one
+isolated LeRobot 0.6 training environment, train exactly PickCube, StackCube, PushCube, and shared
+three-way Task-ID ACT baselines on the frozen accepted train views, and run the preregistered
+validation/unseen-reset/visual-shift closed-loop schedules. It must keep chunk size 16, explicit
+`action_is_pad`, accepted train-only normalization, unchanged 9D Panda state, native 8D
+`pd_joint_pos`, strict one-third shared-task sampling, validation-only checkpoint/horizon
+selection, and hard rejection instead of learned-action clipping or projection. It may not modify
+dataset bytes, exclusions, splits, statistics, language, archive/restore identities, or start
+SmolVLA/VLA-JEPA.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
@@ -351,6 +361,12 @@ python environment/verify_v2_phase2b3.py
 
 # Phase 2B.6-v2 compact Result A/B/C/D artifact verification (no simulator execution)
 python environment/verify_v2_phase2b6_v2.py --help
+
+# Phase 2C-A ACT-only consumer, training, and closed-loop evaluation commands
+python environment/verify_v2_phase2c_a_identity.py --help
+python environment/prepare_v2_phase2c_a.py --help
+python scripts/train_v2_phase2c_a_act.py --help
+python scripts/evaluate_v2_phase2c_a_act.py --help
 
 # Phase 2B.3.1-RR compact Result D evidence verification (no simulator execution)
 python environment/verify_v2_phase2b3_rr.py

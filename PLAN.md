@@ -143,6 +143,14 @@ split/leakage, padding, train-only normalization, archive, and clean-restore gat
 ACT-baseline, SmolVLA, and VLA-JEPA dataset eligibility is true, but all training remains
 unauthorized and no optimizer, backward pass, or training work started.
 
+Phase 2C-A is the active, separately authorized ACT baseline milestone. Its preflight identity
+erratum binds the canonical 64-character package fingerprint and proves that the only live/archive
+tree difference is the authorized package sidecar. The phase trains exactly three task-specific
+ACT policies and one shared three-way Task-ID ACT on the accepted train views, with explicit H=16
+padding masks, maintained LeRobot 0.6 ACT, fixed validation-only checkpoint/horizon selection,
+and real closed-loop unseen-reset/visual-shift evaluation. No dataset production, SmolVLA, or
+VLA-JEPA training is within scope.
+
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected

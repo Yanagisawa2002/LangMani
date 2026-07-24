@@ -3536,3 +3536,43 @@ authorize execution. `act_training_authorized=false`, `smolvla_training_authoriz
 `vla_jepa_training_authorized=false`, `student_policy_training_started=false`,
 `optimizer_created=false`, `optimizer_steps=0`, and `backward_passes=0`. Any model choice,
 training protocol, or policy-quality claim requires a separately authorized later phase.
+
+## D-138 - Resolve the package erratum and freeze the Phase 2C-A ACT consumer boundary
+
+Phase 2C-A treats
+`sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04`
+as the sole accepted-package fingerprint. The similar 65-character value containing an extra
+`c` is a human-document transcription error, not a second dataset identity. The archived and
+restored frozen payload is the unchanged 168-file, 2,779,801,643-byte tree with digest
+`sha256:b0e255d8b3f7f77fe33538cb2c313620d1d00adf90562b33dad06b10674474b3`.
+The live primary is recorded separately as that payload plus the post-finalization control
+sidecar `metadata/accepted_multiskill_dataset_package.json`. The independent identity verifier
+proved that this sidecar is the only difference and that no media, state, action, split,
+normalization, or source-lineage byte changed.
+
+The four authorized primary baselines are one PickCube ACT, one StackCube ACT, one PushCube ACT,
+and one shared three-way Task-ID ACT. All use the maintained LeRobot 0.6 ACT core, RGB
+`256x256`, unchanged `PandaPolicyStateV0[9]`, native `pd_joint_pos[8]`, chunk size 16, ResNet-18,
+the same transformer/VAE/optimizer/precision contract, explicit `action_is_pad`, and the accepted
+train-only statistics. The shared policy's only structural difference is a three-dimensional
+one-hot task identity through LeRobot's public `FeatureType.ENV` encoder token with identity
+normalization. This is oracle task conditioning, not language grounding.
+
+Strict one-third task sampling cannot simultaneously give three unequal frame-count datasets
+exactly 20 passes. Phase 2C-A therefore preserves the explicit one-third sampling requirement and
+sets each shared-task sample budget to the arithmetic mean of the three per-task 20-pass budgets.
+Every task's resulting effective passes remains explicit in the frozen configuration. No silent
+reweighting, architecture sweep, chunk sweep, validation/test normalization, or data copy is
+permitted.
+
+The generic `PolicyContext` now supports either one historical structured `EvaluationTask` or one
+direct stable task ID, never both. This lets official ManiSkill tasks use the existing
+`PolicyAdapter` without fabricating a LangMani-specific TaskSpec. The evaluator remains
+policy-agnostic, admits only RGB and Panda state to the adapter, and hard-rejects malformed,
+non-finite, or out-of-bounds actions. It never clips or projects a learned action.
+
+Validation alone selects at most one primary checkpoint per run and compares the preregistered
+execution horizons 1, 4, and 8. Final unseen-reset and post-render visual-shift schedules are
+fingerprint-bound before results exist and cannot be changed afterward. Phase 2C-A may train and
+evaluate ACT only. SmolVLA and VLA-JEPA remain neither loaded nor training-authorized regardless
+of ACT outcome.

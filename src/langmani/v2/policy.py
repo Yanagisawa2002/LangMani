@@ -75,11 +75,19 @@ class PolicyIdentity:
 
 @dataclass(frozen=True, slots=True)
 class PolicyContext:
-    """Episode-local task binding supplied at every policy reset."""
+    """Episode-local task binding supplied at every policy reset.
 
-    evaluation_task: EvaluationTask
+    Historical LangMani v2 environments pass a structured
+    :class:`EvaluationTask`.  Official ManiSkill consumers such as Phase 2C-A
+    have a stable environment task ID but no LangMani-specific TaskSpec.  The
+    optional ``task_id`` path keeps both behind the same policy interface
+    without fabricating a taxonomy object.
+    """
+
+    evaluation_task: EvaluationTask | None
     evaluation_id: str
     language_instruction: str | None = None
+    task_id: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.evaluation_id, str) or not self.evaluation_id:
@@ -88,6 +96,24 @@ class PolicyContext:
             not isinstance(self.language_instruction, str) or not self.language_instruction.strip()
         ):
             raise PolicyContractError("language_instruction must be None or a non-empty string")
+        if self.evaluation_task is None:
+            if not isinstance(self.task_id, str) or not self.task_id:
+                raise PolicyContractError(
+                    "a context without EvaluationTask requires a non-empty task_id"
+                )
+        elif self.task_id is not None:
+            raise PolicyContractError(
+                "structured EvaluationTask and direct task_id are mutually exclusive"
+            )
+
+    @property
+    def canonical_task_id(self) -> str:
+        """Return the stable task identity without exposing task internals."""
+
+        if self.task_id is not None:
+            return self.task_id
+        assert self.evaluation_task is not None
+        return self.evaluation_task.task_instance.canonical_task_id
 
 
 @dataclass(frozen=True, slots=True)
