@@ -194,6 +194,23 @@ success. The exact first failed gate is `canonical_terminal_success_gate`, so th
 production authorization. The Result B hard stop prevented Modes B/C; production, accepted
 dataset creation, and all model training remain closed.
 
+Phase 2B.6-v2 is the new clean production authorized after that review. It runs every selected
+official source again from episode 0 under the recovered process-scoped Vulkan launcher and the
+versioned exclusion policy in
+[`phase2b6_v2_exclusion_policy.yaml`](configs/langmani_v2/phase2b6_v2_exclusion_policy.yaml).
+Every source identity remains accounted for even when an explicitly classified incompatible
+episode is absent from policy data. The frozen thresholds permit at most five exclusions per task
+and nine overall while requiring at least 99.5% per-task and 99.7% overall acceptance. The old
+1,938-record partial root remains diagnostic and read-only. Dataset acceptance may establish
+later-phase eligibility but never starts or authorizes model training.
+
+The no-training v2 production entry point is:
+
+```bash
+python environment/run_v2_phase2b6_v2.py --help
+python environment/verify_v2_phase2b6_v2.py --help
+```
+
 The native no-training stages are explicitly separate:
 
 ```bash

@@ -1,0 +1,224 @@
+{
+  "schema_version": "langmani-v2-phase2b6-v2-production-spec-v0",
+  "production_run_id": "langmani-official-multiskill-v2-instrumented-production",
+  "derived_dataset_version": "LangManiOfficialMultiSkill-v2",
+  "source_authorization": {
+    "source_branch": "codex/langmani-v2-phase2b6-1-v2-forensic-replay",
+    "source_commit": "18c31f8bc6839d80b465ad73894fa886fa6c8dfb",
+    "target_branch": "codex/langmani-v2-phase2b6-v2-instrumented-production",
+    "official_source_repository": "haosulab/ManiSkill_Demonstrations",
+    "official_source_revision": "d674485bbffdd533914e52d272fdda34c0515608",
+    "official_source_license": "Apache-2.0",
+    "maniskill_source_revision": "a4a4f9272ad64b1564035874b605ceb687b63ed8",
+    "phase2b5_accepted_package_sha256": "sha256:22e93d609fc4564d0bdb3e5fc7571cf8971c8a86b3cf3bdaa910108621bcbcc2",
+    "phase2b5_artifact_manifest_sha256": "sha256:622da6018d12a5e561813543ba4040a33d456dcec2dc830ecd63edc60c0b22cc",
+    "phase2b6_v1_spec_sha256": "sha256:84021d42a33ad939cf4b707eaf75a8b71fcd6c083b88ee2a4aed0b7181e0b232",
+    "phase2b6_1_v2_artifact_manifest_fingerprint": "sha256:c49558caa9f04d445f8e34acd6e71d17b0339a82c4a5273ac8f8827f35e15a6e"
+  },
+  "exclusion_policy": {
+    "relative_path": "configs/langmani_v2/phase2b6_v2_exclusion_policy.yaml",
+    "sha256": "sha256:40b93c996d45037c3c26540e9956deb3b0167a28fccfc7e74f290b5621ac6844",
+    "policy_id": "langmani-phase2b6-v2-exclusion-policy-v1"
+  },
+  "tasks": {
+    "PickCube-v1": {
+      "skill_family": "pick_and_place",
+      "dataset_id": "langmani/official-pickcube-v2",
+      "source_zip_relative_path": "sources/PickCube-v1.zip",
+      "source_zip_size_bytes": 36590010,
+      "source_zip_sha256": "sha256:b2d4afb30fa309755862b98c342e6ee18918253c93f3bbac16ed6670748f26d8",
+      "expected_episodes": 1000,
+      "expected_transitions": 77976
+    },
+    "StackCube-v1": {
+      "skill_family": "stacking",
+      "dataset_id": "langmani/official-stackcube-v2",
+      "source_zip_relative_path": "sources/StackCube-v1.zip",
+      "source_zip_size_bytes": 43486191,
+      "source_zip_sha256": "sha256:f9b7d34b9aa418a04aa8e4322d4dea5aa27e8ae81757f60b210c1ffc54bf9c1b",
+      "expected_episodes": 1000,
+      "expected_transitions": 107420
+    },
+    "PushCube-v1": {
+      "skill_family": "planar_pushing",
+      "dataset_id": "langmani/official-pushcube-v2",
+      "source_zip_relative_path": "sources/PushCube-v1.zip",
+      "source_zip_size_bytes": 24573577,
+      "source_zip_sha256": "sha256:1ce24408bf93658501faaa0ef164a0cdc29539cc412612a413fac746697eeab2",
+      "expected_episodes": 1000,
+      "expected_transitions": 68978
+    }
+  },
+  "expected_totals": {
+    "source_episodes": 3000,
+    "source_transitions": 254374,
+    "task_count": 3,
+    "skill_family_count": 3
+  },
+  "runtime": {
+    "maniskill_version": "3.0.1",
+    "sapien_version": "3.0.3",
+    "lerobot_version": "0.6.0",
+    "python_version": "3.12",
+    "replay_environment": {
+      "robot": "panda",
+      "obs_mode": "rgb",
+      "reward_mode": "none",
+      "control_mode": "pd_joint_pos",
+      "sim_backend": "physx_cpu",
+      "render_backend": "sapien_cuda",
+      "num_envs": 1,
+      "control_frequency_hz": 20,
+      "simulation_frequency_hz": 100,
+      "physics_substeps_per_action": 5
+    },
+    "validated_launcher": {
+      "path": "environment/run_v2_phase2b6_v2_production.sh",
+      "vulkan_icd": "/etc/vulkan/icd.d/my_nvidia_icd.json",
+      "vulkan_icd_sha256": "sha256:faa5543269860bb750bab4c3a9cb08a8c749f6d27500780b773dfcd334c188f8",
+      "egl_vendor_json": "/usr/share/glvnd/egl_vendor.d/10_nvidia.json",
+      "egl_vendor_sha256": "sha256:9e6f14afaa7523370ad96e6675d3357441ee3985e60405cb33e0ced30b2ddaf76",
+      "cuda_visible_devices": "0",
+      "isolated_xdg_runtime_dir": true,
+      "clear_display_and_conflicting_loader_variables": true
+    }
+  },
+  "camera": {
+    "name": "base_camera",
+    "dtype": "uint8",
+    "layout": "HWC_RGB",
+    "width": 256,
+    "height": 256,
+    "crop": "none",
+    "frame_rate_hz": 20,
+    "codec": "h264",
+    "pixel_format": "yuv444p",
+    "video_backend": "pyav"
+  },
+  "observation": {
+    "timing": "observation[t] immediately precedes action[t]",
+    "image_feature": "observation.images.base_camera",
+    "state_feature": "observation.state",
+    "state_schema": "PandaPolicyStateV0",
+    "state_dtype": "float32",
+    "state_shape": [9],
+    "terminal_diagnostic_frame_policy": false,
+    "privileged_fields_excluded": [
+      "object_pose",
+      "goal_pose",
+      "full_simulator_state",
+      "reward",
+      "success_internals",
+      "contacts"
+    ]
+  },
+  "action": {
+    "feature": "action",
+    "schema": "PandaJointPositionActionV0",
+    "control_mode": "pd_joint_pos",
+    "dtype": "float32",
+    "shape": [8],
+    "clipping": false,
+    "projection": false,
+    "interpolation": false,
+    "fabricated_terminal_action": false
+  },
+  "language_policy": {
+    "source": "configs/langmani_v2/phase2b6_dataset_production.yaml",
+    "per_task_train_templates": 6,
+    "per_task_validation_templates": 2,
+    "per_task_held_out_templates": 4,
+    "assignment": "deterministic_from_episode_and_split_identity",
+    "trajectory_duplication_for_language": false
+  },
+  "splits": {
+    "source": "configs/langmani_v2/phase2b6_dataset_production.yaml",
+    "assignment_seed": "langmani-v2-phase2b6-primary-splits-v0",
+    "per_task_source_counts": {
+      "train": 700,
+      "validation": 100,
+      "test_unseen_reset": 100,
+      "test_unseen_task_language": 50,
+      "test_visual_shift": 50
+    },
+    "excluded_sources_remain_in_inventory": true,
+    "replacement_sampling": false,
+    "primary_split_overlap_required": 0
+  },
+  "visual_shift": {
+    "identity": "langmani-v2-phase2b6-postrender-appearance-v0",
+    "scope": "accepted_test_visual_shift_only",
+    "implementation": "post_render_rgb_only",
+    "exposure_multiplier": 0.9,
+    "rgb_channel_multipliers": [1.03, 1.0, 0.94],
+    "physics_changed": false
+  },
+  "cross_skill_folds": {
+    "materialization": "metadata_only",
+    "folds": ["holdout_pick", "holdout_stack", "holdout_push"],
+    "media_duplicated": false
+  },
+  "padding": {
+    "candidate_horizons": [10, 16, 50],
+    "mask_feature": "action_is_pad",
+    "mask_dtype": "bool",
+    "padding_value": "zero_vector",
+    "masked_loss_required": true
+  },
+  "normalization": {
+    "source_view": "accepted_primary_train_only",
+    "canonical": "pooled_natural_training_frame_frequency",
+    "validation_test_excluded_influence": false
+  },
+  "output_roots": {
+    "production": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2",
+    "archive": "/root/autodl-tmp/langmani-external/phase2b6-v2-archive",
+    "restore": "/root/autodl-tmp/langmani-external/phase2b6-v2-restore-scratch",
+    "frozen_v1_read_only": "/root/autodl-tmp/langmani-external/phase2b6/production_v1"
+  },
+  "retry_policy": {
+    "maximum_identical_infrastructure_retries": 1,
+    "physical_quality_retries": 0,
+    "retain_first_attempt": true
+  },
+  "thresholds": {
+    "overall_accepted_source_rate_minimum": 0.997,
+    "per_task_accepted_source_rate_minimum": 0.995,
+    "maximum_exclusions_per_task": 5,
+    "maximum_exclusions_total": 9,
+    "unclassified_failures": 0,
+    "invalid_actions": 0,
+    "non_finite_actions": 0,
+    "accepted_episode_simulator_errors": 0,
+    "accepted_episode_alignment_failures": 0,
+    "accepted_episode_writer_readback_failures": 0
+  },
+  "archive": {
+    "format": "deterministic_tar_gz",
+    "content_address": "sha256",
+    "prefix": "LangManiOfficialMultiSkill-v2",
+    "symlinks_allowed": false,
+    "primary_and_archive_must_be_distinct": true
+  },
+  "stop_rules": [
+    "prior_evidence_changed",
+    "source_bytes_changed",
+    "vulkan_preflight_failure",
+    "action_identity_missing",
+    "unclassified_failure",
+    "per_task_exclusions_above_5",
+    "total_exclusions_above_9",
+    "accepted_alignment_failure",
+    "privileged_data_leak",
+    "lerobot_readback_failure",
+    "primary_split_overlap",
+    "archive_or_restore_failure"
+  ],
+  "authorization": {
+    "training_permitted": false,
+    "optimizer_creation_permitted": false,
+    "backward_pass_permitted": false,
+    "student_policy_training_started": false,
+    "optimizer_steps": 0
+  }
+}

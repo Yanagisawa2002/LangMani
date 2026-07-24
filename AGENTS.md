@@ -178,6 +178,17 @@ hard-stopped. `source_episode_exclusion_review_eligible=true` is not an exclusio
 authorization. Clean production, production resume, dataset acceptance, and all training remain
 false.
 
+Phase 2B.6-v2 is the separately authorized clean, instrumented official-source production. It
+starts again from source episode 0 under the recovered Vulkan launcher and the preregistered
+`langmani-phase2b6-v2-exclusion-policy-v1`. Every one of the 3,000 source identities must receive
+an explicit terminal classification; no Phase 2B.6 partial replay record may be reused. A source
+may be absent from policy data only as an explicitly retained deterministic-physical or
+source-contract exclusion. Infrastructure receives at most one identical recorded retry, while
+an unclassified failure, more than five exclusions for one task, more than nine overall, any
+accepted-data integrity failure, leakage, or archive/restore failure stops the phase. Dataset
+acceptance may create later training eligibility only; ACT, SmolVLA, VLA-JEPA, every optimizer,
+backward pass, and actual training remain unauthorized in this phase.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
@@ -337,6 +348,9 @@ python environment/verify_v2_phase2b.py --help
 
 # Phase 2B.3 compact Result C evidence verification (no simulator execution)
 python environment/verify_v2_phase2b3.py
+
+# Phase 2B.6-v2 compact Result A/B/C/D artifact verification (no simulator execution)
+python environment/verify_v2_phase2b6_v2.py --help
 
 # Phase 2B.3.1-RR compact Result D evidence verification (no simulator execution)
 python environment/verify_v2_phase2b3_rr.py
@@ -590,6 +604,12 @@ The exact environment creation commands are maintained in `README.md`.
   source-exclusion policy review. It must not exclude the source, revise success/stability rules,
   resume Phase 2B.6, reuse the 1,938 partial episodes, run Modes B/C after the Result B hard stop,
   create LeRobot/package/archive outputs, or authorize any model or optimizer activity.
+- Phase 2B.6-v2 is that separately authorized versioned source-policy and clean-production
+  identity. It must use `configs/langmani_v2/phase2b6_v2_exclusion_policy.yaml`, preserve all
+  source identities, start every task at source episode 0, and keep the old partial root read-only.
+  It may continue after an explicitly classified physical exclusion only while the frozen per-task
+  and total exclusion thresholds remain satisfied. It must not repair, replace, shorten, retry, or
+  silently discard a physical failure, and it must never start model training after a dataset pass.
 
 ## Definition of done
 

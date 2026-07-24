@@ -831,6 +831,13 @@ def _load_inventory(production_root: Path) -> list[dict[str, object]]:
 
 
 def _load_assignments(production_root: Path) -> list[dict[str, object]]:
+    accepted_manifest = production_root / "primary" / "metadata" / "accepted_episode_manifest.json"
+    if accepted_manifest.is_file():
+        document = _read_json(accepted_manifest)
+        rows = document.get("episodes")
+        if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
+            raise Phase2B6RuntimeError("accepted episode manifest is malformed")
+        return cast(list[dict[str, object]], rows)
     document = _read_json(production_root / "work" / "primary_split_manifest.json")
     rows = document.get("assignments")
     if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
@@ -936,6 +943,7 @@ def _replay_one(
     replayed_actions = 0
     terminated_count = 0
     truncated_count = 0
+    canonical_success_action_indices: list[int] = []
     for frame_index, action in enumerate(actions):
         observation = base.get_obs()
         policy_rgb = _extract_rgb(observation)
@@ -947,6 +955,8 @@ def _replay_one(
         _, _, terminated, truncated, info = env.step(action)
         replayed_actions += 1
         replay_success = _scalar_bool(info["success"])
+        if replay_success:
+            canonical_success_action_indices.append(frame_index)
         terminated_count += int(_scalar_bool(terminated))
         truncated_count += int(_scalar_bool(truncated))
     terminal_rgb = _extract_rgb(base.get_obs())
@@ -961,6 +971,28 @@ def _replay_one(
     record = {
         "source_success": source_success,
         "replay_success": replay_success,
+        "canonical_success_action_indices": canonical_success_action_indices,
+        "first_canonical_success_action_index": (
+            canonical_success_action_indices[0] if canonical_success_action_indices else None
+        ),
+        "maximum_consecutive_canonical_success_steps": max(
+            (
+                len(run)
+                for run in np.split(
+                    np.asarray(canonical_success_action_indices, dtype=np.int64),
+                    np.where(np.diff(canonical_success_action_indices) != 1)[0] + 1,
+                )
+                if len(run)
+            ),
+            default=0,
+        ),
+        "trailing_canonical_success_steps": (
+            len(actions) - canonical_success_action_indices[0]
+            if canonical_success_action_indices
+            and canonical_success_action_indices
+            == list(range(canonical_success_action_indices[0], len(actions)))
+            else 0
+        ),
         "categorical_outcome_agreement": source_success is replay_success,
         "source_action_count": len(actions),
         "replayed_action_count": replayed_actions,
@@ -1548,9 +1580,19 @@ def compute_dataset_statistics(
 ) -> tuple[dict[str, object], dict[str, object]]:
     """Compute split statistics and canonical normalization from primary train only."""
 
+    accepted_manifest = production_root / "primary" / "metadata" / "accepted_episode_manifest.json"
     assignments = _load_assignments(production_root)
-    replay_document = _read_json(production_root / "primary" / "metadata" / "replay_inventory.json")
-    replay_rows = cast(list[dict[str, object]], replay_document["episodes"])
+    replay_inventory = production_root / "primary" / "metadata" / "replay_inventory.json"
+    if replay_inventory.is_file():
+        replay_document = _read_json(replay_inventory)
+        replay_rows = cast(list[dict[str, object]], replay_document["episodes"])
+    else:
+        replay_rows = [
+            row
+            for row in _read_jsonl(production_root / "work" / "production_attempts.jsonl")
+            if row.get("terminal_attempt") is True
+            and row.get("classification") == "ACCEPTED_REPLAY"
+        ]
     replay_by_identity = {str(row["derived_episode_identity"]): row for row in replay_rows}
     state_moments: dict[tuple[str, str], _Moments] = defaultdict(lambda: _Moments(9))
     action_moments: dict[tuple[str, str], _Moments] = defaultdict(lambda: _Moments(8))
@@ -1675,7 +1717,9 @@ def compute_dataset_statistics(
         {
             "schema_version": "langmani-v2-phase2b6-normalization-v0",
             "canonical_identity": (
-                "LangManiOfficialMultiSkill-v1-primary-train-pooled-natural-frame-v0"
+                "LangManiOfficialMultiSkill-v2-primary-train-pooled-natural-frame-v0"
+                if accepted_manifest.is_file()
+                else "LangManiOfficialMultiSkill-v1-primary-train-pooled-natural-frame-v0"
             ),
             "source_view": "primary_train_only",
             "weighting": "natural_training_frame_frequency",

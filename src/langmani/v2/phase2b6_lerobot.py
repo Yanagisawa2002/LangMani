@@ -38,9 +38,7 @@ from langmani.v2.phase2b5 import (
 )
 from langmani.v2.phase2b5_runtime import ACTION_NAMES
 from langmani.v2.phase2b6 import (
-    DATASET_PACKAGE_ID,
     EXPECTED_EPISODES,
-    EXPECTED_TRANSITIONS,
     PRIMARY_SPLITS,
     TASK_IDS,
     apply_visual_shift,
@@ -185,6 +183,13 @@ def _array_sha256(value: object, *, dtype: np.dtype[Any] | None = None) -> str:
 
 
 def _load_assignments(production_root: Path) -> list[dict[str, object]]:
+    accepted_manifest = production_root / "primary" / "metadata" / "accepted_episode_manifest.json"
+    if accepted_manifest.is_file():
+        document = _read_json(accepted_manifest)
+        rows = document.get("episodes")
+        if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
+            raise Phase2B6LeRobotError("accepted episode manifest is malformed")
+        return cast(list[dict[str, object]], rows)
     document = _read_json(production_root / "work" / "primary_split_manifest.json")
     rows = document.get("assignments")
     if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
@@ -193,11 +198,27 @@ def _load_assignments(production_root: Path) -> list[dict[str, object]]:
 
 
 def _load_replay_rows(production_root: Path) -> list[dict[str, object]]:
-    document = _read_json(production_root / "primary" / "metadata" / "replay_inventory.json")
-    rows = document.get("episodes")
-    if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
-        raise Phase2B6LeRobotError("replay inventory is malformed")
-    return cast(list[dict[str, object]], rows)
+    inventory = production_root / "primary" / "metadata" / "replay_inventory.json"
+    if inventory.is_file():
+        document = _read_json(inventory)
+        rows = document.get("episodes")
+        if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
+            raise Phase2B6LeRobotError("replay inventory is malformed")
+        return cast(list[dict[str, object]], rows)
+    attempts = production_root / "work" / "production_attempts.jsonl"
+    rows: list[dict[str, object]] = []
+    with attempts.open(encoding="utf-8") as stream:
+        for line in stream:
+            value = json.loads(line)
+            if (
+                isinstance(value, dict)
+                and value.get("terminal_attempt") is True
+                and value.get("classification") == "ACCEPTED_REPLAY"
+            ):
+                rows.append(cast(dict[str, object], value))
+    if not rows:
+        raise Phase2B6LeRobotError("accepted replay inventory is empty")
+    return rows
 
 
 def _base_features() -> dict[str, dict[str, object]]:
@@ -309,12 +330,12 @@ def _validate_npz(
     return rgb, state, action, timestamp
 
 
-def _split_repo_id(task_id: str, split: str) -> str:
-    return f"langmani/official-{_task_slug(task_id)}-v1-{split.replace('_', '-')}"
+def _split_repo_id(task_id: str, split: str, *, version: str = "v1") -> str:
+    return f"langmani/official-{_task_slug(task_id)}-{version}-{split.replace('_', '-')}"
 
 
-def _visual_repo_id(task_id: str) -> str:
-    return f"langmani/official-{_task_slug(task_id)}-v1-visual-shift"
+def _visual_repo_id(task_id: str, *, version: str = "v1") -> str:
+    return f"langmani/official-{_task_slug(task_id)}-{version}-visual-shift"
 
 
 def convert_task_split_roots(
@@ -331,8 +352,17 @@ def convert_task_split_roots(
         set(_base_features()) | {"task", "episode_index", "frame_index", "timestamp"}
     )
     assignments = _load_assignments(production_root)
+    source_assignments = cast(
+        list[dict[str, object]],
+        _read_json(production_root / "work" / "primary_split_manifest.json")["assignments"],
+    )
     replay_rows = _load_replay_rows(production_root)
     replay_by_identity = {str(row["derived_episode_identity"]): row for row in replay_rows}
+    expected_episodes = len(replay_rows)
+    expected_frames = sum(_as_int(row["source_action_count"]) for row in replay_rows)
+    version = (
+        "v2" if spec.get("derived_dataset_version") == "LangManiOfficialMultiSkill-v2" else "v1"
+    )
     primary = production_root / "primary"
     task_reports: dict[str, object] = {}
     converted_episodes = 0
@@ -348,6 +378,17 @@ def convert_task_split_roots(
                     if row["task_id"] == task_id and row["primary_split"] == split
                 ],
                 key=lambda row: _as_int(row["source_episode_id"]),
+            )
+            source_rows = [
+                row
+                for row in source_assignments
+                if row["task_id"] == task_id and row["primary_split"] == split
+            ]
+            accepted_source_ids = {_as_int(row["source_episode_id"]) for row in rows}
+            excluded_source_ids = sorted(
+                _as_int(row["source_episode_id"])
+                for row in source_rows
+                if _as_int(row["source_episode_id"]) not in accepted_source_ids
             )
             final_root = primary / "task_roots" / _task_slug(task_id) / "splits" / split
             staging_root = final_root.parent / f".{split}.partial"
@@ -369,7 +410,7 @@ def convert_task_split_roots(
                     f"preserved partial conversion requires review: {staging_root}"
                 )
             staging_root.parent.mkdir(parents=True, exist_ok=True)
-            repo_id = _split_repo_id(task_id, split)
+            repo_id = _split_repo_id(task_id, split, version=version)
             dataset = _writer(repo_id=repo_id, root=staging_root)
             episode_index_rows: list[dict[str, object]] = []
             global_frame = 0
@@ -420,7 +461,7 @@ def convert_task_split_roots(
                                 {
                                     "phase": "lerobot_conversion",
                                     "completed_episodes": converted_episodes,
-                                    "total_episodes": EXPECTED_EPISODES,
+                                    "total_episodes": expected_episodes,
                                     "elapsed_seconds": time.perf_counter() - started,
                                     "task_id": task_id,
                                     "split": split,
@@ -442,7 +483,10 @@ def convert_task_split_roots(
                     "skill_family": CANDIDATE_TASKS[task_id].skill_family,
                     "primary_split": split,
                     "repo_id": repo_id,
+                    "source_episode_count": len(source_rows),
                     "episode_count": len(rows),
+                    "excluded_source_count": len(excluded_source_ids),
+                    "excluded_source_episode_ids": excluded_source_ids,
                     "frame_count": global_frame,
                     "features": {
                         IMAGE_FEATURE: {"dtype": "video", "shape": list(IMAGE_SHAPE)},
@@ -479,9 +523,25 @@ def convert_task_split_roots(
             "skill_family": CANDIDATE_TASKS[task_id].skill_family,
             "dataset_identity": task_spec["dataset_id"],
             "container_relative_path": task_container.relative_to(primary).as_posix(),
+            "source_episode_count": sum(
+                _as_int(cast(Mapping[str, object], report)["source_episode_count"])
+                for report in split_reports.values()
+            ),
             "episode_count": sum(
                 _as_int(cast(Mapping[str, object], report)["episode_count"])
                 for report in split_reports.values()
+            ),
+            "excluded_source_count": sum(
+                _as_int(cast(Mapping[str, object], report)["excluded_source_count"])
+                for report in split_reports.values()
+            ),
+            "excluded_source_episode_ids": sorted(
+                _as_int(episode_id)
+                for report in split_reports.values()
+                for episode_id in cast(
+                    Sequence[object],
+                    cast(Mapping[str, object], report)["excluded_source_episode_ids"],
+                )
             ),
             "frame_count": sum(
                 _as_int(cast(Mapping[str, object], report)["frame_count"])
@@ -525,12 +585,12 @@ def convert_task_split_roots(
                     _as_int(cast(Mapping[str, object], report)["episode_count"])
                     for report in task_reports.values()
                 )
-                == EXPECTED_EPISODES
+                == expected_episodes
                 and sum(
                     _as_int(cast(Mapping[str, object], report)["frame_count"])
                     for report in task_reports.values()
                 )
-                == EXPECTED_TRANSITIONS
+                == expected_frames
             ),
         }
     )
@@ -555,6 +615,9 @@ def convert_visual_shift_roots(
     assignments = _load_assignments(production_root)
     replay_rows = _load_replay_rows(production_root)
     replay_by_identity = {str(row["derived_episode_identity"]): row for row in replay_rows}
+    version = (
+        "v2" if spec.get("derived_dataset_version") == "LangManiOfficialMultiSkill-v2" else "v1"
+    )
     primary = production_root / "primary"
     task_reports: dict[str, object] = {}
     total_changed_values = 0
@@ -581,7 +644,7 @@ def convert_visual_shift_roots(
                 f"preserved partial visual conversion requires review: {staging_root}"
             )
         staging_root.parent.mkdir(parents=True, exist_ok=True)
-        repo_id = _visual_repo_id(task_id)
+        repo_id = _visual_repo_id(task_id, version=version)
         dataset = _writer(repo_id=repo_id, root=staging_root, visual_shift=True)
         episode_index_rows: list[dict[str, object]] = []
         global_frame = 0
@@ -665,7 +728,7 @@ def convert_visual_shift_roots(
                 "payload_tree_digest_before_sidecar": payload_tree["tree_digest"],
                 "payload_file_count_before_sidecar": payload_tree["file_count"],
                 "payload_bytes_before_sidecar": payload_tree["total_bytes"],
-                "passed": len(rows) == 50 and changed_values > 0,
+                "passed": bool(rows) and changed_values > 0,
             }
         )
         _write_json(staging_root / "langmani_phase2b6_visual_shift_manifest.json", sidecar)
@@ -739,6 +802,16 @@ def build_unified_package(
         "source_schema_result.json": evidence_root / "source_schema_result.json",
         "observation_action_contract.json": evidence_root / "observation_action_contract.json",
     }
+    for optional_name in (
+        "accepted_episode_manifest.json",
+        "excluded_episode_manifest.json",
+        "exclusion_policy_manifest.json",
+        "explicit_sub_gate_summary.json",
+        "primary_split_counts.json",
+    ):
+        optional_source = evidence_root / optional_name
+        if optional_source.is_file():
+            copied[optional_name] = optional_source
     metadata_hashes: dict[str, str] = {}
     for name, source in copied.items():
         destination = metadata / name
@@ -812,7 +885,7 @@ def build_unified_package(
     unified = fingerprinted(
         {
             "schema_version": "langmani-v2-phase2b6-unified-multi-root-v0",
-            "package_identity": DATASET_PACKAGE_ID,
+            "package_identity": spec["derived_dataset_version"],
             "materialization": "immutable_task_and_split_multi_root_index",
             "primary_root": primary.as_posix(),
             "primary_root_committed": False,
@@ -832,9 +905,10 @@ def build_unified_package(
             },
             "source_task_roots_modified": False,
             "destructive_concatenation": False,
-            "episode_count": EXPECTED_EPISODES,
-            "frame_count": EXPECTED_TRANSITIONS,
-            "visual_shift_episode_count": 150,
+            "source_episode_count": EXPECTED_EPISODES,
+            "episode_count": task_roots["episode_count"],
+            "frame_count": task_roots["frame_count"],
+            "visual_shift_episode_count": visual["episode_count"],
             "student_policy_training_started": False,
             "optimizer_steps": 0,
             "passed": (
@@ -1063,6 +1137,8 @@ def run_full_readback(
 
     primary = production_root / "primary"
     task_roots = _read_json(evidence_root / "task_specific_root_manifests.json")
+    expected_primary_episodes = _as_int(task_roots["episode_count"])
+    expected_primary_frames = _as_int(task_roots["frame_count"])
     root_reports: list[dict[str, object]] = []
     visual_root_reports: list[dict[str, object]] = []
     equality_rows: list[dict[str, object]] = []
@@ -1090,6 +1166,7 @@ def run_full_readback(
                 flush=True,
             )
     visual = _read_json(evidence_root / "visual_shift_manifest.json")
+    expected_visual_episodes = _as_int(visual["episode_count"])
     for task_id, raw_sidecar in cast(Mapping[str, object], visual["task_roots"]).items():
         sidecar = cast(Mapping[str, object], raw_sidecar)
         root = primary / "visual_shift_roots" / _task_slug(task_id)
@@ -1176,10 +1253,10 @@ def run_full_readback(
             "passed": (
                 len(root_reports) == 15
                 and len(visual_root_reports) == 3
-                and total_episodes == EXPECTED_EPISODES
-                and total_frames == EXPECTED_TRANSITIONS
-                and visual_episodes == 150
-                and decoded_primary_frames == EXPECTED_TRANSITIONS
+                and total_episodes == expected_primary_episodes
+                and total_frames == expected_primary_frames
+                and visual_episodes == expected_visual_episodes
+                and decoded_primary_frames == expected_primary_frames
                 and decoded_visual_frames == visual_frames
                 and all(report["passed"] is True for report in all_reports)
             ),
@@ -1252,7 +1329,12 @@ def run_source_to_derived_verification(
     for task_id in TASK_IDS:
         h5_path = source_root / "expanded" / task_id / "motionplanning" / "trajectory.h5"
         with h5py.File(h5_path, "r") as trajectories:
-            for source_episode_id in range(1000):
+            source_episode_ids = sorted(
+                _as_int(row["source_episode_id"])
+                for row in assignments
+                if row["task_id"] == task_id
+            )
+            for source_episode_id in source_episode_ids:
                 source_actions = np.asarray(
                     trajectories[f"traj_{source_episode_id}"]["actions"],
                     dtype=np.float32,
@@ -1301,7 +1383,7 @@ def run_source_to_derived_verification(
             "failures": failures,
             "student_policy_training_started": False,
             "optimizer_steps": 0,
-            "passed": checked == EXPECTED_EPISODES and not failures,
+            "passed": checked == len(assignments) and not failures,
         }
     )
     _write_json(evidence_root / "source_to_derived_verifier_result.json", report)
@@ -1437,7 +1519,8 @@ def create_archive(
         raise Phase2B6LeRobotError("archive location must be outside the primary dataset")
     tree = file_tree_manifest(primary)
     tree_digest = str(tree["tree_digest"]).removeprefix("sha256:")
-    archive_path = archive_directory / f"{DATASET_PACKAGE_ID}-{tree_digest}.tar.gz"
+    package_id = str(spec["derived_dataset_version"])
+    archive_path = archive_directory / f"{package_id}-{tree_digest}.tar.gz"
     if archive_path.exists():
         raise Phase2B6LeRobotError(f"immutable archive already exists: {archive_path}")
     created = create_deterministic_tar_gz(
@@ -1449,7 +1532,7 @@ def create_archive(
         {
             "schema_version": "langmani-v2-phase2b6-archive-manifest-v0",
             "created_at_utc": _timestamp(),
-            "package_identity": DATASET_PACKAGE_ID,
+            "package_identity": package_id,
             "primary_dataset_location": primary.as_posix(),
             "primary_tree_digest": tree["tree_digest"],
             "primary_file_count": tree["file_count"],
@@ -1497,6 +1580,8 @@ def restore_and_validate(
     )
     package_root = destination / str(archive["archive_prefix"])
     task_manifest = _read_json(package_root / "metadata" / "task_specific_root_manifests.json")
+    expected_inventory_episodes = _as_int(task_manifest["episode_count"])
+    expected_inventory_frames = _as_int(task_manifest["frame_count"])
     sampled: list[dict[str, object]] = []
     inventory_episode_count = 0
     inventory_frame_count = 0
@@ -1570,8 +1655,8 @@ def restore_and_validate(
             "passed": (
                 restored["passed"] is True
                 and restored["restored_tree_digest"] == archive["primary_tree_digest"]
-                and inventory_episode_count == EXPECTED_EPISODES
-                and inventory_frame_count == EXPECTED_TRANSITIONS
+                and inventory_episode_count == expected_inventory_episodes
+                and inventory_frame_count == expected_inventory_frames
                 and len(sampled) == 45
                 and all(row["passed"] is True for row in sampled)
             ),

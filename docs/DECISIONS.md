@@ -3482,3 +3482,33 @@ decision. No source was excluded. `phase2b6_clean_reproduction_eligible=false`,
 `accepted_multiskill_dataset_validated=false`, every ACT/SmolVLA/VLA-JEPA eligibility and
 authorization field remains false, no policy or optimizer was loaded or created, no backward pass
 ran, and `optimizer_steps=0`.
+
+## D-136 - Freeze Phase 2B.6-v2 as a clean production with versioned exclusions
+
+Phase 2B.6-v2 starts only from immutable Phase 2B.6.1-v2 Result B commit
+`18c31f8bc6839d80b465ad73894fa886fa6c8dfb`. It is a new production identity, not a resume or
+amendment of Phase 2B.6. The old 1,938-record partial root remains read-only and no derived record
+from it may enter the v2 accepted package.
+
+The preregistered `langmani-phase2b6-v2-exclusion-policy-v1` retains five explicit source classes:
+accepted replay, deterministic physical exclusion, source-contract exclusion, retryable
+infrastructure, and unclassified failure. Every one of the 3,000 official source identities must
+receive a terminal classification. A physical failure is never repaired, shortened, replaced, or
+retried. Infrastructure permits at most one identical retry and retains the first attempt. One
+unclassified failure stops production.
+
+Official StackCube episode 938 remains exact `traj_938`, seed 962, with action SHA-256
+`5fc50bc7beeb91e55b2eeccf3f016414811d314142e7a80ad6037d4f83d92eb8`. The prior forensic Result B
+makes it eligible for deterministic-physical exclusion but does not remove it automatically. The
+v2 producer must run it once normally and may exclude it only if the explicit final-success result
+is consistent with the immutable forensic evidence.
+
+Dataset thresholds are frozen before the first replay: at least 99.7% overall and 99.5% per-task
+accepted-source rates, three skill families, at most five exclusions per task and nine overall,
+and zero unclassified, invalid-action, non-finite-action, accepted-simulator, accepted-alignment,
+writer/readback, privileged-field, leakage, or restore failure. Excluded sources remain in the
+source inventory and are never replacement sampled.
+
+Even a Result A sets only ACT-baseline, SmolVLA, and VLA-JEPA dataset eligibility. Their training
+authorization remains false. No model or checkpoint is loaded, no optimizer is created, no
+backward pass runs, `student_policy_training_started=false`, and `optimizer_steps=0`.

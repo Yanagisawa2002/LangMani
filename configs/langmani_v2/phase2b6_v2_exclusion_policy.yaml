@@ -1,0 +1,88 @@
+{
+  "schema_version": "langmani-v2-phase2b6-v2-exclusion-policy-v0",
+  "policy_id": "langmani-phase2b6-v2-exclusion-policy-v1",
+  "frozen_before_production": true,
+  "classes": {
+    "ACCEPTED_REPLAY": {
+      "accepted": true,
+      "requirements": [
+        "source_identity_proven",
+        "action_identity_exact",
+        "finite_in_bound_actions",
+        "environment_construction_passed",
+        "reset_identity_passed",
+        "all_actions_executed",
+        "zero_simulator_exceptions",
+        "final_canonical_success_true",
+        "source_replay_outcome_agreement",
+        "observation_action_alignment_exact",
+        "rgb_state_complete",
+        "serialization_passed"
+      ]
+    },
+    "EXCLUDED_DETERMINISTIC_PHYSICAL": {
+      "accepted": false,
+      "retry_permitted": false,
+      "description": "Exact source actions completed in a valid environment but a frozen physical or final-success gate failed unambiguously."
+    },
+    "EXCLUDED_SOURCE_CONTRACT": {
+      "accepted": false,
+      "retry_permitted": false,
+      "description": "Source identity, reset metadata, schema, or action identity is missing or invalid."
+    },
+    "RETRYABLE_INFRASTRUCTURE": {
+      "accepted": false,
+      "maximum_retries": 1,
+      "identical_configuration_required": true,
+      "first_attempt_retained": true,
+      "allowed_reasons": [
+        "environment_construction",
+        "temporary_vulkan_initialization",
+        "transient_file_access",
+        "temporary_writer_initialization",
+        "temporary_storage_access"
+      ]
+    },
+    "UNCLASSIFIED_FAILURE": {
+      "accepted": false,
+      "hard_stop": true
+    }
+  },
+  "registered_exclusions": [
+    {
+      "task_id": "StackCube-v1",
+      "source_episode_id": 938,
+      "source_trajectory": "traj_938",
+      "seed": 962,
+      "action_sha256": "sha256:5fc50bc7beeb91e55b2eeccf3f016414811d314142e7a80ad6037d4f83d92eb8",
+      "eligible_class": "EXCLUDED_DETERMINISTIC_PHYSICAL",
+      "forensic_result": "RESULT_B",
+      "forensic_result_fingerprint": "sha256:30b7b6226d2762a248edc1ec9d9f68030f38bd1b1e385f00a3534c7544af84de",
+      "forensic_artifact_manifest_fingerprint": "sha256:c49558caa9f04d445f8e34acd6e71d17b0339a82c4a5273ac8f8827f35e15a6e",
+      "expected_first_failed_sub_gate": "canonical_terminal_success_gate",
+      "automatic_exclusion": false,
+      "normal_v2_attempt_required": true
+    }
+  ],
+  "thresholds": {
+    "overall_accepted_source_rate_minimum": 0.997,
+    "per_task_accepted_source_rate_minimum": 0.995,
+    "accepted_skill_families_required": 3,
+    "maximum_exclusions_per_task": 5,
+    "maximum_exclusions_total": 9,
+    "unclassified_failures": 0,
+    "invalid_actions": 0,
+    "non_finite_actions": 0,
+    "accepted_episode_simulator_errors": 0,
+    "accepted_episode_alignment_failures": 0,
+    "accepted_episode_writer_readback_failures": 0
+  },
+  "invariants": {
+    "canonical_final_step_success_requirement_changed": false,
+    "physical_quality_retry_permitted": false,
+    "silent_discard_permitted": false,
+    "replacement_sampling_permitted": false,
+    "failure_training_corpus_created": false,
+    "training_authorized": false
+  }
+}

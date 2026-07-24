@@ -115,6 +115,41 @@ def load_production_spec(path: str | Path) -> dict[str, Any]:
     if not isinstance(loaded, dict):
         raise Phase2B6ContractError("production specification must contain one object")
     spec = loaded
+    if spec.get("schema_version") == "langmani-v2-phase2b6-v2-production-spec-v0":
+        if spec.get("derived_dataset_version") != "LangManiOfficialMultiSkill-v2":
+            raise Phase2B6ContractError("v2 derived dataset identity changed")
+        v2_authorization = spec.get("source_authorization")
+        if not isinstance(v2_authorization, Mapping):
+            raise Phase2B6ContractError("v2 source authorization is malformed")
+        if (
+            v2_authorization.get("source_commit") != "18c31f8bc6839d80b465ad73894fa886fa6c8dfb"
+            or v2_authorization.get("target_branch")
+            != "codex/langmani-v2-phase2b6-v2-instrumented-production"
+        ):
+            raise Phase2B6ContractError("v2 Git authorization changed")
+        v2_tasks = spec.get("tasks")
+        if not isinstance(v2_tasks, Mapping) or tuple(v2_tasks) != TASK_IDS:
+            raise Phase2B6ContractError("v2 selected task order changed")
+        v2_totals = spec.get("expected_totals")
+        if not isinstance(v2_totals, Mapping) or (
+            v2_totals.get("source_episodes") != EXPECTED_EPISODES
+            or v2_totals.get("source_transitions") != EXPECTED_TRANSITIONS
+        ):
+            raise Phase2B6ContractError("v2 source totals changed")
+        v2_phase_authorization = spec.get("authorization")
+        if not isinstance(v2_phase_authorization, Mapping) or any(
+            v2_phase_authorization.get(key) is not False
+            for key in (
+                "training_permitted",
+                "optimizer_creation_permitted",
+                "backward_pass_permitted",
+                "student_policy_training_started",
+            )
+        ):
+            raise Phase2B6ContractError("v2 production specification opened model work")
+        spec["_spec_path"] = spec_path.as_posix()
+        spec["_spec_sha256"] = "sha256:" + sha256_file(spec_path)
+        return spec
     if spec.get("schema_version") != SPEC_SCHEMA:
         raise Phase2B6ContractError("production specification schema changed")
     if spec.get("derived_dataset_version") != DATASET_PACKAGE_ID:
