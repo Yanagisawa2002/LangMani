@@ -284,9 +284,41 @@ class Phase2CAOptimizationConfig:
             raise Phase2CAContractError("optimization config contains an unknown task")
         if set(self.target_samples_by_task) != set(self.effective_passes_by_task):
             raise Phase2CAContractError("sample and effective-pass task sets differ")
-        expected_steps = math.ceil(sum(self.target_samples_by_task.values()) / self.batch_size)
+        tasks = set(self.target_samples_by_task)
+        if len(tasks) == 1:
+            task_id = next(iter(tasks))
+            expected_samples = TRAIN_FRAMES[task_id] * TARGET_EFFECTIVE_PASSES
+            if self.target_samples_by_task[task_id] != expected_samples:
+                raise Phase2CAContractError(
+                    "task-specific sample budget must be exactly 20 accepted-data passes"
+                )
+            expected_steps = (
+                math.ceil(TRAIN_FRAMES[task_id] / self.batch_size) * TARGET_EFFECTIVE_PASSES
+            )
+        elif tasks == set(TASK_IDS):
+            if self.batch_size % len(TASK_IDS):
+                raise Phase2CAContractError(
+                    "shared ACT batch size must preserve exact per-batch 1/3 sampling"
+                )
+            budgets = set(self.target_samples_by_task.values())
+            per_task_batch = self.batch_size // len(TASK_IDS)
+            if len(budgets) != 1 or next(iter(budgets)) % per_task_batch:
+                raise Phase2CAContractError(
+                    "shared ACT sample budget must end on an exact balanced batch"
+                )
+            expected_steps = next(iter(budgets)) // per_task_batch
+        else:
+            raise Phase2CAContractError(
+                "optimization config must cover one task or all three tasks"
+            )
         if self.training_steps != expected_steps:
             raise Phase2CAContractError("training steps do not match the effective sample budget")
+        expected_passes = {
+            task_id: sample_count / TRAIN_FRAMES[task_id]
+            for task_id, sample_count in self.target_samples_by_task.items()
+        }
+        if dict(self.effective_passes_by_task) != expected_passes:
+            raise Phase2CAContractError("effective passes disagree with target sample counts")
 
     def to_dict(self) -> dict[str, object]:
         payload = asdict(self)
@@ -388,18 +420,25 @@ def primary_optimization_config(
 
     kind = ModelKind(model)
     if kind is ModelKind.SHARED:
+        if batch_size % len(TASK_IDS):
+            raise Phase2CAContractError(
+                "shared ACT batch size must be divisible by the three task families"
+            )
         total_per_task_budget = sum(
             TRAIN_FRAMES[task_id] * TARGET_EFFECTIVE_PASSES for task_id in TASK_IDS
         )
-        common_budget = math.ceil(total_per_task_budget / len(TASK_IDS))
+        requested_common_budget = math.ceil(total_per_task_budget / len(TASK_IDS))
+        per_task_batch = batch_size // len(TASK_IDS)
+        common_budget = math.ceil(requested_common_budget / per_task_batch) * per_task_batch
         samples = {task_id: common_budget for task_id in TASK_IDS}
+        steps = common_budget // per_task_batch
     else:
         task_id = str(kind.task_id)
         samples = {task_id: TRAIN_FRAMES[task_id] * TARGET_EFFECTIVE_PASSES}
+        steps = math.ceil(TRAIN_FRAMES[task_id] / batch_size) * TARGET_EFFECTIVE_PASSES
     passes = {
         task_id: sample_count / TRAIN_FRAMES[task_id] for task_id, sample_count in samples.items()
     }
-    steps = math.ceil(sum(samples.values()) / batch_size)
     schedule = checkpoint_schedule(steps)
     return Phase2CAOptimizationConfig(
         batch_size=batch_size,
@@ -411,6 +450,28 @@ def primary_optimization_config(
         dataloader_workers=dataloader_workers,
         seed=seed,
     )
+
+
+def validate_consumed_training_samples(
+    optimization: Phase2CAOptimizationConfig,
+    observed_samples: Mapping[str, int],
+) -> dict[str, int]:
+    """Fail closed unless a completed run consumed its exact frozen sample budget."""
+
+    observed = {task_id: int(observed_samples.get(task_id, 0)) for task_id in TASK_IDS}
+    if set(observed_samples) - set(TASK_IDS) or any(
+        isinstance(value, bool) or not isinstance(value, int) or value < 0
+        for value in observed_samples.values()
+    ):
+        raise Phase2CAContractError("training reported invalid task sample counts")
+    expected = {
+        task_id: int(optimization.target_samples_by_task.get(task_id, 0)) for task_id in TASK_IDS
+    }
+    if observed != expected:
+        raise Phase2CAContractError(
+            f"training sample budget mismatch: expected={expected}, observed={observed}"
+        )
+    return observed
 
 
 def task_onehot(task_id: str) -> tuple[float, float, float]:

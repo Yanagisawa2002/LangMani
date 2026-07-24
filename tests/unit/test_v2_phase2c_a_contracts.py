@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 import pytest
@@ -25,6 +26,7 @@ from langmani.v2.phase2c_a import (
     primary_optimization_config,
     task_condition_intervention,
     task_onehot,
+    validate_consumed_training_samples,
     validate_package_document,
 )
 from langmani.v2.policy import PolicyContext, PolicyContractError
@@ -106,11 +108,12 @@ def test_uniform_task_sampler_is_exact_over_three_batches() -> None:
 
 
 def test_shared_budget_preserves_uniform_sampling_and_records_actual_passes() -> None:
-    config = primary_optimization_config(ModelKind.SHARED, batch_size=128)
+    config = primary_optimization_config(ModelKind.SHARED, batch_size=408)
     assert len(set(config.target_samples_by_task.values())) == 1
     assert config.effective_passes_by_task["StackCube-v1"] < 20
     assert config.effective_passes_by_task["PushCube-v1"] > 20
-    assert config.training_steps == 27_769
+    assert config.training_steps == 8_712
+    assert config.target_samples_by_task == {task_id: 1_184_832 for task_id in TASK_IDS}
     assert config.checkpoint_steps[-1] == config.training_steps
 
 
@@ -120,6 +123,20 @@ def test_task_specific_steps_follow_each_accepted_frame_budget() -> None:
         task_id = str(kind.task_id)
         assert config.target_samples_by_task == {task_id: TRAIN_FRAMES[task_id] * 20}
         assert config.effective_passes_by_task == {task_id: 20.0}
+        assert config.training_steps == math.ceil(TRAIN_FRAMES[task_id] / 128) * 20
+
+
+def test_shared_primary_config_rejects_nondivisible_batch() -> None:
+    with pytest.raises(Phase2CAContractError, match="divisible"):
+        primary_optimization_config(ModelKind.SHARED, batch_size=128)
+
+
+def test_completed_training_requires_exact_consumed_sample_budget() -> None:
+    config = primary_optimization_config(ModelKind.PICK, batch_size=408)
+    expected = {"PickCube-v1": TRAIN_FRAMES["PickCube-v1"] * 20}
+    assert validate_consumed_training_samples(config, expected)["PickCube-v1"] == 1_092_160
+    with pytest.raises(Phase2CAContractError, match="sample budget mismatch"):
+        validate_consumed_training_samples(config, {"PickCube-v1": 1_091_000})
 
 
 def test_three_way_task_id_is_explicit_and_state_independent() -> None:

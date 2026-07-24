@@ -64,6 +64,7 @@ from langmani.v2.phase2c_a import (
     Phase2CAOptimizationConfig,
     Phase2CARunIdentity,
     UniformTaskBatchSampler,
+    validate_consumed_training_samples,
 )
 
 TASK_INDEX_KEY = "_phase2c_a_task_index"
@@ -1345,12 +1346,16 @@ def train_primary_act(
         metrics_stream.flush()
         os.fsync(metrics_stream.fileno())
     duration = last_time - start_time
+    effective_samples = validate_consumed_training_samples(
+        optimization,
+        sample_counts,
+    )
     outcome = TrainingOutcome(
         run_root=run_root.as_posix(),
         run_fingerprint=run_identity.run_fingerprint,
         final_step=target_steps,
         examples_processed=sum(sample_counts.values()),
-        effective_samples_by_task={task_id: sample_counts[task_id] for task_id in TASK_IDS},
+        effective_samples_by_task=effective_samples,
         checkpoint_records=tuple(checkpoint_records),
         training_duration_s=duration,
         peak_gpu_allocated_bytes=peak_allocated,
