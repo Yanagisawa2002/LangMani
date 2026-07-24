@@ -13,7 +13,7 @@ import json
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
 SOURCE_BRANCH: Final = "codex/langmani-v2-phase2b6-1-replay-failure-forensics"
 SOURCE_COMMIT: Final = "4f96a0f42dbaf0adb58c4c3aad79fdd7bccfde84"
@@ -279,13 +279,13 @@ def repeatability_passed(runs: Sequence[Mapping[str, object]]) -> bool:
 
     if len(runs) != 3 or any(run.get("passed") is not True for run in runs):
         return False
-    identities = {
+    identities: set[tuple[object, ...]] = {
         (
             run.get("icd_sha256"),
             run.get("vulkan_device_name"),
             run.get("render_device_name"),
             run.get("render_device_pci"),
-            tuple(run.get("action_shape", [])),
+            tuple(cast(Sequence[object], run.get("action_shape", []))),
             run.get("control_mode"),
             run.get("obs_mode"),
         )

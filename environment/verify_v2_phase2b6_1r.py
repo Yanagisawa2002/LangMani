@@ -23,12 +23,7 @@ from langmani.v2.phase2b6_1r import (
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ARTIFACT_ROOT = PROJECT_ROOT / "artifacts" / "langmani_v2" / "phase_2b6_1r"
 DEFAULT_OUTPUT = (
-    PROJECT_ROOT
-    / "outputs"
-    / "diagnostics"
-    / "v2"
-    / "phase2b6_1r"
-    / "verification.json"
+    PROJECT_ROOT / "outputs" / "diagnostics" / "v2" / "phase2b6_1r" / "verification.json"
 )
 REQUIRED_FILES = {
     "repository_environment_audit.json",
@@ -209,16 +204,11 @@ def verify(artifact_root: Path) -> dict[str, object]:
         "eligibility_matches_result": eligibility["phase2b6_1_forensic_restart_eligible"]
         is result_a,
         "authorization_recomputed": authorization == expected_authorization,
-        "forensic_restart_unauthorized": authorization[
-            "phase2b6_1_forensic_restart_authorized"
-        ]
+        "forensic_restart_unauthorized": authorization["phase2b6_1_forensic_restart_authorized"]
         is False,
-        "production_resume_unauthorized": authorization[
-            "phase2b6_production_resume_authorized"
-        ]
+        "production_resume_unauthorized": authorization["phase2b6_production_resume_authorized"]
         is False,
-        "accepted_dataset_closed": authorization["accepted_multiskill_dataset_validated"]
-        is False,
+        "accepted_dataset_closed": authorization["accepted_multiskill_dataset_validated"] is False,
         "training_closed": all(
             authorization[name] is False
             for name in (
@@ -248,9 +238,7 @@ def verify(artifact_root: Path) -> dict[str, object]:
         "stackcube_zero_step_construction_validated": recorded[
             "stackcube_zero_step_construction_validated"
         ],
-        "phase2b6_1_forensic_restart_eligible": recorded[
-            "phase2b6_1_forensic_restart_eligible"
-        ],
+        "phase2b6_1_forensic_restart_eligible": recorded["phase2b6_1_forensic_restart_eligible"],
         "phase2b6_1_forensic_restart_authorized": False,
         "phase2b6_production_resume_authorized": False,
         "accepted_multiskill_dataset_validated": False,

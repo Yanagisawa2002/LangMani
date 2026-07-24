@@ -92,10 +92,7 @@ def test_clean_environment_requires_explicit_primary_device_variables(tmp_path: 
         },
     )
     assert environment["VK_ICD_FILENAMES"] == contracts.PRIMARY_ICD_PATH
-    assert (
-        environment["__EGL_VENDOR_LIBRARY_FILENAMES"]
-        == contracts.EGL_VENDOR_PATH
-    )
+    assert environment["__EGL_VENDOR_LIBRARY_FILENAMES"] == contracts.EGL_VENDOR_PATH
     assert "VK_DRIVER_FILES" not in environment
     assert "DISPLAY" not in environment
     assert environment["CUDA_VISIBLE_DEVICES"] == "0"
@@ -115,12 +112,8 @@ def test_wrong_or_software_device_is_rejected() -> None:
         "can_render": True,
     }
     assert contracts.device_identity_matches(accepted)
-    assert not contracts.device_identity_matches(
-        {**accepted, "name": "llvmpipe (LLVM 19)"}
-    )
-    assert not contracts.device_identity_matches(
-        {**accepted, "name": "NVIDIA GeForce RTX 4090"}
-    )
+    assert not contracts.device_identity_matches({**accepted, "name": "llvmpipe (LLVM 19)"})
+    assert not contracts.device_identity_matches({**accepted, "name": "NVIDIA GeForce RTX 4090"})
     assert not contracts.device_identity_matches({**accepted, "is_cuda": False})
 
 

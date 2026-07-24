@@ -39,7 +39,6 @@ from langmani.v2.phase2b6_1r import (
     TARGET_BRANCH,
     TASK_ID,
     CandidateKind,
-    Phase2B61RContractError,
     authorization_state,
     candidate_by_id,
     candidate_protocol,
@@ -182,10 +181,8 @@ def _verify_artifact_manifest(root: Path) -> dict[str, object]:
             {
                 "path": relative,
                 "exists": path.is_file(),
-                "sha256_matches": path.is_file()
-                and sha256_file(path) == raw.get("sha256"),
-                "size_matches": path.is_file()
-                and path.stat().st_size == raw.get("size_bytes"),
+                "sha256_matches": path.is_file() and sha256_file(path) == raw.get("sha256"),
+                "size_matches": path.is_file() and path.stat().st_size == raw.get("size_bytes"),
             }
         )
     return {
@@ -221,10 +218,8 @@ def _verify_frozen_relevant_files(repo_root: Path, frozen_root: Path) -> dict[st
             {
                 "path": relative,
                 "exists": path.is_file(),
-                "sha256_matches": path.is_file()
-                and sha256_file(path) == raw.get("sha256"),
-                "size_matches": path.is_file()
-                and path.stat().st_size == raw.get("size_bytes"),
+                "sha256_matches": path.is_file() and sha256_file(path) == raw.get("sha256"),
+                "size_matches": path.is_file() and path.stat().st_size == raw.get("size_bytes"),
             }
         )
     target_npz = frozen_root / "work" / "raw" / "stackcube" / "episode_000938.npz"
@@ -333,7 +328,8 @@ def _disk_audit(paths: Sequence[Path]) -> dict[str, object]:
         "paths": rows,
         "minimum_required_free_bytes": 1024**3,
         "compact_diagnostics_only": True,
-        "passed": bool(rows) and all(row["free_bytes"] >= 1024**3 for row in rows),
+        "passed": bool(rows)
+        and all(int(row["free_bytes"]) >= 1024**3 for row in rows),
     }
 
 
@@ -412,10 +408,7 @@ def _ldconfig_inventory() -> tuple[list[str], dict[str, str]]:
             name, resolved = [part.strip() for part in stripped.split("=>", maxsplit=1)]
             soname = name.split()[0]
             sonames.setdefault(soname, resolved)
-            if any(
-                term in soname
-                for term in ("libvulkan", "libEGL", "libGLX", "libnvidia")
-            ):
+            if any(term in soname for term in ("libvulkan", "libEGL", "libGLX", "libnvidia")):
                 lines.append(stripped)
     return lines, sonames
 
@@ -439,7 +432,9 @@ def _icd_inventory(paths: Sequence[Path], sonames: Mapping[str, str]) -> list[di
     return rows
 
 
-def _egl_vendor_inventory(paths: Sequence[Path], sonames: Mapping[str, str]) -> list[dict[str, object]]:
+def _egl_vendor_inventory(
+    paths: Sequence[Path], sonames: Mapping[str, str]
+) -> list[dict[str, object]]:
     rows = []
     for path in sorted({candidate.resolve() for candidate in paths if candidate.is_file()}):
         document = _read_json(path)
@@ -598,12 +593,8 @@ def prepare_audit(
         raise Phase2B61RRuntimeError("evidence root must be new and empty")
     evidence_root.mkdir(parents=True, exist_ok=True)
     repository = _repository_audit(repo_root)
-    phase2b6 = _verify_artifact_manifest(
-        repo_root / "artifacts" / "langmani_v2" / "phase_2b6"
-    )
-    phase2b6_1 = _verify_artifact_manifest(
-        repo_root / "artifacts" / "langmani_v2" / "phase_2b6_1"
-    )
+    phase2b6 = _verify_artifact_manifest(repo_root / "artifacts" / "langmani_v2" / "phase_2b6")
+    phase2b6_1 = _verify_artifact_manifest(repo_root / "artifacts" / "langmani_v2" / "phase_2b6_1")
     frozen = _verify_frozen_relevant_files(repo_root, frozen_root)
     prior = fingerprinted(
         {
@@ -655,9 +646,7 @@ def prepare_audit(
                     "sha256": row["sha256"],
                     "size_bytes": row["size_bytes"],
                 }
-                for row in cast(
-                    Sequence[Mapping[str, object]], inventory["system_icd_manifests"]
-                )
+                for row in cast(Sequence[Mapping[str, object]], inventory["system_icd_manifests"])
             ],
             "system_icd_files_modified": False,
             "passed": True,
@@ -741,9 +730,7 @@ def _parse_vulkan_summary(text: str) -> dict[str, object]:
                 current[key] = value
     return {
         "devices": devices,
-        "selected_device_names": [
-            row["deviceName"] for row in devices if "deviceName" in row
-        ],
+        "selected_device_names": [row["deviceName"] for row in devices if "deviceName" in row],
         "intended_gpu_listed": any(
             EXPECTED_GPU_NAME.lower() in row.get("deviceName", "").lower() for row in devices
         ),
@@ -823,19 +810,13 @@ def _zero_step_stackcube_probe(source_root: Path) -> dict[str, object]:
     explicit_reset_count = 0
     explicit_step_count = 0
     action_submission_count = 0
-    environment: object | None = None
+    environment: Any | None = None
     close_succeeded = False
     try:
         import gymnasium as gym
         import mani_skill.envs  # type: ignore[import-untyped]  # noqa: F401
 
-        metadata_path = (
-            source_root
-            / "expanded"
-            / TASK_ID
-            / "motionplanning"
-            / "trajectory.json"
-        )
+        metadata_path = source_root / "expanded" / TASK_ID / "motionplanning" / "trajectory.json"
         metadata = _read_json(metadata_path)
         env_info = metadata.get("env_info")
         if not isinstance(env_info, dict) or not isinstance(env_info.get("env_kwargs"), dict):
@@ -859,14 +840,17 @@ def _zero_step_stackcube_probe(source_root: Path) -> dict[str, object]:
         base: Any = environment.unwrapped
         action_space = environment.action_space
         observation_space = environment.observation_space
-        action_shape = tuple(int(value) for value in action_space.shape)
+        raw_action_shape = action_space.shape
+        if raw_action_shape is None:
+            raise Phase2B61RRuntimeError("StackCube action space shape is unavailable")
+        action_shape = tuple(int(value) for value in raw_action_shape)
         control_mode = str(base.control_mode)
         obs_mode = str(base.obs_mode)
         environment_spec = getattr(environment, "spec", None) or getattr(base, "spec", None)
         render_system = _render_system_from_environment(base)
         if render_system is None:
             raise Phase2B61RRuntimeError("StackCube render system identity is unavailable")
-        render_device = _device_snapshot(render_system.device)
+        render_device = _device_snapshot(getattr(render_system, "device"))
         action_dtype = str(action_space.dtype)
         checks = {
             "task_id": getattr(environment_spec, "id", None) == TASK_ID,
@@ -1063,9 +1047,7 @@ def _post_child_cleanup(child_pid: int) -> dict[str, object]:
         "gpu_audit": gpu,
         "unexpected_gpu_workloads": unexpected_gpu_workloads,
         "tmux_session_created": False,
-        "passed": not child_alive
-        and processes["passed"] is True
-        and not unexpected_gpu_workloads,
+        "passed": not child_alive and processes["passed"] is True and not unexpected_gpu_workloads,
     }
 
 
@@ -1378,9 +1360,7 @@ def execute_preflight(
             "schema_version": "langmani-v2-phase2b6-1r-launcher-runtime-v0",
             "launcher_path": launcher_path.as_posix(),
             "launcher_sha256": sha256_file(launcher_path),
-            "python_entrypoint": (
-                repo_root / "environment" / "run_v2_phase2b6_1r.py"
-            ).as_posix(),
+            "python_entrypoint": (repo_root / "environment" / "run_v2_phase2b6_1r.py").as_posix(),
             "python_entrypoint_sha256": sha256_file(
                 repo_root / "environment" / "run_v2_phase2b6_1r.py"
             ),
@@ -1393,14 +1373,10 @@ def execute_preflight(
             ),
             "selected_icd": PRIMARY_ICD_PATH,
             "selected_icd_sha256": (
-                sha256_file(Path(PRIMARY_ICD_PATH))
-                if Path(PRIMARY_ICD_PATH).is_file()
-                else None
+                sha256_file(Path(PRIMARY_ICD_PATH)) if Path(PRIMARY_ICD_PATH).is_file() else None
             ),
             "selected_gpu": (
-                cast(Sequence[Mapping[str, object]], gpu["devices"])[0]
-                if gpu["devices"]
-                else None
+                cast(Sequence[Mapping[str, object]], gpu["devices"])[0] if gpu["devices"] else None
             ),
             "renderer_configuration": {
                 "task_id": TASK_ID,

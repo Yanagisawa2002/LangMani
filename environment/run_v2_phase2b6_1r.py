@@ -86,9 +86,7 @@ def main() -> int:
             run_zero_step=args.run_zero_step,
         )
     else:
-        result = write_artifact_manifest(
-            _required_path(args.evidence_root, "--evidence-root")
-        )
+        result = write_artifact_manifest(_required_path(args.evidence_root, "--evidence-root"))
     print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
     return 0
 
