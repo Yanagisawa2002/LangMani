@@ -3528,7 +3528,7 @@ All source accounting, accepted replay/alignment, privileged-field exclusion, Le
 readback, exact source-to-derived equality, zero-overlap leakage, accepted-only padding,
 train-only normalization, content-addressed archive, and clean non-symlink restore gates passed.
 The package identity is `LangManiOfficialMultiSkill-v2`, fingerprint
-`sha256:77675e2134e4886a97e4bdac2230c64c3da30cc080e647433b7c701a79544ed04`.
+`sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04`.
 The phase is Result A with `accepted_multiskill_dataset_validated=true`.
 
 Result A makes ACT-baseline, SmolVLA, and VLA-JEPA dataset consumption eligible but does not

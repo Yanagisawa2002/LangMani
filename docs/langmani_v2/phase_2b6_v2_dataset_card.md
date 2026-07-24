@@ -13,7 +13,7 @@ the source/exclusion inventories but omitted from policy roots under the
 versioned deterministic-physical exclusion class.
 
 Accepted package fingerprint:
-`sha256:77675e2134e4886a97e4bdac2230c64c3da30cc080e647433b7c701a79544ed04`.
+`sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04`.
 
 ## Data roots
 

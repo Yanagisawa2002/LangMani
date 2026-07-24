@@ -1,0 +1,85 @@
+{
+  "archive": {
+    "path": "/root/autodl-tmp/langmani-external/phase2b6-v2-archive/LangManiOfficialMultiSkill-v2-b0e255d8b3f7f77fe33538cb2c313620d1d00adf90562b33dad06b10674474b3.tar.gz",
+    "sha256": "sha256:a43af6568fa46e074efb3d94d4e370a1e5d7c2d7d1ad300c1d4d20f65b7d94f3",
+    "size_bytes": 2709340363
+  },
+  "authorization": {
+    "act_phase2c_a_may_continue_after_verification": true,
+    "dataset_mutation_authorized": false,
+    "identity_interpretation_only": true,
+    "smolvla_training_authorized": false,
+    "vla_jepa_training_authorized": false
+  },
+  "canonical_package": {
+    "fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+    "identity": "LangManiOfficialMultiSkill-v2",
+    "incorrect_human_document_value": "sha256:77675e2134e4886a97e4bdac2230c64c3da30cc080e647433b7c701a79544ed04",
+    "machine_readable_sources": [
+      {
+        "field": "fingerprint",
+        "path": "artifacts/langmani_v2/phase_2b6_v2/accepted_multiskill_dataset_package.json"
+      },
+      {
+        "field": "accepted_package_fingerprint",
+        "path": "artifacts/langmani_v2/phase_2b6_v2/result_classification.json"
+      }
+    ],
+    "recomputation": {
+      "algorithm": "remove top-level fingerprint; JSON sort_keys=true, separators=(comma,colon), ensure_ascii=false, allow_nan=false; UTF-8; SHA-256",
+      "recomputed_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04"
+    }
+  },
+  "checks": {
+    "additional_primary_files_absent": true,
+    "archive_unchanged": true,
+    "common_payload_bytes_identical": true,
+    "dataset_bytes_changed": false,
+    "only_difference_is_authorized_sidecar": true,
+    "restore_unchanged": true,
+    "sidecar_references_canonical_package": true
+  },
+  "frozen_payload_tree": {
+    "file_count": 168,
+    "total_bytes": 2779801643,
+    "tree_digest": "sha256:b0e255d8b3f7f77fe33538cb2c313620d1d00adf90562b33dad06b10674474b3"
+  },
+  "fingerprint": "sha256:df01424d7ea756449864e4efedf1eef601dfbd9e1050bd8ad84770a9b78be24b",
+  "live_primary_tree": {
+    "file_count": 169,
+    "semantic_classification": [
+      "frozen_payload_tree",
+      "post_finalization_control_sidecar"
+    ],
+    "total_bytes": 2782385671,
+    "tree_digest": "sha256:ef7b246d4a43d2ab473b9e710425dbaeabdcb70ff9dcbc841099d719ea8db5c2"
+  },
+  "protected_payload_classes": {
+    "action": "unchanged",
+    "accepted_episode_and_frame_inventory": "unchanged",
+    "image_and_media": "unchanged",
+    "normalization": "unchanged",
+    "source_lineage": "unchanged",
+    "split": "unchanged",
+    "state": "unchanged",
+    "statistics": "unchanged"
+  },
+  "restore": {
+    "fingerprint": "sha256:7a5b7407581e22a50482e1556dc5da1a12c67f09522da44f2de2cb138fdf54c9",
+    "path": "/root/autodl-tmp/langmani-external/phase2b6-v2-restore-scratch/b0e255d8b3f7f77fe33538cb2c313620d1d00adf90562b33dad06b10674474b3/LangManiOfficialMultiSkill-v2",
+    "tree_digest": "sha256:b0e255d8b3f7f77fe33538cb2c313620d1d00adf90562b33dad06b10674474b3"
+  },
+  "schema_version": "langmani-v2-phase2c-a-identity-resolution-v0",
+  "sidecar": {
+    "creation_lineage": {
+      "accepted_evidence_commit": "19de56781e029c20859839a1e3493920449ff9bf",
+      "implementation_origin_commit": "40161abc310995b0d8d7bf444df7ba454c1619fc",
+      "producer": "langmani.v2.phase2b6_v2_finalize.finalize_acceptance"
+    },
+    "path": "metadata/accepted_multiskill_dataset_package.json",
+    "referenced_package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+    "relationship": "post_finalization_control_sidecar_excluded_only_from_frozen_payload_tree_identity",
+    "sha256": "sha256:940272b9dc6386a356f27288870a5e0667d22678fb268f141d15c0c100462a59",
+    "size_bytes": 2584028
+  }
+}

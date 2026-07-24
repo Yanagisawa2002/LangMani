@@ -14,7 +14,7 @@ Accepted package:
 
 - identity: `LangManiOfficialMultiSkill-v2`
 - fingerprint:
-  `sha256:77675e2134e4886a97e4bdac2230c64c3da30cc080e647433b7c701a79544ed04`
+  `sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04`
 - result fingerprint:
   `sha256:81ebfbdc0547e09fd896d9b9eb13213b3040c8fed6f61495500a5d11b2dab2c7`
 
