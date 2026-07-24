@@ -396,7 +396,8 @@ def _repository_audit(repo_root: Path) -> dict[str, object]:
 
 
 def _ldconfig_inventory() -> tuple[list[str], dict[str, str]]:
-    query = _command(["ldconfig", "-p"])
+    executable = shutil.which("ldconfig") or "/sbin/ldconfig"
+    query = _command([executable, "-p"])
     lines = []
     sonames: dict[str, str] = {}
     if query["passed"] is True:
@@ -417,15 +418,16 @@ def _icd_inventory(paths: Sequence[Path], sonames: Mapping[str, str]) -> list[di
     for path in sorted({candidate.resolve() for candidate in paths if candidate.is_file()}):
         parsed = parse_icd_manifest(path)
         library = parsed["library_path"]
-        resolved = Path(library) if Path(library).is_absolute() else Path(sonames.get(library, ""))
+        resolved_text = library if Path(library).is_absolute() else sonames.get(library)
+        resolved = Path(resolved_text) if resolved_text else None
         rows.append(
             {
                 "path": path.as_posix(),
                 "sha256": sha256_file(path),
                 "size_bytes": path.stat().st_size,
                 **parsed,
-                "resolved_library_path": resolved.as_posix() if str(resolved) else None,
-                "referenced_library_exists": bool(str(resolved)) and resolved.is_file(),
+                "resolved_library_path": resolved.as_posix() if resolved else None,
+                "referenced_library_exists": resolved is not None and resolved.is_file(),
             }
         )
     return rows
@@ -439,19 +441,20 @@ def _egl_vendor_inventory(
         document = _read_json(path)
         icd = document.get("ICD")
         library = icd.get("library_path") if isinstance(icd, dict) else None
-        resolved = (
-            Path(library)
+        resolved_text = (
+            library
             if isinstance(library, str) and Path(library).is_absolute()
-            else Path(sonames.get(str(library), ""))
+            else sonames.get(str(library))
         )
+        resolved = Path(resolved_text) if resolved_text else None
         rows.append(
             {
                 "path": path.as_posix(),
                 "sha256": sha256_file(path),
                 "size_bytes": path.stat().st_size,
                 "library_path": library,
-                "resolved_library_path": resolved.as_posix() if str(resolved) else None,
-                "referenced_library_exists": bool(str(resolved)) and resolved.is_file(),
+                "resolved_library_path": resolved.as_posix() if resolved else None,
+                "referenced_library_exists": resolved is not None and resolved.is_file(),
             }
         )
     return rows

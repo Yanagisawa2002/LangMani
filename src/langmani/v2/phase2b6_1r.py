@@ -222,7 +222,10 @@ def clean_child_environment(
     source = dict(inherited or {})
     result = {
         "HOME": home.as_posix(),
-        "PATH": f"{conda_prefix.as_posix()}/bin:/usr/bin:/bin",
+        "PATH": (
+            f"{conda_prefix.as_posix()}/bin:"
+            "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        ),
         "CONDA_PREFIX": conda_prefix.as_posix(),
         "CONDA_DEFAULT_ENV": conda_prefix.name,
         "PYTHONNOUSERSITE": "1",

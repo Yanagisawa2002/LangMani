@@ -97,6 +97,7 @@ def test_clean_environment_requires_explicit_primary_device_variables(tmp_path: 
     assert "DISPLAY" not in environment
     assert environment["CUDA_VISIBLE_DEVICES"] == "0"
     assert environment["PYTHONNOUSERSITE"] == "1"
+    assert "/sbin" in environment["PATH"]
     contracts.validate_primary_environment(environment)
     for name in ("VK_ICD_FILENAMES", "__EGL_VENDOR_LIBRARY_FILENAMES"):
         broken = dict(environment)

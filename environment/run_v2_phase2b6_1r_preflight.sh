@@ -35,7 +35,7 @@ esac
 
 exec env -i \
   HOME=/root \
-  PATH="${conda_prefix}/bin:/usr/bin:/bin" \
+  PATH="${conda_prefix}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
   CONDA_PREFIX="${conda_prefix}" \
   CONDA_DEFAULT_ENV="$(basename "${conda_prefix}")" \
   PYTHONNOUSERSITE=1 \
