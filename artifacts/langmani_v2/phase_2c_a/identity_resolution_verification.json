@@ -1,0 +1,85 @@
+{
+  "branch": "codex/langmani-v2-phase2c-a-act-baselines",
+  "canonical_package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "checks": {
+    "actual_archive_path_matches": true,
+    "actual_archive_sha256_matches": true,
+    "actual_archive_size_matches": true,
+    "all_common_payload_bytes_match": true,
+    "archive_manifest_file_count_matches": true,
+    "archive_manifest_total_bytes_matches": true,
+    "archive_manifest_tree_matches": true,
+    "audit_canonical_fingerprint_matches": true,
+    "audit_fingerprint_recomputed": true,
+    "canonical_package_hex_length": true,
+    "corrected_documents_exclude_invalid": true,
+    "corrected_documents_use_canonical": true,
+    "erratum_records_both_values": true,
+    "invalid_transcription_hex_length": true,
+    "machine_package_fingerprint_matches": true,
+    "machine_package_fingerprint_recomputed": true,
+    "only_primary_difference_is_sidecar": true,
+    "primary_actual_file_count_matches": true,
+    "primary_actual_total_bytes_matches": true,
+    "primary_actual_tree_matches": true,
+    "restore_actual_file_count_matches": true,
+    "restore_actual_total_bytes_matches": true,
+    "restore_actual_tree_matches": true,
+    "restore_has_no_additional_paths": true,
+    "restore_manifest_fingerprint_matches": true,
+    "restore_manifest_tree_matches": true,
+    "result_fingerprint_matches": true,
+    "sidecar_audit_reference_matches": true,
+    "sidecar_fingerprint_matches": true,
+    "sidecar_fingerprint_recomputed": true,
+    "sidecar_sha256_matches": true,
+    "sidecar_size_matches": true,
+    "sidecar_source_controlled_copy_matches": true
+  },
+  "fingerprint": "sha256:c20656b12a3cf4b1d992ba8ea0a76ce794555c436189f65d449b7227e54f4d22",
+  "head": "1e96404e511c714b9beeb65c4536fb302ee51f12",
+  "observed": {
+    "archive": {
+      "path": "/root/autodl-tmp/langmani-external/phase2b6-v2-archive/LangManiOfficialMultiSkill-v2-b0e255d8b3f7f77fe33538cb2c313620d1d00adf90562b33dad06b10674474b3.tar.gz",
+      "sha256": "sha256:a43af6568fa46e074efb3d94d4e370a1e5d7c2d7d1ad300c1d4d20f65b7d94f3",
+      "size_bytes": 2709340363
+    },
+    "common_file_count": 168,
+    "common_mismatch_paths": [],
+    "frozen_payload_tree": {
+      "file_count": 168,
+      "total_bytes": 2779801643,
+      "tree_digest": "sha256:b0e255d8b3f7f77fe33538cb2c313620d1d00adf90562b33dad06b10674474b3"
+    },
+    "live_primary_tree": {
+      "file_count": 169,
+      "total_bytes": 2782385671,
+      "tree_digest": "sha256:ef7b246d4a43d2ab473b9e710425dbaeabdcb70ff9dcbc841099d719ea8db5c2"
+    },
+    "primary_only_paths": [
+      "metadata/accepted_multiskill_dataset_package.json"
+    ],
+    "restore_only_paths": [],
+    "sidecar": {
+      "fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+      "path": "metadata/accepted_multiskill_dataset_package.json",
+      "sha256": "sha256:940272b9dc6386a356f27288870a5e0667d22678fb268f141d15c0c100462a59",
+      "size_bytes": 2584028
+    }
+  },
+  "optimizer_created": false,
+  "passed": true,
+  "protected_payload_classes_unchanged": {
+    "accepted_episode_and_frame_inventory": true,
+    "action": true,
+    "image_and_media": true,
+    "normalization": true,
+    "source_lineage": true,
+    "split": true,
+    "state": true,
+    "statistics": true
+  },
+  "schema_version": "langmani-v2-phase2c-a-identity-verification-v0",
+  "source_commit": "19de56781e029c20859839a1e3493920449ff9bf",
+  "training_started": false
+}
