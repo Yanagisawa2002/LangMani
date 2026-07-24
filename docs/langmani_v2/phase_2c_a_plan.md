@@ -100,3 +100,12 @@ setting changes after a test result is visible.
 
 No SmolVLA, VLA-JEPA, language encoder, LoRA, SARM, LatentGuard, expert, PPO teacher, MPC,
 reset-replay, or new data-production work is authorized.
+
+## Terminal execution status
+
+The four seed-0 primary runs and all 16 validation-only offline diagnostics completed. The
+loss-selected Pick checkpoint then emitted finite but out-of-bounds gripper actions on the first
+pre-registered closed-loop infrastructure smoke. The evaluator rejected the chunk before
+`env.step`; no clipping or projection was used. Phase 2C-A therefore stopped at step 10 of the
+execution plan and is classified `RESULT_D`. Horizon comparison, development evaluation, shared
+seed 1, final evaluation, task-condition intervention, and later-policy training were not run.

@@ -143,13 +143,22 @@ split/leakage, padding, train-only normalization, archive, and clean-restore gat
 ACT-baseline, SmolVLA, and VLA-JEPA dataset eligibility is true, but all training remains
 unauthorized and no optimizer, backward pass, or training work started.
 
-Phase 2C-A is the active, separately authorized ACT baseline milestone. Its preflight identity
-erratum binds the canonical 64-character package fingerprint and proves that the only live/archive
-tree difference is the authorized package sidecar. The phase trains exactly three task-specific
-ACT policies and one shared three-way Task-ID ACT on the accepted train views, with explicit H=16
-padding masks, maintained LeRobot 0.6 ACT, fixed validation-only checkpoint/horizon selection,
-and real closed-loop unseen-reset/visual-shift evaluation. No dataset production, SmolVLA, or
-VLA-JEPA training is within scope.
+Phase 2C-A is complete as Result D. Its preflight identity erratum bound the canonical
+64-character package fingerprint and proved that the only live/archive tree difference was the
+authorized package sidecar. Three task-specific ACT policies and one shared three-way Task-ID ACT
+completed seed-0 training; all 16 retained checkpoints passed validation-only offline diagnostics.
+The frozen loss rule selected the final checkpoint for every model. On the first pre-registered
+Pick/H=4 closed-loop infrastructure smoke, the selected Pick checkpoint emitted finite gripper
+values above the exact live native action bound. The evaluator rejected the chunk before
+`env.step`: one policy query, zero actions, zero environment steps, and no simulator error.
+
+The checkpoint lock was not changed after seeing this result, and no clipping, projection, or
+binary conversion was applied. Phase 2C-A stopped before H=1/4/8 development comparison,
+30-episode validation schedules, shared seed 1, final unseen-reset/visual-shift evaluation,
+task-ID intervention, and representative videos. Those metrics are unavailable rather than zero.
+`act_baselines_validated=false`, `smolvla_phase_eligible=false`, and SmolVLA/VLA-JEPA remain
+untrained and unauthorized. Any action-representation investigation requires a separately
+authorized milestone.
 
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically

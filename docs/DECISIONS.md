@@ -3576,3 +3576,28 @@ execution horizons 1, 4, and 8. Final unseen-reset and post-render visual-shift 
 fingerprint-bound before results exist and cannot be changed afterward. Phase 2C-A may train and
 evaluate ACT only. SmolVLA and VLA-JEPA remain neither loaded nor training-authorized regardless
 of ACT outcome.
+
+## D-139 - Hard-stop Phase 2C-A on the selected policy's first invalid native action
+
+All four seed-0 ACT runs and all 16 validation-only offline diagnostics completed. The frozen
+selection rule chose the final checkpoint for Pick, Stack, Push, and shared Task-ID ACT. Before
+the H=1/4/8 development comparison, one pre-registered Pick/H=4 infrastructure smoke queried the
+selected Pick checkpoint. Its finite `16x8` chunk had valid arm values but all 16 gripper values
+exceeded the live native `pd_joint_pos` upper bound. The declared bounds matched the live
+Gymnasium action space exactly. The evaluator returned `invalid_policy_output` before `env.step`,
+with one policy query, zero actions, zero environment steps, and no simulator error.
+
+An unselected early Pick checkpoint produced a valid first chunk on the same diagnostic reset.
+Replacing the already locked loss-selected checkpoint after observing the closed-loop outcome
+would be outcome-informed reselection, so it is prohibited. Clipping, projection, gripper
+thresholding, and binary conversion also remain prohibited. Phase 2C-A therefore closes as
+Result D, a training/consumer-pipeline result rather than an ACT quality result.
+
+The H=1/4/8 comparison, 30-episode development schedules, bounded zero-success repair, shared
+seed 1, unseen-reset/visual-shift final evaluation, task-ID intervention, and representative
+videos were not run. Their metrics remain unavailable rather than zero.
+`closed_loop_development_started=false`, `final_evaluation_started=false`,
+`act_baselines_validated=false`, `smolvla_phase_eligible=false`,
+`smolvla_training_authorized=false`, and `vla_jepa_training_authorized=false`. Any future
+action-representation investigation requires a separate authorization and cannot reinterpret or
+mutate this Result D evidence.

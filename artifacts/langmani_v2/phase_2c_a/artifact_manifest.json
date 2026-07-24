@@ -1,0 +1,104 @@
+{
+  "canonical_package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "entries": {
+    "accepted_dataset_verification": {
+      "external_path": "/root/autodl-tmp/langmani-phase2c-a/preflight-c0b5106-b408/accepted_dataset_verification.json",
+      "status": "complete"
+    },
+    "act_implementation_audit": {
+      "external_path": "/root/autodl-tmp/langmani-phase2c-a/preflight-c0b5106-b408/act_implementation_audit.json",
+      "status": "complete"
+    },
+    "checkpoint_registry": {
+      "external_path": "/root/autodl-tmp/langmani-phase2c-a/training-v2",
+      "status": "complete_16"
+    },
+    "closed_loop_infrastructure_smoke": {
+      "external_path": "/root/autodl-tmp/langmani-phase2c-a/evaluation-smoke/pick-h4-a3a09d3",
+      "source_copy": "closed_loop_hard_stop.json",
+      "status": "complete_rejected"
+    },
+    "execution_horizon_comparison": {
+      "status": "not_run_due_result_d_hard_stop"
+    },
+    "final_summaries": {
+      "source_copy": "result_classification.json",
+      "status": "complete_result_d"
+    },
+    "final_test_episode_logs": {
+      "status": "not_run_due_result_d_hard_stop"
+    },
+    "four_training_configurations": {
+      "external_path": "/root/autodl-tmp/langmani-phase2c-a/preflight-c0b5106-b408/four_training_configurations.json",
+      "status": "complete"
+    },
+    "gpu_smoke_results": {
+      "external_path": "/root/autodl-tmp/langmani-phase2c-a/reports",
+      "status": "complete_four_models_batch_408"
+    },
+    "identity_resolution": {
+      "source_copy": "identity_resolution.json",
+      "status": "complete"
+    },
+    "identity_resolution_verification": {
+      "source_copy": "identity_resolution_verification.json",
+      "status": "complete"
+    },
+    "micro_overfit": {
+      "external_path": "/root/autodl-tmp/langmani-phase2c-a/reports",
+      "status": "complete_pick_and_shared_200_steps"
+    },
+    "multi_task_interference_report": {
+      "status": "unavailable_closed_loop_not_started"
+    },
+    "offline_checkpoint_diagnostics": {
+      "external_path": "/root/autodl-tmp/langmani-phase2c-a/reports/offline-a3a09d3",
+      "source_copy": "offline_diagnostics_summary.json",
+      "status": "complete_16"
+    },
+    "padding_loss_audit": {
+      "external_path": "/root/autodl-tmp/langmani-phase2c-a/preflight-c0b5106-b408/act_implementation_audit.json",
+      "status": "complete"
+    },
+    "processor_registry": {
+      "external_path": "/root/autodl-tmp/langmani-phase2c-a/training-v2",
+      "status": "complete_16_checkpoints"
+    },
+    "remote_execution_audit": {
+      "source_document": "docs/langmani_v2/phase_2c_a_training_report.md",
+      "status": "complete"
+    },
+    "repository_environment_audit": {
+      "external_path": "/root/autodl-tmp/langmani-phase2c-a/preflight-c0b5106-b408/repository_environment_audit.json",
+      "status": "complete"
+    },
+    "result_classification": {
+      "source_copy": "result_classification.json",
+      "status": "RESULT_D"
+    },
+    "sampler_manifest": {
+      "external_path": "/root/autodl-tmp/langmani-phase2c-a/preflight-c0b5106-b408/sampler_manifest.json",
+      "status": "complete"
+    },
+    "selected_policy_manifests": {
+      "external_path": "/root/autodl-tmp/langmani-phase2c-a/reports/checkpoint-selections-a3a09d3",
+      "status": "complete_four"
+    },
+    "task_conditioning_intervention": {
+      "status": "not_run_due_result_d_hard_stop"
+    },
+    "training_metrics": {
+      "external_path": "/root/autodl-tmp/langmani-phase2c-a/training-v2",
+      "source_copy": "training_summary.json",
+      "status": "complete_four_runs"
+    },
+    "training_view_manifest": {
+      "external_path": "/root/autodl-tmp/langmani-phase2c-a/preflight-c0b5106-b408/training_view_manifest.json",
+      "status": "complete"
+    },
+    "validation_episode_logs": {
+      "status": "not_run_due_result_d_hard_stop"
+    }
+  },
+  "schema_version": "langmani-v2-phase2c-a-artifact-manifest-v0"
+}

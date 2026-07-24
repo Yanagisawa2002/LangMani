@@ -1,0 +1,27 @@
+{
+  "act_baselines_validated": false,
+  "canonical_dataset_bytes_changed": false,
+  "closed_loop_development_started": false,
+  "final_evaluation_started": false,
+  "hard_stop_stage": "closed_loop_infrastructure_smoke",
+  "offline_diagnostics_complete": true,
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "repair_consumed": false,
+  "result": "RESULT_D",
+  "result_reason": "selected_pick_act_emitted_native_pd_joint_pos_out_of_bounds_gripper_actions",
+  "schema_version": "langmani-v2-phase2c-a-result-v0",
+  "shared_seed1_started": false,
+  "smolvla_phase_eligible": false,
+  "smolvla_training_authorized": false,
+  "training_complete": true,
+  "unavailable_metrics": [
+    "execution_horizon_comparison",
+    "validation_success",
+    "unseen_reset_success",
+    "visual_shift_success",
+    "task_condition_sensitivity",
+    "multi_task_interference",
+    "representative_success_or_failure_videos"
+  ],
+  "vla_jepa_training_authorized": false
+}

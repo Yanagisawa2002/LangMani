@@ -1,0 +1,46 @@
+{
+  "action_bound_audit": {
+    "all_arm_dimensions_within_bounds": true,
+    "environment_bounds_match_declared_bounds": true,
+    "first_four_gripper_predictions": [
+      1.0519404411315918,
+      1.0555609464645386,
+      1.0591456890106201,
+      1.054303765296936
+    ],
+    "first_four_invalid_component_count": 4,
+    "gripper_high": 1.0,
+    "invalid_dimension": 7,
+    "predicted_gripper_max_all_16": 1.0591456890106201,
+    "predicted_gripper_min_all_16": 1.0180935859680176
+  },
+  "canonical_package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "candidate_diagnostic_only": {
+    "note": "Step 670 produced a valid first H=4 chunk on the same reset, but was not selected by the frozen loss rule and was not substituted after observing the smoke.",
+    "selected_checkpoint_changed": false,
+    "step_670_first_four_gripper_predictions": [
+      0.8845270276069641,
+      0.8803760409355164,
+      0.9007635116577148,
+      0.9011694192886353
+    ]
+  },
+  "episode": {
+    "actions_executed": 0,
+    "checkpoint_fingerprint": "sha256:da7128d019689d190523c1f4c6f7f1e4060371ef24f203821afd98dbe316e0f3",
+    "environment_steps": 0,
+    "evaluation_id": "phase2c-a:validation:pickcube:000",
+    "execution_horizon": 4,
+    "failure_reason": "policy action exceeded native pd_joint_pos bounds",
+    "invalid_action": true,
+    "outcome": "invalid_policy_output",
+    "policy_queries": 1,
+    "simulator_error": false,
+    "split": "validation",
+    "success": false,
+    "task_id": "PickCube-v1"
+  },
+  "evidence_root": "/root/autodl-tmp/langmani-phase2c-a/evaluation-smoke/pick-h4-a3a09d3",
+  "interpretation": "consumer_pipeline_invalid_not_policy_quality_result",
+  "schema_version": "langmani-v2-phase2c-a-closed-loop-hard-stop-v0"
+}

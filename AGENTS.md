@@ -189,15 +189,19 @@ Result A. Dataset eligibility for ACT-baseline, SmolVLA, and VLA-JEPA is true; e
 authorization remains false, no policy was loaded, and optimizer/backward/training counts remain
 zero.
 
-Phase 2C-A is the active separately authorized ACT-only consumer milestone. It may create one
-isolated LeRobot 0.6 training environment, train exactly PickCube, StackCube, PushCube, and shared
-three-way Task-ID ACT baselines on the frozen accepted train views, and run the preregistered
-validation/unseen-reset/visual-shift closed-loop schedules. It must keep chunk size 16, explicit
-`action_is_pad`, accepted train-only normalization, unchanged 9D Panda state, native 8D
-`pd_joint_pos`, strict one-third shared-task sampling, validation-only checkpoint/horizon
-selection, and hard rejection instead of learned-action clipping or projection. It may not modify
-dataset bytes, exclusions, splits, statistics, language, archive/restore identities, or start
-SmolVLA/VLA-JEPA.
+Phase 2C-A is complete as Result D at its first closed-loop infrastructure smoke. Four seed-0 ACT
+training runs and all 16 validation-only offline checkpoint diagnostics completed. The frozen
+loss rule selected the final checkpoint for each model, but the selected Pick ACT emitted finite
+gripper values above the live native `pd_joint_pos` upper bound on the first policy query. The
+evaluator hard-rejected the chunk before `env.step`, with zero executed actions and no simulator
+error. The already locked checkpoint was not replaced by an earlier checkpoint after this outcome
+was observed, and no clipping, projection, or binary conversion was introduced. The H=1/4/8
+development comparison, 30-episode schedules, shared seed 1, unseen-reset/visual-shift final
+evaluation, task-ID intervention, and representative videos were not run. This is a
+training/consumer-pipeline result, not an ACT quality result:
+`closed_loop_development_started=false`, `final_evaluation_started=false`,
+`act_baselines_validated=false`, `smolvla_phase_eligible=false`, and both SmolVLA and VLA-JEPA
+training remain unauthorized.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
@@ -367,6 +371,7 @@ python environment/verify_v2_phase2c_a_identity.py --help
 python environment/prepare_v2_phase2c_a.py --help
 python scripts/train_v2_phase2c_a_act.py --help
 python scripts/evaluate_v2_phase2c_a_act.py --help
+python environment/verify_v2_phase2c_a.py --help
 
 # Phase 2B.3.1-RR compact Result D evidence verification (no simulator execution)
 python environment/verify_v2_phase2b3_rr.py

@@ -1,0 +1,139 @@
+{
+  "batch_size": 408,
+  "canonical_package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "checkpoint_count": 16,
+  "optimizer": "AdamW",
+  "precision": "bfloat16",
+  "runs": {
+    "pick": {
+      "checkpoints": [
+        {
+          "fingerprint": "sha256:2cbd4379da673d49e06f0f2f76ddaae4e85dfa2dabec8e44a75350e62534cc12",
+          "step": 670
+        },
+        {
+          "fingerprint": "sha256:99dec5c4d43deb57682bd0d48f115c5ec4479787788601f88b04f0375c32a39d",
+          "step": 1340
+        },
+        {
+          "fingerprint": "sha256:80227852c5fee11323a7df8f84bff13789e2b534632433529e8764f4a313a2d4",
+          "step": 2010
+        },
+        {
+          "fingerprint": "sha256:da7128d019689d190523c1f4c6f7f1e4060371ef24f203821afd98dbe316e0f3",
+          "step": 2680
+        }
+      ],
+      "examples_processed": 1092160,
+      "final_step": 2680,
+      "mean_examples_per_second": 2164.9542556896686,
+      "peak_gpu_allocated_bytes": 1185103360,
+      "peak_gpu_reserved_bytes": 18834522112,
+      "run_fingerprint": "sha256:ab6af2aa23406cc05af0397fc7becc50f3bfa35008f814eb580d92012f36319a",
+      "samples_by_task": {
+        "PickCube-v1": 1092160,
+        "PushCube-v1": 0,
+        "StackCube-v1": 0
+      },
+      "training_duration_s": 2465.045079605654
+    },
+    "push": {
+      "checkpoints": [
+        {
+          "fingerprint": "sha256:ec6f32f818cb059597f94c3ce090ffab80ebe4486df7e25289d0aa2e89c15c4f",
+          "step": 595
+        },
+        {
+          "fingerprint": "sha256:1193c9d75f9e3c14f2889b5ab107aca495bc318abf4f10a4f3c9375cefcd6d8f",
+          "step": 1190
+        },
+        {
+          "fingerprint": "sha256:38c369117eb8356b3b03c779dcd40c1edff7e08f44c129f89bb21d0767933340",
+          "step": 1785
+        },
+        {
+          "fingerprint": "sha256:6b51e3af0d4d42dc20c1175e6196b1eb3f7a2b15895555ee71e24ae0d0c167bd",
+          "step": 2380
+        }
+      ],
+      "examples_processed": 964380,
+      "final_step": 2380,
+      "mean_examples_per_second": 2156.4387722042666,
+      "peak_gpu_allocated_bytes": 1183660544,
+      "peak_gpu_reserved_bytes": 18840813568,
+      "run_fingerprint": "sha256:e88c029424fe0df371f35a14cff9b4883602d4d89232893e29e1ba125b6cf0a2",
+      "samples_by_task": {
+        "PickCube-v1": 0,
+        "PushCube-v1": 964380,
+        "StackCube-v1": 0
+      },
+      "training_duration_s": 2180.3436090592295
+    },
+    "shared_seed0": {
+      "checkpoints": [
+        {
+          "fingerprint": "sha256:949a18f0e3d74527473ea9ffb06aaacc0134ff9c7051448420379010e0432b26",
+          "step": 2178
+        },
+        {
+          "fingerprint": "sha256:4cba3d456585990a80726474d3406e2a9f124149a59f052dc68ac9cd39e9348c",
+          "step": 4356
+        },
+        {
+          "fingerprint": "sha256:2f2304bd00e9301b7769cb1ef21bfda2d01738b345be2ff9c36822a518353e33",
+          "step": 6534
+        },
+        {
+          "fingerprint": "sha256:ada3cb1bd9dd9f752f60f2c9059746c8d0e2ae902fa4c5a04c88b8e96242d870",
+          "step": 8712
+        }
+      ],
+      "examples_processed": 3554496,
+      "final_step": 8712,
+      "mean_examples_per_second": 2183.692563974487,
+      "peak_gpu_allocated_bytes": 1182917632,
+      "peak_gpu_reserved_bytes": 18880659456,
+      "run_fingerprint": "sha256:7f9fcc3bdefa548f28ac364f60283323fbfc145f1f8be3d4c198bc003711fd7d",
+      "samples_by_task": {
+        "PickCube-v1": 1184832,
+        "PushCube-v1": 1184832,
+        "StackCube-v1": 1184832
+      },
+      "training_duration_s": 7782.342132944614
+    },
+    "stack": {
+      "checkpoints": [
+        {
+          "fingerprint": "sha256:4eec4b84c713d50388b9a362fcc5e26192f3469c6585925b1ad31db6712911d5",
+          "step": 920
+        },
+        {
+          "fingerprint": "sha256:cee9a0790440a726fe7d451de39a9ef4fafb25a8af4ff4f20671aa516b489df0",
+          "step": 1840
+        },
+        {
+          "fingerprint": "sha256:c71e369c16d8158683dd7c860b7bb2e0907c71c91bb35926f70c9a27e75cbcc0",
+          "step": 2760
+        },
+        {
+          "fingerprint": "sha256:9458aa3c9e499526282e3c48534de0562306d4a346973e0c594e7e7097415a61",
+          "step": 3680
+        }
+      ],
+      "examples_processed": 1497820,
+      "final_step": 3680,
+      "mean_examples_per_second": 2157.80723660045,
+      "peak_gpu_allocated_bytes": 1184870400,
+      "peak_gpu_reserved_bytes": 18834522112,
+      "run_fingerprint": "sha256:3878a60b3e7e764fbac502675fd0b3d53b926b85797adb89889cf435dcb8181a",
+      "samples_by_task": {
+        "PickCube-v1": 0,
+        "PushCube-v1": 0,
+        "StackCube-v1": 1497820
+      },
+      "training_duration_s": 3392.125173613429
+    }
+  },
+  "schema_version": "langmani-v2-phase2c-a-training-summary-v0",
+  "training_commit": "c0b5106cb1fff5b43f46500321264cec33613673"
+}

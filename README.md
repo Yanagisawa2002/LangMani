@@ -210,14 +210,29 @@ passed, so the phase is
 eligibility is true, but every training authorization remains false and no optimizer or training
 work started.
 
-Phase 2C-A is the separately authorized ACT-only consumer of that frozen package. It trains three
-task-specific ACT baselines and one shared three-way Task-ID ACT, then evaluates them in real
-closed-loop official ManiSkill tasks. The phase keeps maintained LeRobot 0.6 ACT, chunk size 16,
-explicit padding masks, accepted train-only statistics, strict shared task balancing, and a
-validation-only checkpoint/execution-horizon lock. Learned actions are hard-rejected when invalid;
-they are never clipped or projected. See the
-[`Phase 2C-A plan`](docs/langmani_v2/phase_2c_a_plan.md). SmolVLA and VLA-JEPA remain outside this
-authorization.
+Phase 2C-A is complete as
+[`Result D`](docs/langmani_v2/phase_2c_a_result.md). Three task-specific ACT baselines and one
+shared three-way Task-ID ACT completed seed-0 training, and all 16 retained checkpoints passed
+validation-only offline diagnostics. The loss-selected Pick checkpoint then emitted finite
+gripper values above the live native action bound on the first closed-loop infrastructure smoke.
+The evaluator rejected the chunk before `env.step`; no action or environment step executed, and
+no clipping, projection, binary conversion, or post-outcome checkpoint replacement was used.
+Closed-loop development and final evaluation therefore did not start, so policy success,
+multi-task interference, task-ID sensitivity, and visual-shift results are unavailable rather
+than zero. `act_baselines_validated=false` and `smolvla_phase_eligible=false`; SmolVLA and VLA-JEPA
+remain untrained and unauthorized. See the
+[`Phase 2C-A plan`](docs/langmani_v2/phase_2c_a_plan.md),
+[`training report`](docs/langmani_v2/phase_2c_a_training_report.md), and
+[`evaluation report`](docs/langmani_v2/phase_2c_a_evaluation_report.md).
+
+The compact result package can be checked against the immutable external training/evaluation
+evidence without starting a simulator or loading a policy:
+
+```bash
+python environment/verify_v2_phase2c_a.py \
+  --evidence-root /path/to/phase2c-a-evidence \
+  --report /new/path/to/result-verification.json
+```
 
 The no-training v2 production entry point is:
 

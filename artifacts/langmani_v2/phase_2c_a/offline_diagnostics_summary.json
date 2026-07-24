@@ -1,0 +1,129 @@
+{
+  "all_checkpoint_outputs_finite": true,
+  "all_checkpoint_outputs_nonconstant": true,
+  "canonical_package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "checkpoint_count": 16,
+  "diagnostic_commit": "a3a09d30cba8a1f85c79953dc0c39e22712e4e9a",
+  "models": {
+    "pick": {
+      "first_action_raw_l1": [
+        0.02915913041518252,
+        0.023011289345031057,
+        0.020388390488400302,
+        0.021126184679828484
+      ],
+      "selected_checkpoint": "sha256:da7128d019689d190523c1f4c6f7f1e4060371ef24f203821afd98dbe316e0f3",
+      "selected_step": 2680,
+      "steps": [
+        670,
+        1340,
+        2010,
+        2680
+      ],
+      "total_action_loss": [
+        0.18180224702180417,
+        0.1688346523931435,
+        0.1615367087672937,
+        0.1614323332628867
+      ],
+      "unpadded_raw_l1": [
+        0.04759571850764638,
+        0.04452673600917672,
+        0.03934923520447193,
+        0.03871382203961406
+      ]
+    },
+    "push": {
+      "first_action_raw_l1": [
+        0.01227980652378447,
+        0.009331696640160196,
+        0.009223643112611514,
+        0.00900104487563155
+      ],
+      "selected_checkpoint": "sha256:6b51e3af0d4d42dc20c1175e6196b1eb3f7a2b15895555ee71e24ae0d0c167bd",
+      "selected_step": 2380,
+      "steps": [
+        595,
+        1190,
+        1785,
+        2380
+      ],
+      "total_action_loss": [
+        0.1109129313385471,
+        0.08923370343246984,
+        0.0886517902507883,
+        0.08204677931334238
+      ],
+      "unpadded_raw_l1": [
+        0.016294550744326362,
+        0.013632406168451298,
+        0.013546329823065013,
+        0.012363489998021499
+      ]
+    },
+    "shared_seed0": {
+      "first_action_raw_l1": [
+        0.032018779306184006,
+        0.02546185847768821,
+        0.023186181245296384,
+        0.018198169448305736
+      ],
+      "selected_by_task_raw_l1": {
+        "PickCube-v1": 0.03234879907029993,
+        "PushCube-v1": 0.012217150226392835,
+        "StackCube-v1": 0.044144702870806005
+      },
+      "selected_checkpoint": "sha256:ada3cb1bd9dd9f752f60f2c9059746c8d0e2ae902fa4c5a04c88b8e96242d870",
+      "selected_step": 8712,
+      "steps": [
+        2178,
+        4356,
+        6534,
+        8712
+      ],
+      "total_action_loss": [
+        0.14394349122745184,
+        0.11788697590610565,
+        0.11615774568569674,
+        0.10775071343456531
+      ],
+      "unpadded_raw_l1": [
+        0.04644612127125541,
+        0.037666314063157826,
+        0.03589571427093434,
+        0.03200055851422622
+      ]
+    },
+    "stack": {
+      "first_action_raw_l1": [
+        0.03804725938812357,
+        0.030794300077538646,
+        0.028184025663721905,
+        0.024702099949643827
+      ],
+      "selected_checkpoint": "sha256:9458aa3c9e499526282e3c48534de0562306d4a346973e0c594e7e7097415a61",
+      "selected_step": 3680,
+      "steps": [
+        920,
+        1840,
+        2760,
+        3680
+      ],
+      "total_action_loss": [
+        0.17302537732415715,
+        0.13638681101889363,
+        0.13221849758497406,
+        0.12347609452702095
+      ],
+      "unpadded_raw_l1": [
+        0.06206283831948957,
+        0.051321738183285615,
+        0.04798391056206687,
+        0.04487544686620421
+      ]
+    }
+  },
+  "padding_excluded_from_metrics": true,
+  "schema_version": "langmani-v2-phase2c-a-offline-diagnostics-summary-v0",
+  "selection_rule": "lowest padding-masked full-validation ACT total loss; tie-break by inverse-normalized first-action L1"
+}
