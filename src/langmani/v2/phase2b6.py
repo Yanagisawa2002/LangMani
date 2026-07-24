@@ -805,6 +805,8 @@ def build_padding_audit(
 
 def build_task_balance_manifest(
     episodes: Sequence[Mapping[str, object]],
+    *,
+    require_exact_source_train_counts: bool = True,
 ) -> dict[str, object]:
     """Describe episode/frame balance and future sampling choices without training."""
 
@@ -859,7 +861,12 @@ def build_task_balance_manifest(
             },
             "training_started": False,
             "optimizer_steps": 0,
-            "passed": all(episode_counts[task_id] == 700 for task_id in TASK_IDS),
+            "source_train_counts_required": require_exact_source_train_counts,
+            "passed": (
+                all(episode_counts[task_id] == 700 for task_id in TASK_IDS)
+                if require_exact_source_train_counts
+                else all(episode_counts[task_id] > 0 for task_id in TASK_IDS)
+            ),
         }
     )
 

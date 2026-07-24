@@ -1178,7 +1178,10 @@ def materialize_accepted_metadata(
     )
     folds = build_cross_skill_folds(spec=contract, split_manifest=accepted_split)
     padding = build_padding_audit(accepted)
-    balance = build_task_balance_manifest(accepted)
+    balance = build_task_balance_manifest(
+        accepted,
+        require_exact_source_train_counts=False,
+    )
     documents = {
         "accepted_primary_split_manifest.json": accepted_split,
         "cross_skill_fold_manifests.json": folds,

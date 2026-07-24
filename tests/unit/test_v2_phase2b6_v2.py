@@ -6,7 +6,7 @@ from typing import cast
 
 import pytest
 
-from langmani.v2.phase2b6 import PRIMARY_SPLITS, TASK_IDS
+from langmani.v2.phase2b6 import PRIMARY_SPLITS, TASK_IDS, build_task_balance_manifest
 from langmani.v2.phase2b6_v2 import (
     EXPECTED_SOURCE_EPISODES,
     PACKAGE_ID,
@@ -260,6 +260,25 @@ def test_split_counts_preserve_source_count_and_report_exclusion() -> None:
     assert sum(row["source_count"] for row in task.values()) == 10
     assert sum(row["accepted_count"] for row in task.values()) == 9
     assert report["replacement_sampling"] is False
+
+
+def test_accepted_only_task_balance_does_not_replace_missing_train_source() -> None:
+    rows = [
+        {
+            "task_id": task_id,
+            "primary_split": "train",
+            "transition_count": 2 + index,
+        }
+        for task_id in TASK_IDS
+        for index in range(2)
+    ]
+    report = build_task_balance_manifest(
+        rows,
+        require_exact_source_train_counts=False,
+    )
+    assert report["episode_counts"] == {task_id: 2 for task_id in TASK_IDS}
+    assert report["source_train_counts_required"] is False
+    assert report["passed"] is True
 
 
 def test_result_classification_separates_integrity_threshold_and_restore() -> None:

@@ -1632,7 +1632,7 @@ def compute_dataset_statistics(
                     {
                         "phase": "statistics",
                         "completed_episodes": index,
-                        "total_episodes": EXPECTED_EPISODES,
+                        "total_episodes": len(assignments),
                     },
                     sort_keys=True,
                 ),
