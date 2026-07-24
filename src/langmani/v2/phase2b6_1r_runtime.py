@@ -328,8 +328,7 @@ def _disk_audit(paths: Sequence[Path]) -> dict[str, object]:
         "paths": rows,
         "minimum_required_free_bytes": 1024**3,
         "compact_diagnostics_only": True,
-        "passed": bool(rows)
-        and all(int(cast(Any, row["free_bytes"])) >= 1024**3 for row in rows),
+        "passed": bool(rows) and all(int(cast(Any, row["free_bytes"])) >= 1024**3 for row in rows),
     }
 
 
