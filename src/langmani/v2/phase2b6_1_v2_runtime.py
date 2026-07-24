@@ -246,7 +246,11 @@ def _repository_audit(
         "branch_exact": branch == TARGET_BRANCH,
         "source_commit_is_ancestor": source_is_ancestor,
         "worktree_clean": status == "",
-        "origin_exact": remote == "https://github.com/Yanagisawa2002/LangMani.git",
+        "origin_repository_exact": remote
+        in {
+            "https://github.com/Yanagisawa2002/LangMani.git",
+            "git@github.com:Yanagisawa2002/LangMani.git",
+        },
         "upstream_matches_head": upstream == head,
         "producer_commit_exists": producer_exists,
         "source_root_exists": source_root.is_dir(),
