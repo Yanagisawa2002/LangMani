@@ -1,0 +1,22 @@
+{
+  "checks": {
+    "checkpoint_bytes_rehashed": true,
+    "closed_loop_smoke_hard_stopped_before_step": true,
+    "four_training_runs_complete": true,
+    "identity_resolution_passed": true,
+    "post_hard_stop_stages_absent": true,
+    "result_classification_valid": true,
+    "sixteen_checkpoints_recoverable": true,
+    "sixteen_offline_diagnostics_passed": true,
+    "validation_only_selection_locks_passed": true
+  },
+  "diagnostic_commit": "a3a09d30cba8a1f85c79953dc0c39e22712e4e9a",
+  "fingerprint": "sha256:d8b42978845249ccfcb0019c05b5e6a73fd16b01c993029a62864dd3fac1d12b",
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "passed": true,
+  "result": "RESULT_D",
+  "schema_version": "langmani-v2-phase2c-a-result-verification-v0",
+  "smolvla_training_authorized": false,
+  "training_commit": "c0b5106cb1fff5b43f46500321264cec33613673",
+  "vla_jepa_training_authorized": false
+}

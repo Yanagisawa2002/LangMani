@@ -76,6 +76,12 @@
       "source_copy": "result_classification.json",
       "status": "RESULT_D"
     },
+    "result_verification": {
+      "external_path": "/root/autodl-tmp/langmani-phase2c-a/verification/result-verification-f9f1ea5.json",
+      "fingerprint": "sha256:d8b42978845249ccfcb0019c05b5e6a73fd16b01c993029a62864dd3fac1d12b",
+      "source_copy": "result_verification.json",
+      "status": "passed"
+    },
     "sampler_manifest": {
       "external_path": "/root/autodl-tmp/langmani-phase2c-a/preflight-c0b5106-b408/sampler_manifest.json",
       "status": "complete"

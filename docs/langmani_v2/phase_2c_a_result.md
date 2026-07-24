@@ -39,3 +39,7 @@ Recommended next work is a separately authorized pre-policy action-validity inve
 should determine why mean/std-regressed gripper outputs cross native bounds and pre-register a
 lawful action representation or eligibility gate before any new training. It must not retroactively
 clip these checkpoints, reinterpret Result D as quality evidence, or start SmolVLA/VLA-JEPA.
+
+The independent compact verifier passed all nine result checks, including rehashing every file
+listed by all 16 checkpoint manifests. Its report fingerprint is
+`sha256:d8b42978845249ccfcb0019c05b5e6a73fd16b01c993029a62864dd3fac1d12b`.
