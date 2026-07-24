@@ -163,7 +163,7 @@ def _installed_source_audit() -> dict[str, object]:
         'valid_mask = ~batch["action_is_pad"].unsqueeze(-1)',
         "abs_err = F.l1_loss",
         "(abs_err * valid_mask).sum()",
-        "loss = l1_loss + self.config.kl_weight * kld_loss",
+        "loss = l1_loss + mean_kld * self.config.kl_weight",
     )
     missing = [fragment for fragment in required_fragments if fragment not in source]
     if missing:
