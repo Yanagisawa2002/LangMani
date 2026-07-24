@@ -26,6 +26,7 @@ from langmani.v2.phase2c_a_act import (  # noqa: E402
     TASK_INDEX_KEY,
     TASK_TOKEN_FEATURE_KEY,
     Phase2CAActError,
+    _postprocess_action_chunk,
     _repo_id,
     act_config_dict,
     build_phase2c_a_act_config,
@@ -102,6 +103,21 @@ def test_policy_batch_projects_no_privileged_fields_and_keeps_padding() -> None:
         [0.0, 0.0, 1.0],
     ]
     assert projected["action_is_pad"].dtype is torch.bool
+
+
+def test_action_postprocessor_receives_policy_action_tensor() -> None:
+    predicted = torch.zeros(2, 16, 8)
+
+    class _TensorOnlyPostprocessor:
+        def __call__(self, value: object) -> torch.Tensor:
+            assert isinstance(value, torch.Tensor)
+            return value + 1
+
+    result = _postprocess_action_chunk(  # type: ignore[arg-type]
+        _TensorOnlyPostprocessor(),
+        predicted,
+    )
+    assert torch.equal(result, predicted + 1)
 
 
 def test_shared_config_uses_public_three_way_env_token() -> None:

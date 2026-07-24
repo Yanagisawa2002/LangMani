@@ -1431,13 +1431,10 @@ def offline_diagnostics(
         predicted_normalized = policy.predict_action_chunk(
             cast(dict[str, torch.Tensor], observations)
         )
-        predicted_raw_value = postprocessor({ACTION_FEATURE_KEY: predicted_normalized})
-        if isinstance(predicted_raw_value, Mapping):
-            predicted_raw_tensor = predicted_raw_value.get(ACTION_FEATURE_KEY)
-        else:
-            predicted_raw_tensor = predicted_raw_value
-        if not isinstance(predicted_raw_tensor, torch.Tensor):
-            raise Phase2CAActError("ACT postprocessor did not return an action tensor")
+        predicted_raw_tensor = _postprocess_action_chunk(
+            postprocessor,
+            predicted_normalized,
+        )
         expected_normalized = cast(torch.Tensor, processed[ACTION_FEATURE_KEY])
         expected_raw = cast(torch.Tensor, projected[ACTION_FEATURE_KEY])
         padding = cast(torch.Tensor, projected["action_is_pad"])
