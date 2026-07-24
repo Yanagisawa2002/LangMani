@@ -186,7 +186,9 @@ def _storage_audit(paths: Sequence[Path]) -> dict[str, object]:
             "free_bytes": usage.free,
             "total_bytes": usage.total,
         }
-    minimum = min(int(cast(Mapping[str, object], row)["free_bytes"]) for row in reports.values())
+    minimum = min(
+        cast(int, cast(Mapping[str, object], row)["free_bytes"]) for row in reports.values()
+    )
     return {
         "paths": reports,
         "minimum_free_bytes": minimum,
@@ -431,11 +433,12 @@ def run_rendering_preflight(
             try:
                 env = gym.make(task_id, **cast(Any, _environment_kwargs(document)))
                 base: Any = env.unwrapped
-                task_report = {
+                action_shape = tuple(cast(tuple[int, ...], env.action_space.shape))
+                task_report: dict[str, object] = {
                     "task_id": task_id,
                     "control_mode": str(base.control_mode),
                     "control_frequency_hz": int(base.control_freq),
-                    "action_shape": list(env.action_space.shape),
+                    "action_shape": list(action_shape),
                     "observation_space": str(env.observation_space),
                     "explicit_reset_count": 0,
                     "explicit_step_count": 0,
@@ -445,7 +448,7 @@ def run_rendering_preflight(
                     "passed": (
                         str(base.control_mode) == CONTROL_MODE
                         and int(base.control_freq) == 20
-                        and tuple(env.action_space.shape) == (8,)
+                        and action_shape == (8,)
                     ),
                 }
             except Exception as error:  # noqa: BLE001 - external simulator boundary
@@ -550,7 +553,7 @@ def _attempt_record(
     production_root: Path,
     retryable_reason: str | None = None,
 ) -> dict[str, object]:
-    action_count = int(replay["source_action_count"])
+    action_count = cast(int, replay["source_action_count"])
     sub_gates["reset_identity_gate"] = gate(
         "passed",
         reset_identity=assignment["reset_identity"],
@@ -853,7 +856,7 @@ def run_full_production(
                                 _save_episode_npz(output_path, arrays)
                                 serialization = _validate_serialized_npz(
                                     output_path,
-                                    action_count=int(replay["source_action_count"]),
+                                    action_count=cast(int, replay["source_action_count"]),
                                 )
                                 if serialization["passed"] is not True:
                                     raise Phase2B6V2RuntimeError("serialized NPZ readback changed")
@@ -1065,7 +1068,11 @@ def run_full_production(
             "source_episode_count": len(terminal),
             "gate_failures": {
                 name: sum(
-                    cast(Mapping[str, object], row["sub_gates"])[name]["status"] == "failed"
+                    cast(
+                        Mapping[str, object],
+                        cast(Mapping[str, object], row["sub_gates"])[name],
+                    )["status"]
+                    == "failed"
                     for row in terminal
                 )
                 for name in REQUIRED_SUB_GATES

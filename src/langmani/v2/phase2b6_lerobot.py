@@ -201,10 +201,12 @@ def _load_replay_rows(production_root: Path) -> list[dict[str, object]]:
     inventory = production_root / "primary" / "metadata" / "replay_inventory.json"
     if inventory.is_file():
         document = _read_json(inventory)
-        rows = document.get("episodes")
-        if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
+        inventory_rows = document.get("episodes")
+        if not isinstance(inventory_rows, list) or not all(
+            isinstance(row, dict) for row in inventory_rows
+        ):
             raise Phase2B6LeRobotError("replay inventory is malformed")
-        return cast(list[dict[str, object]], rows)
+        return cast(list[dict[str, object]], inventory_rows)
     attempts = production_root / "work" / "production_attempts.jsonl"
     rows: list[dict[str, object]] = []
     with attempts.open(encoding="utf-8") as stream:
@@ -1480,7 +1482,7 @@ def run_leakage_audit(
                 "fold_count": len(cast(Mapping[str, object], folds["folds"])),
             },
             "primary_split_overlap_count": (
-                int(primary_summary["primary_split_overlap_count"])
+                cast(int, primary_summary["primary_split_overlap_count"])
                 + media_overlap_count
                 + len(train_template_ids & heldout_template_ids)
             ),
