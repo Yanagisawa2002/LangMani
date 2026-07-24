@@ -9,7 +9,6 @@ import math
 import os
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ARTIFACT_ROOT = PROJECT_ROOT / "artifacts" / "langmani_v2" / "phase_2c_a"
