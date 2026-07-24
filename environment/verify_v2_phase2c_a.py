@@ -239,6 +239,7 @@ def verify_phase2c_a(
     for path in diagnostic_paths:
         diagnostic = _read_object(path)
         fingerprint = diagnostic.get("checkpoint_fingerprint")
+        total_action_loss = diagnostic.get("total_action_loss")
         if (
             not isinstance(fingerprint, str)
             or diagnostic.get("passed") is not True
@@ -246,8 +247,8 @@ def verify_phase2c_a(
             or diagnostic.get("package_fingerprint") != CANONICAL_PACKAGE
             or diagnostic.get("output_finite") is not True
             or diagnostic.get("constant_action_prediction") is not False
-            or not isinstance(diagnostic.get("total_action_loss"), int | float)
-            or not math.isfinite(float(diagnostic["total_action_loss"]))
+            or not isinstance(total_action_loss, int | float)
+            or not math.isfinite(float(total_action_loss))
         ):
             raise Phase2CAVerificationError(f"offline diagnostic differs: {path}")
         diagnostic_by_fingerprint[fingerprint] = diagnostic
