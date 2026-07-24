@@ -870,8 +870,22 @@ def _physical_snapshot(base: Any, step_index: int) -> dict[str, object]:
     tcp_pose = getattr(getattr(base.agent, "tcp", None), "pose", None)
     tcp_raw = getattr(tcp_pose, "raw_pose", None)
     pair_force: list[object] | None = None
+    gripper_cube_a_forces: list[list[object]] = []
+    gripper_cube_b_forces: list[list[object]] = []
     with suppress(AttributeError, RuntimeError, TypeError, ValueError):
         pair_force = _jsonable_array(base.scene.get_pairwise_contact_forces(cube_a, cube_b))
+    for finger_name in ("finger1_link", "finger2_link"):
+        finger = getattr(base.agent, finger_name, None)
+        if finger is None:
+            continue
+        with suppress(AttributeError, RuntimeError, TypeError, ValueError):
+            gripper_cube_a_forces.append(
+                _jsonable_array(base.scene.get_pairwise_contact_forces(finger, cube_a))
+            )
+        with suppress(AttributeError, RuntimeError, TypeError, ValueError):
+            gripper_cube_b_forces.append(
+                _jsonable_array(base.scene.get_pairwise_contact_forces(finger, cube_b))
+            )
     return {
         "step_index": step_index,
         "robot_qpos": qpos,
@@ -883,6 +897,8 @@ def _physical_snapshot(base: Any, step_index: int) -> dict[str, object]:
         "lower_cube_angular_velocity": _actor_vector(cube_b, "angular_velocity"),
         "upper_cube_linear_velocity": _actor_vector(cube_a, "linear_velocity"),
         "upper_cube_angular_velocity": _actor_vector(cube_a, "angular_velocity"),
+        "gripper_upper_cube_contact_forces": gripper_cube_a_forces,
+        "gripper_lower_cube_contact_forces": gripper_cube_b_forces,
         "cube_cube_contact_force": pair_force,
         "upper_cube_height": float(poses["cubeA"][2]),
         "relative_cube_displacement": relative.tolist(),
@@ -896,6 +912,20 @@ def _event_snapshots(step_snapshots: Sequence[Mapping[str, object]]) -> dict[str
     upper_reset_height = float(cast(float, reset["upper_cube_height"]))
     events: dict[str, object] = {"reset": reset}
     for snapshot in step_snapshots[1:]:
+        gripper_forces = [
+            *cast(
+                Sequence[object],
+                snapshot.get("gripper_upper_cube_contact_forces", []),
+            ),
+            *cast(
+                Sequence[object],
+                snapshot.get("gripper_lower_cube_contact_forces", []),
+            ),
+        ]
+        if "first_gripper_cube_contact" not in events and any(
+            np.linalg.norm(np.asarray(force, dtype=np.float64)) > 1e-5 for force in gripper_forces
+        ):
+            events["first_gripper_cube_contact"] = snapshot
         if (
             "first_cube_contact" not in events
             and snapshot.get("cube_cube_contact_force") is not None
@@ -918,6 +948,7 @@ def _event_snapshots(step_snapshots: Sequence[Mapping[str, object]]) -> dict[str
             events["first_canonical_success"] = snapshot
     events["final_step"] = step_snapshots[-1]
     for name in (
+        "first_gripper_cube_contact",
         "first_cube_contact",
         "first_lift",
         "first_placement_relation",
