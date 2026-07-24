@@ -1,0 +1,55 @@
+{
+  "action": {
+    "clipping": false,
+    "control_mode": "pd_joint_pos",
+    "dtype": "float32",
+    "fabricated_terminal_action": false,
+    "feature": "action",
+    "interpolation": false,
+    "projection": false,
+    "schema": "PandaJointPositionActionV0",
+    "shape": [
+      8
+    ]
+  },
+  "camera": {
+    "codec": "h264",
+    "crop": "none",
+    "dtype": "uint8",
+    "frame_rate_hz": 20,
+    "height": 256,
+    "layout": "HWC_RGB",
+    "name": "base_camera",
+    "pixel_format": "yuv444p",
+    "video_backend": "pyav",
+    "width": 256
+  },
+  "fabricated_terminal_action": false,
+  "fingerprint": "sha256:7a0619a42920bb1e6a2dc6bddf278736e5fdea7b1ebc76f80e0c6de4820d321e",
+  "observation": {
+    "image_feature": "observation.images.base_camera",
+    "privileged_fields_excluded": [
+      "object_pose",
+      "goal_pose",
+      "full_simulator_state",
+      "reward",
+      "success_internals",
+      "contacts"
+    ],
+    "state_dtype": "float32",
+    "state_feature": "observation.state",
+    "state_schema": "PandaPolicyStateV0",
+    "state_shape": [
+      9
+    ],
+    "terminal_diagnostic_frame_policy": false,
+    "timing": "observation[t] immediately precedes action[t]"
+  },
+  "observation_before_action": true,
+  "optimizer_steps": 0,
+  "passed": true,
+  "privileged_fields_excluded": true,
+  "schema_version": "langmani-v2-phase2b6-v2-observation-action-contract-v0",
+  "student_policy_training_started": false,
+  "terminal_diagnostic_frame_in_policy_data": false
+}

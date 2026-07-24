@@ -1,0 +1,8 @@
+{
+  "fingerprint": "sha256:077b4cd318039fe4e54442f87fe203d1092b741f92c50be7bab5b2a1134f25d3",
+  "passed": true,
+  "production_run_id": "langmani-official-multiskill-v2-instrumented-production",
+  "schema_version": "langmani-v2-phase2b6-v2-frozen-spec-v0",
+  "specification_fingerprint": "sha256:4f17802bbe04b0a9d38ff19436b25b71d31da71eea9b5db02fed3f18cf08b0d0",
+  "specification_sha256": "sha256:324bf4df04767350a219eb46065ead9a9d27362b4789849281e45bb670c1a221"
+}

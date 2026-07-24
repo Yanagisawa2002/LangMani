@@ -1,0 +1,156 @@
+{
+  "created_at_utc": "2026-07-24T10:45:59.613677+00:00",
+  "cross_skill_folds": {
+    "alternate_view_reference_only": true,
+    "fold_count": 3,
+    "materialization": "metadata_only",
+    "primary_leakage": false
+  },
+  "fingerprint": "sha256:19515e727f0654415a3125b79ee916ab97eec7080efadeba0c8337946dcad7bc",
+  "passed": true,
+  "primary_identity_audit": {
+    "duplicate_within_primary_assignments": {
+      "action_sha256": 0,
+      "derived_episode_identity": 0,
+      "reset_identity": 0,
+      "source_trajectory_identity": 0
+    },
+    "overlap_matrix": {
+      "test_unseen_reset__test_unseen_task_language": {
+        "action_sha256": 0,
+        "derived_episode_identity": 0,
+        "initial_state_sha256": 0,
+        "media_namespace": 0,
+        "reset_identity": 0,
+        "source_trajectory_identity": 0
+      },
+      "test_unseen_reset__test_visual_shift": {
+        "action_sha256": 0,
+        "derived_episode_identity": 0,
+        "initial_state_sha256": 0,
+        "media_namespace": 0,
+        "reset_identity": 0,
+        "source_trajectory_identity": 0
+      },
+      "test_unseen_task_language__test_visual_shift": {
+        "action_sha256": 0,
+        "derived_episode_identity": 0,
+        "initial_state_sha256": 0,
+        "media_namespace": 0,
+        "reset_identity": 0,
+        "source_trajectory_identity": 0
+      },
+      "train__test_unseen_reset": {
+        "action_sha256": 0,
+        "derived_episode_identity": 0,
+        "initial_state_sha256": 0,
+        "media_namespace": 0,
+        "reset_identity": 0,
+        "source_trajectory_identity": 0
+      },
+      "train__test_unseen_task_language": {
+        "action_sha256": 0,
+        "derived_episode_identity": 0,
+        "initial_state_sha256": 0,
+        "media_namespace": 0,
+        "reset_identity": 0,
+        "source_trajectory_identity": 0
+      },
+      "train__test_visual_shift": {
+        "action_sha256": 0,
+        "derived_episode_identity": 0,
+        "initial_state_sha256": 0,
+        "media_namespace": 0,
+        "reset_identity": 0,
+        "source_trajectory_identity": 0
+      },
+      "train__validation": {
+        "action_sha256": 0,
+        "derived_episode_identity": 0,
+        "initial_state_sha256": 0,
+        "media_namespace": 0,
+        "reset_identity": 0,
+        "source_trajectory_identity": 0
+      },
+      "validation__test_unseen_reset": {
+        "action_sha256": 0,
+        "derived_episode_identity": 0,
+        "initial_state_sha256": 0,
+        "media_namespace": 0,
+        "reset_identity": 0,
+        "source_trajectory_identity": 0
+      },
+      "validation__test_unseen_task_language": {
+        "action_sha256": 0,
+        "derived_episode_identity": 0,
+        "initial_state_sha256": 0,
+        "media_namespace": 0,
+        "reset_identity": 0,
+        "source_trajectory_identity": 0
+      },
+      "validation__test_visual_shift": {
+        "action_sha256": 0,
+        "derived_episode_identity": 0,
+        "initial_state_sha256": 0,
+        "media_namespace": 0,
+        "reset_identity": 0,
+        "source_trajectory_identity": 0
+      }
+    },
+    "passed": true,
+    "primary_split_overlap_count": 0,
+    "schema_version": "langmani-v2-phase2b6-primary-leakage-summary-v0"
+  },
+  "primary_media_overlap_count": 0,
+  "primary_media_overlap_matrix": {
+    "test_unseen_reset__test_unseen_task_language": {
+      "file_hash_overlap": 0,
+      "relative_path_overlap": 0
+    },
+    "test_unseen_reset__test_visual_shift": {
+      "file_hash_overlap": 0,
+      "relative_path_overlap": 0
+    },
+    "test_unseen_task_language__test_visual_shift": {
+      "file_hash_overlap": 0,
+      "relative_path_overlap": 0
+    },
+    "train__test_unseen_reset": {
+      "file_hash_overlap": 0,
+      "relative_path_overlap": 0
+    },
+    "train__test_unseen_task_language": {
+      "file_hash_overlap": 0,
+      "relative_path_overlap": 0
+    },
+    "train__test_visual_shift": {
+      "file_hash_overlap": 0,
+      "relative_path_overlap": 0
+    },
+    "train__validation": {
+      "file_hash_overlap": 0,
+      "relative_path_overlap": 0
+    },
+    "validation__test_unseen_reset": {
+      "file_hash_overlap": 0,
+      "relative_path_overlap": 0
+    },
+    "validation__test_unseen_task_language": {
+      "file_hash_overlap": 0,
+      "relative_path_overlap": 0
+    },
+    "validation__test_visual_shift": {
+      "file_hash_overlap": 0,
+      "relative_path_overlap": 0
+    }
+  },
+  "primary_split_overlap_count": 0,
+  "schema_version": "langmani-v2-phase2b6-leakage-audit-v0",
+  "train_heldout_language_template_overlap_count": 0,
+  "visual_shift_lineage": {
+    "exact_match": true,
+    "expected_source_episode_count": 150,
+    "manifest_source_episode_count": 150,
+    "training_source_overlap_count": 0
+  }
+}

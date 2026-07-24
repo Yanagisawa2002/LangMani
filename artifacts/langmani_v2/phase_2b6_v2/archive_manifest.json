@@ -1,0 +1,22 @@
+{
+  "archive_bytes_reused_after_verified_manifest": true,
+  "archive_content_address_kind": "primary_tree_sha256",
+  "archive_prefix": "LangManiOfficialMultiSkill-v2",
+  "archive_sha256": "sha256:a43af6568fa46e074efb3d94d4e370a1e5d7c2d7d1ad300c1d4d20f65b7d94f3",
+  "archive_size_bytes": 2709340363,
+  "content_addressed_archive_location": "/root/autodl-tmp/langmani-external/phase2b6-v2-archive/LangManiOfficialMultiSkill-v2-b0e255d8b3f7f77fe33538cb2c313620d1d00adf90562b33dad06b10674474b3.tar.gz",
+  "created_at_utc": "2026-07-24T10:52:14.511964+00:00",
+  "fingerprint": "sha256:034a703904e747c16ef10a7d28d847d8adccd9b86546bb45a96d952c72687f5a",
+  "package_identity": "LangManiOfficialMultiSkill-v2",
+  "passed": true,
+  "primary_and_archive_distinct": true,
+  "primary_dataset_location": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary",
+  "primary_file_count": 168,
+  "primary_total_bytes": 2779801643,
+  "primary_tree_digest": "sha256:b0e255d8b3f7f77fe33538cb2c313620d1d00adf90562b33dad06b10674474b3",
+  "recovery_command": "python environment/run_v2_phase2b6_v2.py restore --production-root /root/autodl-tmp/langmani-external/phase2b6-v2/production_v2 --evidence-root /root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/evidence --restore-root <clean-scratch>",
+  "schema_version": "langmani-v2-phase2b6-archive-manifest-v0",
+  "source_zip_bytes_included": false,
+  "source_zip_references_included": true,
+  "symlinks_in_primary": false
+}

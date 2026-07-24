@@ -1,0 +1,31 @@
+{
+  "accepted_multiskill_dataset_validated": true,
+  "accepted_package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "backward_passes": 0,
+  "fingerprint": "sha256:81ebfbdc0547e09fd896d9b9eb13213b3040c8fed6f61495500a5d11b2dab2c7",
+  "gates": {
+    "accepted_action_frame_alignment": true,
+    "accepted_replay_outcome_agreement": true,
+    "accepted_simulator_errors_zero": true,
+    "accepted_source_thresholds": true,
+    "all_3000_sources_accounted": true,
+    "archive_created": true,
+    "invalid_and_nonfinite_actions_zero": true,
+    "lerobot_full_readback": true,
+    "padding_masks_verified": true,
+    "primary_split_leakage_zero": true,
+    "privileged_fields_excluded": true,
+    "restore_validated": true,
+    "source_to_derived_equality": true,
+    "three_skill_families_retained": true,
+    "train_only_normalization": true,
+    "unclassified_failures_zero": true
+  },
+  "label": "Versioned multi-skill dataset accepted",
+  "optimizer_created": false,
+  "optimizer_steps": 0,
+  "passed": true,
+  "result": "RESULT_A",
+  "schema_version": "langmani-v2-phase2b6-v2-result-v0",
+  "student_policy_training_started": false
+}

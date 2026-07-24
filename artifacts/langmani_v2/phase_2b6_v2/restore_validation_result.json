@@ -1,0 +1,877 @@
+{
+  "archive_sha256": "sha256:a43af6568fa46e074efb3d94d4e370a1e5d7c2d7d1ad300c1d4d20f65b7d94f3",
+  "archive_sha256_verified": true,
+  "created_at_utc": "2026-07-24T10:53:34.158339+00:00",
+  "fingerprint": "sha256:7a5b7407581e22a50482e1556dc5da1a12c67f09522da44f2de2cb138fdf54c9",
+  "full_episode_inventory_count": 2998,
+  "full_file_hash_tree_verified": true,
+  "full_frame_inventory_count": 254200,
+  "lerobot_api_loading": true,
+  "passed": true,
+  "restored_file_count": 168,
+  "restored_location": "/root/autodl-tmp/langmani-external/phase2b6-v2-restore-scratch/b0e255d8b3f7f77fe33538cb2c313620d1d00adf90562b33dad06b10674474b3/LangManiOfficialMultiSkill-v2",
+  "restored_total_bytes": 2779801643,
+  "restored_tree_digest": "sha256:b0e255d8b3f7f77fe33538cb2c313620d1d00adf90562b33dad06b10674474b3",
+  "schema_version": "langmani-v2-phase2b6-restore-validation-v0",
+  "scratch_deleted_after_evidence_finalization": false,
+  "stratified_sample_count": 45,
+  "stratified_samples": [
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Grasp the cube, then place it on the goal.",
+      "local_episode_index": 0,
+      "passed": true,
+      "source_identity": "sha256:9a4bcf41d38eb6f0e127482fe79af5e1138ae8c0172da786cb0c74a0cc46e248",
+      "split": "test_unseen_reset",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Grasp the cube, then place it on the goal.",
+      "local_episode_index": 50,
+      "passed": true,
+      "source_identity": "sha256:2da4344e1899736e3f2aad72884dec276dd83ee9cf567491a5b6b99949ac13eb",
+      "split": "test_unseen_reset",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Grasp the cube, then place it on the goal.",
+      "local_episode_index": 99,
+      "passed": true,
+      "source_identity": "sha256:43c8b66f9162dcd166918bf3fd96754ee479ee67397d1acef1b1d1ab7f06b114",
+      "split": "test_unseen_reset",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Use the gripper to move the cube onto its destination.",
+      "local_episode_index": 0,
+      "passed": true,
+      "source_identity": "sha256:39e74b29ee6afd5c0984bfd7840491cff43afa44c58e6d666fc70437f14b110f",
+      "split": "test_unseen_task_language",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Relocate the cube to the goal using a grasp.",
+      "local_episode_index": 25,
+      "passed": true,
+      "source_identity": "sha256:8ab869b1ae152a9a24f2d58cf7ab54a52b7cfd1d77f0ad3cd9a8797e03d738bb",
+      "split": "test_unseen_task_language",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Use the gripper to move the cube onto its destination.",
+      "local_episode_index": 49,
+      "passed": true,
+      "source_identity": "sha256:c80d9f1cebe38f85be331793efa939b58ac59b7116ed209ce790ea04904ab56b",
+      "split": "test_unseen_task_language",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Lift and relocate the cube to its target.",
+      "local_episode_index": 0,
+      "passed": true,
+      "source_identity": "sha256:f5accfbc0c7001dd57ebbe82deb2583894b8c48ef448a464b019b386a8ff9c4a",
+      "split": "test_visual_shift",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Grasp the cube, then place it on the goal.",
+      "local_episode_index": 25,
+      "passed": true,
+      "source_identity": "sha256:d12291c63ef2fdee50061e4536be5f6bb3e9d24050a41c48afa294205914ee98",
+      "split": "test_visual_shift",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Grasp the cube, then place it on the goal.",
+      "local_episode_index": 49,
+      "passed": true,
+      "source_identity": "sha256:4d7e2bdaca1de2c2db3cc273cd4e25464a9146a223bc89b0b291238932a9aae1",
+      "split": "test_visual_shift",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Transfer the cube to the goal location.",
+      "local_episode_index": 0,
+      "passed": true,
+      "source_identity": "sha256:a193516178b3f4460402a8fb9ff3c61b67798287273a8a99f5ffbc87d6029ecb",
+      "split": "train",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Move the cube into the target area by picking it up.",
+      "local_episode_index": 350,
+      "passed": true,
+      "source_identity": "sha256:6171009222698595b2674177ed3d8f53774bcd20daef80fd4810764f0a37e863",
+      "split": "train",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Transfer the cube to the goal location.",
+      "local_episode_index": 699,
+      "passed": true,
+      "source_identity": "sha256:400fe773b005a815ae820ffd03bda182f248e707f09ca6b13b625b2ac66d905c",
+      "split": "train",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Grasp the cube, then place it on the goal.",
+      "local_episode_index": 0,
+      "passed": true,
+      "source_identity": "sha256:dbd164c9f57b65081065e37bd58a9ffa364faec0a26f0faa6296c4dea0d1b946",
+      "split": "validation",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Grasp the cube, then place it on the goal.",
+      "local_episode_index": 50,
+      "passed": true,
+      "source_identity": "sha256:3f9f2e3caccb913540e000d13e93317cd5b84cdd2030a2c254f718f3cfe61955",
+      "split": "validation",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Grasp the cube, then place it on the goal.",
+      "local_episode_index": 99,
+      "passed": true,
+      "source_identity": "sha256:40ed2000c60b4dbeed80447f9f718a5e2c6bf33c4dda35a915860c424092b318",
+      "split": "validation",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Move the cube into the target area using a push.",
+      "local_episode_index": 0,
+      "passed": true,
+      "source_identity": "sha256:103d221eea19c77b986a71874ce4b53fa46f14c5f71d7530033ca418ef3de1d1",
+      "split": "test_unseen_reset",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PushCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Move the cube into the target area using a push.",
+      "local_episode_index": 50,
+      "passed": true,
+      "source_identity": "sha256:9c19e93579ae5f0eef52d685bd1e9c96680f4e4a2c9cb83a7e444f66979aa066",
+      "split": "test_unseen_reset",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PushCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Slide the block onto its goal region.",
+      "local_episode_index": 99,
+      "passed": true,
+      "source_identity": "sha256:e23a75384f08606b57b15c1b5743e97c986068ccd780e26c8e3e596d568433ac",
+      "split": "test_unseen_reset",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PushCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Nudge the cube across the surface into the goal.",
+      "local_episode_index": 0,
+      "passed": true,
+      "source_identity": "sha256:e95d714b276a364b6e4709a1739e93b93a210d95f94b869b2ffd975043aef730",
+      "split": "test_unseen_task_language",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PushCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Use planar contact to move the cube into its target region.",
+      "local_episode_index": 25,
+      "passed": true,
+      "source_identity": "sha256:e86f45fbbc5967f5837505b8612eb253fb822e319b841766c4ebb93a21e5470d",
+      "split": "test_unseen_task_language",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PushCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Nudge the cube across the surface into the goal.",
+      "local_episode_index": 49,
+      "passed": true,
+      "source_identity": "sha256:7377c0fb10d854992231f22eb705fed2fa3eb0b6938fe459f8e34cca26e9c4f0",
+      "split": "test_unseen_task_language",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PushCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Move the cube into the target area using a push.",
+      "local_episode_index": 0,
+      "passed": true,
+      "source_identity": "sha256:e08f69d9d7e694380440bb52f11065b899a3c15a88840a21f87c60c9d92453d4",
+      "split": "test_visual_shift",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PushCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Move the cube into the target area using a push.",
+      "local_episode_index": 25,
+      "passed": true,
+      "source_identity": "sha256:07363b26b717402ac782a0720a09b2efab6b7ff3f428aec13edbc32940997f93",
+      "split": "test_visual_shift",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PushCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Slide the block onto its goal region.",
+      "local_episode_index": 49,
+      "passed": true,
+      "source_identity": "sha256:382c8e724d2fcebaaf7944f71e17eb335042a397e013c08c9002073ed732610d",
+      "split": "test_visual_shift",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PushCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Push the cube onto the target region.",
+      "local_episode_index": 0,
+      "passed": true,
+      "source_identity": "sha256:fcfb0e6e489ebb2969070b1c303586fcc220291800a13bddb1fdd77fc0bacdb8",
+      "split": "train",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PushCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Push the block until it reaches the marked destination.",
+      "local_episode_index": 349,
+      "passed": true,
+      "source_identity": "sha256:2def20a13c7bf1b55ddf5afebe72d7f1b16eb87316fd74f2388a68de42b04f16",
+      "split": "train",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PushCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Use the gripper to push the cube onto the goal.",
+      "local_episode_index": 698,
+      "passed": true,
+      "source_identity": "sha256:7796e445ae3f76c44638143c76c6b997ce658574e1d807f90796748fa3a72008",
+      "split": "train",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PushCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Move the cube into the target area using a push.",
+      "local_episode_index": 0,
+      "passed": true,
+      "source_identity": "sha256:cec87a091693cc6331d61d05ffdb3f9f79c40f1c310b80d4fd681e76d330e93e",
+      "split": "validation",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PushCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Slide the block onto its goal region.",
+      "local_episode_index": 50,
+      "passed": true,
+      "source_identity": "sha256:1cee09e1e9c8d966dce6b37515738fd787cfebc8b9a3a48075d019f79ed3c74f",
+      "split": "validation",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PushCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Move the cube into the target area using a push.",
+      "local_episode_index": 99,
+      "passed": true,
+      "source_identity": "sha256:a2015197be5a368e35d6b39045c7c13fb56cd088b093a7e4883ae7ec85c5a481",
+      "split": "validation",
+      "state_shape": [
+        9
+      ],
+      "task_id": "PushCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Put one block on top of the other block.",
+      "local_episode_index": 0,
+      "passed": true,
+      "source_identity": "sha256:ee8efa42d50d4497f666db3d1338a82d2e255d4c4e25d788daf6792e923d1f58",
+      "split": "test_unseen_reset",
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Put one block on top of the other block.",
+      "local_episode_index": 49,
+      "passed": true,
+      "source_identity": "sha256:e0bdd41ea092d911574f26a41265debde5ca03d0a45890b3f424580fd2bc7d6e",
+      "split": "test_unseen_reset",
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Put one block on top of the other block.",
+      "local_episode_index": 98,
+      "passed": true,
+      "source_identity": "sha256:b3a1868eab2abe6db4f8d2702e15dabb7d65a53c504d73ea0e186d5b91a84d17",
+      "split": "test_unseen_reset",
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Use the gripper to assemble a stack from the two cubes.",
+      "local_episode_index": 0,
+      "passed": true,
+      "source_identity": "sha256:75442ce4cfc50a3009753697df424f957cbcba013084ac3cf20668c0d5d5789b",
+      "split": "test_unseen_task_language",
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Use the gripper to assemble a stack from the two cubes.",
+      "local_episode_index": 25,
+      "passed": true,
+      "source_identity": "sha256:22c0dcbba4792436fbb697aac25ad1e3585349f24c755d9b7fb36b303fc92c4e",
+      "split": "test_unseen_task_language",
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Set the upper cube onto the lower cube.",
+      "local_episode_index": 49,
+      "passed": true,
+      "source_identity": "sha256:3873617c99615c2d9a63b171b73fe4f010eca2cce083bb0f332dd4bd494f2748",
+      "split": "test_unseen_task_language",
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Lift one cube and complete a two-level stack.",
+      "local_episode_index": 0,
+      "passed": true,
+      "source_identity": "sha256:a2d7fc6a251d372819d8969d823d59de62d1446658f1c042a6a3454c39977087",
+      "split": "test_visual_shift",
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Put one block on top of the other block.",
+      "local_episode_index": 25,
+      "passed": true,
+      "source_identity": "sha256:07e38c51f1fa3e170d6abbbece951673cb43ae5190ba2a5c5787d8605b0c9ec4",
+      "split": "test_visual_shift",
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Put one block on top of the other block.",
+      "local_episode_index": 49,
+      "passed": true,
+      "source_identity": "sha256:e6dc051d8f73b20d39029a0bd80c3b4505ba7633088bc99fa6d2ee0a30b5562a",
+      "split": "test_visual_shift",
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Build a two-cube stack.",
+      "local_episode_index": 0,
+      "passed": true,
+      "source_identity": "sha256:f5fc383f651e53dcdb71bb4eebbc02b7de21bcf9b07d57ce4c1dac09de1dbef7",
+      "split": "train",
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Place one cube securely on top of the second cube.",
+      "local_episode_index": 350,
+      "passed": true,
+      "source_identity": "sha256:659daf39fa6e62276ed48bdc9c1ccbcfb2a0c00f3e7fe05f571e22c364e8c57f",
+      "split": "train",
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Arrange the two cubes into a vertical stack.",
+      "local_episode_index": 699,
+      "passed": true,
+      "source_identity": "sha256:b19ae7da106c3de292433282eb8336c091fd5714a69e3e14b8186622f0586627",
+      "split": "train",
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Lift one cube and complete a two-level stack.",
+      "local_episode_index": 0,
+      "passed": true,
+      "source_identity": "sha256:3c670db58b4424f8f9837eef46574e7dcfa5d5849168a3d99ad483e3b191a84b",
+      "split": "validation",
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Put one block on top of the other block.",
+      "local_episode_index": 50,
+      "passed": true,
+      "source_identity": "sha256:7e02efa96719f5dc70996a8e3fa460c0f7686af4f9083de49b924848d9ebd669",
+      "split": "validation",
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "image_shape": [
+        3,
+        256,
+        256
+      ],
+      "instruction": "Put one block on top of the other block.",
+      "local_episode_index": 99,
+      "passed": true,
+      "source_identity": "sha256:8728c708360aadfecc63fadb10c78751bbba97c993067e68001006a0fe03c23b",
+      "split": "validation",
+      "state_shape": [
+        9
+      ],
+      "task_id": "StackCube-v1"
+    }
+  ],
+  "symlink_to_primary_used": false,
+  "task_split_root_count": 15
+}

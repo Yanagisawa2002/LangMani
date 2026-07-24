@@ -1,0 +1,16 @@
+{
+  "accepted_multiskill_dataset_validated": true,
+  "act_baseline_training_eligible": true,
+  "act_training_authorized": false,
+  "backward_passes": 0,
+  "eligibility_is_authorization": false,
+  "fingerprint": "sha256:25c0d5a45cf3fd323dc008078ddb98e274833a360ab200e2752d5dc0768d577f",
+  "optimizer_created": false,
+  "optimizer_steps": 0,
+  "schema_version": "langmani-v2-phase2b6-v2-authorization-state-v0",
+  "smolvla_training_authorized": false,
+  "smolvla_training_eligible": true,
+  "student_policy_training_started": false,
+  "vla_jepa_training_authorized": false,
+  "vla_jepa_training_eligible": true
+}

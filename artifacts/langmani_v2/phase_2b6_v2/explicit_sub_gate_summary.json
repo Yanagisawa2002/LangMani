@@ -1,0 +1,27 @@
+{
+  "fingerprint": "sha256:a431510ef0821473fd2fa6d1f0fd65c979f30735ae5d78623e9dd5f32a5e94ed",
+  "first_failed_sub_gates": {
+    "canonical_terminal_success_gate": 2
+  },
+  "gate_failures": {
+    "action_contract_gate": 0,
+    "action_count_gate": 0,
+    "canonical_terminal_success_gate": 2,
+    "environment_construction_gate": 0,
+    "episode_serialization_gate": 0,
+    "observation_action_alignment_gate": 0,
+    "pre_action_frame_count_gate": 0,
+    "rendering_preflight_gate": 0,
+    "reset_identity_gate": 0,
+    "rgb_completeness_gate": 0,
+    "simulator_exception_gate": 0,
+    "source_replay_outcome_agreement_gate": 2,
+    "state_completeness_gate": 0,
+    "step_execution_gate": 0,
+    "temporary_writer_gate": 0,
+    "timestamp_monotonicity_gate": 0
+  },
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b6-v2-sub-gate-summary-v0",
+  "source_episode_count": 3000
+}

@@ -133,15 +133,15 @@ was false and source/replay final outcomes disagreed. The exact first failed gat
 hard stop prohibited Modes B/C. Source-exclusion review is eligible only as a future decision;
 clean production, production resume, dataset acceptance, and all training remain closed.
 
-Phase 2B.6-v2 is now the active separately authorized clean production identity. It starts from
-all three official source episode-zero boundaries, uses the recovered Vulkan launcher and
-explicit replay sub-gates, and preregisters a versioned exclusion policy before any replay.
-Episode 938 is reviewed through one normal production attempt rather than automatically removed.
-The new package may tolerate at most five explicit exclusions per task and nine overall while
-requiring at least 99.5% per-task and 99.7% overall source acceptance, zero unclassified failure,
-complete source accounting, clean LeRobot readback, leakage-free splits, and successful archive
-restore. No old partial replay bytes may enter the accepted package, and no model training is
-authorized by this production instruction.
+Phase 2B.6-v2 is complete at Result A. It restarted all three official sources from episode zero
+under the recovered Vulkan launcher and explicit replay sub-gates, without reusing any old partial
+record. It accepted 2,998/3,000 sources and 254,200 policy frames. StackCube episode 938 and
+PushCube episode 202 each executed every exact source action in a valid environment and failed
+`canonical_terminal_success_gate`; both remain explicit deterministic-physical exclusions. All
+source accounting, thresholds, LeRobot 0.6 full readback, exact source-to-derived verification,
+split/leakage, padding, train-only normalization, archive, and clean-restore gates passed.
+ACT-baseline, SmolVLA, and VLA-JEPA dataset eligibility is true, but all training remains
+unauthorized and no optimizer, backward pass, or training work started.
 
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically

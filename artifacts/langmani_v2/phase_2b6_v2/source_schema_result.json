@@ -1,0 +1,89 @@
+{
+  "created_at_utc": "2026-07-24T06:39:04.937036+00:00",
+  "episode_count": 3000,
+  "fingerprint": "sha256:ff71f2ab6ab9b922df08a60ea6f5e1f00aeec962220f54cd1febc6c3b1bf2e65",
+  "malformed_trajectory_count": 0,
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b6-source-schema-result-v0",
+  "source_inventory_digest": "sha256:f8279645cdb2952168f49b833194b93557803256ec18e3d55f3873d3e88449d3",
+  "source_inventory_relative_path": "work/source_episode_inventory.json",
+  "source_inventory_sha256": "sha256:fa911efe3f669da08355d73ee602b27b62062678e98540d791c437c6eaf5ab98",
+  "tasks": [
+    {
+      "action_bound_violations": 0,
+      "duplicate_action_hash_count": 0,
+      "episode_length": {
+        "maximum": 103,
+        "median": 78.0,
+        "minimum": 49
+      },
+      "expected_trajectory_count": 1000,
+      "expected_transition_count": 77976,
+      "malformed_count": 0,
+      "malformed_or_missing": [],
+      "nonfinite_action_values": 0,
+      "passed": true,
+      "source_h5_sha256": "sha256:03ca60546541a7f18321d9d32721f0254bc75217828c0cadacd217d0c014576a",
+      "source_json_sha256": "sha256:16e403cb77bfbdda28c243b96eb90adbae1c0edf42854283be57ee47076a2e90",
+      "successful_count": 1000,
+      "task_id": "PickCube-v1",
+      "terminal_metadata_h5_agreements": 1000,
+      "trajectory_count": 1000,
+      "transition_count": 77976,
+      "unique_action_hashes": 1000,
+      "unique_reset_identities": 1000,
+      "unique_source_episode_ids": 1000
+    },
+    {
+      "action_bound_violations": 0,
+      "duplicate_action_hash_count": 0,
+      "episode_length": {
+        "maximum": 412,
+        "median": 106.0,
+        "minimum": 80
+      },
+      "expected_trajectory_count": 1000,
+      "expected_transition_count": 107420,
+      "malformed_count": 0,
+      "malformed_or_missing": [],
+      "nonfinite_action_values": 0,
+      "passed": true,
+      "source_h5_sha256": "sha256:61d07df7b52f303d2088e977df5f863be7d2274348ff05791f3a815359815523",
+      "source_json_sha256": "sha256:48cb1119c9f5a8f0d7187fc83674a2c401b41466cb1930b2a5c26b706ba3bd81",
+      "successful_count": 1000,
+      "task_id": "StackCube-v1",
+      "terminal_metadata_h5_agreements": 1000,
+      "trajectory_count": 1000,
+      "transition_count": 107420,
+      "unique_action_hashes": 1000,
+      "unique_reset_identities": 1000,
+      "unique_source_episode_ids": 1000
+    },
+    {
+      "action_bound_violations": 0,
+      "duplicate_action_hash_count": 0,
+      "episode_length": {
+        "maximum": 81,
+        "median": 69.0,
+        "minimum": 61
+      },
+      "expected_trajectory_count": 1000,
+      "expected_transition_count": 68978,
+      "malformed_count": 0,
+      "malformed_or_missing": [],
+      "nonfinite_action_values": 0,
+      "passed": true,
+      "source_h5_sha256": "sha256:d74a4c0efdbf68cb5512dabfc9dfa2759fb53c7f221b15ded92b0d03533f3f2b",
+      "source_json_sha256": "sha256:b33b5fadbdf5fd9e6c739d414d77a0ba61ae0dc05453e76392c2fd7d48e4522c",
+      "successful_count": 1000,
+      "task_id": "PushCube-v1",
+      "terminal_metadata_h5_agreements": 1000,
+      "trajectory_count": 1000,
+      "transition_count": 68978,
+      "unique_action_hashes": 1000,
+      "unique_reset_identities": 1000,
+      "unique_source_episode_ids": 1000
+    }
+  ],
+  "transition_count": 254374
+}

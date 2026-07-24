@@ -1,0 +1,411 @@
+{
+  "action_sequence_changed": false,
+  "appearance_contract": {
+    "exposure_multiplier": 0.9,
+    "identity": "langmani-v2-phase2b6-postrender-appearance-v0",
+    "implementation": "post_render_rgb_only",
+    "physics_changed": false,
+    "rgb_channel_multipliers": [
+      1.03,
+      1.0,
+      0.94
+    ],
+    "scope": "accepted_test_visual_shift_only"
+  },
+  "categorical_outcome_agreement_rate": 1.0,
+  "created_at_utc": "2026-07-24T06:39:35.557351+00:00",
+  "episode_count": 3,
+  "fingerprint": "sha256:63148ea685e7f3bf34adcd3d464b3aaa51c6476587fdb4b390ba99d9c98d9dc5",
+  "passed": true,
+  "physics_configuration_changed": false,
+  "schema_version": "langmani-v2-phase2b6-visual-shift-pilot-v0",
+  "tasks": [
+    {
+      "action_sha256": "sha256:78349e8be037d9a1d674dda77aa4b277374fd2c73b04bcb73a96f09aa21171f0",
+      "categorical_physical_outcome_preserved": true,
+      "changed_channel_values": 15722334,
+      "derived_episode_identity": "sha256:707ba29129be505b808eb324431eaa99cad3940ff9f1e401dfec6ea7bb2f3ddf",
+      "original_rgb_sha256": "sha256:df0aad121f1c1c310247cae25d02af113abb42317a32ab481c4d5af1c227921b",
+      "passed": true,
+      "physics_input_changed": false,
+      "physics_replay": {
+        "action_clipping_or_projection": false,
+        "action_frame_alignment": true,
+        "canonical_success_action_indices": [
+          76,
+          77,
+          78,
+          79
+        ],
+        "categorical_outcome_agreement": true,
+        "fabricated_terminal_action": false,
+        "first_canonical_success_action_index": 76,
+        "first_state_anchor_error": null,
+        "first_state_anchor_used": false,
+        "invalid_action_count": 0,
+        "maximum_consecutive_canonical_success_steps": 4,
+        "nonfinite_value_count": 0,
+        "passed": true,
+        "planner_or_expert_invoked": false,
+        "policy_frame_count": 80,
+        "replay_success": true,
+        "replayed_action_count": 80,
+        "semantic_reset_state_error": {
+          "compared_numeric_values": 70,
+          "matched_leaf_count": 4,
+          "maximum_absolute_error": 0.0,
+          "mean_absolute_error": 0.0,
+          "missing_leaves": [],
+          "per_numeric_leaf": {
+            "actors/cube": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/goal_site": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/table-workspace": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "articulations/panda": {
+              "compared_values": 31,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            }
+          },
+          "shape_mismatch_leaves": [],
+          "structures_match": true,
+          "unexpected_leaves": []
+        },
+        "simulator_error_count": 0,
+        "source_action_count": 80,
+        "source_action_sha256": "sha256:78349e8be037d9a1d674dda77aa4b277374fd2c73b04bcb73a96f09aa21171f0",
+        "source_success": true,
+        "success_predicate_modified": false,
+        "terminal_diagnostic_frame_count": 1,
+        "terminal_object_pose_error": {
+          "diagnostic_only": true,
+          "maximum_quaternion_sign_invariant_l2": 0.0,
+          "maximum_translation_l2_m": 0.0,
+          "objects": {
+            "cube": {
+              "quaternion_sign_invariant_l2": 0.0,
+              "translation_l2_m": 0.0
+            }
+          }
+        },
+        "terminal_rgb_sha256": "sha256:3be6599be147c4c37895f9c87124696c241e928e9bfefb11199f7d2eff1bc847",
+        "terminal_state_error": {
+          "compared_numeric_values": 70,
+          "matched_leaf_count": 4,
+          "maximum_absolute_error": 0.0,
+          "mean_absolute_error": 0.0,
+          "missing_leaves": [],
+          "per_numeric_leaf": {
+            "actors/cube": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/goal_site": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/table-workspace": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "articulations/panda": {
+              "compared_values": 31,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            }
+          },
+          "shape_mismatch_leaves": [],
+          "structures_match": true,
+          "unexpected_leaves": []
+        },
+        "terminated_signal_count": 4,
+        "trailing_canonical_success_steps": 4,
+        "truncated_signal_count": 31,
+        "wall_clock_seconds": 0.4146241433918476
+      },
+      "post_render_only": true,
+      "primary_split": "test_visual_shift",
+      "shifted_rgb_sha256": "sha256:f6670daadddbe0cfb2befdd66f8891893c3a8da946ce9932d342692022359fba",
+      "source_episode_id": 13,
+      "source_trajectory_identity": "sha256:f5accfbc0c7001dd57ebbe82deb2583894b8c48ef448a464b019b386a8ff9c4a",
+      "state_sha256": "sha256:fd98e2ee784936ecf94bbabb1bb2a25aece35b796e258a4a624821f8ad38a121",
+      "task_id": "PickCube-v1"
+    },
+    {
+      "action_sha256": "sha256:216c5e414662b83ecdaab0311545d0bf4df10eee7cb444c01b5b4b49f5a261ff",
+      "categorical_physical_outcome_preserved": true,
+      "changed_channel_values": 21409633,
+      "derived_episode_identity": "sha256:c86da257fa793892cd8b95ddf37ef8566fce6fd6827996c2380557d92a00cd6e",
+      "original_rgb_sha256": "sha256:d0719fd3a89e132865f4155baca0a759ffd3bfce55902134724f2d3a926a1c8d",
+      "passed": true,
+      "physics_input_changed": false,
+      "physics_replay": {
+        "action_clipping_or_projection": false,
+        "action_frame_alignment": true,
+        "canonical_success_action_indices": [
+          103,
+          104,
+          105,
+          106,
+          107,
+          108
+        ],
+        "categorical_outcome_agreement": true,
+        "fabricated_terminal_action": false,
+        "first_canonical_success_action_index": 103,
+        "first_state_anchor_error": null,
+        "first_state_anchor_used": false,
+        "invalid_action_count": 0,
+        "maximum_consecutive_canonical_success_steps": 6,
+        "nonfinite_value_count": 0,
+        "passed": true,
+        "planner_or_expert_invoked": false,
+        "policy_frame_count": 109,
+        "replay_success": true,
+        "replayed_action_count": 109,
+        "semantic_reset_state_error": {
+          "compared_numeric_values": 70,
+          "matched_leaf_count": 4,
+          "maximum_absolute_error": 0.0,
+          "mean_absolute_error": 0.0,
+          "missing_leaves": [],
+          "per_numeric_leaf": {
+            "actors/cubeA": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/cubeB": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/table-workspace": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "articulations/panda_wristcam": {
+              "compared_values": 31,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            }
+          },
+          "shape_mismatch_leaves": [],
+          "structures_match": true,
+          "unexpected_leaves": []
+        },
+        "simulator_error_count": 0,
+        "source_action_count": 109,
+        "source_action_sha256": "sha256:216c5e414662b83ecdaab0311545d0bf4df10eee7cb444c01b5b4b49f5a261ff",
+        "source_success": true,
+        "success_predicate_modified": false,
+        "terminal_diagnostic_frame_count": 1,
+        "terminal_object_pose_error": {
+          "diagnostic_only": true,
+          "maximum_quaternion_sign_invariant_l2": 0.0008958920493789017,
+          "maximum_translation_l2_m": 0.0003598118305988199,
+          "objects": {
+            "cubeA": {
+              "quaternion_sign_invariant_l2": 0.0008958920493789017,
+              "translation_l2_m": 0.0003598118305988199
+            },
+            "cubeB": {
+              "quaternion_sign_invariant_l2": 1.923738306622072e-05,
+              "translation_l2_m": 1.329829500481094e-06
+            }
+          }
+        },
+        "terminal_rgb_sha256": "sha256:fe77077cce8d3a6557e8f2b096e0c0b64cb16c37dc785cd378c97aa8cb2b1b2d",
+        "terminal_state_error": {
+          "compared_numeric_values": 70,
+          "matched_leaf_count": 4,
+          "maximum_absolute_error": 0.058660827577114105,
+          "mean_absolute_error": 0.001602685374037703,
+          "missing_leaves": [],
+          "per_numeric_leaf": {
+            "actors/cubeA": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.058660827577114105,
+              "mean_absolute_error": 0.005425112670018542
+            },
+            "actors/cubeB": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.022990607656538486,
+              "mean_absolute_error": 0.003201307305105799
+            },
+            "actors/table-workspace": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "articulations/panda_wristcam": {
+              "compared_values": 31,
+              "maximum_absolute_error": 1.7470410966780037e-05,
+              "mean_absolute_error": 1.4360163233152802e-06
+            }
+          },
+          "shape_mismatch_leaves": [],
+          "structures_match": true,
+          "unexpected_leaves": []
+        },
+        "terminated_signal_count": 6,
+        "trailing_canonical_success_steps": 6,
+        "truncated_signal_count": 60,
+        "wall_clock_seconds": 0.7383746653795242
+      },
+      "post_render_only": true,
+      "primary_split": "test_visual_shift",
+      "shifted_rgb_sha256": "sha256:d59ad9a7ffc84581990548782851d20407f7177634d70a286aa612bd807f0dbc",
+      "source_episode_id": 3,
+      "source_trajectory_identity": "sha256:a2d7fc6a251d372819d8969d823d59de62d1446658f1c042a6a3454c39977087",
+      "state_sha256": "sha256:bfbfabc927c5265097a5a0f4432a819e6f79a2d9a163426690a425264f2625da",
+      "task_id": "StackCube-v1"
+    },
+    {
+      "action_sha256": "sha256:5fd30016a4eebf6741434b3f0ad33a2327d9b3fb71fccee07a6ddb032bd2fc7c",
+      "categorical_physical_outcome_preserved": true,
+      "changed_channel_values": 12386304,
+      "derived_episode_identity": "sha256:41a83525e40136fd6c1fe3418cf4b2e39f1f6437fcbcdc81d4cdeca658355426",
+      "original_rgb_sha256": "sha256:faa1e61f23c46ea0bf5d1c591d2a9737c979b68dc377a08646ebdd445e6cea15",
+      "passed": true,
+      "physics_input_changed": false,
+      "physics_replay": {
+        "action_clipping_or_projection": false,
+        "action_frame_alignment": true,
+        "canonical_success_action_indices": [
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62
+        ],
+        "categorical_outcome_agreement": true,
+        "fabricated_terminal_action": false,
+        "first_canonical_success_action_index": 54,
+        "first_state_anchor_error": null,
+        "first_state_anchor_used": false,
+        "invalid_action_count": 0,
+        "maximum_consecutive_canonical_success_steps": 9,
+        "nonfinite_value_count": 0,
+        "passed": true,
+        "planner_or_expert_invoked": false,
+        "policy_frame_count": 63,
+        "replay_success": true,
+        "replayed_action_count": 63,
+        "semantic_reset_state_error": {
+          "compared_numeric_values": 70,
+          "matched_leaf_count": 4,
+          "maximum_absolute_error": 0.0,
+          "mean_absolute_error": 0.0,
+          "missing_leaves": [],
+          "per_numeric_leaf": {
+            "actors/cube": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/goal_region": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/table-workspace": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "articulations/panda": {
+              "compared_values": 31,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            }
+          },
+          "shape_mismatch_leaves": [],
+          "structures_match": true,
+          "unexpected_leaves": []
+        },
+        "simulator_error_count": 0,
+        "source_action_count": 63,
+        "source_action_sha256": "sha256:5fd30016a4eebf6741434b3f0ad33a2327d9b3fb71fccee07a6ddb032bd2fc7c",
+        "source_success": true,
+        "success_predicate_modified": false,
+        "terminal_diagnostic_frame_count": 1,
+        "terminal_object_pose_error": {
+          "diagnostic_only": true,
+          "maximum_quaternion_sign_invariant_l2": 0.0,
+          "maximum_translation_l2_m": 0.0,
+          "objects": {
+            "obj": {
+              "quaternion_sign_invariant_l2": 0.0,
+              "translation_l2_m": 0.0
+            }
+          }
+        },
+        "terminal_rgb_sha256": "sha256:ae1e32d33e6d80e31b099a5c3efd0ad043246384c5ffc14f78cd5c997683e2cd",
+        "terminal_state_error": {
+          "compared_numeric_values": 70,
+          "matched_leaf_count": 4,
+          "maximum_absolute_error": 0.0,
+          "mean_absolute_error": 0.0,
+          "missing_leaves": [],
+          "per_numeric_leaf": {
+            "actors/cube": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/goal_region": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "actors/table-workspace": {
+              "compared_values": 13,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            },
+            "articulations/panda": {
+              "compared_values": 31,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0
+            }
+          },
+          "shape_mismatch_leaves": [],
+          "structures_match": true,
+          "unexpected_leaves": []
+        },
+        "terminated_signal_count": 9,
+        "trailing_canonical_success_steps": 9,
+        "truncated_signal_count": 14,
+        "wall_clock_seconds": 0.33278956823050976
+      },
+      "post_render_only": true,
+      "primary_split": "test_visual_shift",
+      "shifted_rgb_sha256": "sha256:1525b36189a5abc253ae0d1617eba1d358dbcee989104c24e062feffb3ff4a9f",
+      "source_episode_id": 17,
+      "source_trajectory_identity": "sha256:e08f69d9d7e694380440bb52f11065b899a3c15a88840a21f87c60c9d92453d4",
+      "state_sha256": "sha256:ae33aab9fbec8746591166122ec95df286110cb176f0d268f863bafe330777ba",
+      "task_id": "PushCube-v1"
+    }
+  ],
+  "visual_shift_identity": "langmani-v2-phase2b6-postrender-appearance-v0"
+}

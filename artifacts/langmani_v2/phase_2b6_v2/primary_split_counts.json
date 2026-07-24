@@ -1,0 +1,75 @@
+{
+  "excluded_sources_remain_in_source_inventory": true,
+  "fingerprint": "sha256:a9f9e7743eac93c9c8314cd3201d1025b5aa7afda55f25a0111a39112b3e99ee",
+  "passed": true,
+  "replacement_sampling": false,
+  "schema_version": "langmani-v2-phase2b6-v2-split-counts-v0",
+  "tasks": {
+    "PickCube-v1": {
+      "test_unseen_reset": {
+        "accepted_count": 100,
+        "source_count": 100
+      },
+      "test_unseen_task_language": {
+        "accepted_count": 50,
+        "source_count": 50
+      },
+      "test_visual_shift": {
+        "accepted_count": 50,
+        "source_count": 50
+      },
+      "train": {
+        "accepted_count": 700,
+        "source_count": 700
+      },
+      "validation": {
+        "accepted_count": 100,
+        "source_count": 100
+      }
+    },
+    "PushCube-v1": {
+      "test_unseen_reset": {
+        "accepted_count": 100,
+        "source_count": 100
+      },
+      "test_unseen_task_language": {
+        "accepted_count": 50,
+        "source_count": 50
+      },
+      "test_visual_shift": {
+        "accepted_count": 50,
+        "source_count": 50
+      },
+      "train": {
+        "accepted_count": 699,
+        "source_count": 700
+      },
+      "validation": {
+        "accepted_count": 100,
+        "source_count": 100
+      }
+    },
+    "StackCube-v1": {
+      "test_unseen_reset": {
+        "accepted_count": 99,
+        "source_count": 100
+      },
+      "test_unseen_task_language": {
+        "accepted_count": 50,
+        "source_count": 50
+      },
+      "test_visual_shift": {
+        "accepted_count": 50,
+        "source_count": 50
+      },
+      "train": {
+        "accepted_count": 700,
+        "source_count": 700
+      },
+      "validation": {
+        "accepted_count": 100,
+        "source_count": 100
+      }
+    }
+  }
+}

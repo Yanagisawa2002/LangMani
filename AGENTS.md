@@ -178,16 +178,16 @@ hard-stopped. `source_episode_exclusion_review_eligible=true` is not an exclusio
 authorization. Clean production, production resume, dataset acceptance, and all training remain
 false.
 
-Phase 2B.6-v2 is the separately authorized clean, instrumented official-source production. It
-starts again from source episode 0 under the recovered Vulkan launcher and the preregistered
-`langmani-phase2b6-v2-exclusion-policy-v1`. Every one of the 3,000 source identities must receive
-an explicit terminal classification; no Phase 2B.6 partial replay record may be reused. A source
-may be absent from policy data only as an explicitly retained deterministic-physical or
-source-contract exclusion. Infrastructure receives at most one identical recorded retry, while
-an unclassified failure, more than five exclusions for one task, more than nine overall, any
-accepted-data integrity failure, leakage, or archive/restore failure stops the phase. Dataset
-acceptance may create later training eligibility only; ACT, SmolVLA, VLA-JEPA, every optimizer,
-backward pass, and actual training remain unauthorized in this phase.
+Phase 2B.6-v2 is the completed clean, instrumented official-source production. It restarted from
+source episode 0 under the recovered Vulkan launcher and the preregistered
+`langmani-phase2b6-v2-exclusion-policy-v1`, without reusing Phase 2B.6 partial records. It
+classified all 3,000 sources, accepted 2,998 episodes/254,200 frames, and retained StackCube
+episode 938 plus PushCube episode 202 as `EXCLUDED_DETERMINISTIC_PHYSICAL`, each at
+`canonical_terminal_success_gate`. All thresholds, source accounting, LeRobot 0.6 readback,
+source equality, leakage, padding, normalization, archive, and clean-restore gates passed, giving
+Result A. Dataset eligibility for ACT-baseline, SmolVLA, and VLA-JEPA is true; every training
+authorization remains false, no policy was loaded, and optimizer/backward/training counts remain
+zero.
 
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level

@@ -1,0 +1,218 @@
+{
+  "destructive_concatenation": false,
+  "episode_count": 2998,
+  "fingerprint": "sha256:191c81c75c1985cfbdba5cd77ac7d906498dd77ef5284471afb3b5a2969e8253",
+  "frame_count": 254200,
+  "load_filters": {
+    "all_tasks": "iterate every task/split root in tasks",
+    "one_cross_skill_fold": "resolve immutable episode identities from metadata/cross_skill_fold_manifests.json",
+    "one_skill": "select tasks[].skill_family",
+    "one_split": "select tasks[].splits[].primary_split",
+    "one_task": "select tasks[].task_id"
+  },
+  "materialization": "immutable_task_and_split_multi_root_index",
+  "metadata": {
+    "accepted_episode_manifest.json": "sha256:4ba54dd49e2f3f68a8e20ab8d63a525352f8f3fd11a4d21d318ca59d4471e197",
+    "cross_skill_fold_manifests.json": "sha256:3a1a581c95af5bd7ba5dc3014186fb1b36c0a79295dc74f70403e20876a25420",
+    "dataset_statistics.json": "sha256:eb22b4dbdacb6cf9f95fa97ed2228bf6fe2e32c77d6d52e3228b596e4b295413",
+    "excluded_episode_manifest.json": "sha256:fbf1aa9be3e4e8daf252b901a3df01577aab651e3000c5bc6542dd65c3950b55",
+    "exclusion_policy_manifest.json": "sha256:4271ea4cd563812b5fa4b8dd9a14cd15c7eeca83d504ec404f42de720906d303",
+    "explicit_sub_gate_summary.json": "sha256:fee59578feee31d3c18507637b297ae1260486d2a6a101409d0bd68f18d61402",
+    "language_template_manifest.json": "sha256:9c859c88fd5a2ff774e5fea0c9d086d43773890368c69b3c3485f6d1eef538d7",
+    "normalization_manifest.json": "sha256:025d4f0a0f99e09e3a31053302985974afdd5f64c1acf3637a6c1f7a39015fb9",
+    "observation_action_contract.json": "sha256:82d4e51909a5382143adbc5ae5b3b719bd42e3a4d0ad5169ed80343a6ff3873b",
+    "padding_audit.json": "sha256:f1f3820bd8c168afa4580d55d3ab012506f64f74d7f34bfbffc2b9f31f6cf947",
+    "primary_split_counts.json": "sha256:15d2f267c0de1d594cb25cd2657a440f5e4e34b5d8dafa531a0cd7cde9c85bab",
+    "primary_split_manifest.json": "sha256:25f2b96310b7289851e0c33286587bdf9056c97d141a22e7c212958fa0035464",
+    "production_run_manifest.json": "sha256:ab5ec280802ff1d752d092d7e9f2cd9f6b47dacb439d3e1c19418bc47808053a",
+    "source_integrity_audit.json": "sha256:63b3de61f0a6b8e4b681cf8d94da8e5b9df0b78855faaa5c4ba691d0d9a77e19",
+    "source_schema_result.json": "sha256:190c928af3998f35fa9b6b2f184448835c4490ac68ffe1d14c5662dc76ac4981",
+    "task_balance_manifest.json": "sha256:cc5729ba9408be98306808a5e66ac5f09a066c08151dbabd5ef45fcee56ff57c"
+  },
+  "optimizer_steps": 0,
+  "package_identity": "LangManiOfficialMultiSkill-v2",
+  "passed": true,
+  "primary_root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary",
+  "primary_root_committed": false,
+  "schema_version": "langmani-v2-phase2b6-unified-multi-root-v0",
+  "source_episode_count": 3000,
+  "source_lineage_sha256": "sha256:2e8f9deb79174052f43723625768ca735515c83f00516cccf75546fcae10be0f",
+  "source_task_roots_modified": false,
+  "student_policy_training_started": false,
+  "tasks": [
+    {
+      "container_relative_root": "task_roots/pickcube",
+      "dataset_identity": "langmani/official-pickcube-v2",
+      "skill_family": "pick_and_place",
+      "splits": [
+        {
+          "episode_count": 100,
+          "frame_count": 7828,
+          "manifest_fingerprint": "sha256:cf633a0787def947c9a681729ad2a45439cc91ace60d0df408d6e54e57f1d28e",
+          "primary_split": "test_unseen_reset",
+          "relative_root": "task_roots/pickcube/splits/test_unseen_reset",
+          "repo_id": "langmani/official-pickcube-v2-test-unseen-reset"
+        },
+        {
+          "episode_count": 50,
+          "frame_count": 3796,
+          "manifest_fingerprint": "sha256:02e7a76a7050134ff669aa62a4377dce33f74a754beeed21e5cfdcba5c25e4f7",
+          "primary_split": "test_unseen_task_language",
+          "relative_root": "task_roots/pickcube/splits/test_unseen_task_language",
+          "repo_id": "langmani/official-pickcube-v2-test-unseen-task-language"
+        },
+        {
+          "episode_count": 50,
+          "frame_count": 3941,
+          "manifest_fingerprint": "sha256:472c1e12aa64318930e47766a7dd1a6a10ad5d1ffb52664dbdcd8238df73c45a",
+          "primary_split": "test_visual_shift",
+          "relative_root": "task_roots/pickcube/splits/test_visual_shift",
+          "repo_id": "langmani/official-pickcube-v2-test-visual-shift"
+        },
+        {
+          "episode_count": 700,
+          "frame_count": 54608,
+          "manifest_fingerprint": "sha256:cf45aa8a8d6a1508d57d0c2d98da181cfb17c0eb642f15e475de9d9974fd1b20",
+          "primary_split": "train",
+          "relative_root": "task_roots/pickcube/splits/train",
+          "repo_id": "langmani/official-pickcube-v2-train"
+        },
+        {
+          "episode_count": 100,
+          "frame_count": 7803,
+          "manifest_fingerprint": "sha256:1bd51cc8d163120d52eed62eb2fb26d06ef9f00a3404967b369dfad9c2a4557b",
+          "primary_split": "validation",
+          "relative_root": "task_roots/pickcube/splits/validation",
+          "repo_id": "langmani/official-pickcube-v2-validation"
+        }
+      ],
+      "task_id": "PickCube-v1",
+      "tree_digest": "sha256:7d0a5665cd8337d8f3664bc11cc029e5cbe6a0b3ec3c909c772b330e6fcb4738"
+    },
+    {
+      "container_relative_root": "task_roots/pushcube",
+      "dataset_identity": "langmani/official-pushcube-v2",
+      "skill_family": "planar_pushing",
+      "splits": [
+        {
+          "episode_count": 100,
+          "frame_count": 6896,
+          "manifest_fingerprint": "sha256:47f3c7d9e4f6a448826058bbf742d59d9d18de76421b32cb8afb6bfc62897f92",
+          "primary_split": "test_unseen_reset",
+          "relative_root": "task_roots/pushcube/splits/test_unseen_reset",
+          "repo_id": "langmani/official-pushcube-v2-test-unseen-reset"
+        },
+        {
+          "episode_count": 50,
+          "frame_count": 3442,
+          "manifest_fingerprint": "sha256:2bec6619f4cab1b3b2eed77c099fa84daac2d2067a584012d7f4625f50ef30eb",
+          "primary_split": "test_unseen_task_language",
+          "relative_root": "task_roots/pushcube/splits/test_unseen_task_language",
+          "repo_id": "langmani/official-pushcube-v2-test-unseen-task-language"
+        },
+        {
+          "episode_count": 50,
+          "frame_count": 3459,
+          "manifest_fingerprint": "sha256:f741ff0d53f2294c9eaa0c8fd7038b97c894a57e824fdc6fbf874b742f1c804b",
+          "primary_split": "test_visual_shift",
+          "relative_root": "task_roots/pushcube/splits/test_visual_shift",
+          "repo_id": "langmani/official-pushcube-v2-test-visual-shift"
+        },
+        {
+          "episode_count": 699,
+          "frame_count": 48219,
+          "manifest_fingerprint": "sha256:a18e5d6b8a81d312c26a54ef163a7e44f3ea340be03eae41fefc69f410044873",
+          "primary_split": "train",
+          "relative_root": "task_roots/pushcube/splits/train",
+          "repo_id": "langmani/official-pushcube-v2-train"
+        },
+        {
+          "episode_count": 100,
+          "frame_count": 6893,
+          "manifest_fingerprint": "sha256:6f69ce8e67e96ef22b1b12f5b89840b8fcb61e46d0b6d578466746dad75917c9",
+          "primary_split": "validation",
+          "relative_root": "task_roots/pushcube/splits/validation",
+          "repo_id": "langmani/official-pushcube-v2-validation"
+        }
+      ],
+      "task_id": "PushCube-v1",
+      "tree_digest": "sha256:cd9156115e1fa8416c26ea29b14a64a4e0cbcb720472d9f13b9ada59ac32b2cf"
+    },
+    {
+      "container_relative_root": "task_roots/stackcube",
+      "dataset_identity": "langmani/official-stackcube-v2",
+      "skill_family": "stacking",
+      "splits": [
+        {
+          "episode_count": 99,
+          "frame_count": 10855,
+          "manifest_fingerprint": "sha256:d435a190f1f3bc1fba3e8098ecbfd47e99600fed045ad9ba91a99223bb571e0b",
+          "primary_split": "test_unseen_reset",
+          "relative_root": "task_roots/stackcube/splits/test_unseen_reset",
+          "repo_id": "langmani/official-stackcube-v2-test-unseen-reset"
+        },
+        {
+          "episode_count": 50,
+          "frame_count": 5573,
+          "manifest_fingerprint": "sha256:aa83f6971d4d558b15958357c40cca4ef894086edcf49ae2b38d429fc8092455",
+          "primary_split": "test_unseen_task_language",
+          "relative_root": "task_roots/stackcube/splits/test_unseen_task_language",
+          "repo_id": "langmani/official-stackcube-v2-test-unseen-task-language"
+        },
+        {
+          "episode_count": 50,
+          "frame_count": 5441,
+          "manifest_fingerprint": "sha256:be6060a9f887cad96891eaac72a1f9df8febb4bb7b76aecdffd05aa8a4d714fe",
+          "primary_split": "test_visual_shift",
+          "relative_root": "task_roots/stackcube/splits/test_visual_shift",
+          "repo_id": "langmani/official-stackcube-v2-test-visual-shift"
+        },
+        {
+          "episode_count": 700,
+          "frame_count": 74891,
+          "manifest_fingerprint": "sha256:52a32ef64e52cf878fe616e92769ba02c9855c6a0e769864cc5ad8b081e32657",
+          "primary_split": "train",
+          "relative_root": "task_roots/stackcube/splits/train",
+          "repo_id": "langmani/official-stackcube-v2-train"
+        },
+        {
+          "episode_count": 100,
+          "frame_count": 10555,
+          "manifest_fingerprint": "sha256:d34130e2f6cbe2cc2c67d750380d0a67e7a9da663bf9be69cc68d86b9c840e7f",
+          "primary_split": "validation",
+          "relative_root": "task_roots/stackcube/splits/validation",
+          "repo_id": "langmani/official-stackcube-v2-validation"
+        }
+      ],
+      "task_id": "StackCube-v1",
+      "tree_digest": "sha256:d0546aa0edf64463f8d35b69cc2250a011b387e6dd9fdc4c9093b9841a375c36"
+    }
+  ],
+  "visual_shift_episode_count": 150,
+  "visual_shift_roots": [
+    {
+      "episode_count": 50,
+      "frame_count": 3941,
+      "manifest_fingerprint": "sha256:c2b308355e26fbfc907c68e7e8e49bca1476462518925820f10cdac4205a33b8",
+      "relative_root": "visual_shift_roots/pickcube",
+      "repo_id": "langmani/official-pickcube-v2-visual-shift",
+      "task_id": "PickCube-v1"
+    },
+    {
+      "episode_count": 50,
+      "frame_count": 3459,
+      "manifest_fingerprint": "sha256:cad94bbdddfe103b5811ed6dc198b4e62e7278aeb875b899156907fcfb93f7c3",
+      "relative_root": "visual_shift_roots/pushcube",
+      "repo_id": "langmani/official-pushcube-v2-visual-shift",
+      "task_id": "PushCube-v1"
+    },
+    {
+      "episode_count": 50,
+      "frame_count": 5441,
+      "manifest_fingerprint": "sha256:73b29b37c85c7532a899928780914d8e08709f8473d7ce467569e85664de1e55",
+      "relative_root": "visual_shift_roots/stackcube",
+      "repo_id": "langmani/official-stackcube-v2-visual-shift",
+      "task_id": "StackCube-v1"
+    }
+  ]
+}

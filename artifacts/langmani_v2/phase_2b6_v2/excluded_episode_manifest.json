@@ -1,0 +1,451 @@
+{
+  "episode_count": 2,
+  "episodes": [
+    {
+      "action_frame_alignment": true,
+      "attempt_index": 0,
+      "canonical_success_action_indices": [
+        100,
+        101,
+        102,
+        103
+      ],
+      "categorical_outcome_agreement": false,
+      "classification": "EXCLUDED_DETERMINISTIC_PHYSICAL",
+      "derived_action_sha256": "sha256:5fc50bc7beeb91e55b2eeccf3f016414811d314142e7a80ad6037d4f83d92eb8",
+      "derived_episode_identity": "sha256:39d5ebf482a610f99cf271c62841a2ef8aedb8c24a42857a319cf429c37416fd",
+      "evidence_reference": {
+        "attempt_index": 0,
+        "forensic_comparison": {
+          "consistent": true,
+          "expected_first_failed_sub_gate": "canonical_terminal_success_gate",
+          "forensic_artifact_manifest_fingerprint": "sha256:c49558caa9f04d445f8e34acd6e71d17b0339a82c4a5273ac8f8827f35e15a6e",
+          "forensic_result_fingerprint": "sha256:30b7b6226d2762a248edc1ec9d9f68030f38bd1b1e385f00a3534c7544af84de"
+        },
+        "kind": "terminal_instrumented_production_attempt",
+        "relative_path": "work/production_attempts.jsonl",
+        "source_episode_id": 938,
+        "task_id": "StackCube-v1"
+      },
+      "first_canonical_success_action_index": 100,
+      "first_failed_sub_gate": "canonical_terminal_success_gate",
+      "forensic_comparison": {
+        "consistent": true,
+        "expected_first_failed_sub_gate": "canonical_terminal_success_gate",
+        "forensic_artifact_manifest_fingerprint": "sha256:c49558caa9f04d445f8e34acd6e71d17b0339a82c4a5273ac8f8827f35e15a6e",
+        "forensic_result_fingerprint": "sha256:30b7b6226d2762a248edc1ec9d9f68030f38bd1b1e385f00a3534c7544af84de"
+      },
+      "instruction": "Put one block on top of the other block.",
+      "instruction_template_id": "phase2b6:StackCube-v1:validation:00:b6ecaa51ef8527a8",
+      "invalid_action_count": 0,
+      "maximum_consecutive_canonical_success_steps": 4,
+      "nonfinite_value_count": 0,
+      "passed": false,
+      "policy_frame_count": 105,
+      "primary_split": "test_unseen_reset",
+      "raw_relative_path": null,
+      "raw_sha256": null,
+      "replay_success": false,
+      "replayed_action_count": 105,
+      "reset_identity": "sha256:e396b1aea2fe017ae24ab29115f5e3702fa1a37d6d34f0f9d0629f188f44410b",
+      "retry": false,
+      "retry_reason": null,
+      "rgb_sha256": "sha256:5ac5b494053c2bf086d5b1e29199ee965782aa97b174399f1a8358e49c4f5d69",
+      "simulator_error_count": 0,
+      "skill_family": "stacking",
+      "source_action_count": 105,
+      "source_action_sha256": "sha256:5fc50bc7beeb91e55b2eeccf3f016414811d314142e7a80ad6037d4f83d92eb8",
+      "source_episode_id": 938,
+      "source_success": true,
+      "source_trajectory_identity": "sha256:f5c25c7b4f1f7f5ed0cd8b3641f7a451f758c1a47eb9aa31bf96b0081848f7a3",
+      "state_sha256": "sha256:95fda1395919b8363ae842a2e693c3d37a50c02000e19eb38bfe297107975352",
+      "sub_gates": {
+        "action_contract_gate": {
+          "observed": {
+            "action_count": 105,
+            "action_dtype": "float32",
+            "action_sha256": "sha256:5fc50bc7beeb91e55b2eeccf3f016414811d314142e7a80ad6037d4f83d92eb8",
+            "action_shape": [
+              105,
+              8
+            ],
+            "expected_action_sha256": "sha256:5fc50bc7beeb91e55b2eeccf3f016414811d314142e7a80ad6037d4f83d92eb8",
+            "invalid_action_count": 0,
+            "nonfinite_value_count": 0
+          },
+          "status": "passed"
+        },
+        "action_count_gate": {
+          "observed": {
+            "replay_action_count": 105,
+            "source_action_count": 105
+          },
+          "status": "passed"
+        },
+        "canonical_terminal_success_gate": {
+          "observed": {
+            "final_canonical_success": false
+          },
+          "status": "failed"
+        },
+        "environment_construction_gate": {
+          "observed": {},
+          "status": "passed"
+        },
+        "episode_serialization_gate": {
+          "observed": {},
+          "status": "not_reached"
+        },
+        "observation_action_alignment_gate": {
+          "observed": {
+            "convention": "observation[t] immediately precedes action[t]",
+            "terminal_diagnostic_frame_in_policy_data": false
+          },
+          "status": "passed"
+        },
+        "pre_action_frame_count_gate": {
+          "observed": {
+            "action_count": 105,
+            "policy_frame_count": 105
+          },
+          "status": "passed"
+        },
+        "rendering_preflight_gate": {
+          "observed": {
+            "rendering_contract_fingerprint": "sha256:204723c1dcc63f31623f41a179a7fa67ec57af1700c2d116590292cb730b11d9"
+          },
+          "status": "passed"
+        },
+        "reset_identity_gate": {
+          "observed": {
+            "first_state_anchor_used": false,
+            "reset_identity": "sha256:e396b1aea2fe017ae24ab29115f5e3702fa1a37d6d34f0f9d0629f188f44410b",
+            "semantic_reset_state_error": {
+              "compared_numeric_values": 70,
+              "matched_leaf_count": 4,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "missing_leaves": [],
+              "per_numeric_leaf": {
+                "actors/cubeA": {
+                  "compared_values": 13,
+                  "maximum_absolute_error": 0.0,
+                  "mean_absolute_error": 0.0
+                },
+                "actors/cubeB": {
+                  "compared_values": 13,
+                  "maximum_absolute_error": 0.0,
+                  "mean_absolute_error": 0.0
+                },
+                "actors/table-workspace": {
+                  "compared_values": 13,
+                  "maximum_absolute_error": 0.0,
+                  "mean_absolute_error": 0.0
+                },
+                "articulations/panda_wristcam": {
+                  "compared_values": 31,
+                  "maximum_absolute_error": 0.0,
+                  "mean_absolute_error": 0.0
+                }
+              },
+              "shape_mismatch_leaves": [],
+              "structures_match": true,
+              "unexpected_leaves": []
+            }
+          },
+          "status": "passed"
+        },
+        "rgb_completeness_gate": {
+          "observed": {
+            "dtype": "uint8",
+            "shape": [
+              105,
+              256,
+              256,
+              3
+            ]
+          },
+          "status": "passed"
+        },
+        "simulator_exception_gate": {
+          "observed": {
+            "simulator_error_count": 0
+          },
+          "status": "passed"
+        },
+        "source_replay_outcome_agreement_gate": {
+          "observed": {
+            "replay_success": false,
+            "source_success": true
+          },
+          "status": "failed"
+        },
+        "state_completeness_gate": {
+          "observed": {
+            "dtype": "float32",
+            "shape": [
+              105,
+              9
+            ]
+          },
+          "status": "passed"
+        },
+        "step_execution_gate": {
+          "observed": {
+            "replayed_action_count": 105,
+            "source_action_count": 105
+          },
+          "status": "passed"
+        },
+        "temporary_writer_gate": {
+          "observed": {},
+          "status": "not_reached"
+        },
+        "timestamp_monotonicity_gate": {
+          "observed": {
+            "exact_20hz": true,
+            "frame_count": 105,
+            "strictly_monotonic": true
+          },
+          "status": "passed"
+        }
+      },
+      "task_id": "StackCube-v1",
+      "terminal_attempt": true,
+      "terminal_object_pose_error": {
+        "diagnostic_only": true,
+        "maximum_quaternion_sign_invariant_l2": 0.001889168995195963,
+        "maximum_translation_l2_m": 0.0008924618895924616,
+        "objects": {
+          "cubeA": {
+            "quaternion_sign_invariant_l2": 0.001889168995195963,
+            "translation_l2_m": 0.0008924618895924616
+          },
+          "cubeB": {
+            "quaternion_sign_invariant_l2": 2.7089637466780633e-05,
+            "translation_l2_m": 8.418270035185359e-07
+          }
+        }
+      },
+      "terminated_signal_count": 4,
+      "timestamp_sha256": "sha256:dabfeb77388e8d4b86d57153a5e67bd6973a8f86f133a4b1b774990c9aab373f",
+      "trailing_canonical_success_steps": 0,
+      "truncated_signal_count": 56
+    },
+    {
+      "action_frame_alignment": true,
+      "attempt_index": 0,
+      "canonical_success_action_indices": [],
+      "categorical_outcome_agreement": false,
+      "classification": "EXCLUDED_DETERMINISTIC_PHYSICAL",
+      "derived_action_sha256": "sha256:436bcad43799b2f409799ec7196353b4b2eb307dc72441e1a00263290e4828df",
+      "derived_episode_identity": "sha256:e0da20cf32e186321013ce47e706f9ae308941a7c0363070add0f5e92f399421",
+      "evidence_reference": {
+        "attempt_index": 0,
+        "forensic_comparison": null,
+        "kind": "terminal_instrumented_production_attempt",
+        "relative_path": "work/production_attempts.jsonl",
+        "source_episode_id": 202,
+        "task_id": "PushCube-v1"
+      },
+      "first_canonical_success_action_index": null,
+      "first_failed_sub_gate": "canonical_terminal_success_gate",
+      "instruction": "Guide the cube into the target region without picking it up.",
+      "instruction_template_id": "phase2b6:PushCube-v1:train:04:ed130366867826de",
+      "invalid_action_count": 0,
+      "maximum_consecutive_canonical_success_steps": 0,
+      "nonfinite_value_count": 0,
+      "passed": false,
+      "policy_frame_count": 69,
+      "primary_split": "train",
+      "raw_relative_path": null,
+      "raw_sha256": null,
+      "replay_success": false,
+      "replayed_action_count": 69,
+      "reset_identity": "sha256:eba68d312f7d7c7a5a01316da0b9f861fc0b52010b09ab299ce1973640d8a317",
+      "retry": false,
+      "retry_reason": null,
+      "rgb_sha256": "sha256:445a83c331c096a19265724e1aef34fe864ad9201036f1729b32a8ae06dc09fa",
+      "simulator_error_count": 0,
+      "skill_family": "planar_pushing",
+      "source_action_count": 69,
+      "source_action_sha256": "sha256:436bcad43799b2f409799ec7196353b4b2eb307dc72441e1a00263290e4828df",
+      "source_episode_id": 202,
+      "source_success": true,
+      "source_trajectory_identity": "sha256:d7a8a8d58d7756efbdc20f63a3e1eaafe439ceadfc85cfe5eeded8e75fc3f341",
+      "state_sha256": "sha256:1aafb3949e71b725a57edf322c480c09797358fd3997fe4c1808750400c6c17a",
+      "sub_gates": {
+        "action_contract_gate": {
+          "observed": {
+            "action_count": 69,
+            "action_dtype": "float32",
+            "action_sha256": "sha256:436bcad43799b2f409799ec7196353b4b2eb307dc72441e1a00263290e4828df",
+            "action_shape": [
+              69,
+              8
+            ],
+            "expected_action_sha256": "sha256:436bcad43799b2f409799ec7196353b4b2eb307dc72441e1a00263290e4828df",
+            "invalid_action_count": 0,
+            "nonfinite_value_count": 0
+          },
+          "status": "passed"
+        },
+        "action_count_gate": {
+          "observed": {
+            "replay_action_count": 69,
+            "source_action_count": 69
+          },
+          "status": "passed"
+        },
+        "canonical_terminal_success_gate": {
+          "observed": {
+            "final_canonical_success": false
+          },
+          "status": "failed"
+        },
+        "environment_construction_gate": {
+          "observed": {},
+          "status": "passed"
+        },
+        "episode_serialization_gate": {
+          "observed": {},
+          "status": "not_reached"
+        },
+        "observation_action_alignment_gate": {
+          "observed": {
+            "convention": "observation[t] immediately precedes action[t]",
+            "terminal_diagnostic_frame_in_policy_data": false
+          },
+          "status": "passed"
+        },
+        "pre_action_frame_count_gate": {
+          "observed": {
+            "action_count": 69,
+            "policy_frame_count": 69
+          },
+          "status": "passed"
+        },
+        "rendering_preflight_gate": {
+          "observed": {
+            "rendering_contract_fingerprint": "sha256:204723c1dcc63f31623f41a179a7fa67ec57af1700c2d116590292cb730b11d9"
+          },
+          "status": "passed"
+        },
+        "reset_identity_gate": {
+          "observed": {
+            "first_state_anchor_used": false,
+            "reset_identity": "sha256:eba68d312f7d7c7a5a01316da0b9f861fc0b52010b09ab299ce1973640d8a317",
+            "semantic_reset_state_error": {
+              "compared_numeric_values": 70,
+              "matched_leaf_count": 4,
+              "maximum_absolute_error": 0.0,
+              "mean_absolute_error": 0.0,
+              "missing_leaves": [],
+              "per_numeric_leaf": {
+                "actors/cube": {
+                  "compared_values": 13,
+                  "maximum_absolute_error": 0.0,
+                  "mean_absolute_error": 0.0
+                },
+                "actors/goal_region": {
+                  "compared_values": 13,
+                  "maximum_absolute_error": 0.0,
+                  "mean_absolute_error": 0.0
+                },
+                "actors/table-workspace": {
+                  "compared_values": 13,
+                  "maximum_absolute_error": 0.0,
+                  "mean_absolute_error": 0.0
+                },
+                "articulations/panda": {
+                  "compared_values": 31,
+                  "maximum_absolute_error": 0.0,
+                  "mean_absolute_error": 0.0
+                }
+              },
+              "shape_mismatch_leaves": [],
+              "structures_match": true,
+              "unexpected_leaves": []
+            }
+          },
+          "status": "passed"
+        },
+        "rgb_completeness_gate": {
+          "observed": {
+            "dtype": "uint8",
+            "shape": [
+              69,
+              256,
+              256,
+              3
+            ]
+          },
+          "status": "passed"
+        },
+        "simulator_exception_gate": {
+          "observed": {
+            "simulator_error_count": 0
+          },
+          "status": "passed"
+        },
+        "source_replay_outcome_agreement_gate": {
+          "observed": {
+            "replay_success": false,
+            "source_success": true
+          },
+          "status": "failed"
+        },
+        "state_completeness_gate": {
+          "observed": {
+            "dtype": "float32",
+            "shape": [
+              69,
+              9
+            ]
+          },
+          "status": "passed"
+        },
+        "step_execution_gate": {
+          "observed": {
+            "replayed_action_count": 69,
+            "source_action_count": 69
+          },
+          "status": "passed"
+        },
+        "temporary_writer_gate": {
+          "observed": {},
+          "status": "not_reached"
+        },
+        "timestamp_monotonicity_gate": {
+          "observed": {
+            "exact_20hz": true,
+            "frame_count": 69,
+            "strictly_monotonic": true
+          },
+          "status": "passed"
+        }
+      },
+      "task_id": "PushCube-v1",
+      "terminal_attempt": true,
+      "terminal_object_pose_error": {
+        "diagnostic_only": true,
+        "maximum_quaternion_sign_invariant_l2": 0.0007102131733027806,
+        "maximum_translation_l2_m": 0.002688180840087635,
+        "objects": {
+          "obj": {
+            "quaternion_sign_invariant_l2": 0.0007102131733027806,
+            "translation_l2_m": 0.002688180840087635
+          }
+        }
+      },
+      "terminated_signal_count": 0,
+      "timestamp_sha256": "sha256:77f23ee434534cf60a5602d2456debb122ec0d8668127320ee66a5c197177bac",
+      "trailing_canonical_success_steps": 0,
+      "truncated_signal_count": 20
+    }
+  ],
+  "failure_training_corpus_created": false,
+  "fingerprint": "sha256:3c911714482ee6f7ceba24ec15bb4bd677cb0fb4bd358aa17370932c208aae77",
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b6-v2-excluded-episode-manifest-v0"
+}

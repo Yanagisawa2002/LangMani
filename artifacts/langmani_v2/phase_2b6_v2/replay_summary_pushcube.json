@@ -1,0 +1,118 @@
+{
+  "accepted_count": 999,
+  "accepted_frame_count": 68909,
+  "camera": {
+    "construction_attempts": [
+      {
+        "attempt_index": 0,
+        "exception": null,
+        "passed": true
+      }
+    ],
+    "parameters": {
+      "cam2world_gl": {
+        "dtype": "float32",
+        "shape": [
+          4,
+          4
+        ],
+        "value": [
+          [
+            0.0,
+            -0.7808687686920166,
+            0.6246950626373291,
+            0.30000001192092896
+          ],
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.6246950626373291,
+            0.7808687686920166,
+            0.6000000238418579
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "config_far": 100,
+      "config_fov": 1.5707963267948966,
+      "config_height": 256,
+      "config_near": 0.01,
+      "config_width": 256,
+      "extrinsic_cv": {
+        "dtype": "float32",
+        "shape": [
+          3,
+          4
+        ],
+        "value": [
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.7808687686920166,
+            0.0,
+            -0.6246950626373291,
+            0.1405564546585083
+          ],
+          [
+            -0.6246950626373291,
+            0.0,
+            -0.7808687686920166,
+            0.6559298038482666
+          ]
+        ]
+      },
+      "intrinsic_cv": {
+        "dtype": "float32",
+        "shape": [
+          3,
+          3
+        ],
+        "value": [
+          [
+            128.0,
+            0.0,
+            128.0
+          ],
+          [
+            0.0,
+            128.0,
+            128.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      }
+    }
+  },
+  "excluded_count": 1,
+  "exclusions": [
+    {
+      "classification": "EXCLUDED_DETERMINISTIC_PHYSICAL",
+      "first_failed_sub_gate": "canonical_terminal_success_gate",
+      "source_episode_id": 202
+    }
+  ],
+  "fingerprint": "sha256:7fe83787a2e07a4e9989215601f33af7da31e61b01d4a5e7575a5ec216f75c58",
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b6-v2-task-replay-summary-v0",
+  "skill_family": "planar_pushing",
+  "source_count": 1000,
+  "task_id": "PushCube-v1"
+}

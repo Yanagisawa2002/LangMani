@@ -1,0 +1,39 @@
+{
+  "backward_passes": 0,
+  "created_at_utc": "2026-07-24T08:12:36.976226+00:00",
+  "cuda_available": true,
+  "cuda_runtime_reported_by_torch": "12.8",
+  "environment_prefix": "/root/autodl-tmp/conda-envs/langmani",
+  "executable": "/root/autodl-tmp/conda-envs/langmani/bin/python3.12",
+  "fingerprint": "sha256:3fe9cb16740f96f25157da224dd7ccc99d75047532aac71a2d98a518275620ab",
+  "isolated_from_maniskill_replay_environment": true,
+  "lerobot_distribution_source": "installed PyPI sdist/wheel 0.6.0",
+  "lerobot_tag": "v0.6.0",
+  "model_or_policy_loaded": false,
+  "optimizer_created": false,
+  "packages": {
+    "av": "15.1.0",
+    "datasets": "4.8.5",
+    "diffusers": "not_installed",
+    "h5py": "3.16.0",
+    "lerobot": "0.6.0",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "pillow": "12.3.0",
+    "pyarrow": "25.0.0",
+    "torch": "2.11.0+cu128",
+    "transformers": "5.4.0"
+  },
+  "passed": true,
+  "pyav_libraries": {
+    "libavcodec": "61.19.101",
+    "libavdevice": "61.3.100",
+    "libavfilter": "10.4.100",
+    "libavformat": "61.7.100",
+    "libavutil": "59.39.100",
+    "libswresample": "5.3.100",
+    "libswscale": "8.3.100"
+  },
+  "python": "3.12.13",
+  "schema_version": "langmani-v2-phase2b6-lerobot-environment-v0"
+}

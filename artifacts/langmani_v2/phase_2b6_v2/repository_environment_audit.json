@@ -1,0 +1,90 @@
+{
+  "archive_root": "/root/autodl-tmp/langmani-external/phase2b6-v2-archive",
+  "authorization": {
+    "accepted_multiskill_dataset_validated": false,
+    "act_baseline_training_eligible": false,
+    "act_training_authorized": false,
+    "backward_passes": 0,
+    "eligibility_is_authorization": false,
+    "optimizer_created": false,
+    "optimizer_steps": 0,
+    "schema_version": "langmani-v2-phase2b6-v2-authorization-state-v0",
+    "smolvla_training_authorized": false,
+    "smolvla_training_eligible": false,
+    "student_policy_training_started": false,
+    "vla_jepa_training_authorized": false,
+    "vla_jepa_training_eligible": false
+  },
+  "branch": "codex/langmani-v2-phase2b6-v2-instrumented-production",
+  "checks": {
+    "frozen_v1_root_exists": true,
+    "github_matches_head": true,
+    "network_turbo_sourced": true,
+    "new_root_isolation": true,
+    "new_roots_absent": true,
+    "no_merge_commits_since_source": true,
+    "process_state": true,
+    "source_commit_is_ancestor": true,
+    "source_root_exists": true,
+    "storage": true,
+    "target_branch": true,
+    "upstream_matches_head": true,
+    "worktree_clean": true
+  },
+  "created_at_utc": "2026-07-24T06:38:58.898815+00:00",
+  "exclusion_policy_sha256": "sha256:40b93c996d45037c3c26540e9956deb3b0167a28fccfc7e74f290b5621ac6844",
+  "fingerprint": "sha256:d3cb2dd7a8ec92a15eac445431c713c7c39011f73525354e38573a1d8af42c89",
+  "frozen_v1_root": "/root/autodl-tmp/langmani-external/phase2b6/production_v1",
+  "github_branch_sha": "36a50acd07b24257c90330087ed96d3250bce531",
+  "gpu": {
+    "available": true,
+    "devices": [
+      {
+        "driver_version": "580.76.05",
+        "memory_total_mib": 32607,
+        "memory_used_mib": 0,
+        "name": "NVIDIA GeForce RTX 5090",
+        "utilization_percent": 0,
+        "uuid": "GPU-27f8a10c-1b18-1109-85da-247ee1927024"
+      }
+    ]
+  },
+  "head": "36a50acd07b24257c90330087ed96d3250bce531",
+  "passed": true,
+  "process_state": {
+    "matching_processes": [],
+    "passed": true,
+    "prohibited_active_processes": [],
+    "query_succeeded": true
+  },
+  "production_root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2",
+  "remote": "git@github.com:Yanagisawa2002/LangMani.git",
+  "restore_root": "/root/autodl-tmp/langmani-external/phase2b6-v2-restore-scratch",
+  "schema_version": "langmani-v2-phase2b6-v2-repository-environment-v0",
+  "source_commit": "18c31f8bc6839d80b465ad73894fa886fa6c8dfb",
+  "source_root": "/root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608",
+  "specification_sha256": "sha256:324bf4df04767350a219eb46065ead9a9d27362b4789849281e45bb670c1a221",
+  "storage": {
+    "minimum_free_bytes": 86648516608,
+    "minimum_required_bytes": 64424509440,
+    "passed": true,
+    "paths": {
+      "/root/autodl-tmp/langmani-external/phase2b6-v2-archive": {
+        "free_bytes": 86648516608,
+        "total_bytes": 268435456000,
+        "volume": "/root/autodl-tmp/langmani-external"
+      },
+      "/root/autodl-tmp/langmani-external/phase2b6-v2-restore-scratch": {
+        "free_bytes": 86648516608,
+        "total_bytes": 268435456000,
+        "volume": "/root/autodl-tmp/langmani-external"
+      },
+      "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2": {
+        "free_bytes": 86648516608,
+        "total_bytes": 268435456000,
+        "volume": "/root/autodl-tmp/langmani-external/phase2b6-v2"
+      }
+    }
+  },
+  "upstream": "36a50acd07b24257c90330087ed96d3250bce531"
+}

@@ -194,15 +194,21 @@ success. The exact first failed gate is `canonical_terminal_success_gate`, so th
 production authorization. The Result B hard stop prevented Modes B/C; production, accepted
 dataset creation, and all model training remain closed.
 
-Phase 2B.6-v2 is the new clean production authorized after that review. It runs every selected
+Phase 2B.6-v2 is the completed clean production authorized after that review. It ran every selected
 official source again from episode 0 under the recovered process-scoped Vulkan launcher and the
 versioned exclusion policy in
 [`phase2b6_v2_exclusion_policy.yaml`](configs/langmani_v2/phase2b6_v2_exclusion_policy.yaml).
 Every source identity remains accounted for even when an explicitly classified incompatible
 episode is absent from policy data. The frozen thresholds permit at most five exclusions per task
 and nine overall while requiring at least 99.5% per-task and 99.7% overall acceptance. The old
-1,938-record partial root remains diagnostic and read-only. Dataset acceptance may establish
-later-phase eligibility but never starts or authorizes model training.
+1,938-record partial root remains diagnostic and read-only, and no old record was reused. The new
+run accepted 2,998/3,000 sources and 254,200 frames, retaining StackCube episode 938 and PushCube
+episode 202 as explicit deterministic-physical exclusions. Full LeRobot 0.6 readback, exact
+source-to-derived verification, zero-overlap leakage, content-addressed archive, and clean restore
+passed, so the phase is
+[`RESULT_A`](docs/langmani_v2/phase_2b6_v2_result.md). ACT-baseline, SmolVLA, and VLA-JEPA dataset
+eligibility is true, but every training authorization remains false and no optimizer or training
+work started.
 
 The no-training v2 production entry point is:
 

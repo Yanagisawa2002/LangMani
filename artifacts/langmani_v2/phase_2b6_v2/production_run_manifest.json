@@ -1,0 +1,88 @@
+{
+  "accepted_episode_count": 2998,
+  "accepted_frame_count": 254200,
+  "created_at_utc": "2026-07-24T07:44:08.703073+00:00",
+  "elapsed_seconds": 3845.055408515036,
+  "excluded_episode_count": 2,
+  "fingerprint": "sha256:db4c26b38565cb5a1cf816170ed48eb2f41786a6f35817d7e52f35a61b2f3a4c",
+  "frozen_v1_root_unchanged": true,
+  "optimizer_steps": 0,
+  "passed": true,
+  "per_task": {
+    "PickCube-v1": {
+      "accepted_count": 1000,
+      "excluded_count": 0,
+      "fingerprint": "sha256:96df4745b90d1094e375c8d4128d26685d70d6f712ca8d9263b15666c2528681"
+    },
+    "PushCube-v1": {
+      "accepted_count": 999,
+      "excluded_count": 1,
+      "fingerprint": "sha256:7fe83787a2e07a4e9989215601f33af7da31e61b01d4a5e7575a5ec216f75c58"
+    },
+    "StackCube-v1": {
+      "accepted_count": 999,
+      "excluded_count": 1,
+      "fingerprint": "sha256:5717ea9e48bef45a95422fad1e2433af1a083cf9a9893f7ea69f52eb4c33b420"
+    }
+  },
+  "previous_partial_records_reused": false,
+  "producer": {
+    "fingerprint": "sha256:25e1d6a7c307bee3cf4b7c12b2c9ead65a33ff76c826861826da6d5e19694e78",
+    "optimizer_steps": 0,
+    "previous_partial_records_reused": false,
+    "producer_commit": "36a50acd07b24257c90330087ed96d3250bce531",
+    "producer_worktree_clean": true,
+    "schema_version": "langmani-v2-phase2b6-v2-production-start-v0",
+    "source_episode_start": 0,
+    "started_at_utc": "2026-07-24T06:40:03.636053+00:00",
+    "student_policy_training_started": false
+  },
+  "schema_version": "langmani-v2-phase2b6-v2-production-run-manifest-v0",
+  "source_episode_count": 3000,
+  "source_transition_count": 254374,
+  "student_policy_training_started": false,
+  "threshold_audit": {
+    "accepted_count": 2998,
+    "accepted_source_rate": 0.9993333333333333,
+    "checks": {
+      "all_source_identities_accounted": true,
+      "maximum_total_exclusions": true,
+      "overall_accepted_source_rate": true,
+      "per_task_accepted_source_rate": true,
+      "retryable_failures_terminal": true,
+      "unclassified_failures": true
+    },
+    "class_counts": {
+      "ACCEPTED_REPLAY": 2998,
+      "EXCLUDED_DETERMINISTIC_PHYSICAL": 2
+    },
+    "excluded_count": 2,
+    "fingerprint": "sha256:49c8c7870e1b990a11e084fce0072e215374fff1a067345e3c3e7d7a9595ce94",
+    "passed": true,
+    "per_task": {
+      "PickCube-v1": {
+        "accepted_count": 1000,
+        "accepted_source_rate": 1.0,
+        "excluded_count": 0,
+        "passed": true,
+        "source_count": 1000
+      },
+      "PushCube-v1": {
+        "accepted_count": 999,
+        "accepted_source_rate": 0.999,
+        "excluded_count": 1,
+        "passed": true,
+        "source_count": 1000
+      },
+      "StackCube-v1": {
+        "accepted_count": 999,
+        "accepted_source_rate": 0.999,
+        "excluded_count": 1,
+        "passed": true,
+        "source_count": 1000
+      }
+    },
+    "schema_version": "langmani-v2-phase2b6-v2-threshold-audit-v0",
+    "source_count": 3000
+  }
+}

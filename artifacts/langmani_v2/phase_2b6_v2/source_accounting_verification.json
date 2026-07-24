@@ -1,0 +1,60 @@
+{
+  "accepted_episode_count": 2998,
+  "checks": {
+    "accepted_excluded_disjoint": true,
+    "accepted_manifest_count": true,
+    "accepted_plus_excluded_complete": true,
+    "all_source_identities_accounted": true,
+    "every_exclusion_verified": true,
+    "excluded_manifest_count": true,
+    "terminal_identity_unique": true
+  },
+  "excluded_episode_checks": [
+    {
+      "absent_from_policy_raw_root": true,
+      "classification": "EXCLUDED_DETERMINISTIC_PHYSICAL",
+      "evidence_reference": {
+        "attempt_index": 0,
+        "forensic_comparison": {
+          "consistent": true,
+          "expected_first_failed_sub_gate": "canonical_terminal_success_gate",
+          "forensic_artifact_manifest_fingerprint": "sha256:c49558caa9f04d445f8e34acd6e71d17b0339a82c4a5273ac8f8827f35e15a6e",
+          "forensic_result_fingerprint": "sha256:30b7b6226d2762a248edc1ec9d9f68030f38bd1b1e385f00a3534c7544af84de"
+        },
+        "kind": "terminal_instrumented_production_attempt",
+        "relative_path": "work/production_attempts.jsonl",
+        "source_episode_id": 938,
+        "task_id": "StackCube-v1"
+      },
+      "first_failed_sub_gate": "canonical_terminal_success_gate",
+      "passed": true,
+      "source_action_sha256": "sha256:5fc50bc7beeb91e55b2eeccf3f016414811d314142e7a80ad6037d4f83d92eb8",
+      "source_episode_id": 938,
+      "source_trajectory_identity": "sha256:f5c25c7b4f1f7f5ed0cd8b3641f7a451f758c1a47eb9aa31bf96b0081848f7a3",
+      "task_id": "StackCube-v1"
+    },
+    {
+      "absent_from_policy_raw_root": true,
+      "classification": "EXCLUDED_DETERMINISTIC_PHYSICAL",
+      "evidence_reference": {
+        "attempt_index": 0,
+        "forensic_comparison": null,
+        "kind": "terminal_instrumented_production_attempt",
+        "relative_path": "work/production_attempts.jsonl",
+        "source_episode_id": 202,
+        "task_id": "PushCube-v1"
+      },
+      "first_failed_sub_gate": "canonical_terminal_success_gate",
+      "passed": true,
+      "source_action_sha256": "sha256:436bcad43799b2f409799ec7196353b4b2eb307dc72441e1a00263290e4828df",
+      "source_episode_id": 202,
+      "source_trajectory_identity": "sha256:d7a8a8d58d7756efbdc20f63a3e1eaafe439ceadfc85cfe5eeded8e75fc3f341",
+      "task_id": "PushCube-v1"
+    }
+  ],
+  "excluded_episode_count": 2,
+  "fingerprint": "sha256:11490d51b34e1bf736a9d6baee4d4feb6c855ff8ed5e1ad6f0f938609006b81f",
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b6-v2-source-accounting-verifier-v0",
+  "source_episode_count": 3000
+}

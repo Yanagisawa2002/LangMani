@@ -1,0 +1,60 @@
+{
+  "directly_relevant_files": [
+    {
+      "path": "run/frozen_production_specification.json",
+      "sha256": "sha256:35e1dd507d82c5dcf831ec9e1be0f1c20b058d7bdb4bd7899c3dc8db10f1bc7f",
+      "size_bytes": 12293
+    },
+    {
+      "path": "run/specification_lock.json",
+      "sha256": "sha256:808ebc653c3933bf3770f1f0c7eaeeeed941c22179b7d2ae483f0e2f1c56f7eb",
+      "size_bytes": 552
+    },
+    {
+      "path": "run/full_production_started.json",
+      "sha256": "sha256:692b91472af193cdbf0316721d801df1ef4dd6b6d404bb9fa3f53e333b3dab0c",
+      "size_bytes": 562
+    },
+    {
+      "path": "run/command_log.jsonl",
+      "sha256": "sha256:9799232b1ff098cc45afb1444fee1353f33920b873e3abb55e47f9b34fb990cc",
+      "size_bytes": 6074
+    },
+    {
+      "path": "work/source_episode_inventory.json",
+      "sha256": "sha256:fa911efe3f669da08355d73ee602b27b62062678e98540d791c437c6eaf5ab98",
+      "size_bytes": 2383080
+    },
+    {
+      "path": "work/primary_split_manifest.json",
+      "sha256": "sha256:00f2fb815b0899b1312cca16c906fe452a7764a6810aabbcc3c5188806ab944d",
+      "size_bytes": 2823429
+    },
+    {
+      "path": "work/replay_records.jsonl",
+      "sha256": "sha256:b5bfe3fe07a904f5732cacabda26ce65bacf2ecc2b9a781ec0315658ebf56105",
+      "size_bytes": 7655040
+    },
+    {
+      "path": "work/raw/stackcube/episode_000936.npz",
+      "sha256": "sha256:6b1e94f8189a2f9b8d58d291c638e8d066bef3f7014405cd25970c4eb00c3fc9",
+      "size_bytes": 9589142
+    },
+    {
+      "path": "work/raw/stackcube/episode_000937.npz",
+      "sha256": "sha256:65d8100972d19ffbf7b40eb0d4cd0983aaf3b9be78e94b96a2e14ef252636daa",
+      "size_bytes": 10617401
+    }
+  ],
+  "fingerprint": "sha256:63fd57213c92815f01c29ddd0d8ebf87f31f841687c3a055b8441b6ba7563a36",
+  "frozen_bytes_modified": false,
+  "frozen_root": "/root/autodl-tmp/langmani-external/phase2b6/production_v1",
+  "historical_accepted_episode_count": 1938,
+  "historical_accepted_frame_count": 178633,
+  "partial_output_is_accepted_dataset": false,
+  "passed": true,
+  "read_only_contract": true,
+  "schema_version": "langmani-v2-phase2b6-1-frozen-partial-inventory-v0",
+  "target_episode_npz_files": [],
+  "temporary_or_partial_named_files": []
+}

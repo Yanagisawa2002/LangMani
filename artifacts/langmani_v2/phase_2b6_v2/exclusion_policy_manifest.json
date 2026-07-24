@@ -1,0 +1,25 @@
+{
+  "fingerprint": "sha256:083951dc95ddddff2382174d423d3e8b0e0bdf4c05174a57cd41abf2baf3830f",
+  "frozen_before_first_replay": true,
+  "passed": true,
+  "policy_fingerprint": "sha256:eff2a6228cb16ba0e017a5352adb9d21fe74b0806712b782404baa493cda75a3",
+  "policy_id": "langmani-phase2b6-v2-exclusion-policy-v1",
+  "policy_sha256": "sha256:40b93c996d45037c3c26540e9956deb3b0167a28fccfc7e74f290b5621ac6844",
+  "registered_exclusions": [
+    {
+      "action_sha256": "sha256:5fc50bc7beeb91e55b2eeccf3f016414811d314142e7a80ad6037d4f83d92eb8",
+      "automatic_exclusion": false,
+      "eligible_class": "EXCLUDED_DETERMINISTIC_PHYSICAL",
+      "expected_first_failed_sub_gate": "canonical_terminal_success_gate",
+      "forensic_artifact_manifest_fingerprint": "sha256:c49558caa9f04d445f8e34acd6e71d17b0339a82c4a5273ac8f8827f35e15a6e",
+      "forensic_result": "RESULT_B",
+      "forensic_result_fingerprint": "sha256:30b7b6226d2762a248edc1ec9d9f68030f38bd1b1e385f00a3534c7544af84de",
+      "normal_v2_attempt_required": true,
+      "seed": 962,
+      "source_episode_id": 938,
+      "source_trajectory": "traj_938",
+      "task_id": "StackCube-v1"
+    }
+  ],
+  "schema_version": "langmani-v2-phase2b6-v2-exclusion-policy-manifest-v0"
+}

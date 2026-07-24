@@ -1,0 +1,16 @@
+{
+  "approximate_action_tolerance_used": false,
+  "created_at_utc": "2026-07-24T10:44:15.547853+00:00",
+  "derived_episode_count": 2998,
+  "exact_action_equality_count": 2998,
+  "failure_count": 0,
+  "failures": [],
+  "fingerprint": "sha256:6ecd79ec15922a30e15fa8780a4109adf8b4e0ea779fe7d71196c6a06eae9403",
+  "independent_from_production_writer": true,
+  "optimizer_steps": 0,
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b6-source-to-derived-verifier-v0",
+  "source_action_values_checked": 2033600,
+  "source_episode_count": 2998,
+  "student_policy_training_started": false
+}

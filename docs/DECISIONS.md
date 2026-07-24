@@ -3512,3 +3512,27 @@ source inventory and are never replacement sampled.
 Even a Result A sets only ACT-baseline, SmolVLA, and VLA-JEPA dataset eligibility. Their training
 authorization remains false. No model or checkpoint is loaded, no optimizer is created, no
 backward pass runs, `student_policy_training_started=false`, and `optimizer_steps=0`.
+
+## D-137 - Accept the Phase 2B.6-v2 versioned multi-skill dataset
+
+The clean production completed from source episode zero without reusing any Phase 2B.6 partial
+record. All 3,000 official sources received terminal classifications: 2,998 `ACCEPTED_REPLAY` and
+two `EXCLUDED_DETERMINISTIC_PHYSICAL`. StackCube episode 938 and PushCube episode 202 each executed
+every exact source action without simulator, action, infrastructure, or writer failure, but final
+canonical success was false. Their first failed sub-gate is
+`canonical_terminal_success_gate`; neither was retried, repaired, shortened, or replaced.
+
+The accepted package contains 254,200 primary frames across all three skill families. Overall
+acceptance is 99.9333%; PickCube, StackCube, and PushCube acceptance is 100.0%, 99.9%, and 99.9%.
+All source accounting, accepted replay/alignment, privileged-field exclusion, LeRobot 0.6 full
+readback, exact source-to-derived equality, zero-overlap leakage, accepted-only padding,
+train-only normalization, content-addressed archive, and clean non-symlink restore gates passed.
+The package identity is `LangManiOfficialMultiSkill-v2`, fingerprint
+`sha256:77675e2134e4886a97e4bdac2230c64c3da30cc080e647433b7c701a79544ed04`.
+The phase is Result A with `accepted_multiskill_dataset_validated=true`.
+
+Result A makes ACT-baseline, SmolVLA, and VLA-JEPA dataset consumption eligible but does not
+authorize execution. `act_training_authorized=false`, `smolvla_training_authorized=false`,
+`vla_jepa_training_authorized=false`, `student_policy_training_started=false`,
+`optimizer_created=false`, `optimizer_steps=0`, and `backward_passes=0`. Any model choice,
+training protocol, or policy-quality claim requires a separately authorized later phase.

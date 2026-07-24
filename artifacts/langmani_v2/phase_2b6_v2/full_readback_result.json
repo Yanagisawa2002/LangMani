@@ -1,0 +1,535 @@
+{
+  "action_failure_count": 0,
+  "all_generated_episode_readback_count": 3148,
+  "all_generated_frame_readback_count": 267041,
+  "api_episode_readback_count": 3148,
+  "created_at_utc": "2026-07-24T10:42:59.835746+00:00",
+  "decoded_frame_count": 267041,
+  "decoded_primary_frame_count": 254200,
+  "decoded_visual_shift_frame_count": 12841,
+  "decoding_failure_count": 0,
+  "episode_count": 2998,
+  "fingerprint": "sha256:28364ac164e90a29ebefe6baf730db64d015d3599906dd9f11ed846ec0a8f77c",
+  "frame_count": 254200,
+  "frame_level_structural_validation_count": 267041,
+  "lerobot_version": "0.6.0",
+  "metadata_failure_count": 0,
+  "optimizer_steps": 0,
+  "passed": true,
+  "primary_root_count": 15,
+  "primary_roots": [
+    {
+      "api_episode_readback_count": 100,
+      "episode_count": 100,
+      "expected_episode_count": 100,
+      "expected_frame_count": 7828,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 7828,
+      "frame_level_structural_validation_count": 7828,
+      "passed": true,
+      "repo_id": "langmani/official-pickcube-v2-test-unseen-reset",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/task_roots/pickcube/splits/test_unseen_reset",
+      "video": {
+        "decoded_frame_count": 7828,
+        "decoded_shapes": {
+          "(256, 256, 3)": 7828
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 1
+      }
+    },
+    {
+      "api_episode_readback_count": 50,
+      "episode_count": 50,
+      "expected_episode_count": 50,
+      "expected_frame_count": 3796,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 3796,
+      "frame_level_structural_validation_count": 3796,
+      "passed": true,
+      "repo_id": "langmani/official-pickcube-v2-test-unseen-task-language",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/task_roots/pickcube/splits/test_unseen_task_language",
+      "video": {
+        "decoded_frame_count": 3796,
+        "decoded_shapes": {
+          "(256, 256, 3)": 3796
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 1
+      }
+    },
+    {
+      "api_episode_readback_count": 50,
+      "episode_count": 50,
+      "expected_episode_count": 50,
+      "expected_frame_count": 3941,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 3941,
+      "frame_level_structural_validation_count": 3941,
+      "passed": true,
+      "repo_id": "langmani/official-pickcube-v2-test-visual-shift",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/task_roots/pickcube/splits/test_visual_shift",
+      "video": {
+        "decoded_frame_count": 3941,
+        "decoded_shapes": {
+          "(256, 256, 3)": 3941
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 1
+      }
+    },
+    {
+      "api_episode_readback_count": 700,
+      "episode_count": 700,
+      "expected_episode_count": 700,
+      "expected_frame_count": 54608,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 54608,
+      "frame_level_structural_validation_count": 54608,
+      "passed": true,
+      "repo_id": "langmani/official-pickcube-v2-train",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/task_roots/pickcube/splits/train",
+      "video": {
+        "decoded_frame_count": 54608,
+        "decoded_shapes": {
+          "(256, 256, 3)": 54608
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 2
+      }
+    },
+    {
+      "api_episode_readback_count": 100,
+      "episode_count": 100,
+      "expected_episode_count": 100,
+      "expected_frame_count": 7803,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 7803,
+      "frame_level_structural_validation_count": 7803,
+      "passed": true,
+      "repo_id": "langmani/official-pickcube-v2-validation",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/task_roots/pickcube/splits/validation",
+      "video": {
+        "decoded_frame_count": 7803,
+        "decoded_shapes": {
+          "(256, 256, 3)": 7803
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 1
+      }
+    },
+    {
+      "api_episode_readback_count": 100,
+      "episode_count": 100,
+      "expected_episode_count": 100,
+      "expected_frame_count": 6896,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 6896,
+      "frame_level_structural_validation_count": 6896,
+      "passed": true,
+      "repo_id": "langmani/official-pushcube-v2-test-unseen-reset",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/task_roots/pushcube/splits/test_unseen_reset",
+      "video": {
+        "decoded_frame_count": 6896,
+        "decoded_shapes": {
+          "(256, 256, 3)": 6896
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 1
+      }
+    },
+    {
+      "api_episode_readback_count": 50,
+      "episode_count": 50,
+      "expected_episode_count": 50,
+      "expected_frame_count": 3442,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 3442,
+      "frame_level_structural_validation_count": 3442,
+      "passed": true,
+      "repo_id": "langmani/official-pushcube-v2-test-unseen-task-language",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/task_roots/pushcube/splits/test_unseen_task_language",
+      "video": {
+        "decoded_frame_count": 3442,
+        "decoded_shapes": {
+          "(256, 256, 3)": 3442
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 1
+      }
+    },
+    {
+      "api_episode_readback_count": 50,
+      "episode_count": 50,
+      "expected_episode_count": 50,
+      "expected_frame_count": 3459,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 3459,
+      "frame_level_structural_validation_count": 3459,
+      "passed": true,
+      "repo_id": "langmani/official-pushcube-v2-test-visual-shift",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/task_roots/pushcube/splits/test_visual_shift",
+      "video": {
+        "decoded_frame_count": 3459,
+        "decoded_shapes": {
+          "(256, 256, 3)": 3459
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 1
+      }
+    },
+    {
+      "api_episode_readback_count": 699,
+      "episode_count": 699,
+      "expected_episode_count": 699,
+      "expected_frame_count": 48219,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 48219,
+      "frame_level_structural_validation_count": 48219,
+      "passed": true,
+      "repo_id": "langmani/official-pushcube-v2-train",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/task_roots/pushcube/splits/train",
+      "video": {
+        "decoded_frame_count": 48219,
+        "decoded_shapes": {
+          "(256, 256, 3)": 48219
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 1
+      }
+    },
+    {
+      "api_episode_readback_count": 100,
+      "episode_count": 100,
+      "expected_episode_count": 100,
+      "expected_frame_count": 6893,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 6893,
+      "frame_level_structural_validation_count": 6893,
+      "passed": true,
+      "repo_id": "langmani/official-pushcube-v2-validation",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/task_roots/pushcube/splits/validation",
+      "video": {
+        "decoded_frame_count": 6893,
+        "decoded_shapes": {
+          "(256, 256, 3)": 6893
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 1
+      }
+    },
+    {
+      "api_episode_readback_count": 99,
+      "episode_count": 99,
+      "expected_episode_count": 99,
+      "expected_frame_count": 10855,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 10855,
+      "frame_level_structural_validation_count": 10855,
+      "passed": true,
+      "repo_id": "langmani/official-stackcube-v2-test-unseen-reset",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/task_roots/stackcube/splits/test_unseen_reset",
+      "video": {
+        "decoded_frame_count": 10855,
+        "decoded_shapes": {
+          "(256, 256, 3)": 10855
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 1
+      }
+    },
+    {
+      "api_episode_readback_count": 50,
+      "episode_count": 50,
+      "expected_episode_count": 50,
+      "expected_frame_count": 5573,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 5573,
+      "frame_level_structural_validation_count": 5573,
+      "passed": true,
+      "repo_id": "langmani/official-stackcube-v2-test-unseen-task-language",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/task_roots/stackcube/splits/test_unseen_task_language",
+      "video": {
+        "decoded_frame_count": 5573,
+        "decoded_shapes": {
+          "(256, 256, 3)": 5573
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 1
+      }
+    },
+    {
+      "api_episode_readback_count": 50,
+      "episode_count": 50,
+      "expected_episode_count": 50,
+      "expected_frame_count": 5441,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 5441,
+      "frame_level_structural_validation_count": 5441,
+      "passed": true,
+      "repo_id": "langmani/official-stackcube-v2-test-visual-shift",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/task_roots/stackcube/splits/test_visual_shift",
+      "video": {
+        "decoded_frame_count": 5441,
+        "decoded_shapes": {
+          "(256, 256, 3)": 5441
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 1
+      }
+    },
+    {
+      "api_episode_readback_count": 700,
+      "episode_count": 700,
+      "expected_episode_count": 700,
+      "expected_frame_count": 74891,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 74891,
+      "frame_level_structural_validation_count": 74891,
+      "passed": true,
+      "repo_id": "langmani/official-stackcube-v2-train",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/task_roots/stackcube/splits/train",
+      "video": {
+        "decoded_frame_count": 74891,
+        "decoded_shapes": {
+          "(256, 256, 3)": 74891
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 2
+      }
+    },
+    {
+      "api_episode_readback_count": 100,
+      "episode_count": 100,
+      "expected_episode_count": 100,
+      "expected_frame_count": 10555,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 10555,
+      "frame_level_structural_validation_count": 10555,
+      "passed": true,
+      "repo_id": "langmani/official-stackcube-v2-validation",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/task_roots/stackcube/splits/validation",
+      "video": {
+        "decoded_frame_count": 10555,
+        "decoded_shapes": {
+          "(256, 256, 3)": 10555
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 1
+      }
+    }
+  ],
+  "root_count": 18,
+  "schema_version": "langmani-v2-phase2b6-full-lerobot-readback-v0",
+  "state_failure_count": 0,
+  "student_policy_training_started": false,
+  "visual_shift_episode_count": 150,
+  "visual_shift_frame_count": 12841,
+  "visual_shift_root_count": 3,
+  "visual_shift_roots": [
+    {
+      "api_episode_readback_count": 50,
+      "episode_count": 50,
+      "expected_episode_count": 50,
+      "expected_frame_count": 3941,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 3941,
+      "frame_level_structural_validation_count": 3941,
+      "passed": true,
+      "repo_id": "langmani/official-pickcube-v2-visual-shift",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/visual_shift_roots/pickcube",
+      "video": {
+        "decoded_frame_count": 3941,
+        "decoded_shapes": {
+          "(256, 256, 3)": 3941
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 1
+      }
+    },
+    {
+      "api_episode_readback_count": 50,
+      "episode_count": 50,
+      "expected_episode_count": 50,
+      "expected_frame_count": 3459,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 3459,
+      "frame_level_structural_validation_count": 3459,
+      "passed": true,
+      "repo_id": "langmani/official-pushcube-v2-visual-shift",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/visual_shift_roots/pushcube",
+      "video": {
+        "decoded_frame_count": 3459,
+        "decoded_shapes": {
+          "(256, 256, 3)": 3459
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 1
+      }
+    },
+    {
+      "api_episode_readback_count": 50,
+      "episode_count": 50,
+      "expected_episode_count": 50,
+      "expected_frame_count": 5441,
+      "failures": {
+        "action": 0,
+        "api_image": 0,
+        "api_instruction": 0,
+        "index_or_timestamp": 0,
+        "metadata": 0,
+        "state": 0
+      },
+      "frame_count": 5441,
+      "frame_level_structural_validation_count": 5441,
+      "passed": true,
+      "repo_id": "langmani/official-stackcube-v2-visual-shift",
+      "root": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/visual_shift_roots/stackcube",
+      "video": {
+        "decoded_frame_count": 5441,
+        "decoded_shapes": {
+          "(256, 256, 3)": 5441
+        },
+        "decoding_failures": [],
+        "passed": true,
+        "video_file_count": 1
+      }
+    }
+  ]
+}
