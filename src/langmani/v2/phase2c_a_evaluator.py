@@ -605,7 +605,11 @@ def summarize_evaluation(
     return {
         "schema_version": "langmani-v2-phase2c-a-evaluation-summary-v0",
         **base,
-        "task_ids": sorted({str(record["task_id"]) for record in normalized}),
+        "task_ids": [
+            task_id
+            for task_id in TASK_IDS
+            if task_id in {str(record["task_id"]) for record in normalized}
+        ],
         "policy_ids": sorted({str(record["policy_id"]) for record in normalized}),
         "checkpoint_identities": sorted(
             {str(record["checkpoint_identity"]) for record in normalized}

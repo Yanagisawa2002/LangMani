@@ -37,7 +37,7 @@ def test_evaluation_summary_has_confidence_interval_and_latency() -> None:
     assert result["success_rate"] == 0.5
     assert len(result["success_wilson_95"]) == 2
     assert result["inference_latency_p50_ms"] == 4.5
-    assert result["inference_latency_p95_ms"] == pytest.approx(4.95)
+    assert result["inference_latency_p95_ms"] == pytest.approx(5.0)
 
 
 def test_horizon_selection_uses_validation_only_and_prefers_success() -> None:

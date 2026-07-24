@@ -659,7 +659,8 @@ def build_training_view_manifest(
                 "source_trajectory_identity": raw.get("source_trajectory_identity"),
                 "action_sha256": raw.get("action_sha256"),
                 "reset_identity": raw.get("reset_identity"),
-                "frame_count": raw.get("frame_count"),
+                "frame_count": raw.get("transition_count"),
+                "transition_count": raw.get("transition_count"),
                 "primary_split": "train",
                 "instruction_template_id": raw.get("instruction_template_id"),
             }
