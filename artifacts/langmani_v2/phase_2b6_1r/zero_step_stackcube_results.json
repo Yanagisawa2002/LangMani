@@ -1,0 +1,189 @@
+{
+  "action_submission_count": 0,
+  "explicit_reset_count": 0,
+  "explicit_step_count": 0,
+  "fingerprint": "sha256:99451f5c3322d34c2823e8e5c9dc6b2e02b3a27296921eea9f5dc43a996763a8",
+  "forensic_replay_started": false,
+  "passed": true,
+  "runs": [
+    {
+      "action_dtype": "float32",
+      "action_shape": [
+        8
+      ],
+      "action_space": "Box([-2.8973 -1.7628 -2.8973 -3.0718 -2.8973 -0.0175 -2.8973 -1.    ], [ 2.8973  1.7628  2.8973 -0.0698  2.8973  3.7525  2.8973  1.    ], (8,), float32)",
+      "action_submission_count": 0,
+      "checks": {
+        "action_dtype": true,
+        "action_shape": true,
+        "control_frequency_hz": true,
+        "control_mode": true,
+        "obs_mode": true,
+        "render_backend": true,
+        "render_device": true,
+        "sensor_size": true,
+        "sim_backend": true,
+        "task_id": true
+      },
+      "close_succeeded": true,
+      "constructor_kwargs": {
+        "control_mode": "pd_joint_pos",
+        "human_render_camera_configs": {
+          "shader_pack": "default"
+        },
+        "num_envs": 1,
+        "obs_mode": "rgb",
+        "render_backend": "sapien_cuda",
+        "render_mode": null,
+        "reward_mode": "none",
+        "sensor_configs": {
+          "height": 256,
+          "width": 256
+        },
+        "sim_backend": "physx_cpu",
+        "viewer_camera_configs": {
+          "shader_pack": "default"
+        }
+      },
+      "constructor_may_initialize_scene_internally": true,
+      "control_mode": "pd_joint_pos",
+      "exception": null,
+      "explicit_reset_count": 0,
+      "explicit_step_count": 0,
+      "obs_mode": "rgb",
+      "observation_space": "Dict('agent': Dict('qpos': Box(-inf, inf, (1, 9), float32), 'qvel': Box(-inf, inf, (1, 9), float32)), 'extra': Dict('tcp_pose': Box(-inf, inf, (1, 7), float32)), 'sensor_data': Dict('base_camera': Dict('rgb': Box(0, 255, (1, 256, 256, 3), uint8)), 'hand_camera': Dict('rgb': Box(0, 255, (1, 256, 256, 3), uint8))), 'sensor_param': Dict('base_camera': Dict('cam2world_gl': Box(-inf, inf, (1, 4, 4), float32), 'extrinsic_cv': Box(-inf, inf, (1, 3, 4), float32), 'intrinsic_cv': Box(-inf, inf, (1, 3, 3), float32)), 'hand_camera': Dict('cam2world_gl': Box(-inf, inf, (1, 4, 4), float32), 'extrinsic_cv': Box(-inf, inf, (1, 3, 4), float32), 'intrinsic_cv': Box(-inf, inf, (1, 3, 3), float32))))",
+      "passed": true,
+      "policy_frame_count": 0,
+      "render_device": {
+        "can_present": false,
+        "can_render": true,
+        "cuda_id": 0,
+        "is_cpu": false,
+        "is_cuda": true,
+        "name": "NVIDIA GeForce RTX 5090",
+        "pci_string": "0000:27:00.0"
+      },
+      "wall_clock_seconds": 1.9118723832070827
+    },
+    {
+      "action_dtype": "float32",
+      "action_shape": [
+        8
+      ],
+      "action_space": "Box([-2.8973 -1.7628 -2.8973 -3.0718 -2.8973 -0.0175 -2.8973 -1.    ], [ 2.8973  1.7628  2.8973 -0.0698  2.8973  3.7525  2.8973  1.    ], (8,), float32)",
+      "action_submission_count": 0,
+      "checks": {
+        "action_dtype": true,
+        "action_shape": true,
+        "control_frequency_hz": true,
+        "control_mode": true,
+        "obs_mode": true,
+        "render_backend": true,
+        "render_device": true,
+        "sensor_size": true,
+        "sim_backend": true,
+        "task_id": true
+      },
+      "close_succeeded": true,
+      "constructor_kwargs": {
+        "control_mode": "pd_joint_pos",
+        "human_render_camera_configs": {
+          "shader_pack": "default"
+        },
+        "num_envs": 1,
+        "obs_mode": "rgb",
+        "render_backend": "sapien_cuda",
+        "render_mode": null,
+        "reward_mode": "none",
+        "sensor_configs": {
+          "height": 256,
+          "width": 256
+        },
+        "sim_backend": "physx_cpu",
+        "viewer_camera_configs": {
+          "shader_pack": "default"
+        }
+      },
+      "constructor_may_initialize_scene_internally": true,
+      "control_mode": "pd_joint_pos",
+      "exception": null,
+      "explicit_reset_count": 0,
+      "explicit_step_count": 0,
+      "obs_mode": "rgb",
+      "observation_space": "Dict('agent': Dict('qpos': Box(-inf, inf, (1, 9), float32), 'qvel': Box(-inf, inf, (1, 9), float32)), 'extra': Dict('tcp_pose': Box(-inf, inf, (1, 7), float32)), 'sensor_data': Dict('base_camera': Dict('rgb': Box(0, 255, (1, 256, 256, 3), uint8)), 'hand_camera': Dict('rgb': Box(0, 255, (1, 256, 256, 3), uint8))), 'sensor_param': Dict('base_camera': Dict('cam2world_gl': Box(-inf, inf, (1, 4, 4), float32), 'extrinsic_cv': Box(-inf, inf, (1, 3, 4), float32), 'intrinsic_cv': Box(-inf, inf, (1, 3, 3), float32)), 'hand_camera': Dict('cam2world_gl': Box(-inf, inf, (1, 4, 4), float32), 'extrinsic_cv': Box(-inf, inf, (1, 3, 4), float32), 'intrinsic_cv': Box(-inf, inf, (1, 3, 3), float32))))",
+      "passed": true,
+      "policy_frame_count": 0,
+      "render_device": {
+        "can_present": false,
+        "can_render": true,
+        "cuda_id": 0,
+        "is_cpu": false,
+        "is_cuda": true,
+        "name": "NVIDIA GeForce RTX 5090",
+        "pci_string": "0000:27:00.0"
+      },
+      "wall_clock_seconds": 1.7144381627440453
+    },
+    {
+      "action_dtype": "float32",
+      "action_shape": [
+        8
+      ],
+      "action_space": "Box([-2.8973 -1.7628 -2.8973 -3.0718 -2.8973 -0.0175 -2.8973 -1.    ], [ 2.8973  1.7628  2.8973 -0.0698  2.8973  3.7525  2.8973  1.    ], (8,), float32)",
+      "action_submission_count": 0,
+      "checks": {
+        "action_dtype": true,
+        "action_shape": true,
+        "control_frequency_hz": true,
+        "control_mode": true,
+        "obs_mode": true,
+        "render_backend": true,
+        "render_device": true,
+        "sensor_size": true,
+        "sim_backend": true,
+        "task_id": true
+      },
+      "close_succeeded": true,
+      "constructor_kwargs": {
+        "control_mode": "pd_joint_pos",
+        "human_render_camera_configs": {
+          "shader_pack": "default"
+        },
+        "num_envs": 1,
+        "obs_mode": "rgb",
+        "render_backend": "sapien_cuda",
+        "render_mode": null,
+        "reward_mode": "none",
+        "sensor_configs": {
+          "height": 256,
+          "width": 256
+        },
+        "sim_backend": "physx_cpu",
+        "viewer_camera_configs": {
+          "shader_pack": "default"
+        }
+      },
+      "constructor_may_initialize_scene_internally": true,
+      "control_mode": "pd_joint_pos",
+      "exception": null,
+      "explicit_reset_count": 0,
+      "explicit_step_count": 0,
+      "obs_mode": "rgb",
+      "observation_space": "Dict('agent': Dict('qpos': Box(-inf, inf, (1, 9), float32), 'qvel': Box(-inf, inf, (1, 9), float32)), 'extra': Dict('tcp_pose': Box(-inf, inf, (1, 7), float32)), 'sensor_data': Dict('base_camera': Dict('rgb': Box(0, 255, (1, 256, 256, 3), uint8)), 'hand_camera': Dict('rgb': Box(0, 255, (1, 256, 256, 3), uint8))), 'sensor_param': Dict('base_camera': Dict('cam2world_gl': Box(-inf, inf, (1, 4, 4), float32), 'extrinsic_cv': Box(-inf, inf, (1, 3, 4), float32), 'intrinsic_cv': Box(-inf, inf, (1, 3, 3), float32)), 'hand_camera': Dict('cam2world_gl': Box(-inf, inf, (1, 4, 4), float32), 'extrinsic_cv': Box(-inf, inf, (1, 3, 4), float32), 'intrinsic_cv': Box(-inf, inf, (1, 3, 3), float32))))",
+      "passed": true,
+      "policy_frame_count": 0,
+      "render_device": {
+        "can_present": false,
+        "can_render": true,
+        "cuda_id": 0,
+        "is_cpu": false,
+        "is_cuda": true,
+        "name": "NVIDIA GeForce RTX 5090",
+        "pci_string": "0000:27:00.0"
+      },
+      "wall_clock_seconds": 1.6188683863729239
+    }
+  ],
+  "schema_version": "langmani-v2-phase2b6-1r-zero-step-results-v0",
+  "task_id": "StackCube-v1"
+}

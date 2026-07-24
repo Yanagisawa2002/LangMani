@@ -1,0 +1,160 @@
+{
+  "candidate_controls": [
+    {
+      "candidate_id": "candidate_b_explicit_glx_icd",
+      "icd_path": "/etc/vulkan/icd.d/nvidia_icd.json",
+      "icd_sha256": "sha256:7bdb6f27d35b66fc848df6f94b8773bba30ea3a7f06f114100d14154a235a34b",
+      "summary": {
+        "devices": [],
+        "intended_gpu_listed": false,
+        "selected_device_names": [],
+        "software_renderer_listed": false
+      },
+      "vulkaninfo": {
+        "command": [
+          "vulkaninfo",
+          "--summary"
+        ],
+        "exit_code": 1,
+        "passed": false,
+        "stderr": "ERROR: [Loader Message] Code 0 : loader_scanned_icd_add: Could not get 'vkCreateInstance' via 'vk_icdGetInstanceProcAddr' for ICD libGLX_nvidia.so.0\nCannot create Vulkan instance.\nThis problem is often caused by a faulty installation of the Vulkan driver or attempting to use a GPU that does not support Vulkan.\nERROR at ./vulkaninfo/vulkaninfo.h:649:vkCreateInstance failed with ERROR_INCOMPATIBLE_DRIVER\n",
+        "stdout": "",
+        "timed_out": false,
+        "wall_clock_seconds": 0.06835795193910599
+      }
+    },
+    {
+      "candidate_id": "candidate_c_clean_loader_default",
+      "icd_path": null,
+      "icd_sha256": null,
+      "summary": {
+        "devices": [],
+        "intended_gpu_listed": false,
+        "selected_device_names": [],
+        "software_renderer_listed": false
+      },
+      "vulkaninfo": {
+        "command": [
+          "vulkaninfo",
+          "--summary"
+        ],
+        "exit_code": 1,
+        "passed": false,
+        "stderr": "ERROR: [Loader Message] Code 0 : loader_scanned_icd_add: Could not get 'vkCreateInstance' via 'vk_icdGetInstanceProcAddr' for ICD libGLX_nvidia.so.0\nCannot create Vulkan instance.\nThis problem is often caused by a faulty installation of the Vulkan driver or attempting to use a GPU that does not support Vulkan.\nERROR at ./vulkaninfo/vulkaninfo.h:649:vkCreateInstance failed with ERROR_INCOMPATIBLE_DRIVER\n",
+        "stdout": "",
+        "timed_out": false,
+        "wall_clock_seconds": 0.04865485616028309
+      }
+    }
+  ],
+  "fingerprint": "sha256:ab79fbc33996d3a9f00f867c9115ae1d6ecd26afe97001518e27de8a49b03b0a",
+  "passed": true,
+  "primary_runs": [
+    {
+      "icd_path": "/etc/vulkan/icd.d/my_nvidia_icd.json",
+      "icd_sha256": "sha256:faa5543269860bb750bab4c3a9cb08a8c749f6d27500780b773dfcd334c188f8",
+      "run_index": 1,
+      "summary": {
+        "devices": [
+          {
+            "apiVersion": "4211000 (1.4.312)",
+            "deviceName": "NVIDIA GeForce RTX 5090",
+            "deviceType": "PHYSICAL_DEVICE_TYPE_DISCRETE_GPU",
+            "deviceUUID": "27f8a10c-1b18-1109-85da-247ee1927024",
+            "driverInfo": "580.76.05",
+            "driverName": "NVIDIA",
+            "index": "GPU0"
+          }
+        ],
+        "intended_gpu_listed": true,
+        "selected_device_names": [
+          "NVIDIA GeForce RTX 5090"
+        ],
+        "software_renderer_listed": false
+      },
+      "vulkaninfo": {
+        "command": [
+          "vulkaninfo",
+          "--summary"
+        ],
+        "exit_code": 0,
+        "passed": true,
+        "stderr": "'DISPLAY' environment variable not set... skipping surface info\n",
+        "stdout": "==========\nVULKANINFO\n==========\n\nVulkan Instance Version: 1.3.204\n\n\nInstance Extensions: count = 20\n-------------------------------\nVK_EXT_acquire_drm_display             : extension revision 1\nVK_EXT_acquire_xlib_display            : extension revision 1\nVK_EXT_debug_report                    : extension revision 10\nVK_EXT_debug_utils                     : extension revision 2\nVK_EXT_direct_mode_display             : extension revision 1\nVK_EXT_display_surface_counter         : extension revision 1\nVK_EXT_swapchain_colorspace            : extension revision 5\nVK_KHR_device_group_creation           : extension revision 1\nVK_KHR_display                         : extension revision 23\nVK_KHR_external_fence_capabilities     : extension revision 1\nVK_KHR_external_memory_capabilities    : extension revision 1\nVK_KHR_external_semaphore_capabilities : extension revision 1\nVK_KHR_get_display_properties2         : extension revision 1\nVK_KHR_get_physical_device_properties2 : extension revision 2\nVK_KHR_get_surface_capabilities2       : extension revision 1\nVK_KHR_surface                         : extension revision 25\nVK_KHR_surface_protected_capabilities  : extension revision 1\nVK_KHR_wayland_surface                 : extension revision 6\nVK_KHR_xcb_surface                     : extension revision 6\nVK_KHR_xlib_surface                    : extension revision 6\n\nInstance Layers: count = 2\n--------------------------\nVK_LAYER_NV_optimus NVIDIA Optimus layer 1.4.312  version 1\nVK_LAYER_NV_present NVIDIA GR2608 layer  1.4.312  version 1\n\nDevices:\n========\nGPU0:\n\tapiVersion         = 4211000 (1.4.312)\n\tdriverVersion      = 2433941824 (0x91130140)\n\tvendorID           = 0x10de\n\tdeviceID           = 0x2b85\n\tdeviceType         = PHYSICAL_DEVICE_TYPE_DISCRETE_GPU\n\tdeviceName         = NVIDIA GeForce RTX 5090\n\tdriverID           = DRIVER_ID_NVIDIA_PROPRIETARY\n\tdriverName         = NVIDIA\n\tdriverInfo         = 580.76.05\n\tconformanceVersion = 1.4.1.3\n\tdeviceUUID         = 27f8a10c-1b18-1109-85da-247ee1927024\n\tdriverUUID         = 19de5650-c11b-5b07-a5d9-acd7f6917fe8\n",
+        "timed_out": false,
+        "wall_clock_seconds": 0.3960746880620718
+      }
+    },
+    {
+      "icd_path": "/etc/vulkan/icd.d/my_nvidia_icd.json",
+      "icd_sha256": "sha256:faa5543269860bb750bab4c3a9cb08a8c749f6d27500780b773dfcd334c188f8",
+      "run_index": 2,
+      "summary": {
+        "devices": [
+          {
+            "apiVersion": "4211000 (1.4.312)",
+            "deviceName": "NVIDIA GeForce RTX 5090",
+            "deviceType": "PHYSICAL_DEVICE_TYPE_DISCRETE_GPU",
+            "deviceUUID": "27f8a10c-1b18-1109-85da-247ee1927024",
+            "driverInfo": "580.76.05",
+            "driverName": "NVIDIA",
+            "index": "GPU0"
+          }
+        ],
+        "intended_gpu_listed": true,
+        "selected_device_names": [
+          "NVIDIA GeForce RTX 5090"
+        ],
+        "software_renderer_listed": false
+      },
+      "vulkaninfo": {
+        "command": [
+          "vulkaninfo",
+          "--summary"
+        ],
+        "exit_code": 0,
+        "passed": true,
+        "stderr": "'DISPLAY' environment variable not set... skipping surface info\n",
+        "stdout": "==========\nVULKANINFO\n==========\n\nVulkan Instance Version: 1.3.204\n\n\nInstance Extensions: count = 20\n-------------------------------\nVK_EXT_acquire_drm_display             : extension revision 1\nVK_EXT_acquire_xlib_display            : extension revision 1\nVK_EXT_debug_report                    : extension revision 10\nVK_EXT_debug_utils                     : extension revision 2\nVK_EXT_direct_mode_display             : extension revision 1\nVK_EXT_display_surface_counter         : extension revision 1\nVK_EXT_swapchain_colorspace            : extension revision 5\nVK_KHR_device_group_creation           : extension revision 1\nVK_KHR_display                         : extension revision 23\nVK_KHR_external_fence_capabilities     : extension revision 1\nVK_KHR_external_memory_capabilities    : extension revision 1\nVK_KHR_external_semaphore_capabilities : extension revision 1\nVK_KHR_get_display_properties2         : extension revision 1\nVK_KHR_get_physical_device_properties2 : extension revision 2\nVK_KHR_get_surface_capabilities2       : extension revision 1\nVK_KHR_surface                         : extension revision 25\nVK_KHR_surface_protected_capabilities  : extension revision 1\nVK_KHR_wayland_surface                 : extension revision 6\nVK_KHR_xcb_surface                     : extension revision 6\nVK_KHR_xlib_surface                    : extension revision 6\n\nInstance Layers: count = 2\n--------------------------\nVK_LAYER_NV_optimus NVIDIA Optimus layer 1.4.312  version 1\nVK_LAYER_NV_present NVIDIA GR2608 layer  1.4.312  version 1\n\nDevices:\n========\nGPU0:\n\tapiVersion         = 4211000 (1.4.312)\n\tdriverVersion      = 2433941824 (0x91130140)\n\tvendorID           = 0x10de\n\tdeviceID           = 0x2b85\n\tdeviceType         = PHYSICAL_DEVICE_TYPE_DISCRETE_GPU\n\tdeviceName         = NVIDIA GeForce RTX 5090\n\tdriverID           = DRIVER_ID_NVIDIA_PROPRIETARY\n\tdriverName         = NVIDIA\n\tdriverInfo         = 580.76.05\n\tconformanceVersion = 1.4.1.3\n\tdeviceUUID         = 27f8a10c-1b18-1109-85da-247ee1927024\n\tdriverUUID         = 19de5650-c11b-5b07-a5d9-acd7f6917fe8\n",
+        "timed_out": false,
+        "wall_clock_seconds": 0.24351266771554947
+      }
+    },
+    {
+      "icd_path": "/etc/vulkan/icd.d/my_nvidia_icd.json",
+      "icd_sha256": "sha256:faa5543269860bb750bab4c3a9cb08a8c749f6d27500780b773dfcd334c188f8",
+      "run_index": 3,
+      "summary": {
+        "devices": [
+          {
+            "apiVersion": "4211000 (1.4.312)",
+            "deviceName": "NVIDIA GeForce RTX 5090",
+            "deviceType": "PHYSICAL_DEVICE_TYPE_DISCRETE_GPU",
+            "deviceUUID": "27f8a10c-1b18-1109-85da-247ee1927024",
+            "driverInfo": "580.76.05",
+            "driverName": "NVIDIA",
+            "index": "GPU0"
+          }
+        ],
+        "intended_gpu_listed": true,
+        "selected_device_names": [
+          "NVIDIA GeForce RTX 5090"
+        ],
+        "software_renderer_listed": false
+      },
+      "vulkaninfo": {
+        "command": [
+          "vulkaninfo",
+          "--summary"
+        ],
+        "exit_code": 0,
+        "passed": true,
+        "stderr": "'DISPLAY' environment variable not set... skipping surface info\n",
+        "stdout": "==========\nVULKANINFO\n==========\n\nVulkan Instance Version: 1.3.204\n\n\nInstance Extensions: count = 20\n-------------------------------\nVK_EXT_acquire_drm_display             : extension revision 1\nVK_EXT_acquire_xlib_display            : extension revision 1\nVK_EXT_debug_report                    : extension revision 10\nVK_EXT_debug_utils                     : extension revision 2\nVK_EXT_direct_mode_display             : extension revision 1\nVK_EXT_display_surface_counter         : extension revision 1\nVK_EXT_swapchain_colorspace            : extension revision 5\nVK_KHR_device_group_creation           : extension revision 1\nVK_KHR_display                         : extension revision 23\nVK_KHR_external_fence_capabilities     : extension revision 1\nVK_KHR_external_memory_capabilities    : extension revision 1\nVK_KHR_external_semaphore_capabilities : extension revision 1\nVK_KHR_get_display_properties2         : extension revision 1\nVK_KHR_get_physical_device_properties2 : extension revision 2\nVK_KHR_get_surface_capabilities2       : extension revision 1\nVK_KHR_surface                         : extension revision 25\nVK_KHR_surface_protected_capabilities  : extension revision 1\nVK_KHR_wayland_surface                 : extension revision 6\nVK_KHR_xcb_surface                     : extension revision 6\nVK_KHR_xlib_surface                    : extension revision 6\n\nInstance Layers: count = 2\n--------------------------\nVK_LAYER_NV_optimus NVIDIA Optimus layer 1.4.312  version 1\nVK_LAYER_NV_present NVIDIA GR2608 layer  1.4.312  version 1\n\nDevices:\n========\nGPU0:\n\tapiVersion         = 4211000 (1.4.312)\n\tdriverVersion      = 2433941824 (0x91130140)\n\tvendorID           = 0x10de\n\tdeviceID           = 0x2b85\n\tdeviceType         = PHYSICAL_DEVICE_TYPE_DISCRETE_GPU\n\tdeviceName         = NVIDIA GeForce RTX 5090\n\tdriverID           = DRIVER_ID_NVIDIA_PROPRIETARY\n\tdriverName         = NVIDIA\n\tdriverInfo         = 580.76.05\n\tconformanceVersion = 1.4.1.3\n\tdeviceUUID         = 27f8a10c-1b18-1109-85da-247ee1927024\n\tdriverUUID         = 19de5650-c11b-5b07-a5d9-acd7f6917fe8\n",
+        "timed_out": false,
+        "wall_clock_seconds": 0.23973128199577332
+      }
+    }
+  ],
+  "schema_version": "langmani-v2-phase2b6-1r-vulkan-results-v0"
+}

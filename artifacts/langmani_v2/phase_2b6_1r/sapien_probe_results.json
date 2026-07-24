@@ -1,0 +1,53 @@
+{
+  "fingerprint": "sha256:5a2da8e2ee007c281fac286fdc5323ae99c93e3fbb6f6ce67b38ab91a179fbd6",
+  "negative_control": null,
+  "passed": true,
+  "primary_runs": [
+    {
+      "correct_device_selected": true,
+      "device": {
+        "can_present": false,
+        "can_render": true,
+        "cuda_id": 0,
+        "is_cpu": false,
+        "is_cuda": true,
+        "name": "NVIDIA GeForce RTX 5090",
+        "pci_string": "0000:27:00.0"
+      },
+      "exception": null,
+      "passed": true,
+      "wall_clock_seconds": 0.7600813545286655
+    },
+    {
+      "correct_device_selected": true,
+      "device": {
+        "can_present": false,
+        "can_render": true,
+        "cuda_id": 0,
+        "is_cpu": false,
+        "is_cuda": true,
+        "name": "NVIDIA GeForce RTX 5090",
+        "pci_string": "0000:27:00.0"
+      },
+      "exception": null,
+      "passed": true,
+      "wall_clock_seconds": 0.6617880761623383
+    },
+    {
+      "correct_device_selected": true,
+      "device": {
+        "can_present": false,
+        "can_render": true,
+        "cuda_id": 0,
+        "is_cpu": false,
+        "is_cuda": true,
+        "name": "NVIDIA GeForce RTX 5090",
+        "pci_string": "0000:27:00.0"
+      },
+      "exception": null,
+      "passed": true,
+      "wall_clock_seconds": 0.7297522556036711
+    }
+  ],
+  "schema_version": "langmani-v2-phase2b6-1r-sapien-results-v0"
+}

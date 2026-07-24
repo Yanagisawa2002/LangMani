@@ -1,0 +1,48 @@
+{
+  "fingerprint": "sha256:6fc507c01fe6a7e25ed297f4d3027218caf7feeb5fe5d99d5706d4c7044c7f6a",
+  "fresh_process_count": 3,
+  "passed": true,
+  "required_fresh_process_count": 3,
+  "runs": [
+    {
+      "action_shape": [
+        8
+      ],
+      "control_mode": "pd_joint_pos",
+      "icd_sha256": "sha256:faa5543269860bb750bab4c3a9cb08a8c749f6d27500780b773dfcd334c188f8",
+      "obs_mode": "rgb",
+      "passed": true,
+      "pid": 6490,
+      "render_device_name": "NVIDIA GeForce RTX 5090",
+      "render_device_pci": "0000:27:00.0",
+      "vulkan_device_name": "NVIDIA GeForce RTX 5090"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "control_mode": "pd_joint_pos",
+      "icd_sha256": "sha256:faa5543269860bb750bab4c3a9cb08a8c749f6d27500780b773dfcd334c188f8",
+      "obs_mode": "rgb",
+      "passed": true,
+      "pid": 6818,
+      "render_device_name": "NVIDIA GeForce RTX 5090",
+      "render_device_pci": "0000:27:00.0",
+      "vulkan_device_name": "NVIDIA GeForce RTX 5090"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "control_mode": "pd_joint_pos",
+      "icd_sha256": "sha256:faa5543269860bb750bab4c3a9cb08a8c749f6d27500780b773dfcd334c188f8",
+      "obs_mode": "rgb",
+      "passed": true,
+      "pid": 7148,
+      "render_device_name": "NVIDIA GeForce RTX 5090",
+      "render_device_pci": "0000:27:00.0",
+      "vulkan_device_name": "NVIDIA GeForce RTX 5090"
+    }
+  ],
+  "schema_version": "langmani-v2-phase2b6-1r-repeatability-v0"
+}

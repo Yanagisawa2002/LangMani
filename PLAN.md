@@ -114,6 +114,16 @@ unrun. Episode-938 physical compatibility, determinism, canonical replay success
 writer behavior remain unverified. No production-reproduction, protocol-revision, or
 source-exclusion eligibility was granted.
 
+Phase 2B.6.1-R completed as Result A at the infrastructure-only gate. A frozen process-scoped
+launcher selected `/etc/vulkan/icd.d/my_nvidia_icd.json`; Vulkan, minimal SAPIEN, and zero-step
+`StackCube-v1` construction passed in 3/3 fresh processes on the same RTX 5090, and every
+environment closed with zero explicit resets, steps, actions, or policy frames. The default
+packaged GLX-associated route reproduced its prior Vulkan-instance failure, while no process,
+GPU-workload, or frozen-file leak occurred. This sets only
+`phase2b6_1_forensic_restart_eligible=true`. The original forensic protocol still requires a
+separate authorization and new run identity; Phase 2B.6 production, dataset acceptance, and all
+training remain closed.
+
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected

@@ -1,0 +1,170 @@
+{
+  "backward_passes": 0,
+  "dataset_writer_started": false,
+  "evidence_root": "/root/autodl-tmp/langmani-external/phase2b6_1r/evidence_v2",
+  "fingerprint": "sha256:9d86ed4ca609f3e7c2d3108e7126db553328ddf48e7d07ed57832a602674178a",
+  "forensic_replay_started": false,
+  "frozen_after": {
+    "directly_relevant_file_count": 9,
+    "episode_938_npz_exists": false,
+    "files": [
+      {
+        "exists": true,
+        "path": "run/frozen_production_specification.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "run/specification_lock.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "run/full_production_started.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "run/command_log.jsonl",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "work/source_episode_inventory.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "work/primary_split_manifest.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "work/replay_records.jsonl",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "work/raw/stackcube/episode_000936.npz",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "work/raw/stackcube/episode_000937.npz",
+        "sha256_matches": true,
+        "size_matches": true
+      }
+    ],
+    "frozen_root": "/root/autodl-tmp/langmani-external/phase2b6/production_v1",
+    "frozen_root_write_attempted": false,
+    "passed": true
+  },
+  "frozen_before": {
+    "directly_relevant_file_count": 9,
+    "episode_938_npz_exists": false,
+    "files": [
+      {
+        "exists": true,
+        "path": "run/frozen_production_specification.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "run/specification_lock.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "run/full_production_started.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "run/command_log.jsonl",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "work/source_episode_inventory.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "work/primary_split_manifest.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "work/replay_records.jsonl",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "work/raw/stackcube/episode_000936.npz",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "work/raw/stackcube/episode_000937.npz",
+        "sha256_matches": true,
+        "size_matches": true
+      }
+    ],
+    "frozen_root": "/root/autodl-tmp/langmani-external/phase2b6/production_v1",
+    "frozen_root_write_attempted": false,
+    "passed": true
+  },
+  "frozen_root": "/root/autodl-tmp/langmani-external/phase2b6/production_v1",
+  "frozen_root_unchanged": true,
+  "negative_control_run_count": 1,
+  "optimizer_created": false,
+  "optimizer_steps": 0,
+  "output_root": "/root/autodl-tmp/langmani-external/phase2b6_1r/vulkan_recovery_v1",
+  "passed": true,
+  "primary_run_count": 3,
+  "production_resumed": false,
+  "repository": {
+    "branch": "codex/langmani-v2-phase2b6-1r-vulkan-recovery",
+    "checks": {
+      "source_commit_is_ancestor": true,
+      "source_remote_sha": true,
+      "target_branch": true,
+      "target_remote_matches_head": true,
+      "upstream_matches_head": true,
+      "worktree_clean": true
+    },
+    "fingerprint": "sha256:ed851e1e42266c4e2f126bd8f817ce570c332cc2ef6e3e37708cb38055fa38e1",
+    "head": "056450ddb6bc9dc7e260d590c53533b00a25a276",
+    "passed": true,
+    "remote": "git@github.com:Yanagisawa2002/LangMani.git",
+    "repository_path": "/root/autodl-tmp/langmani",
+    "schema_version": "langmani-v2-phase2b6-1r-repository-audit-v0",
+    "source_branch": "codex/langmani-v2-phase2b6-1-replay-failure-forensics",
+    "source_commit": "4f96a0f42dbaf0adb58c4c3aad79fdd7bccfde84",
+    "source_is_ancestor": true,
+    "source_remote_sha": "4f96a0f42dbaf0adb58c4c3aad79fdd7bccfde84",
+    "status_porcelain": "",
+    "target_remote_sha": "056450ddb6bc9dc7e260d590c53533b00a25a276",
+    "upstream": "056450ddb6bc9dc7e260d590c53533b00a25a276",
+    "worktree_path": "/root/autodl-tmp/langmani"
+  },
+  "schema_version": "langmani-v2-phase2b6-1r-remote-execution-v0",
+  "source_root": "/root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608",
+  "training_started": false
+}

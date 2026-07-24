@@ -3406,3 +3406,40 @@ promoted. `phase2b6_production_resume_authorized=false`,
 `accepted_multiskill_dataset_validated=false`, all ACT/SmolVLA/VLA-JEPA eligibility and
 authorization fields remain false, no policy or optimizer was instantiated, no backward pass ran,
 and `optimizer_steps=0`.
+
+## D-134 - Recover the Vulkan construction precondition without authorizing replay
+
+Phase 2B.6.1-R starts from immutable Phase 2B.6.1 commit
+`4f96a0f42dbaf0adb58c4c3aad79fdd7bccfde84` and owns only process-scoped Vulkan/SAPIEN
+preflight plus zero-step `StackCube-v1` construction. The prior Phase 2B.6 and Phase 2B.6.1
+artifact manifests, the official StackCube archive, and directly relevant frozen partial-output
+files all rehashed successfully. No frozen byte was modified.
+
+The server exposed two unambiguous system NVIDIA ICDs. The primary explicit EGL-associated ICD
+`/etc/vulkan/icd.d/my_nvidia_icd.json` has SHA-256
+`faa5543269860bb750bab4c3a9cb08a8c749f6d27500780b773dfcd334c188f8` and references
+`/lib/x86_64-linux-gnu/libEGL_nvidia.so.0`. The separately audited GLX-associated
+`/etc/vulkan/icd.d/nvidia_icd.json` and SAPIEN's automatic packaged GLX-associated route both
+failed Vulkan instance creation with `ERROR_INCOMPATIBLE_DRIVER`. No system ICD or `/etc` file was
+edited.
+
+The accepted launcher fixes `VK_ICD_FILENAMES` to the explicit EGL-associated ICD,
+`__EGL_VENDOR_LIBRARY_FILENAMES` to `/usr/share/glvnd/egl_vendor.d/10_nvidia.json`,
+`CUDA_VISIBLE_DEVICES=0`, and a fresh phase-owned `XDG_RUNTIME_DIR`, while leaving
+`VK_DRIVER_FILES`, `DISPLAY`, and `WAYLAND_DISPLAY` unset. In three independent fresh processes,
+`vulkaninfo`, the minimal SAPIEN device probe, and `gym.make("StackCube-v1", ...)` all passed on
+the same NVIDIA GeForce RTX 5090 at SAPIEN PCI address `0000:27:00.0`. The native action contract
+was `pd_joint_pos float32[8]`, the RGB camera contract matched the forensic protocol, and every
+environment closed cleanly. Explicit reset, step, action submission, and policy-frame counts were
+all zero. No phase process, GPU workload, tmux session, or frozen-file change leaked.
+
+Phase 2B.6.1-R is therefore infrastructure-only `RESULT_A`, with
+`vulkan_preflight_validated=true`,
+`stackcube_zero_step_construction_validated=true`, and
+`phase2b6_1_forensic_restart_eligible=true`. Eligibility is not authorization. Controls 936/937,
+target 938, Modes A/B/C, replay compatibility, physical determinism, alignment, serialization, and
+writer behavior remain untested in this phase. `phase2b6_1_forensic_restart_authorized=false`,
+`phase2b6_production_resume_authorized=false`,
+`accepted_multiskill_dataset_validated=false`, all ACT/SmolVLA/VLA-JEPA eligibility and
+authorization fields remain false, no policy or optimizer was loaded or created, no backward pass
+ran, `student_policy_training_started=false`, and `optimizer_steps=0`.

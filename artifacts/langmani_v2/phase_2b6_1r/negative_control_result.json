@@ -1,0 +1,57 @@
+{
+  "candidate": {
+    "action_submission_count": 0,
+    "candidate_id": "candidate_c_clean_loader_default",
+    "created_at_utc": "2026-07-24T03:43:09.961478+00:00",
+    "explicit_reset_count": 0,
+    "explicit_step_count": 0,
+    "fingerprint": "sha256:a4a5c34f687ef1822d7b1ea82c81523e071fb28ffe4d7093bdc4fb00ab1831c0",
+    "first_failure_layer": "vulkaninfo",
+    "forensic_replay_started": false,
+    "icd_path": null,
+    "icd_sha256": null,
+    "passed": false,
+    "pid": 7745,
+    "policy_or_optimizer_loaded": false,
+    "process_environment": {
+      "CUDA_VISIBLE_DEVICES": "0",
+      "DISPLAY": null,
+      "NVIDIA_VISIBLE_DEVICES": null,
+      "VK_DRIVER_FILES": null,
+      "VK_ICD_FILENAMES": "/root/autodl-tmp/conda-envs/langmani/lib/python3.12/site-packages/sapien/vulkan_library/nvidia_icd.json",
+      "WAYLAND_DISPLAY": null,
+      "XDG_RUNTIME_DIR": "/root/autodl-tmp/langmani-external/phase2b6_1r/vulkan_recovery_v1/xdg-runtime",
+      "__EGL_VENDOR_LIBRARY_FILENAMES": null
+    },
+    "production_resumed": false,
+    "python_executable": "/root/autodl-tmp/conda-envs/langmani/bin/python3.12",
+    "run_index": 1,
+    "sapien_probe": null,
+    "schema_version": "langmani-v2-phase2b6-1r-child-run-v0",
+    "vulkan_summary": {
+      "devices": [],
+      "intended_gpu_listed": false,
+      "selected_device_names": [],
+      "software_renderer_listed": false
+    },
+    "vulkaninfo": {
+      "command": [
+        "vulkaninfo",
+        "--summary"
+      ],
+      "exit_code": 1,
+      "passed": false,
+      "stderr": "ERROR: [Loader Message] Code 0 : loader_scanned_icd_add: Could not get 'vkCreateInstance' via 'vk_icdGetInstanceProcAddr' for ICD libGLX_nvidia.so.0\nCannot create Vulkan instance.\nThis problem is often caused by a faulty installation of the Vulkan driver or attempting to use a GPU that does not support Vulkan.\nERROR at ./vulkaninfo/vulkaninfo.h:649:vkCreateInstance failed with ERROR_INCOMPATIBLE_DRIVER\n",
+      "stdout": "",
+      "timed_out": false,
+      "wall_clock_seconds": 0.04865485616028309
+    },
+    "zero_step_stackcube": null
+  },
+  "failure_required": false,
+  "fingerprint": "sha256:814f6d0299ccc304623d7d9c9ffc1eee83a94ec981931e2819d63c7a6253581f",
+  "passed": true,
+  "run_only_after_primary_passed": true,
+  "schema_version": "langmani-v2-phase2b6-1r-negative-control-v0",
+  "system_manipulated_to_force_failure": false
+}

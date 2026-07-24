@@ -1,0 +1,55 @@
+{
+  "arbitrary_combinations_forbidden": true,
+  "candidate_count": 3,
+  "candidates": [
+    {
+      "candidate_id": "candidate_a_explicit_egl_icd",
+      "egl_vendor_filenames": "/usr/share/glvnd/egl_vendor.d/10_nvidia.json",
+      "execution_status": "frozen_not_run",
+      "icd_library_path": "/lib/x86_64-linux-gnu/libEGL_nvidia.so.0",
+      "icd_sha256": "sha256:faa5543269860bb750bab4c3a9cb08a8c749f6d27500780b773dfcd334c188f8",
+      "may_run_sapien_probe": true,
+      "may_run_zero_step_stackcube": true,
+      "purpose": "primary_recovery_contract",
+      "referenced_library_exists": true,
+      "resolved_library_path": "/lib/x86_64-linux-gnu/libEGL_nvidia.so.0",
+      "vk_driver_files": null,
+      "vk_icd_filenames": "/etc/vulkan/icd.d/my_nvidia_icd.json"
+    },
+    {
+      "candidate_id": "candidate_b_explicit_glx_icd",
+      "egl_vendor_filenames": "/usr/share/glvnd/egl_vendor.d/10_nvidia.json",
+      "execution_status": "frozen_not_run",
+      "icd_library_path": "libGLX_nvidia.so.0",
+      "icd_sha256": "sha256:7bdb6f27d35b66fc848df6f94b8773bba30ea3a7f06f114100d14154a235a34b",
+      "may_run_sapien_probe": false,
+      "may_run_zero_step_stackcube": false,
+      "purpose": "separate_official_nvidia_icd_audit",
+      "referenced_library_exists": true,
+      "resolved_library_path": "/usr/lib/x86_64-linux-gnu/libGLX_nvidia.so.0",
+      "vk_driver_files": null,
+      "vk_icd_filenames": "/etc/vulkan/icd.d/nvidia_icd.json"
+    },
+    {
+      "candidate_id": "candidate_c_clean_loader_default",
+      "egl_vendor_filenames": null,
+      "execution_status": "frozen_not_run",
+      "icd_library_path": null,
+      "icd_sha256": null,
+      "may_run_sapien_probe": true,
+      "may_run_zero_step_stackcube": false,
+      "purpose": "negative_control_default_loader",
+      "referenced_library_exists": null,
+      "resolved_library_path": null,
+      "vk_driver_files": null,
+      "vk_icd_filenames": null
+    }
+  ],
+  "fingerprint": "sha256:47fcd779b569908a063ad9c0f459fdd6bbee114364e8efbf89af59a8bfe9aa11",
+  "frozen_before_execution": true,
+  "passed": true,
+  "primary_candidate_id": "candidate_a_explicit_egl_icd",
+  "primary_identity_unambiguous": true,
+  "schema_version": "langmani-v2-phase2b6-1r-candidate-protocol-v0",
+  "system_files_modified": false
+}

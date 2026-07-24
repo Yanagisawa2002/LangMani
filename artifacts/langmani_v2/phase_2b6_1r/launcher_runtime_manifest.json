@@ -1,0 +1,54 @@
+{
+  "conda_environment": "langmani",
+  "driver": "580.76.05",
+  "fingerprint": "sha256:03561e1a5b7071481acbc175afd88b7368a5a4f6ec47eac9c36d7499e8bf031f",
+  "launcher_path": "/root/autodl-tmp/langmani/environment/run_v2_phase2b6_1r_preflight.sh",
+  "launcher_sha256": "sha256:a5a3349d26f096a2a8800a6de40a7a127db8b254009d67735e968637b4f7d112",
+  "manual_interactive_exports_required": false,
+  "passed": true,
+  "python_entrypoint": "/root/autodl-tmp/langmani/environment/run_v2_phase2b6_1r.py",
+  "python_entrypoint_sha256": "sha256:bea2a15a05076c8dd547ad4089453a0d4339a31f91cad90beff0482c89f62503",
+  "renderer_configuration": {
+    "control_mode": "pd_joint_pos",
+    "num_envs": 1,
+    "obs_mode": "rgb",
+    "render_backend": "sapien_cuda",
+    "sensor_size": [
+      256,
+      256
+    ],
+    "sim_backend": "physx_cpu",
+    "task_id": "StackCube-v1"
+  },
+  "runtime": {
+    "conda_prefix": "/root/autodl-tmp/conda-envs/langmani",
+    "package_locations": {
+      "h5py": "/root/autodl-tmp/conda-envs/langmani/lib/python3.12/site-packages",
+      "mani-skill": "/root/autodl-tmp/conda-envs/langmani/lib/python3.12/site-packages",
+      "numpy": "/root/autodl-tmp/conda-envs/langmani/lib/python3.12/site-packages",
+      "sapien": "/root/autodl-tmp/conda-envs/langmani/lib/python3.12/site-packages",
+      "torch": "/root/autodl-tmp/conda-envs/langmani/lib/python3.12/site-packages"
+    },
+    "packages": {
+      "h5py": "3.16.0",
+      "mani-skill": "3.0.1",
+      "numpy": "2.2.6",
+      "sapien": "3.0.3",
+      "torch": "2.11.0+cu128"
+    },
+    "python_executable": "/root/autodl-tmp/conda-envs/langmani/bin/python3.12",
+    "python_version": "3.12.13"
+  },
+  "schema_version": "langmani-v2-phase2b6-1r-launcher-runtime-v0",
+  "selected_gpu": {
+    "driver_version": "580.76.05",
+    "memory_total_mib": 32607,
+    "memory_used_mib": 0,
+    "name": "NVIDIA GeForce RTX 5090",
+    "pci_bus_id": "00000000:27:00.0",
+    "utilization_percent": 0,
+    "uuid": "GPU-27f8a10c-1b18-1109-85da-247ee1927024"
+  },
+  "selected_icd": "/etc/vulkan/icd.d/my_nvidia_icd.json",
+  "selected_icd_sha256": "sha256:faa5543269860bb750bab4c3a9cb08a8c749f6d27500780b773dfcd334c188f8"
+}

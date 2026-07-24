@@ -1,0 +1,77 @@
+{
+  "expected_device_name": "NVIDIA GeForce RTX 5090",
+  "fingerprint": "sha256:b59e4c4c188505ff0af8a9e8fe84c1c2367f6ccf1d9590b16d5cb9f6de3694dd",
+  "nvidia_smi": {
+    "compute_processes": [],
+    "devices": [
+      {
+        "driver_version": "580.76.05",
+        "memory_total_mib": 32607,
+        "memory_used_mib": 0,
+        "name": "NVIDIA GeForce RTX 5090",
+        "pci_bus_id": "00000000:27:00.0",
+        "utilization_percent": 0,
+        "uuid": "GPU-27f8a10c-1b18-1109-85da-247ee1927024"
+      }
+    ],
+    "intended_gpu_present": true,
+    "passed": true,
+    "query": {
+      "command": [
+        "nvidia-smi",
+        "--query-gpu=uuid,name,pci.bus_id,driver_version,memory.used,memory.total,utilization.gpu",
+        "--format=csv,noheader,nounits"
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "stderr": "",
+      "stdout": "GPU-27f8a10c-1b18-1109-85da-247ee1927024, NVIDIA GeForce RTX 5090, 00000000:27:00.0, 580.76.05, 0, 32607, 0\n",
+      "timed_out": false,
+      "wall_clock_seconds": 0.0834404993802309
+    }
+  },
+  "passed": true,
+  "runs": [
+    {
+      "action_shape": [
+        8
+      ],
+      "control_mode": "pd_joint_pos",
+      "icd_sha256": "sha256:faa5543269860bb750bab4c3a9cb08a8c749f6d27500780b773dfcd334c188f8",
+      "obs_mode": "rgb",
+      "passed": true,
+      "pid": 6490,
+      "render_device_name": "NVIDIA GeForce RTX 5090",
+      "render_device_pci": "0000:27:00.0",
+      "vulkan_device_name": "NVIDIA GeForce RTX 5090"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "control_mode": "pd_joint_pos",
+      "icd_sha256": "sha256:faa5543269860bb750bab4c3a9cb08a8c749f6d27500780b773dfcd334c188f8",
+      "obs_mode": "rgb",
+      "passed": true,
+      "pid": 6818,
+      "render_device_name": "NVIDIA GeForce RTX 5090",
+      "render_device_pci": "0000:27:00.0",
+      "vulkan_device_name": "NVIDIA GeForce RTX 5090"
+    },
+    {
+      "action_shape": [
+        8
+      ],
+      "control_mode": "pd_joint_pos",
+      "icd_sha256": "sha256:faa5543269860bb750bab4c3a9cb08a8c749f6d27500780b773dfcd334c188f8",
+      "obs_mode": "rgb",
+      "passed": true,
+      "pid": 7148,
+      "render_device_name": "NVIDIA GeForce RTX 5090",
+      "render_device_pci": "0000:27:00.0",
+      "vulkan_device_name": "NVIDIA GeForce RTX 5090"
+    }
+  ],
+  "schema_version": "langmani-v2-phase2b6-1r-device-binding-v0",
+  "software_or_wrong_device_selected": false
+}

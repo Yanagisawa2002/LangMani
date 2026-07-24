@@ -1,0 +1,18 @@
+{
+  "files": [
+    {
+      "path": "/etc/vulkan/icd.d/my_nvidia_icd.json",
+      "sha256": "sha256:faa5543269860bb750bab4c3a9cb08a8c749f6d27500780b773dfcd334c188f8",
+      "size_bytes": 162
+    },
+    {
+      "path": "/etc/vulkan/icd.d/nvidia_icd.json",
+      "sha256": "sha256:7bdb6f27d35b66fc848df6f94b8773bba30ea3a7f06f114100d14154a235a34b",
+      "size_bytes": 140
+    }
+  ],
+  "fingerprint": "sha256:048f3b674813cd5ce96417af1af7025d491bdd2158ca9f9d43aa5106555b33f5",
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b6-1r-icd-hashes-v0",
+  "system_icd_files_modified": false
+}

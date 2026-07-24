@@ -1,0 +1,10 @@
+{
+  "eligibility_is_authorization": false,
+  "fingerprint": "sha256:93388056cfe50113952d3b6c3832c4190c913d9096f3860a0392cea94d0656c6",
+  "passed": true,
+  "phase2b6_1_forensic_restart_authorized": false,
+  "phase2b6_1_forensic_restart_eligible": true,
+  "phase2b6_production_resume_authorized": false,
+  "result": "RESULT_A",
+  "schema_version": "langmani-v2-phase2b6-1r-eligibility-v0"
+}

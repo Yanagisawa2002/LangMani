@@ -1,0 +1,28 @@
+{
+  "allowed_operations": [
+    "vulkaninfo --summary",
+    "minimal SAPIEN RenderSystem construction and release",
+    "gym.make StackCube-v1",
+    "static environment contract inspection",
+    "environment close"
+  ],
+  "fingerprint": "sha256:52c6106c8d0325c44c0c44e22e28fd776288151a9ad4d3492383df6623ea3a7a",
+  "forbidden_operations": [
+    "environment reset",
+    "environment step",
+    "robot action submission",
+    "trajectory replay",
+    "dataset writer",
+    "production resume",
+    "policy loading or training"
+  ],
+  "fresh_process_run_count": 3,
+  "hard_stop_on_primary_failure": true,
+  "negative_control_candidate_id": "candidate_c_clean_loader_default",
+  "passed": true,
+  "phase2b6_1_forensic_restart_authorized": false,
+  "phase2b6_production_resume_authorized": false,
+  "primary_candidate_id": "candidate_a_explicit_egl_icd",
+  "schema_version": "langmani-v2-phase2b6-1r-preflight-protocol-v0",
+  "task_id": "StackCube-v1"
+}

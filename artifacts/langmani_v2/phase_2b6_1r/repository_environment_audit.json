@@ -1,0 +1,115 @@
+{
+  "authorization_state": {
+    "accepted_dataset_package_created": false,
+    "accepted_multiskill_dataset_validated": false,
+    "act_training_authorized": false,
+    "act_training_eligible": false,
+    "backward_passes": 0,
+    "fingerprint": "sha256:5690b3ed02c1806ec812630db2d01a1762aef82d5aa7ac2c37cc47820267ccb1",
+    "optimizer_created": false,
+    "optimizer_steps": 0,
+    "passed": true,
+    "phase2b6_1_forensic_restart_authorized": false,
+    "phase2b6_production_resume_authorized": false,
+    "production_or_forensic_replay_started": false,
+    "schema_version": "langmani-v2-phase2b6-1r-authorization-v0",
+    "smolvla_training_authorized": false,
+    "smolvla_training_eligible": false,
+    "student_policy_training_started": false,
+    "vla_jepa_training_authorized": false,
+    "vla_jepa_training_eligible": false
+  },
+  "disk": {
+    "compact_diagnostics_only": true,
+    "minimum_required_free_bytes": 1073741824,
+    "passed": true,
+    "paths": [
+      {
+        "free_bytes": 86656749568,
+        "path": "/root/autodl-tmp/langmani",
+        "total_bytes": 268435456000,
+        "used_bytes": 181778706432
+      },
+      {
+        "free_bytes": 86656749568,
+        "path": "/root/autodl-tmp/langmani-external/phase2b6_1r/evidence_v2",
+        "total_bytes": 268435456000,
+        "used_bytes": 181778706432
+      },
+      {
+        "free_bytes": 86656749568,
+        "path": "/root/autodl-tmp/langmani-external/phase2b6/production_v1",
+        "total_bytes": 268435456000,
+        "used_bytes": 181778706432
+      }
+    ]
+  },
+  "fingerprint": "sha256:a76e664e2e5c51701f8614e23c8fc00588fa1e7e140da405e87804582f86bef0",
+  "gpu": {
+    "compute_processes": [],
+    "devices": [
+      {
+        "driver_version": "580.76.05",
+        "memory_total_mib": 32607,
+        "memory_used_mib": 0,
+        "name": "NVIDIA GeForce RTX 5090",
+        "pci_bus_id": "00000000:27:00.0",
+        "utilization_percent": 100,
+        "uuid": "GPU-27f8a10c-1b18-1109-85da-247ee1927024"
+      }
+    ],
+    "intended_gpu_present": true,
+    "passed": true,
+    "query": {
+      "command": [
+        "nvidia-smi",
+        "--query-gpu=uuid,name,pci.bus_id,driver_version,memory.used,memory.total,utilization.gpu",
+        "--format=csv,noheader,nounits"
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "stderr": "",
+      "stdout": "GPU-27f8a10c-1b18-1109-85da-247ee1927024, NVIDIA GeForce RTX 5090, 00000000:27:00.0, 580.76.05, 0, 32607, 100\n",
+      "timed_out": false,
+      "wall_clock_seconds": 0.09341265633702278
+    }
+  },
+  "passed": true,
+  "prior_result_identity": {
+    "phase": "Phase 2B.6.1",
+    "result": "RESULT_D",
+    "source_commit": "4f96a0f42dbaf0adb58c4c3aad79fdd7bccfde84"
+  },
+  "process_state": {
+    "passed": true,
+    "prohibited_active_processes": [],
+    "query_succeeded": true
+  },
+  "repository": {
+    "branch": "codex/langmani-v2-phase2b6-1r-vulkan-recovery",
+    "checks": {
+      "source_commit_is_ancestor": true,
+      "source_remote_sha": true,
+      "target_branch": true,
+      "target_remote_matches_head": true,
+      "upstream_matches_head": true,
+      "worktree_clean": true
+    },
+    "fingerprint": "sha256:ed851e1e42266c4e2f126bd8f817ce570c332cc2ef6e3e37708cb38055fa38e1",
+    "head": "056450ddb6bc9dc7e260d590c53533b00a25a276",
+    "passed": true,
+    "remote": "git@github.com:Yanagisawa2002/LangMani.git",
+    "repository_path": "/root/autodl-tmp/langmani",
+    "schema_version": "langmani-v2-phase2b6-1r-repository-audit-v0",
+    "source_branch": "codex/langmani-v2-phase2b6-1-replay-failure-forensics",
+    "source_commit": "4f96a0f42dbaf0adb58c4c3aad79fdd7bccfde84",
+    "source_is_ancestor": true,
+    "source_remote_sha": "4f96a0f42dbaf0adb58c4c3aad79fdd7bccfde84",
+    "status_porcelain": "",
+    "target_remote_sha": "056450ddb6bc9dc7e260d590c53533b00a25a276",
+    "upstream": "056450ddb6bc9dc7e260d590c53533b00a25a276",
+    "worktree_path": "/root/autodl-tmp/langmani"
+  },
+  "schema_version": "langmani-v2-phase2b6-1r-repository-environment-v0",
+  "server_checkout": "/root/autodl-tmp/langmani"
+}

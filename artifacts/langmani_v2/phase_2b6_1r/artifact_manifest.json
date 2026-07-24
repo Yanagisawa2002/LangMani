@@ -1,0 +1,105 @@
+{
+  "file_count": 19,
+  "files": [
+    {
+      "path": "authorization_state.json",
+      "sha256": "sha256:ef79c4eaeb85ea10d887bdcdfa94e751dd4a5ca798e8524cfc599d3b5617cf49",
+      "size_bytes": 773
+    },
+    {
+      "path": "authorization_state_final.json",
+      "sha256": "sha256:ef79c4eaeb85ea10d887bdcdfa94e751dd4a5ca798e8524cfc599d3b5617cf49",
+      "size_bytes": 773
+    },
+    {
+      "path": "candidate_icd_manifest.json",
+      "sha256": "sha256:cb22ac254f80078b011ee7887d0350303d77a674f7f92e60ad4902710404b6e6",
+      "size_bytes": 2292
+    },
+    {
+      "path": "cleanup_audit.json",
+      "sha256": "sha256:c8902c34c3b6352b8ba54e9a3d3368f9db6f4c8cd2d82d7fd47a0849e3ca343e",
+      "size_bytes": 6933
+    },
+    {
+      "path": "device_binding_audit.json",
+      "sha256": "sha256:b4ce8bf64cebd4a5744e7f42e65dd4c81b8c95b5ac070401f80fd25677da359f",
+      "size_bytes": 2419
+    },
+    {
+      "path": "eligibility_state.json",
+      "sha256": "sha256:4760de6f3e934ac0e96f31aab98b0207bdcb0ee90e0f6a78cbe86420ed523f7a",
+      "size_bytes": 389
+    },
+    {
+      "path": "fresh_process_repeatability_result.json",
+      "sha256": "sha256:9254a85d2aea57a4f65b8752b0877b0823644723600a610d83fdd0c51935374c",
+      "size_bytes": 1479
+    },
+    {
+      "path": "frozen_preflight_protocol.json",
+      "sha256": "sha256:cc8c0880926cc4bb421c39d2eb33b68d34d37a46ccd38901dcf97ff2c455dc9b",
+      "size_bytes": 949
+    },
+    {
+      "path": "icd_hashes.json",
+      "sha256": "sha256:46c40dc8275c1afd0f386596046c06f285d4e391e29e0868da58c9959281b7d5",
+      "size_bytes": 590
+    },
+    {
+      "path": "launcher_runtime_manifest.json",
+      "sha256": "sha256:7b25d81b16628e3f109ebd554226728b799b9c430fb9807a14c0ce95ffae0c07",
+      "size_bytes": 2172
+    },
+    {
+      "path": "negative_control_result.json",
+      "sha256": "sha256:51afa02e1af00ca0d44b3f9d3c8acee92287482f6733a33c8800b8c0b86785b3",
+      "size_bytes": 2387
+    },
+    {
+      "path": "phase2b6_1_evidence_verification.json",
+      "sha256": "sha256:153a91edeab572293e000f8e16307f08624ec7df26ead556db896c7623311ba2",
+      "size_bytes": 9448
+    },
+    {
+      "path": "remote_execution_audit.json",
+      "sha256": "sha256:13be3faec2b3d3692ddcfa3acdb4926ce50fb889153492271f933269fbb3c882",
+      "size_bytes": 5257
+    },
+    {
+      "path": "rendering_stack_inventory.json",
+      "sha256": "sha256:b2439e8a2792921697e54da2705d7934d54798c5a27abbe059170d0013ecb590",
+      "size_bytes": 9537
+    },
+    {
+      "path": "repository_environment_audit.json",
+      "sha256": "sha256:e5da9ace9da29aa1f2422cb550112c8fc04be5f61b3f5b1ed4568ecb3a83277f",
+      "size_bytes": 4077
+    },
+    {
+      "path": "result_classification.json",
+      "sha256": "sha256:3c238941988b77c48081ae7157b5366bd6ac65d1d33d6dc51f916b95a549f45d",
+      "size_bytes": 538
+    },
+    {
+      "path": "sapien_probe_results.json",
+      "sha256": "sha256:3cdd54aeca13b05862220f1268dd5fa7c5ca8d78cd557a198c32e122d963f39a",
+      "size_bytes": 1379
+    },
+    {
+      "path": "vulkaninfo_results.json",
+      "sha256": "sha256:cb2d48c3ae196a92fe27126bb5a62a6615f707bca53f7bef28787606a6647ace",
+      "size_bytes": 12039
+    },
+    {
+      "path": "zero_step_stackcube_results.json",
+      "sha256": "sha256:fce160b4c8a7a8fb077e095f256812bd629a329bd82bae255a8f3c5a07c91954",
+      "size_bytes": 7722
+    }
+  ],
+  "fingerprint": "sha256:23406ce54be296e47d0b8186fe1d5f10a714df50d800c429b43e6c78ebfba6c9",
+  "large_driver_dumps_committed": false,
+  "passed": true,
+  "schema_version": "langmani-v2-phase2b6-1r-artifact-manifest-v0",
+  "trajectory_or_dataset_bytes_committed": false
+}

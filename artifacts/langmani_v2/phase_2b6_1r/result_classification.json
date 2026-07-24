@@ -1,0 +1,13 @@
+{
+  "accepted_multiskill_dataset_validated": false,
+  "fingerprint": "sha256:5ed07db5c9d41b7f944301ab4aef0346b2dd6bec46562ee3e92154b0e0909fa1",
+  "passed": true,
+  "phase2b6_1_forensic_restart_authorized": false,
+  "phase2b6_1_forensic_restart_eligible": true,
+  "phase2b6_production_resume_authorized": false,
+  "reason": "vulkan_environment_contract_recovered",
+  "result": "RESULT_A",
+  "schema_version": "langmani-v2-phase2b6-1r-result-v0",
+  "stackcube_zero_step_construction_validated": true,
+  "vulkan_preflight_validated": true
+}

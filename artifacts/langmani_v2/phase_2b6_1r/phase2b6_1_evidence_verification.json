@@ -1,0 +1,360 @@
+{
+  "fingerprint": "sha256:025c456596f32a2a5b52d90c914a990b6f9b8a6e365ce9679c1cb9768d90b807",
+  "frozen_partial_root": {
+    "directly_relevant_file_count": 9,
+    "episode_938_npz_exists": false,
+    "files": [
+      {
+        "exists": true,
+        "path": "run/frozen_production_specification.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "run/specification_lock.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "run/full_production_started.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "run/command_log.jsonl",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "work/source_episode_inventory.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "work/primary_split_manifest.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "work/replay_records.jsonl",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "work/raw/stackcube/episode_000936.npz",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "work/raw/stackcube/episode_000937.npz",
+        "sha256_matches": true,
+        "size_matches": true
+      }
+    ],
+    "frozen_root": "/root/autodl-tmp/langmani-external/phase2b6/production_v1",
+    "frozen_root_write_attempted": false,
+    "passed": true
+  },
+  "passed": true,
+  "phase2b6": {
+    "file_count": 21,
+    "files": [
+      {
+        "exists": true,
+        "path": "authorization_state.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "cross_skill_fold_manifests.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "frozen_production_specification.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "language_template_manifest.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "observation_action_contract.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "padding_audit.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "phase2b5_source_package_verification.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "primary_split_manifest.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "production_failure_analysis.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "production_run_manifest.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "rejected_production_manifest.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "remote_execution_audit.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "replay_summary_pickcube.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "replay_summary_pushcube.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "replay_summary_stackcube.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "repository_environment_audit.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "result_classification.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "source_integrity_audit.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "source_schema_result.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "task_balance_manifest.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "visual_shift_pilot.json",
+        "sha256_matches": true,
+        "size_matches": true
+      }
+    ],
+    "manifest_fingerprint": "sha256:a4b4ace15b3d5bd5dfb2215507abd14fcbe1a0a21dce0f875d6d91dcc676f8a0",
+    "manifest_fingerprint_valid": true,
+    "passed": true,
+    "root": "/root/autodl-tmp/langmani/artifacts/langmani_v2/phase_2b6"
+  },
+  "phase2b6_1": {
+    "file_count": 24,
+    "files": [
+      {
+        "exists": true,
+        "path": "authorization_state.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "authorization_state_final.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "control_episode_results.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "eligibility_state.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "episode_938_mode_a_results.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "episode_938_mode_b_results.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "episode_938_mode_c_result.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "first_failure_report.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "forensic_protocol.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "frozen_partial_output_inventory.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "historical_evidence_audit.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "infrastructure_failure_report.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "observation_action_alignment_audit.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "phase2b5_source_package_verification.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "phase2b6_prior_evidence_verification.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "physical_state_comparison.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "preflight_result.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "producer_forensic_call_sequence_audit.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "remote_execution_audit.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "repository_environment_audit.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "result_classification.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "source_episode_identity_manifest.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "success_timing_audit.json",
+        "sha256_matches": true,
+        "size_matches": true
+      },
+      {
+        "exists": true,
+        "path": "writer_filesystem_audit.json",
+        "sha256_matches": true,
+        "size_matches": true
+      }
+    ],
+    "manifest_fingerprint": "sha256:17427bdf2dda9ad4dcebd92e678b695f89b7f2fe147725a1daf5d6cf818ca826",
+    "manifest_fingerprint_valid": true,
+    "passed": true,
+    "root": "/root/autodl-tmp/langmani/artifacts/langmani_v2/phase_2b6_1"
+  },
+  "prior_first_failure_layer": "environment_construction",
+  "prior_primary_classification": "insufficient_evidence",
+  "prior_result": "RESULT_D",
+  "prior_result_reinterpreted": false,
+  "schema_version": "langmani-v2-phase2b6-1r-prior-evidence-v0"
+}

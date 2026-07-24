@@ -157,6 +157,17 @@ reclassify the frozen Phase 2B.6 Result C or establish any episode-938 physical,
 alignment, or writer claim. Production resume, package acceptance, all training eligibility and
 authorization, optimizer creation, backward, and optimizer steps remain false or zero.
 
+Phase 2B.6.1-R is the completed infrastructure-only Vulkan recovery and zero-step environment
+gate. The explicit EGL-associated ICD
+`/etc/vulkan/icd.d/my_nvidia_icd.json` passed Vulkan, minimal SAPIEN, and three independent
+zero-step `StackCube-v1` constructions on the intended RTX 5090; the previous automatic packaged
+GLX-associated route again failed before Vulkan instance creation. Every accepted construction
+closed with zero explicit resets, steps, actions, and policy frames, and no process or GPU-workload
+leak. Phase 2B.6.1-R is Result A and sets only
+`phase2b6_1_forensic_restart_eligible=true`. The original forensic replay remains unauthorized,
+Phase 2B.6 production remains closed, no accepted multi-skill dataset exists, and every training,
+optimizer, backward, and student-policy flag remains false or zero.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
@@ -349,6 +360,9 @@ python environment/verify_v2_phase2b6.py
 
 # Phase 2B.6.1 compact Result D evidence verification; no simulator execution.
 python environment/verify_v2_phase2b6_1.py
+
+# Phase 2B.6.1-R compact Result A evidence verification; no simulator execution.
+python environment/verify_v2_phase2b6_1r.py
 
 # Native Linux NVIDIA/Vulkan acceptance gate. The M2 command invokes the
 # M0 installation and M1 environment target gates in the main runtime first,
@@ -554,6 +568,11 @@ The exact environment creation commands are maintained in `README.md`.
   replay outcomes, and bounded pilot metadata only. Result A authorizes only a separately invoked
   Phase 2B.6 dataset-production decision; it must not start full production, load a policy, create
   an optimizer, or authorize ACT, SmolVLA, VLA-JEPA, or other training.
+- Phase 2B.6.1-R may only establish a process-scoped Vulkan/EGL contract, run minimal SAPIEN
+  rendering probes, and construct/inspect/close `StackCube-v1` without reset or step. Its Result A
+  creates forensic-restart eligibility, never authorization. Episode 936/937/938 replay, Phase
+  2B.6 production, writer/export/archive/restore work, accepted-dataset creation, policy loading,
+  optimizer creation, backward, inference, and training require separate later authorization.
 
 ## Definition of done
 

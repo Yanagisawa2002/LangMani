@@ -176,6 +176,15 @@ official trajectory or the historical rejection. See the
 [`Phase 2B.6.1 result`](docs/langmani_v2/phase_2b6_1_result.md). Production, accepted-package
 creation, and every training path remain closed.
 
+Phase 2B.6.1-R recovered only the rendering/environment-construction precondition. The
+process-scoped launcher pinned `/etc/vulkan/icd.d/my_nvidia_icd.json`; Vulkan, minimal SAPIEN, and
+zero-step `StackCube-v1` construction passed in three independent processes on the intended RTX
+5090. Every construction closed with zero explicit resets, steps, actions, and policy frames. The
+unmodified automatic packaged GLX-associated route reproduced its earlier Vulkan-instance
+failure. The phase is [`RESULT_A`](docs/langmani_v2/phase_2b6_1r_result.md), but it sets only
+`phase2b6_1_forensic_restart_eligible=true`. Replay itself, Phase 2B.6 production, accepted-dataset
+creation, and all model training remain unauthorized.
+
 The native no-training stages are explicitly separate:
 
 ```bash
@@ -212,6 +221,13 @@ simulator:
 
 ```bash
 python environment/verify_v2_phase2b6_1.py
+```
+
+The compact Phase 2B.6.1-R Result A evidence can be independently checked without constructing a
+simulator or loading a model:
+
+```bash
+python environment/verify_v2_phase2b6_1r.py
 ```
 
 The completed Phase 2B archive can be independently re-audited without starting training:

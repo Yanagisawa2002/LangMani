@@ -1,0 +1,20 @@
+{
+  "accepted_dataset_package_created": false,
+  "accepted_multiskill_dataset_validated": false,
+  "act_training_authorized": false,
+  "act_training_eligible": false,
+  "backward_passes": 0,
+  "fingerprint": "sha256:5690b3ed02c1806ec812630db2d01a1762aef82d5aa7ac2c37cc47820267ccb1",
+  "optimizer_created": false,
+  "optimizer_steps": 0,
+  "passed": true,
+  "phase2b6_1_forensic_restart_authorized": false,
+  "phase2b6_production_resume_authorized": false,
+  "production_or_forensic_replay_started": false,
+  "schema_version": "langmani-v2-phase2b6-1r-authorization-v0",
+  "smolvla_training_authorized": false,
+  "smolvla_training_eligible": false,
+  "student_policy_training_started": false,
+  "vla_jepa_training_authorized": false,
+  "vla_jepa_training_eligible": false
+}

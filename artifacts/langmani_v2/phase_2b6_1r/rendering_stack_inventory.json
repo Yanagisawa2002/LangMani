@@ -1,0 +1,137 @@
+{
+  "checks": {
+    "egl_vendor_present": true,
+    "nvidia_driver_library_present": true,
+    "primary_icd_library_present": true,
+    "primary_icd_present": true,
+    "vulkan_loader_present": true
+  },
+  "created_at_utc": "2026-07-24T03:41:08.389802+00:00",
+  "egl_vendor_manifests": [
+    {
+      "library_path": "libEGL_nvidia.so.0",
+      "path": "/usr/share/glvnd/egl_vendor.d/10_nvidia.json",
+      "referenced_library_exists": true,
+      "resolved_library_path": "/usr/lib/x86_64-linux-gnu/libEGL_nvidia.so.0",
+      "sha256": "sha256:9e6f14afaa7523370ad96e6675d3357441ee3985e60405cb3e0ced30b2ddaf76",
+      "size_bytes": 107
+    }
+  ],
+  "fingerprint": "sha256:caafd9848bd1642fd8dbc78ef46a9a08a7f210b8c75ea0ed8e6de6c461785c16",
+  "inherited_render_environment": {
+    "CUDA_VISIBLE_DEVICES": null,
+    "DISPLAY": null,
+    "NVIDIA_VISIBLE_DEVICES": null,
+    "VK_DRIVER_FILES": null,
+    "VK_ICD_FILENAMES": "/root/autodl-tmp/conda-envs/langmani/lib/python3.12/site-packages/sapien/vulkan_library/nvidia_icd.json",
+    "WAYLAND_DISPLAY": null,
+    "XDG_RUNTIME_DIR": null,
+    "__EGL_VENDOR_LIBRARY_FILENAMES": null
+  },
+  "packaged_python_icd_files": [
+    {
+      "path": "/root/autodl-tmp/conda-envs/langmani/lib/python3.12/site-packages/sapien/vulkan_library/nvidia_icd.json",
+      "sha256": "sha256:6f16f08ac1f056c5142bc67823ae28d5a5ce6bf4c2263c216551b6ee627f8289",
+      "size_bytes": 140
+    }
+  ],
+  "passed": true,
+  "relevant_loader_and_driver_libraries": [
+    "libvulkan.so.1 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libvulkan.so.1",
+    "libnvidia-wayland-client.so.580.76.05 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-wayland-client.so.580.76.05",
+    "libnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-vksc-core.so.1",
+    "libnvidia-tls.so.580.76.05 (libc6,x86-64, OS ABI: Linux 2.3.99) => /usr/lib/x86_64-linux-gnu/libnvidia-tls.so.580.76.05",
+    "libnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-sandboxutils.so.1",
+    "libnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-sandboxutils.so",
+    "libnvidia-rtcore.so.580.76.05 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-rtcore.so.580.76.05",
+    "libnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.1",
+    "libnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so",
+    "libnvidia-present.so.580.76.05 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-present.so.580.76.05",
+    "libnvidia-pkcs11.so.580.76.05 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-pkcs11.so.580.76.05",
+    "libnvidia-pkcs11-openssl3.so.580.76.05 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-pkcs11-openssl3.so.580.76.05",
+    "libnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-opticalflow.so.1",
+    "libnvidia-opticalflow.so (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-opticalflow.so",
+    "libnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.1",
+    "libnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-nvvm.so.4",
+    "libnvidia-nvvm.so (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-nvvm.so",
+    "libnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-ngx.so.1",
+    "libnvidia-ml.so.1 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1",
+    "libnvidia-ml.so (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-ml.so",
+    "libnvidia-gtk3.so.580.76.05 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-gtk3.so.580.76.05",
+    "libnvidia-gtk2.so.580.76.05 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-gtk2.so.580.76.05",
+    "libnvidia-gpucomp.so.580.76.05 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-gpucomp.so.580.76.05",
+    "libnvidia-glvkspirv.so.580.76.05 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-glvkspirv.so.580.76.05",
+    "libnvidia-glsi.so.580.76.05 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-glsi.so.580.76.05",
+    "libnvidia-glcore.so.580.76.05 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-glcore.so.580.76.05",
+    "libnvidia-fbc.so.1 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-fbc.so.1",
+    "libnvidia-fbc.so (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-fbc.so",
+    "libnvidia-encode.so.1 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-encode.so.1",
+    "libnvidia-encode.so (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-encode.so",
+    "libnvidia-eglcore.so.580.76.05 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-eglcore.so.580.76.05",
+    "libnvidia-egl-wayland.so.1 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-egl-wayland.so.1",
+    "libnvidia-egl-gbm.so.1 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-egl-gbm.so.1",
+    "libnvidia-cfg.so.1 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.1",
+    "libnvidia-cfg.so (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so",
+    "libnvidia-allocator.so.1 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-allocator.so.1",
+    "libnvidia-allocator.so (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libnvidia-allocator.so",
+    "libGLX_nvidia.so.0 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libGLX_nvidia.so.0",
+    "libGLX_mesa.so.0 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libGLX_mesa.so.0",
+    "libGLX.so.0 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libGLX.so.0",
+    "libEGL_nvidia.so.0 (libc6,x86-64) => /usr/lib/x86_64-linux-gnu/libEGL_nvidia.so.0"
+  ],
+  "runtime": {
+    "conda_prefix": "/root/autodl-tmp/conda-envs/langmani",
+    "package_locations": {
+      "h5py": "/root/autodl-tmp/conda-envs/langmani/lib/python3.12/site-packages",
+      "mani-skill": "/root/autodl-tmp/conda-envs/langmani/lib/python3.12/site-packages",
+      "numpy": "/root/autodl-tmp/conda-envs/langmani/lib/python3.12/site-packages",
+      "sapien": "/root/autodl-tmp/conda-envs/langmani/lib/python3.12/site-packages",
+      "torch": "/root/autodl-tmp/conda-envs/langmani/lib/python3.12/site-packages"
+    },
+    "packages": {
+      "h5py": "3.16.0",
+      "mani-skill": "3.0.1",
+      "numpy": "2.2.6",
+      "sapien": "3.0.3",
+      "torch": "2.11.0+cu128"
+    },
+    "python_executable": "/root/autodl-tmp/conda-envs/langmani/bin/python3.12",
+    "python_version": "3.12.13"
+  },
+  "schema_version": "langmani-v2-phase2b6-1r-rendering-inventory-v0",
+  "system_icd_manifests": [
+    {
+      "api_version": "1.4.312",
+      "file_format_version": "1.0.1",
+      "library_path": "/lib/x86_64-linux-gnu/libEGL_nvidia.so.0",
+      "path": "/etc/vulkan/icd.d/my_nvidia_icd.json",
+      "referenced_library_exists": true,
+      "resolved_library_path": "/lib/x86_64-linux-gnu/libEGL_nvidia.so.0",
+      "sha256": "sha256:faa5543269860bb750bab4c3a9cb08a8c749f6d27500780b773dfcd334c188f8",
+      "size_bytes": 162
+    },
+    {
+      "api_version": "1.4.312",
+      "file_format_version": "1.0.1",
+      "library_path": "libGLX_nvidia.so.0",
+      "path": "/etc/vulkan/icd.d/nvidia_icd.json",
+      "referenced_library_exists": true,
+      "resolved_library_path": "/usr/lib/x86_64-linux-gnu/libGLX_nvidia.so.0",
+      "sha256": "sha256:7bdb6f27d35b66fc848df6f94b8773bba30ea3a7f06f114100d14154a235a34b",
+      "size_bytes": 140
+    }
+  ],
+  "vulkaninfo_binary": "/usr/bin/vulkaninfo",
+  "vulkaninfo_version": {
+    "command": [
+      "vulkaninfo",
+      "--version"
+    ],
+    "exit_code": 1,
+    "passed": false,
+    "stderr": "",
+    "stdout": "\nvulkaninfo - Summarize Vulkan information in relation to the current environment.\n\nUSAGE: vulkaninfo [options]\n\nOPTIONS:\n-h, --help          Print this help.\n--summary           Show a summary of the instance and GPU's on a system.\n--text              Produce a text version of vulkaninfo output to stdout. This is\n                    the default output.\n--html              Produce an html version of vulkaninfo output, saved as\n                    \"vulkaninfo.html\" in the directory in which the command\n                    is run.\n-j, --json          Produce a json version of vulkaninfo to standard output of the\n                    first gpu in the system conforming to the DevSim schema.\n--json=<gpu-number> For a multi-gpu system, a single gpu can be targetted by\n                    specifying the gpu-number associated with the gpu of \n                    interest. This number can be determined by running\n                    vulkaninfo without any options specified.\n--portability       Produce a json version of vulkaninfo to standard output of the first\n                    gpu in the system conforming to the DevSim Portability Subset schema.\n--portability=<N>   Produce the json output conforming to the DevSim Portability\n                    Subset Schema for the GPU specified to standard output,\n                    where N is the GPU desired.\n--show-tool-props   Show the active VkPhysicalDeviceToolPropertiesEXT that vulkaninfo finds.\n--show-formats      Display the format properties of each physical device.\n                    Note: This option does not affect html or json output;\n                    they will always print format properties.\n-o <filename>, --output<filename>\n                    Print output to a new file whose name is specified by filename.\n                    File will be written to the current working directory.\n\n",
+    "timed_out": false,
+    "wall_clock_seconds": 0.0031810402870178223
+  }
+}

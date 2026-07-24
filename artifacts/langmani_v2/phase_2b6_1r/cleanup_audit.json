@@ -1,0 +1,215 @@
+{
+  "fingerprint": "sha256:bf761a3b95b72a3978e224fd15098c3c60262311a5ffe01e790a0d4f65b35cb7",
+  "no_leaked_child_processes": true,
+  "no_tmux_session_created": true,
+  "no_unexpected_gpu_workloads": true,
+  "passed": true,
+  "runs": [
+    {
+      "child_pid": 6490,
+      "child_process_alive": false,
+      "gpu_audit": {
+        "compute_processes": [],
+        "devices": [
+          {
+            "driver_version": "580.76.05",
+            "memory_total_mib": 32607,
+            "memory_used_mib": 0,
+            "name": "NVIDIA GeForce RTX 5090",
+            "pci_bus_id": "00000000:27:00.0",
+            "utilization_percent": 0,
+            "uuid": "GPU-27f8a10c-1b18-1109-85da-247ee1927024"
+          }
+        ],
+        "intended_gpu_present": true,
+        "passed": true,
+        "query": {
+          "command": [
+            "nvidia-smi",
+            "--query-gpu=uuid,name,pci.bus_id,driver_version,memory.used,memory.total,utilization.gpu",
+            "--format=csv,noheader,nounits"
+          ],
+          "exit_code": 0,
+          "passed": true,
+          "stderr": "",
+          "stdout": "GPU-27f8a10c-1b18-1109-85da-247ee1927024, NVIDIA GeForce RTX 5090, 00000000:27:00.0, 580.76.05, 0, 32607, 0\n",
+          "timed_out": false,
+          "wall_clock_seconds": 0.12061968445777893
+        }
+      },
+      "passed": true,
+      "process_audit": {
+        "passed": true,
+        "prohibited_active_processes": [],
+        "query_succeeded": true
+      },
+      "tmux_session_created": false,
+      "unexpected_gpu_workloads": false
+    },
+    {
+      "child_pid": 6818,
+      "child_process_alive": false,
+      "gpu_audit": {
+        "compute_processes": [],
+        "devices": [
+          {
+            "driver_version": "580.76.05",
+            "memory_total_mib": 32607,
+            "memory_used_mib": 0,
+            "name": "NVIDIA GeForce RTX 5090",
+            "pci_bus_id": "00000000:27:00.0",
+            "utilization_percent": 1,
+            "uuid": "GPU-27f8a10c-1b18-1109-85da-247ee1927024"
+          }
+        ],
+        "intended_gpu_present": true,
+        "passed": true,
+        "query": {
+          "command": [
+            "nvidia-smi",
+            "--query-gpu=uuid,name,pci.bus_id,driver_version,memory.used,memory.total,utilization.gpu",
+            "--format=csv,noheader,nounits"
+          ],
+          "exit_code": 0,
+          "passed": true,
+          "stderr": "",
+          "stdout": "GPU-27f8a10c-1b18-1109-85da-247ee1927024, NVIDIA GeForce RTX 5090, 00000000:27:00.0, 580.76.05, 0, 32607, 1\n",
+          "timed_out": false,
+          "wall_clock_seconds": 0.09830833971500397
+        }
+      },
+      "passed": true,
+      "process_audit": {
+        "passed": true,
+        "prohibited_active_processes": [],
+        "query_succeeded": true
+      },
+      "tmux_session_created": false,
+      "unexpected_gpu_workloads": false
+    },
+    {
+      "child_pid": 7148,
+      "child_process_alive": false,
+      "gpu_audit": {
+        "compute_processes": [],
+        "devices": [
+          {
+            "driver_version": "580.76.05",
+            "memory_total_mib": 32607,
+            "memory_used_mib": 0,
+            "name": "NVIDIA GeForce RTX 5090",
+            "pci_bus_id": "00000000:27:00.0",
+            "utilization_percent": 0,
+            "uuid": "GPU-27f8a10c-1b18-1109-85da-247ee1927024"
+          }
+        ],
+        "intended_gpu_present": true,
+        "passed": true,
+        "query": {
+          "command": [
+            "nvidia-smi",
+            "--query-gpu=uuid,name,pci.bus_id,driver_version,memory.used,memory.total,utilization.gpu",
+            "--format=csv,noheader,nounits"
+          ],
+          "exit_code": 0,
+          "passed": true,
+          "stderr": "",
+          "stdout": "GPU-27f8a10c-1b18-1109-85da-247ee1927024, NVIDIA GeForce RTX 5090, 00000000:27:00.0, 580.76.05, 0, 32607, 0\n",
+          "timed_out": false,
+          "wall_clock_seconds": 0.10962130129337311
+        }
+      },
+      "passed": true,
+      "process_audit": {
+        "passed": true,
+        "prohibited_active_processes": [],
+        "query_succeeded": true
+      },
+      "tmux_session_created": false,
+      "unexpected_gpu_workloads": false
+    },
+    {
+      "child_pid": 7476,
+      "child_process_alive": false,
+      "gpu_audit": {
+        "compute_processes": [],
+        "devices": [
+          {
+            "driver_version": "580.76.05",
+            "memory_total_mib": 32607,
+            "memory_used_mib": 0,
+            "name": "NVIDIA GeForce RTX 5090",
+            "pci_bus_id": "00000000:27:00.0",
+            "utilization_percent": 0,
+            "uuid": "GPU-27f8a10c-1b18-1109-85da-247ee1927024"
+          }
+        ],
+        "intended_gpu_present": true,
+        "passed": true,
+        "query": {
+          "command": [
+            "nvidia-smi",
+            "--query-gpu=uuid,name,pci.bus_id,driver_version,memory.used,memory.total,utilization.gpu",
+            "--format=csv,noheader,nounits"
+          ],
+          "exit_code": 0,
+          "passed": true,
+          "stderr": "",
+          "stdout": "GPU-27f8a10c-1b18-1109-85da-247ee1927024, NVIDIA GeForce RTX 5090, 00000000:27:00.0, 580.76.05, 0, 32607, 0\n",
+          "timed_out": false,
+          "wall_clock_seconds": 0.06498041190207005
+        }
+      },
+      "passed": true,
+      "process_audit": {
+        "passed": true,
+        "prohibited_active_processes": [],
+        "query_succeeded": true
+      },
+      "tmux_session_created": false,
+      "unexpected_gpu_workloads": false
+    },
+    {
+      "child_pid": 7745,
+      "child_process_alive": false,
+      "gpu_audit": {
+        "compute_processes": [],
+        "devices": [
+          {
+            "driver_version": "580.76.05",
+            "memory_total_mib": 32607,
+            "memory_used_mib": 0,
+            "name": "NVIDIA GeForce RTX 5090",
+            "pci_bus_id": "00000000:27:00.0",
+            "utilization_percent": 0,
+            "uuid": "GPU-27f8a10c-1b18-1109-85da-247ee1927024"
+          }
+        ],
+        "intended_gpu_present": true,
+        "passed": true,
+        "query": {
+          "command": [
+            "nvidia-smi",
+            "--query-gpu=uuid,name,pci.bus_id,driver_version,memory.used,memory.total,utilization.gpu",
+            "--format=csv,noheader,nounits"
+          ],
+          "exit_code": 0,
+          "passed": true,
+          "stderr": "",
+          "stdout": "GPU-27f8a10c-1b18-1109-85da-247ee1927024, NVIDIA GeForce RTX 5090, 00000000:27:00.0, 580.76.05, 0, 32607, 0\n",
+          "timed_out": false,
+          "wall_clock_seconds": 0.08723480068147182
+        }
+      },
+      "passed": true,
+      "process_audit": {
+        "passed": true,
+        "prohibited_active_processes": [],
+        "query_succeeded": true
+      },
+      "tmux_session_created": false,
+      "unexpected_gpu_workloads": false
+    }
+  ],
+  "schema_version": "langmani-v2-phase2b6-1r-cleanup-v0"
+}
