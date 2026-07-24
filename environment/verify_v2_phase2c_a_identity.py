@@ -14,9 +14,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_AUDIT = (
     PROJECT_ROOT / "artifacts" / "langmani_v2" / "phase_2c_a" / "identity_resolution.json"
 )
-DEFAULT_PRIMARY = Path(
-    "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary"
-)
+DEFAULT_PRIMARY = Path("/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary")
 DEFAULT_ARCHIVE = Path(
     "/root/autodl-tmp/langmani-external/phase2b6-v2-archive/"
     "LangManiOfficialMultiSkill-v2-"
@@ -31,9 +29,7 @@ SIDECAR = "metadata/accepted_multiskill_dataset_package.json"
 CANONICAL_PACKAGE_FINGERPRINT = (
     "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04"
 )
-INVALID_TRANSCRIPTION = (
-    "sha256:77675e2134e4886a97e4bdac2230c64c3da30cc080e647433b7c701a79544ed04"
-)
+INVALID_TRANSCRIPTION = "sha256:77675e2134e4886a97e4bdac2230c64c3da30cc080e647433b7c701a79544ed04"
 CORRECTED_DOCUMENTS = (
     "docs/DECISIONS.md",
     "docs/langmani_v2/phase_2b6_v2_dataset_card.md",
@@ -143,8 +139,10 @@ def _entry_map(manifest: Mapping[str, object]) -> dict[str, tuple[int, str]]:
         path = raw.get("path")
         size_bytes = raw.get("size_bytes")
         digest = raw.get("sha256")
-        if not isinstance(path, str) or not isinstance(size_bytes, int) or not isinstance(
-            digest, str
+        if (
+            not isinstance(path, str)
+            or not isinstance(size_bytes, int)
+            or not isinstance(digest, str)
         ):
             raise IdentityResolutionError("tree manifest entry fields are invalid")
         result[path] = (size_bytes, digest)
@@ -160,9 +158,7 @@ def _git(command: list[str], *, repo_root: Path) -> str:
         text=True,
     )
     if completed.returncode != 0:
-        raise IdentityResolutionError(
-            f"git {' '.join(command)} failed: {completed.stderr.strip()}"
-        )
+        raise IdentityResolutionError(f"git {' '.join(command)} failed: {completed.stderr.strip()}")
     return completed.stdout.strip()
 
 
@@ -187,21 +183,13 @@ def verify_identity_resolution(
         / "accepted_multiskill_dataset_package.json"
     )
     result_path = (
-        repo_root
-        / "artifacts"
-        / "langmani_v2"
-        / "phase_2b6_v2"
-        / "result_classification.json"
+        repo_root / "artifacts" / "langmani_v2" / "phase_2b6_v2" / "result_classification.json"
     )
     archive_manifest_path = (
         repo_root / "artifacts" / "langmani_v2" / "phase_2b6_v2" / "archive_manifest.json"
     )
     restore_manifest_path = (
-        repo_root
-        / "artifacts"
-        / "langmani_v2"
-        / "phase_2b6_v2"
-        / "restore_validation_result.json"
+        repo_root / "artifacts" / "langmani_v2" / "phase_2b6_v2" / "restore_validation_result.json"
     )
     package = read_json(package_path)
     result = read_json(result_path)
@@ -255,18 +243,12 @@ def verify_identity_resolution(
     }
     erratum_text = (repo_root / ERRATUM).read_text(encoding="utf-8")
     checks = {
-        "audit_fingerprint_recomputed": audit_fingerprint
-        == canonical_json_sha256(audit_body),
-        "canonical_package_hex_length": len(
-            CANONICAL_PACKAGE_FINGERPRINT.removeprefix("sha256:")
-        )
+        "audit_fingerprint_recomputed": audit_fingerprint == canonical_json_sha256(audit_body),
+        "canonical_package_hex_length": len(CANONICAL_PACKAGE_FINGERPRINT.removeprefix("sha256:"))
         == 64,
-        "invalid_transcription_hex_length": len(
-            INVALID_TRANSCRIPTION.removeprefix("sha256:")
-        )
+        "invalid_transcription_hex_length": len(INVALID_TRANSCRIPTION.removeprefix("sha256:"))
         == 65,
-        "machine_package_fingerprint_matches": package_fingerprint
-        == CANONICAL_PACKAGE_FINGERPRINT,
+        "machine_package_fingerprint_matches": package_fingerprint == CANONICAL_PACKAGE_FINGERPRINT,
         "machine_package_fingerprint_recomputed": recomputed_package_fingerprint
         == CANONICAL_PACKAGE_FINGERPRINT,
         "result_fingerprint_matches": result.get("accepted_package_fingerprint")
@@ -280,15 +262,13 @@ def verify_identity_resolution(
             INVALID_TRANSCRIPTION not in text for text in corrected_docs.values()
         ),
         "erratum_records_both_values": (
-            CANONICAL_PACKAGE_FINGERPRINT in erratum_text
-            and INVALID_TRANSCRIPTION in erratum_text
+            CANONICAL_PACKAGE_FINGERPRINT in erratum_text and INVALID_TRANSCRIPTION in erratum_text
         ),
         "actual_archive_path_matches": archive_path.resolve().as_posix()
         == archive_audit.get("path"),
         "actual_archive_size_matches": archive_path.stat().st_size
         == archive_audit.get("size_bytes"),
-        "actual_archive_sha256_matches": sha256_file(archive_path)
-        == archive_audit.get("sha256"),
+        "actual_archive_sha256_matches": sha256_file(archive_path) == archive_audit.get("sha256"),
         "archive_manifest_tree_matches": archive_manifest.get("primary_tree_digest")
         == frozen_audit.get("tree_digest"),
         "archive_manifest_file_count_matches": archive_manifest.get("primary_file_count")
@@ -309,23 +289,17 @@ def verify_identity_resolution(
         == live_audit.get("file_count"),
         "primary_actual_total_bytes_matches": primary.get("total_bytes")
         == live_audit.get("total_bytes"),
-        "primary_actual_tree_matches": primary.get("tree_digest")
-        == live_audit.get("tree_digest"),
+        "primary_actual_tree_matches": primary.get("tree_digest") == live_audit.get("tree_digest"),
         "only_primary_difference_is_sidecar": primary_only == [SIDECAR],
         "restore_has_no_additional_paths": not restore_only,
         "all_common_payload_bytes_match": not common_mismatches
         and len(common_paths) == frozen_audit.get("file_count"),
-        "sidecar_size_matches": sidecar_path.stat().st_size
-        == sidecar_audit.get("size_bytes"),
+        "sidecar_size_matches": sidecar_path.stat().st_size == sidecar_audit.get("size_bytes"),
         "sidecar_sha256_matches": sidecar_sha256 == sidecar_audit.get("sha256"),
         "sidecar_source_controlled_copy_matches": sidecar_sha256 == source_package_sha256,
-        "sidecar_fingerprint_matches": sidecar_fingerprint
-        == CANONICAL_PACKAGE_FINGERPRINT,
-        "sidecar_fingerprint_recomputed": sidecar_recomputed
-        == CANONICAL_PACKAGE_FINGERPRINT,
-        "sidecar_audit_reference_matches": sidecar_audit.get(
-            "referenced_package_fingerprint"
-        )
+        "sidecar_fingerprint_matches": sidecar_fingerprint == CANONICAL_PACKAGE_FINGERPRINT,
+        "sidecar_fingerprint_recomputed": sidecar_recomputed == CANONICAL_PACKAGE_FINGERPRINT,
+        "sidecar_audit_reference_matches": sidecar_audit.get("referenced_package_fingerprint")
         == CANONICAL_PACKAGE_FINGERPRINT,
     }
     report: dict[str, object] = {
@@ -341,12 +315,10 @@ def verify_identity_resolution(
                 "size_bytes": archive_path.stat().st_size,
             },
             "frozen_payload_tree": {
-                key: restore[key]
-                for key in ("file_count", "total_bytes", "tree_digest")
+                key: restore[key] for key in ("file_count", "total_bytes", "tree_digest")
             },
             "live_primary_tree": {
-                key: primary[key]
-                for key in ("file_count", "total_bytes", "tree_digest")
+                key: primary[key] for key in ("file_count", "total_bytes", "tree_digest")
             },
             "primary_only_paths": primary_only,
             "restore_only_paths": restore_only,
