@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,8 @@ from langmani.v2.phase2c_a import (  # noqa: E402
 from langmani.v2.phase2c_a_act import (  # noqa: E402
     TASK_INDEX_KEY,
     TASK_TOKEN_FEATURE_KEY,
+    Phase2CAActError,
+    _repo_id,
     build_phase2c_a_act_config,
     load_processor_statistics,
     masked_l1_loss,
@@ -38,6 +41,24 @@ from langmani.v2.policy import ObservationBatch, PolicyContext  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 EVIDENCE = PROJECT_ROOT / "artifacts" / "langmani_v2" / "phase_2b6_v2"
+
+
+def test_repo_id_comes_from_accepted_split_manifest(tmp_path: Path) -> None:
+    manifest = {
+        "repo_id": "langmani/official-pickcube-v2-train",
+        "task_id": "PickCube-v1",
+        "primary_split": "train",
+    }
+    (tmp_path / "langmani_phase2b6_split_manifest.json").write_text(
+        json.dumps(manifest),
+        encoding="utf-8",
+    )
+    assert (
+        _repo_id(tmp_path, task_id="PickCube-v1", split="train")
+        == "langmani/official-pickcube-v2-train"
+    )
+    with pytest.raises(Phase2CAActError, match="accepted LeRobot split identity"):
+        _repo_id(tmp_path, task_id="PushCube-v1", split="train")
 
 
 def _raw_batch(batch_size: int = 2) -> dict[str, object]:

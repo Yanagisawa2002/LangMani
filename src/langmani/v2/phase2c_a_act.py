@@ -177,11 +177,16 @@ def _task_root(primary_root: Path, task_id: str, split: str) -> Path:
     return primary_root / "task_roots" / TASK_SLUGS[task_id] / "splits" / split
 
 
-def _repo_id(root: Path) -> str:
-    info = _read_object(root / "meta" / "info.json")
-    repo_id = info.get("repo_id")
-    if not isinstance(repo_id, str) or not repo_id:
-        raise Phase2CAActError(f"{root} has no LeRobot repo_id")
+def _repo_id(root: Path, *, task_id: str, split: str) -> str:
+    manifest = _read_object(root / "langmani_phase2b6_split_manifest.json")
+    repo_id = manifest.get("repo_id")
+    if (
+        not isinstance(repo_id, str)
+        or not repo_id
+        or manifest.get("task_id") != task_id
+        or manifest.get("primary_split") != split
+    ):
+        raise Phase2CAActError(f"{root} has no matching accepted LeRobot split identity")
     return repo_id
 
 
@@ -210,7 +215,7 @@ def load_dataset_view(
         if not root.is_dir():
             raise Phase2CAActError(f"accepted LeRobot split root is missing: {root}")
         dataset = LeRobotDataset(
-            repo_id=_repo_id(root),
+            repo_id=_repo_id(root, task_id=task_id, split=split),
             root=root,
             delta_timestamps=delta_timestamps,
             video_backend="pyav",
