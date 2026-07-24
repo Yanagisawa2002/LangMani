@@ -23,7 +23,7 @@ import torch
 from lerobot.configs import FeatureType, NormalizationMode, PolicyFeature
 from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.policies.act import ACTConfig, ACTPolicy
-from lerobot.processor import PolicyProcessorPipeline
+from lerobot.processor import DataProcessorPipeline, PolicyProcessorPipeline
 from torch.utils.data import ConcatDataset, DataLoader, Dataset
 
 from langmani.datasets.identity import sha256_hex
@@ -810,8 +810,8 @@ def _save_and_reload_probe(
     )
     if not isinstance(loaded.policy, ACTPolicy):
         raise Phase2CAActError("checkpoint smoke did not reload ACTPolicy")
-    if not isinstance(loaded.preprocessor, PolicyProcessorPipeline) or not isinstance(
-        loaded.postprocessor, PolicyProcessorPipeline
+    if not isinstance(loaded.preprocessor, DataProcessorPipeline) or not isinstance(
+        loaded.postprocessor, DataProcessorPipeline
     ):
         raise Phase2CAActError("checkpoint smoke did not reload both processors")
     loaded.policy.to(policy.config.device)

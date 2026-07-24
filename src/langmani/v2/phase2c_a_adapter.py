@@ -11,7 +11,7 @@ from typing import Any, cast
 import numpy as np
 import torch
 from lerobot.policies.act import ACTPolicy
-from lerobot.processor import PolicyProcessorPipeline
+from lerobot.processor import DataProcessorPipeline, PolicyProcessorPipeline
 
 from langmani.datasets.identity import sha256_hex
 from langmani.datasets.lerobot_types import ACTION_FEATURE_KEY
@@ -157,8 +157,8 @@ class Phase2CAActPolicyAdapter:
         )
         if not isinstance(loaded.policy, ACTPolicy):
             raise Phase2CAAdapterError("checkpoint did not reload an ACTPolicy")
-        if not isinstance(loaded.preprocessor, PolicyProcessorPipeline) or not isinstance(
-            loaded.postprocessor, PolicyProcessorPipeline
+        if not isinstance(loaded.preprocessor, DataProcessorPipeline) or not isinstance(
+            loaded.postprocessor, DataProcessorPipeline
         ):
             raise Phase2CAAdapterError("checkpoint did not reload both policy processors")
         return cls(
