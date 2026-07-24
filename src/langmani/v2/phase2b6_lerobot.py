@@ -80,6 +80,21 @@ def _as_float(value: object) -> float:
     return float(cast(Any, value))
 
 
+def _canonical_sha256(value: object) -> str:
+    """Normalize one historically duplicated SHA-256 scheme prefix."""
+
+    digest = str(value)
+    while digest.startswith("sha256:"):
+        digest = digest.removeprefix("sha256:")
+    if len(digest) != 64:
+        raise Phase2B6LeRobotError("SHA-256 value has the wrong length")
+    try:
+        int(digest, 16)
+    except ValueError as error:
+        raise Phase2B6LeRobotError("SHA-256 value is not hexadecimal") from error
+    return "sha256:" + digest.lower()
+
+
 def _timestamp() -> str:
     return datetime.now(UTC).isoformat()
 
@@ -1523,13 +1538,40 @@ def create_archive(
     tree_digest = str(tree["tree_digest"]).removeprefix("sha256:")
     package_id = str(spec["derived_dataset_version"])
     archive_path = archive_directory / f"{package_id}-{tree_digest}.tar.gz"
-    if archive_path.exists():
-        raise Phase2B6LeRobotError(f"immutable archive already exists: {archive_path}")
-    created = create_deterministic_tar_gz(
-        source_root=primary,
-        archive_path=archive_path,
-        prefix=str(cast(Mapping[str, object], spec["archive"])["prefix"]),
-    )
+    archive_prefix = str(cast(Mapping[str, object], spec["archive"])["prefix"])
+    archive_bytes_reused = archive_path.exists()
+    if archive_bytes_reused:
+        previous_path = evidence_root / "archive_manifest.json"
+        if not previous_path.is_file():
+            raise Phase2B6LeRobotError(
+                "an existing immutable archive has no prior manifest to verify"
+            )
+        previous = _read_json(previous_path)
+        previous_body = {key: value for key, value in previous.items() if key != "fingerprint"}
+        if (
+            previous.get("fingerprint") != fingerprinted(previous_body)["fingerprint"]
+            or previous.get("content_addressed_archive_location") != archive_path.as_posix()
+            or previous.get("primary_tree_digest") != tree["tree_digest"]
+            or previous.get("archive_prefix") != archive_prefix
+            or _as_int(previous.get("archive_size_bytes")) != archive_path.stat().st_size
+        ):
+            raise Phase2B6LeRobotError("existing immutable archive manifest does not match")
+        actual_archive_sha256 = "sha256:" + sha256_file(archive_path)
+        if _canonical_sha256(previous.get("archive_sha256")) != actual_archive_sha256:
+            raise Phase2B6LeRobotError("existing immutable archive SHA-256 changed")
+        created: dict[str, object] = {
+            "size_bytes": archive_path.stat().st_size,
+            "sha256": actual_archive_sha256,
+            "source_tree_digest": tree["tree_digest"],
+            "prefix": archive_prefix,
+        }
+    else:
+        created = create_deterministic_tar_gz(
+            source_root=primary,
+            archive_path=archive_path,
+            prefix=archive_prefix,
+        )
+    archive_sha256 = _canonical_sha256(created["sha256"])
     entrypoint = (
         "environment/run_v2_phase2b6_v2.py"
         if package_id == "LangManiOfficialMultiSkill-v2"
@@ -1546,9 +1588,10 @@ def create_archive(
             "primary_total_bytes": tree["total_bytes"],
             "content_addressed_archive_location": archive_path.as_posix(),
             "archive_size_bytes": created["size_bytes"],
-            "archive_sha256": created["sha256"],
+            "archive_sha256": archive_sha256,
             "archive_prefix": created["prefix"],
             "archive_content_address_kind": "primary_tree_sha256",
+            "archive_bytes_reused_after_verified_manifest": archive_bytes_reused,
             "source_zip_references_included": True,
             "source_zip_bytes_included": False,
             "primary_and_archive_distinct": primary.parent != archive_directory,
@@ -1587,6 +1630,8 @@ def restore_and_validate(
         prefix=str(archive["archive_prefix"]),
         expected_tree_digest=tree_digest,
     )
+    archive_sha256 = _canonical_sha256(archive["archive_sha256"])
+    restored_archive_sha256 = _canonical_sha256(restored["archive_sha256"])
     package_root = destination / str(archive["archive_prefix"])
     task_manifest = _read_json(package_root / "metadata" / "task_specific_root_manifests.json")
     expected_inventory_episodes = _as_int(task_manifest["episode_count"])
@@ -1645,7 +1690,8 @@ def restore_and_validate(
         {
             "schema_version": "langmani-v2-phase2b6-restore-validation-v0",
             "created_at_utc": _timestamp(),
-            "archive_sha256": archive["archive_sha256"],
+            "archive_sha256": archive_sha256,
+            "archive_sha256_verified": restored_archive_sha256 == archive_sha256,
             "restored_location": package_root.as_posix(),
             "restored_tree_digest": restored["restored_tree_digest"],
             "full_file_hash_tree_verified": (
@@ -1663,6 +1709,7 @@ def restore_and_validate(
             "scratch_deleted_after_evidence_finalization": False,
             "passed": (
                 restored["passed"] is True
+                and restored_archive_sha256 == archive_sha256
                 and restored["restored_tree_digest"] == archive["primary_tree_digest"]
                 and inventory_episode_count == expected_inventory_episodes
                 and inventory_frame_count == expected_inventory_frames

@@ -6,7 +6,12 @@ from typing import cast
 
 import pytest
 
-from langmani.v2.phase2b6 import PRIMARY_SPLITS, TASK_IDS, build_task_balance_manifest
+from langmani.v2.phase2b6 import (
+    PRIMARY_SPLITS,
+    TASK_IDS,
+    build_task_balance_manifest,
+    fingerprinted,
+)
 from langmani.v2.phase2b6_lerobot import create_archive
 from langmani.v2.phase2b6_v2 import (
     EXPECTED_SOURCE_EPISODES,
@@ -87,10 +92,26 @@ def test_v2_archive_reports_the_runnable_v2_restore_entrypoint(tmp_path: Path) -
     )
 
     assert report["passed"] is True
+    assert str(report["archive_sha256"]).count("sha256:") == 1
     assert "environment/run_v2_phase2b6_v2.py restore" in report["recovery_command"]
     assert f"--production-root {production_root.as_posix()}" in report["recovery_command"]
     assert f"--evidence-root {evidence_root.as_posix()}" in report["recovery_command"]
     assert "--restore-root <clean-scratch>" in report["recovery_command"]
+
+    malformed_body = {key: value for key, value in report.items() if key != "fingerprint"}
+    malformed_body["archive_sha256"] = "sha256:" + str(report["archive_sha256"])
+    (evidence_root / "archive_manifest.json").write_text(
+        json.dumps(fingerprinted(malformed_body)),
+        encoding="utf-8",
+    )
+    repaired = create_archive(
+        production_root=production_root,
+        archive_root=tmp_path / "archive",
+        evidence_root=evidence_root,
+        spec_path=SPEC,
+    )
+    assert repaired["archive_bytes_reused_after_verified_manifest"] is True
+    assert repaired["archive_sha256"] == report["archive_sha256"]
 
 
 def test_episode_938_is_registered_for_review_not_automatic_exclusion() -> None:
