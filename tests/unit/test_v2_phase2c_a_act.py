@@ -105,7 +105,7 @@ def test_policy_batch_projects_no_privileged_fields_and_keeps_padding() -> None:
 
 
 def test_shared_config_uses_public_three_way_env_token() -> None:
-    optimization = primary_optimization_config(ModelKind.SHARED, batch_size=128)
+    optimization = primary_optimization_config(ModelKind.SHARED, batch_size=408)
     config = build_phase2c_a_act_config(
         ModelKind.SHARED,
         device="cpu",
