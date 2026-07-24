@@ -329,7 +329,7 @@ def _disk_audit(paths: Sequence[Path]) -> dict[str, object]:
         "minimum_required_free_bytes": 1024**3,
         "compact_diagnostics_only": True,
         "passed": bool(rows)
-        and all(int(row["free_bytes"]) >= 1024**3 for row in rows),
+        and all(int(cast(Any, row["free_bytes"])) >= 1024**3 for row in rows),
     }
 
 
@@ -850,7 +850,7 @@ def _zero_step_stackcube_probe(source_root: Path) -> dict[str, object]:
         render_system = _render_system_from_environment(base)
         if render_system is None:
             raise Phase2B61RRuntimeError("StackCube render system identity is unavailable")
-        render_device = _device_snapshot(getattr(render_system, "device"))
+        render_device = _device_snapshot(cast(Any, render_system).device)
         action_dtype = str(action_space.dtype)
         checks = {
             "task_id": getattr(environment_spec, "id", None) == TASK_ID,
