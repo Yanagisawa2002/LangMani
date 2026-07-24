@@ -14,7 +14,8 @@ import os
 import time
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import asdict, dataclass, replace
+from enum import Enum
 from pathlib import Path
 from typing import Any, cast
 
@@ -76,6 +77,29 @@ TRAINING_SUMMARY_FILE = "training_summary.json"
 
 class Phase2CAActError(RuntimeError):
     """Raised when installed ACT or accepted data violates Phase 2C-A."""
+
+
+def act_config_dict(config: ACTConfig) -> dict[str, object]:
+    """Return the installed dataclass config as deterministic JSON-safe data."""
+
+    def convert(value: object) -> object:
+        if isinstance(value, Enum):
+            return value.value
+        if isinstance(value, Mapping):
+            return {
+                str(convert(key)): convert(item)
+                for key, item in sorted(value.items(), key=lambda pair: str(pair[0]))
+            }
+        if isinstance(value, tuple | list):
+            return [convert(item) for item in value]
+        if value is None or isinstance(value, str | int | float | bool):
+            return value
+        raise Phase2CAActError(f"ACT config contains a non-JSON value: {type(value)!r}")
+
+    converted = convert(asdict(config))
+    if not isinstance(converted, dict):
+        raise Phase2CAActError("ACT config did not serialize to an object")
+    return converted
 
 
 @dataclass(frozen=True, slots=True)
@@ -977,7 +1001,7 @@ def run_one_batch_gpu_smoke(
         "prediction_nonconstant": bool(float(np.var(reloaded_prediction)) > 1e-12),
         "peak_gpu_allocated_bytes": int(torch.cuda.max_memory_allocated()),
         "peak_gpu_reserved_bytes": int(torch.cuda.max_memory_reserved()),
-        "effective_act_config": config.to_dict(),
+        "effective_act_config": act_config_dict(config),
     }
     result = {
         **semantic,
@@ -1151,7 +1175,7 @@ def run_micro_overfit(
         "checkpoint": checkpoint,
         "checkpoint_reload_max_abs_error": reload_error,
         "checkpoint_reload_error": loaded_error,
-        "effective_act_config": config.to_dict(),
+        "effective_act_config": act_config_dict(config),
         "loss_curve": losses,
         "action_loss_curve": action_losses,
         "kl_loss_curve": kl_losses,
@@ -1203,7 +1227,7 @@ def train_primary_act(
         "identity": run_identity.to_dict(),
         "model_kind": kind.value,
         "model_config": Phase2CAModelConfig.for_model(kind).to_dict(),
-        "effective_act_config": config.to_dict(),
+        "effective_act_config": act_config_dict(config),
         "optimization_config": optimization.to_dict(),
         "processor_statistics": dict(statistics.manifest),
         "processor_statistics_fingerprint": statistics.fingerprint,

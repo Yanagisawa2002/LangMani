@@ -27,6 +27,7 @@ from langmani.v2.phase2c_a_act import (  # noqa: E402
     TASK_TOKEN_FEATURE_KEY,
     Phase2CAActError,
     _repo_id,
+    act_config_dict,
     build_phase2c_a_act_config,
     load_processor_statistics,
     masked_l1_loss,
@@ -112,6 +113,9 @@ def test_shared_config_uses_public_three_way_env_token() -> None:
         optimization=optimization,
     )
     validate_shared_act_config(config)
+    serialized = act_config_dict(config)
+    assert serialized["chunk_size"] == 16
+    assert serialized["normalization_mapping"]["VISUAL"] == "MEAN_STD"
     assert config.input_features[TASK_TOKEN_FEATURE_KEY].shape == (3,)
     assert config.input_features[STATE_FEATURE_KEY].shape == (9,)
 
