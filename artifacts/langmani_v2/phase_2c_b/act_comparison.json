@@ -1,0 +1,15 @@
+{
+  "schema_version": "langmani-v2-phase2c-b-act-comparison-v0",
+  "act_result": "RESULT_B",
+  "act_pipeline_valid": true,
+  "act_episode_count": 360,
+  "act_actions_executed": 18000,
+  "act_success_count": 0,
+  "act_invalid_action_count": 0,
+  "act_simulator_error_count": 0,
+  "smolvla_pick_initial_success_count": 0,
+  "smolvla_pick_repaired_success_count": 0,
+  "smolvla_broke_act_zero_success_floor": false,
+  "comparison_limit": "Only Pick SmolVLA reached full training; no cross-skill or shared-model comparison exists.",
+  "source": "artifacts/langmani_v2/phase_2c_a1/result_classification.json"
+}

@@ -1,0 +1,35 @@
+{
+  "schema_version": "langmani-v2-phase2c-b-artifact-manifest-v0",
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "result": "RESULT_D",
+  "source_baseline_commit": "4c38190a36ec41349ef39774ee95dc666537eed6",
+  "repair_evaluation_commit": "c07e735e77fd2ee299eb97bc98b2b569ea32f945",
+  "file_count": 16,
+  "total_bytes": 24839,
+  "record_digest": "sha256:6a57a070873972b5cf1d61f75b78070d67c5e4858c46b4b4e672977be4921871",
+  "record_digest_method": "SHA-256 of UTF-8 records sorted by path, each encoded as path NUL byte-size NUL file-sha256 LF",
+  "files": [
+    {"path": "act_comparison.json", "bytes": 606, "sha256": "c97a8d39eb01e6119326fba687b323f640d39747f26acd38514269e744c68541"},
+    {"path": "action_processor_audit.json", "bytes": 2004, "sha256": "00a52d1507c69759a00a4a9c32a119a62841bf013562a196bdbc1b6c9f392654"},
+    {"path": "artifact_coverage.json", "bytes": 2158, "sha256": "0b53b2999756164d6574ef80eeb9a9a2233aead4dd925dc721dd4799124cc8af"},
+    {"path": "authorization_state.json", "bytes": 634, "sha256": "1b3c3d369f10804d92c66d173041cc213680d6d50615fa5b76b4d2f19c80f297"},
+    {"path": "checkpoint_and_offline_diagnostics.json", "bytes": 2648, "sha256": "51c9f07d16cb5e3b92f2dc866c3214e8eb82df1594ac983d4e9ef478c0bd41f5"},
+    {"path": "execution_horizon_and_policy_selection.json", "bytes": 1676, "sha256": "f99e04e8f5f887b17a9ffbbdfec54f940f12ec716b854ed3088031e274f46748"},
+    {"path": "failure_and_runtime.json", "bytes": 983, "sha256": "48410470ce1f9cec3dba319012dad3832c65167a3108eaa02dd5d57c96fd2b43"},
+    {"path": "input_and_base_audit.json", "bytes": 2820, "sha256": "572633e2f49aca6ccbddd38724ca7f61985d2240d36d3d87ac5c8502191152c7"},
+    {"path": "language_and_multiskill.json", "bytes": 1060, "sha256": "d72cda0b6b3b4841c223ea138475d6e120448ef290beb6994e063bb962739f7e"},
+    {"path": "remote_execution_audit.json", "bytes": 1179, "sha256": "153db8dd38837a72af7f4900ea3c8aa61f22587a7528bf18f61e78821910b00c"},
+    {"path": "repository_environment_audit.json", "bytes": 1214, "sha256": "7bd7136dd1144232edeb3da8dea4ba1f02d4feab23361b2301cac3ee876c0559"},
+    {"path": "result_classification.json", "bytes": 950, "sha256": "fa565693add66a0d311e81e6fcf1208cfd3a1f98e6deed42d8dfcb83175683b9"},
+    {"path": "smoke_and_micro_result.json", "bytes": 2061, "sha256": "1ecc456092b0e41ae1b622854a7ae538ed19a7e789308f71af1a72aea693c186"},
+    {"path": "training_result.json", "bytes": 1044, "sha256": "73abd91f7d048fd7f85fe571b8702bc206ac701784cda2d3e2d58946c1f6c416"},
+    {"path": "training_views_and_configuration.json", "bytes": 1909, "sha256": "665ea2859d91e28ba345af9191154250108eec3f209257a76b3751b3a7522eac"},
+    {"path": "validation_and_repair.json", "bytes": 1893, "sha256": "f47d9723e6f2138a13033c61670a4e5e591023a9d3b0d14a1cec861a6428faca"}
+  ],
+  "excluded_generated_content": {
+    "datasets": true,
+    "checkpoints": true,
+    "raw_episode_logs": true,
+    "videos": true
+  }
+}

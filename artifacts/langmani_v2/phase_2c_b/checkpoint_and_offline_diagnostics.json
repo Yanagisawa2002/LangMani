@@ -1,0 +1,69 @@
+{
+  "schema_version": "langmani-v2-phase2c-b-checkpoint-and-offline-diagnostics-v0",
+  "checkpoints": [
+    {
+      "optimizer_step": 5000,
+      "file_count": 9,
+      "size_bytes": 1319485667,
+      "sha256": "sha256:8c4f4b3aaa4f6438240da5627173577b51eea74a188f266ed89dc89463a1dcbb"
+    },
+    {
+      "optimizer_step": 10000,
+      "file_count": 9,
+      "size_bytes": 1319485668,
+      "sha256": "sha256:12866771186063d82c324a0bf5952e0e871d5e523d5a734b66588ed8fc6dae79"
+    },
+    {
+      "optimizer_step": 20000,
+      "file_count": 9,
+      "size_bytes": 1319485668,
+      "sha256": "sha256:3667a1250c1afefcda363dae34d374737ddf46af87a79397b0d2f5da49c77e80"
+    }
+  ],
+  "offline_validation": [
+    {
+      "optimizer_step": 5000,
+      "physical_action_mae": 0.10414600708984605,
+      "physical_first_action_mae": 0.0893495106138289,
+      "arm_action_mae": 0.10900614110366108,
+      "gripper_action_mae": 0.07012508167438324,
+      "flow_matching_loss": 0.13586725026834756,
+      "invalid_action_count": 0,
+      "clipping_events": 0,
+      "projection_events": 0,
+      "nonfinite_loss_count": 0,
+      "source_sha256": "sha256:8bcac7808f3786eb0cc2e989d827e0d523807a015b2eaf7f0b6d3b953eef5adc5",
+      "source_fingerprint": "sha256:7f9c3a2cf0aa55ad09ab1b524cb957899fbf982aba54f7d9675138ce3358c0ff"
+    },
+    {
+      "optimizer_step": 10000,
+      "physical_action_mae": 0.08085094235537613,
+      "physical_first_action_mae": 0.061252192477695644,
+      "arm_action_mae": 0.0821377306247741,
+      "gripper_action_mae": 0.0718434177081314,
+      "flow_matching_loss": 0.12991830419923645,
+      "invalid_action_count": 0,
+      "clipping_events": 0,
+      "projection_events": 0,
+      "nonfinite_loss_count": 0,
+      "source_sha256": "sha256:b75d9139b19107402640f5e314a6498efa9e5b11f47d490816bd64797816c73b",
+      "source_fingerprint": "sha256:02bffc0a9ab1a0f812757872a6d7f37a8028bf925b7492e0cc5764c78a7d8732"
+    },
+    {
+      "optimizer_step": 20000,
+      "physical_action_mae": 0.060791042446388756,
+      "physical_first_action_mae": 0.028175402840133756,
+      "arm_action_mae": 0.061152467906256634,
+      "gripper_action_mae": 0.058261067748322265,
+      "flow_matching_loss": 0.1006586230796529,
+      "invalid_action_count": 0,
+      "clipping_events": 0,
+      "projection_events": 0,
+      "nonfinite_loss_count": 0,
+      "source_sha256": "sha256:617612fb969a345760498e6a907cf88aac596c62da6cfe13736fb4fe7774e5dbd",
+      "source_fingerprint": "sha256:3038eeb33b21086b3cc1a14749fc9b1220910c9cee2e4c35d4b257b601bdacf2"
+    }
+  ],
+  "selected_offline_checkpoints": [20000, 10000],
+  "selected_on_total_loss_only": false
+}

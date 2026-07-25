@@ -1,0 +1,45 @@
+{
+  "schema_version": "langmani-v2-phase2c-b-smoke-and-micro-result-v0",
+  "gpu_smoke": {
+    "optimizer_steps": 1,
+    "real_policy_queries": 1,
+    "real_environment_steps": 1,
+    "invalid_action_count": 0,
+    "simulator_error_count": 0,
+    "training_result": {
+      "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/training/smoke-pick-7326833-bound/training_result.json",
+      "sha256": "sha256:83d0356a1e42207542413866da0578eb5906332fb03f4fe1c43857f42413ee35",
+      "fingerprint": "sha256:8f9eaffe615d9e19088e1efdc6115933b46fbbf2a6021818941dc308464320f5"
+    },
+    "evaluation_summary": {
+      "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/evaluation/smoke-pick-7326833-bound/summary.json",
+      "sha256": "sha256:38953d8f198e93e2429ad530caea3d1834af5fa69302db77976ca4b5020e9aa3"
+    },
+    "competence_evidence": false
+  },
+  "pick_micro": {
+    "optimizer_steps": 500,
+    "initial_fixed_batch_loss": 9.436518669128418,
+    "final_fixed_batch_loss": 0.3652,
+    "initial_physical_action_mae": 1.0173,
+    "final_physical_action_mae": 0.1369,
+    "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/training/micro-pick-7326833-bound/training_result.json",
+    "sha256": "sha256:88716044052e504c8324d62308055d602652c22a203b775b88c6d2d47e626f6c",
+    "fingerprint": "sha256:4fffaddca25ae591f691a251c22a0e954e50afa4c569f1c17e7b99c2ed8021ea",
+    "passed": true,
+    "competence_evidence": false
+  },
+  "shared_micro": {
+    "optimizer_steps": 500,
+    "initial_fixed_batch_loss": 15.0239,
+    "final_fixed_batch_loss": 0.2604,
+    "initial_physical_action_mae": 1.2887,
+    "final_physical_action_mae": 0.1788,
+    "same_observation_instruction_max_abs_difference": 1.921348,
+    "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/training/micro-shared-7326833-bound/training_result.json",
+    "sha256": "sha256:7ffabbff99fe35ce12c4bad202850c4a394d52e07516aee35d5763db726040f5",
+    "fingerprint": "sha256:78a75b97a3ea249249e96f94f074fa899c0bd420e70e3ccc5f97680ccb7ec04d",
+    "passed": true,
+    "competence_evidence": false
+  }
+}

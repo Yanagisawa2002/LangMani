@@ -1,0 +1,26 @@
+{
+  "schema_version": "langmani-v2-phase2c-b-compact-training-result-v0",
+  "model": "pick_smolvla",
+  "completed": true,
+  "passed": true,
+  "optimizer_steps": 20000,
+  "training_duration_seconds": 10031.313681956963,
+  "initial_fixed_batch_loss": 9.436518669128418,
+  "final_fixed_batch_loss": 0.012063581496477127,
+  "fixed_batch_loss_decreased": true,
+  "physical_action_error_decreased": true,
+  "clipping_events": 0,
+  "projection_events": 0,
+  "peak_gpu_allocated_bytes": 2354876416,
+  "peak_gpu_reserved_bytes": 2545942528,
+  "source": {
+    "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/training/full-pick-7326833-authoritative/training_result.json",
+    "sha256": "sha256:a2e8a2dccd8209d106f7dd16141e64874e181c2f2d17937e43d3c712644f1e01",
+    "fingerprint": "sha256:6c4dde5aa9fddd22a4b0af4f90791d0d9a5d6829c5d9dc13535f29c444c158c7"
+  },
+  "not_trained": {
+    "shared_language_smolvla": "Pick competence gate failed",
+    "stack_smolvla": "Pick competence gate failed",
+    "push_smolvla": "Pick competence gate failed"
+  }
+}

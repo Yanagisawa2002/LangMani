@@ -218,6 +218,21 @@ producing success. The phase is Result B:
 not evidence that interference is absent. SmolVLA and VLA-JEPA remain untrained and unauthorized;
 no further ACT repair, architecture, seed, checkpoint reselection, or data change is authorized.
 
+Phase 2C-B is complete as Result D after the official pretrained SmolVLA comparison. The pinned
+base and nested VLM loaded 450,046,176 parameters with no reinitialization; the bounded physical
+action transform, 1.6-million-action audit, real GPU smoke, Pick/shared micro-overfits, and the
+20,000-step Pick-only run all passed their pipeline gates. The initial locked 20k/H=1 Pick gate
+completed 30 episodes with zero success, zero invalid actions, and zero simulator errors. The sole
+permitted repair was bound to a demonstrated action-chunk execution-horizon defect and changed
+only `H_exec` from 1 to 8. The repeated gate again completed 0/30, with 16 failed grasps, 13
+no-initial-motion failures, one object drop, zero invalid actions, and zero simulator errors.
+This is a generic SmolVLA competence failure, not an infrastructure or action-contract failure:
+`result_d_stop=true`, `smolvla_baselines_validated=false`, and
+`other_full_models_authorized=false`. Shared, Stack, and Push full training, final evaluation,
+language intervention, VLA-JEPA, LatentGuard, SARM, PPO, and new-data work were not started and
+remain unauthorized. No second repair or additional SmolVLA tuning is permitted within Phase
+2C-B.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
@@ -392,6 +407,18 @@ python environment/verify_v2_phase2c_a.py --help
 # This reads compact evidence plus externally retained checkpoint components and starts no
 # simulator, optimizer, SmolVLA, or VLA-JEPA work.
 python environment/verify_v2_phase2c_a1.py --help
+
+# Phase 2C-B official SmolVLA consumer, staged training/evaluation, repair, and verification.
+python environment/prepare_v2_phase2c_b.py --help
+python environment/audit_v2_phase2c_b_smolvla_base.py --help
+python scripts/train_v2_phase2c_b_smolvla.py --help
+python scripts/diagnose_v2_phase2c_b_smolvla.py --help
+python scripts/select_v2_phase2c_b_checkpoints.py --help
+python environment/lock_v2_phase2c_b_evaluation.py --help
+python scripts/select_v2_phase2c_b_policy.py --help
+python scripts/evaluate_v2_phase2c_b_smolvla.py --help
+python scripts/select_v2_phase2c_b_repair.py --help
+python environment/verify_v2_phase2c_b.py --help
 
 # Phase 2B.3.1-RR compact Result D evidence verification (no simulator execution)
 python environment/verify_v2_phase2b3_rr.py

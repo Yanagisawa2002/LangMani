@@ -1,0 +1,40 @@
+{
+  "schema_version": "langmani-v2-phase2c-b-action-processor-audit-v0",
+  "representation": "smolvla_bounded_action_latent_v1",
+  "training_path": "native physical action -> affine [-1,1] -> multiply by 1-epsilon -> atanh -> official flow target",
+  "inference_path": "official generated latent -> tanh -> affine native Panda bounds -> physical action",
+  "epsilon": 0.000001,
+  "post_hoc_clipping": false,
+  "projection": false,
+  "replacement_action": false,
+  "bounded_action_manifest": {
+    "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/preflight-7326833/bounded_action_manifest.json",
+    "sha256": "sha256:4857d0979185ffd81f6dc3b045e9840cadbc903b51c4df839b6821d887d1147f8",
+    "fingerprint": "sha256:e509452bdbdb34c8e1684ce4b3730670594c6eb3ebfc43c7aeaaf6edd51d733bf",
+    "passed": true
+  },
+  "action_100k_audit": {
+    "chunk_count": 100000,
+    "action_count": 1600000,
+    "invalid_action_count": 0,
+    "nonfinite_action_count": 0,
+    "clipping_events": 0,
+    "projection_events": 0,
+    "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/preflight-7326833/action_100k_audit.json",
+    "sha256": "sha256:a325bff97f6562d25ee53f522ca14576a2860a7dce02caf8fdd77c00cfa9f159",
+    "fingerprint": "sha256:7327d64f73979b5a5fd8a594efeca59da1f47724770c31bf70de50f88e7ac9fab",
+    "passed": true
+  },
+  "padding_audit": {
+    "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/preflight-7326833/padding_audit.json",
+    "sha256": "sha256:97c6f511f0a88e7d072cff4885344cbdb3faeebd03ec2b026986508091071e739",
+    "fingerprint": "sha256:b8ff90eaddd7952a4ca073f0dc3b5c020fdc8c7563f94ecfb66ca7a66d68cd481",
+    "passed": true
+  },
+  "processor_contract": {
+    "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/base-audit-f3aaa88/processor_contract.json",
+    "sha256": "sha256:a175be413fd2c095ed9121d57ded42b14e3b30192159d363b3f9840e2006395b",
+    "fingerprint": "sha256:dae4f8b70e6bd887fede7303384ab8b8518b9160e0747b7181c580599b99e9331",
+    "checkpoint_reload_consistent": true
+  }
+}

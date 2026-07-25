@@ -1,0 +1,29 @@
+{
+  "schema_version": "langmani-v2-phase2c-b-language-and-multiskill-v0",
+  "shared_micro_language_sensitivity": {
+    "status": "completed",
+    "same_observation_instruction_max_abs_difference": 1.921348,
+    "interpretation": "the micro model output changed with language; this is not correct language-conditioned control"
+  },
+  "shared_full_training": {
+    "status": "not_run",
+    "reason": "Pick remained 0/30 after the sole bounded repair"
+  },
+  "language_intervention": {
+    "status": "not_run",
+    "lock_fingerprint": "sha256:5ef9cd0fdfc75dfdf72f719eabe68a9eb40d852ab86c1c408119838f09aaab6b",
+    "reason": "shared full model was not authorized"
+  },
+  "held_out_paraphrase_evaluation": {
+    "status": "not_run",
+    "reason": "final policies were not authorized"
+  },
+  "multiskill_interference": {
+    "status": "not_run",
+    "reason": "Model M/S/U full training was not authorized",
+    "positive_transfer_observed": null,
+    "negative_transfer_observed": null
+  },
+  "practical_difference_threshold": 0.1,
+  "task_id_model_input": false
+}

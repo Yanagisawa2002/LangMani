@@ -1,0 +1,25 @@
+{
+  "schema_version": "langmani-v2-phase2c-b-result-classification-v0",
+  "result": "RESULT_D",
+  "name": "Generic SmolVLA competence failure",
+  "pipeline_valid": true,
+  "pick_initial_gate": "0/30",
+  "pick_repaired_gate": "0/30",
+  "bounded_repair_used": true,
+  "bounded_repair_remaining": false,
+  "skills_learned": [],
+  "smolvla_broke_act_zero_success_floor": false,
+  "shared_model_trained": false,
+  "stack_model_trained": false,
+  "push_model_trained": false,
+  "final_test_opened": false,
+  "language_intervention_run": false,
+  "multiskill_interference_measured": false,
+  "independent_verification": {
+    "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/verification/pick-gate-repaired.json",
+    "sha256": "sha256:488d3058ed2ac0b07c68803a86850f6524554bcdb27571c906243d6fa11015074",
+    "fingerprint": "sha256:9bc6bc202b118adb015a502b1111107b9c8c74e8e5eea92320a71a8ee98a33b21",
+    "passed": false,
+    "result_d_stop": true
+  }
+}

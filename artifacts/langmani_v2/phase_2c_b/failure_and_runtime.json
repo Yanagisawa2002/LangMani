@@ -1,0 +1,26 @@
+{
+  "schema_version": "langmani-v2-phase2c-b-failure-and-runtime-v0",
+  "result": "RESULT_D",
+  "pipeline_valid": true,
+  "infrastructure_failure": false,
+  "initial_gate_failures": {
+    "no_initial_motion": 26,
+    "failed_grasp": 4
+  },
+  "repaired_gate_failures": {
+    "no_initial_motion": 13,
+    "failed_grasp": 16,
+    "object_drop": 1
+  },
+  "repaired_gate_dominant_failure": "failed_grasp",
+  "training_duration_seconds": 10031.313681956963,
+  "training_peak_gpu_allocated_bytes": 2354876416,
+  "training_peak_gpu_reserved_bytes": 2545942528,
+  "repaired_inference_latency_p50_ms": 123.8737580133602,
+  "repaired_inference_latency_p95_ms": 126.12592162913643,
+  "repaired_mean_policy_queries_per_episode": 7.0,
+  "repaired_mean_episode_steps": 50.0,
+  "invalid_action_count": 0,
+  "simulator_error_count": 0,
+  "interpretation": "The bounded official SmolVLA consumer trained and executed correctly, but the Pick-only policy did not acquire closed-loop task competence."
+}

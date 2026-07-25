@@ -150,3 +150,14 @@ changes semantics, or final settings change after results are visible.
 
 VLA-JEPA, LatentGuard, SARM, PPO, Diffusion Policy, and any new data phase
 remain unauthorized regardless of the Phase 2C-B result.
+
+## Closure
+
+The ordered plan stopped at gate 10. The locked 20k/H=1 Pick policy reached
+0/30 with zero invalid actions and zero simulator errors. The sole permitted
+repair changed only the demonstrated execution horizon from H=1 to H=8; the
+repeated gate again reached 0/30, with 16 failed grasps, 13 no-initial-motion
+failures, and one object drop. Independent verification set
+`result_d_stop=true` and prohibited all remaining full models. Phase 2C-B is
+therefore complete as `RESULT_D`; all later conditional stages in this plan
+remain unrun.

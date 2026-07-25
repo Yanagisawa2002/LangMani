@@ -7,7 +7,7 @@
 [![Pipeline](https://img.shields.io/badge/final_pipeline-validated-1f9d55)](docs/RESULTS_INDEX.md)
 [![Physical](https://img.shields.io/badge/physical_target-validated-1f9d55)](docs/RESULTS_INDEX.md)
 [![Quality](https://img.shields.io/badge/final_quality_gate-failed-c2410c)](docs/RESULTS_INDEX.md)
-[![SmolVLA](https://img.shields.io/badge/SmolVLA-not_started-64748b)](docs/RESULTS_INDEX.md)
+[![SmolVLA](https://img.shields.io/badge/SmolVLA-RESULT__D-c2410c)](docs/langmani_v2/phase_2c_b_result.md)
 
 ## LangMani 2.0
 
@@ -247,6 +247,26 @@ that interference is absent. `act_baselines_validated=true`, `act_policy_quality
 [`evaluation report`](docs/langmani_v2/phase_2c_a1_evaluation_report.md),
 [`multi-skill analysis`](docs/langmani_v2/phase_2c_a1_multiskill_analysis.md), and
 [`failure analysis`](docs/langmani_v2/phase_2c_a1_failure_analysis.md).
+
+Phase 2C-B is complete as
+[`Result D`](docs/langmani_v2/phase_2c_b_result.md). The official pretrained SmolVLA base loaded
+strictly with no reinitialized parameters; its bounded native-action path, 1.6-million-action
+audit, real GPU smoke, Pick/shared micro-overfits, and 20,000-step Pick-only training run all
+passed. The frozen selector chose the 20k checkpoint with `H_exec=1`, but its first 30-episode Pick
+gate finished 0/30 with zero invalid actions and zero simulator errors. The sole authorized repair
+changed only the demonstrated action-chunk execution-horizon defect from H=1 to H=8. The repeated
+gate again finished 0/30, with 16 failed grasps, 13 no-initial-motion failures, one object drop,
+zero invalid actions, and zero simulator errors.
+
+This is a generic SmolVLA competence failure, not an infrastructure or action-contract failure.
+The independent verifier set `result_d_stop=true`, so full Shared/Stack/Push training, final
+evaluation, language intervention, VLA-JEPA, LatentGuard, SARM, PPO, and new-data work were not
+started. See the
+[`training report`](docs/langmani_v2/phase_2c_b_training_report.md),
+[`evaluation report`](docs/langmani_v2/phase_2c_b_evaluation_report.md),
+[`language analysis`](docs/langmani_v2/phase_2c_b_language_analysis.md),
+[`multi-skill analysis`](docs/langmani_v2/phase_2c_b_multiskill_analysis.md), and
+[`failure analysis`](docs/langmani_v2/phase_2c_b_failure_analysis.md).
 
 The compact result package can be checked against the immutable external training/evaluation
 evidence without starting a simulator or loading a policy:

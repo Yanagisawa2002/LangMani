@@ -1,0 +1,49 @@
+{
+  "schema_version": "langmani-v2-phase2c-b-validation-and-repair-v0",
+  "initial_gate": {
+    "checkpoint_sha256": "sha256:3667a1250c1afefcda363dae34d374737ddf46af87a79397b0d2f5da49c77e80",
+    "execution_horizon": 1,
+    "episode_count": 30,
+    "success_count": 0,
+    "timeout_count": 30,
+    "failure_categories": {
+      "failed_grasp": 4,
+      "no_initial_motion": 26
+    },
+    "invalid_action_count": 0,
+    "simulator_error_count": 0,
+    "source_sha256": "sha256:9d13bc7569e71c3c1b78a834e84ea8f4c7895a06d230e73e79dc419e01ee9e00",
+    "source_fingerprint": "sha256:9c865eff92a44313eaf8cf848b0a21486e52669fc66de29634c8aaa1279a0571"
+  },
+  "bounded_repair": {
+    "repair_ordinal": 1,
+    "repair_kind": "action_chunk_execution_horizon",
+    "original_execution_horizon": 1,
+    "repaired_execution_horizon": 8,
+    "model_bytes_changed": false,
+    "training_started": false,
+    "source_sha256": "sha256:714c4809521863bc1957c612eb3b7053b5754d8e65dca0b92913673c03ecba7b",
+    "source_fingerprint": "sha256:377f1d8025e078c8461f6bb3bdcb46dd2a44f8bc7d997956586e578a162f07ea"
+  },
+  "repaired_gate": {
+    "checkpoint_sha256": "sha256:3667a1250c1afefcda363dae34d374737ddf46af87a79397b0d2f5da49c77e80",
+    "execution_horizon": 8,
+    "episode_count": 30,
+    "success_count": 0,
+    "timeout_count": 30,
+    "failure_categories": {
+      "failed_grasp": 16,
+      "no_initial_motion": 13,
+      "object_drop": 1
+    },
+    "invalid_action_count": 0,
+    "simulator_error_count": 0,
+    "mean_policy_query_count": 7.0,
+    "inference_latency_p50_ms": 123.8737580133602,
+    "inference_latency_p95_ms": 126.12592162913643,
+    "source_sha256": "sha256:4262862422a7cd23219d152ad85aa01a81cd6f602e509b6b9a557ab490e31fe2",
+    "source_fingerprint": "sha256:6f205ce9427e1a9c9ce18e89dad6239aaa1606c226d16f307c842fcd6c58e1c6"
+  },
+  "repair_consumed": true,
+  "second_repair_permitted": false
+}

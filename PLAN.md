@@ -180,18 +180,38 @@ that interference is absent. The phase closes with `act_baselines_validated=true
 not pass a quality gate. SmolVLA and VLA-JEPA remain untrained, with both training-authorized flags
 false. Any next phase requires a new explicit authorization and cannot reopen ACT.
 
+Phase 2C-B is complete as Result D. It pinned the official
+`lerobot/smolvla_base` revision and nested SmolVLM revision, strictly loaded all 450,046,176
+parameters with no reinitialization, and retained the official 32-dimensional internal padding
+while exposing the frozen Panda state/action contract. The serialized bounded-action latent
+transform passed a 1.6-million-action audit, and the real GPU smoke, Pick/shared micro-overfits,
+processor reload, and the full 20,000-step Pick-only training run completed successfully.
+
+Validation-only diagnostics retained the 20k and 10k checkpoints. The frozen two-checkpoint by
+three-horizon screen selected 20k/H=1, whose 30-episode Pick gate reached 0/30 with zero invalid
+actions and zero simulator errors. A demonstrated execution-horizon defect permitted the one
+bounded repair: the same 20k checkpoint changed only from H=1 to H=8. The repaired gate again
+reached 0/30, with 16 failed grasps, 13 no-initial-motion failures, one object drop, zero invalid
+actions, and zero simulator errors. The independent verifier set `result_d_stop=true`,
+`bounded_repair_permitted=false`, and `other_full_models_authorized=false`. Shared, Stack, and
+Push full models, final/test schedules, language intervention, VLA-JEPA, LatentGuard, SARM, PPO,
+and new-data work were not run. This result closes Phase 2C-B without a second repair or automatic
+next-model authorization.
+
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected
 FactorFiLM after development; `m42_final_v0` remains sealed and unaccessed. The shared-ACT
-architecture search is therefore closed. M5A is the latest completed milestone: it adds
+architecture search is therefore closed. Within the v1 sequence, M5A is the latest completed
+milestone: it adds
 modular language-to-TaskSpec routing over the six frozen PerTask ACT controls. Its separately
 authorized sealed final has completed with valid physical evidence but failed its conjunctive
 language/control quality gate. M5B now implements the optional canonical-JSON LatentGuard
 initial-state proposal bridge. Its implementation and CPU fixture gates are complete, but the real
 single-seed probe is blocked because the current execution server lacks the accepted controller
-registry, runtime-selection record, ACT checkpoint, and processor artifacts. SmolVLA and bounded
-M6B execution have not started and remain unauthorized.
+registry, runtime-selection record, ACT checkpoint, and processor artifacts. Bounded M6B execution
+has not started and remains unauthorized. The separate v2 Phase 2C-B SmolVLA result is the Result-D
+closure recorded above and does not change the v1 M5/M6 evidence.
 
 ## M0 — Reproducible environment foundation (complete)
 

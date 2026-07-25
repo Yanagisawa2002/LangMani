@@ -1,0 +1,28 @@
+{
+  "schema_version": "langmani-v2-phase2c-b-remote-execution-audit-v0",
+  "host": "autodl-container-1qjylxm03k-eda0d680",
+  "repository": "/root/autodl-tmp/langmani-phase2c-b",
+  "evidence_root": "/root/autodl-tmp/langmani-phase2c-b-evidence",
+  "training_git_commit": "73268338b73b4ae2edc32397ed733fb1edddf598",
+  "training_run_root": "/root/autodl-tmp/langmani-phase2c-b-evidence/training/full-pick-7326833-authoritative",
+  "training_exit_code": 0,
+  "evaluation_git_commit": "4e6240bafbce65cccc0ecb1648e88b214cdd45bd",
+  "repair_git_commit": "c07e735e77fd2ee299eb97bc98b2b569ea32f945",
+  "initial_gate_exit_code": 0,
+  "repair_gate_exit_code": 0,
+  "independent_verifier_exit_code": 2,
+  "independent_verifier_exit_interpretation": "Expected quality-gate rejection, not an infrastructure failure",
+  "vulkan_icd": "/etc/vulkan/icd.d/my_nvidia_icd.json",
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "full_training_jobs_started": [
+    "pick_smolvla"
+  ],
+  "full_training_jobs_not_started": [
+    "shared_language_smolvla",
+    "stack_smolvla",
+    "push_smolvla"
+  ],
+  "final_test_started": false,
+  "language_intervention_started": false,
+  "server_shutdown_requested": false
+}

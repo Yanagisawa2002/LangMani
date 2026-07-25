@@ -1,0 +1,65 @@
+{
+  "schema_version": "langmani-v2-phase2c-b-input-and-base-audit-v0",
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "dataset": {
+    "episode_count": 2998,
+    "frame_count": 254200,
+    "task_episodes": {
+      "PickCube-v1": 1000,
+      "PushCube-v1": 999,
+      "StackCube-v1": 999
+    },
+    "task_frames": {
+      "PickCube-v1": 77976,
+      "PushCube-v1": 68909,
+      "StackCube-v1": 107315
+    },
+    "input_verification": {
+      "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/preflight-7326833/input_verification.json",
+      "sha256": "sha256:317a2882d2f5bfd2b1a17c9d326bbf6916fa18f13214e3f74b2d089bc95e2842",
+      "fingerprint": "sha256:d49a25878e1de06216d2b2ce359d8e33cb1cb2723c0bf63cd4d31f755a271259c",
+      "passed": true
+    }
+  },
+  "base_model": {
+    "model": "lerobot/smolvla_base",
+    "revision": "c83c3163b8ca9b7e67c509fffd9121e66cb96205",
+    "vlm": "HuggingFaceTB/SmolVLM2-500M-Video-Instruct",
+    "vlm_revision": "7b375e1b73b11138ff12fe22c8f2822d8fe03467",
+    "loaded_parameter_count": 450046176,
+    "trainable_parameter_count": 99880992,
+    "frozen_parameter_count": 350165184,
+    "loaded_ratio": 1.0,
+    "reinitialized_parameters": [],
+    "manifest": {
+      "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/base-audit-f3aaa88/base_model_manifest.json",
+      "sha256": "sha256:fd3a1706f1684002a6b95a23c820b72647cea48ce2f1dbb5964f325d72a52bab",
+      "fingerprint": "sha256:398b674ad417f98d2aa973838f2c102e56ca3c7b3d445d4fc9e7752dd0bd4cc6a"
+    },
+    "weight_loading_audit": {
+      "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/base-audit-f3aaa88/pretrained_weight_loading_audit.json",
+      "sha256": "sha256:bf20124828b60ee444b0c57444ddb1a0dfbb9233da873fa44637124eb53a4137",
+      "fingerprint": "sha256:0cc54f4a6d7244a4d5c79000672b81d58d5fb9ef0f43842bd6b3ec4ff9ebf69b",
+      "passed": true
+    }
+  },
+  "embodiment_adaptation": {
+    "camera_count": 1,
+    "public_state_dimensions": 9,
+    "public_action_dimensions": 8,
+    "official_internal_padding_dimensions": 32,
+    "task_id_model_input": false,
+    "manifest": {
+      "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/base-audit-f3aaa88/embodiment_adaptation_manifest.json",
+      "sha256": "sha256:fd7b7bdfc40b4226dcfd78c61e4f2a24ceaac4a284a1da69fce0ba108108ecad",
+      "fingerprint": "sha256:2f03ec8d5b90e4cf3b80236f49543c163ae203cf90aff275f829859ff60a4e96d",
+      "passed": true
+    }
+  },
+  "base_audit_completion": {
+    "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/base-audit-f3aaa88/base_audit_complete.json",
+    "sha256": "sha256:1dcb07f52a2ed2edc8aa03e80891aa36aee205f4259d89bf848f671904fb07f2",
+    "fingerprint": "sha256:0c11748fa2af200baf8270c16cfaa973dc20109adc3bec865d5250e851fa0bce",
+    "passed": true
+  }
+}

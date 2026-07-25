@@ -3718,3 +3718,26 @@ The repair must be recorded by a fingerprinted
 initial 0/30 summary, and pre-locked H=8 screen. Independent verification must consume both the
 initial and repaired summaries. After this repair, no second repair is permitted. A repaired 0/30
 must set the Result-D stop and keep full shared, Stack, Push, and VLA-JEPA training unauthorized.
+
+## D-143 - Close Phase 2C-B as Result D after the sole bounded repair
+
+The sole Phase 2C-B repair changed only the selected Pick policy's execution horizon from
+`H_exec=1` to the pre-locked `H_exec=8`; it did not change checkpoint bytes, construct an
+optimizer, retrain, alter the dataset or splits, change resets/tasks/success, or modify the
+observation, language, or native physical-action contracts.
+
+The repaired 20,000-step Pick checkpoint completed all 30 validation episodes with zero
+successes, 30 timeouts, 16 `failed_grasp`, 13 `no_initial_motion`, and one `object_drop`. It
+executed 50 environment steps per episode with seven policy queries per episode, zero invalid
+actions, and zero simulator errors. The behavior change confirms that the repair exercised its
+intended execution-horizon boundary, but it did not establish task competence.
+
+Independent verification is bound to fingerprint
+`sha256:9bc6bc202b118adb015a502b1111107b9c8c74e8e5eea92320a71a8ee98a33b21`
+and sets `result_d_stop=true`, `bounded_repair_permitted=false`,
+`other_full_models_authorized=false`, `vla_jepa_training_authorized=false`, and
+`latentguard_authorized=false`. Phase 2C-B therefore closes as Result D: generic SmolVLA
+competence failure, not infrastructure failure. Full Shared, Stack, and Push training, final/test
+evaluation, language intervention, held-out paraphrases, visual shift, multi-skill transfer,
+VLA-JEPA, LatentGuard, SARM, PPO, and new-data work remain unrun and unauthorized. No second
+repair or automatic next-model phase is permitted.

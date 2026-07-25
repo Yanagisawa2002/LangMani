@@ -1,0 +1,20 @@
+{
+  "schema_version": "langmani-v2-phase2c-b-execution-horizon-and-policy-selection-v0",
+  "selection_subset_episode_count": 6,
+  "grid": [
+    {"step": 10000, "horizon": 1, "success": 0, "timeout": 6, "no_initial_motion": 1, "failed_grasp": 5, "smoothness_l2": 0.2201362504110688, "queries_per_episode": 50.0},
+    {"step": 10000, "horizon": 4, "success": 0, "timeout": 6, "no_initial_motion": 5, "failed_grasp": 1, "smoothness_l2": 0.21731366270147578, "queries_per_episode": 13.0},
+    {"step": 10000, "horizon": 8, "success": 0, "timeout": 6, "no_initial_motion": 1, "failed_grasp": 5, "smoothness_l2": 0.18248203319915682, "queries_per_episode": 7.0},
+    {"step": 20000, "horizon": 1, "success": 0, "timeout": 6, "no_initial_motion": 6, "failed_grasp": 0, "smoothness_l2": 0.0829710821138216, "queries_per_episode": 50.0},
+    {"step": 20000, "horizon": 4, "success": 0, "timeout": 6, "no_initial_motion": 6, "failed_grasp": 0, "smoothness_l2": 0.11193439159930525, "queries_per_episode": 13.0},
+    {"step": 20000, "horizon": 8, "success": 0, "timeout": 6, "no_initial_motion": 1, "failed_grasp": 5, "smoothness_l2": 0.1189612073126466, "queries_per_episode": 7.0}
+  ],
+  "initial_selected_policy": {
+    "checkpoint_sha256": "sha256:3667a1250c1afefcda363dae34d374737ddf46af87a79397b0d2f5da49c77e80",
+    "execution_horizon": 1,
+    "selection_reason": "all success and timeout counts tied; H=1 had the lowest action smoothness metric",
+    "source_sha256": "sha256:3c29ce8a1d8e6c0e709ad1f1dbb36875289a8cfa55f1471ed9543ab6bc71e922",
+    "source_fingerprint": "sha256:7303fe20c5baebd32633897cbb287cc13611392320287b8fa3299783d8b43b4d"
+  },
+  "final_test_opened": false
+}

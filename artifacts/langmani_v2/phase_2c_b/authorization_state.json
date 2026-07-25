@@ -1,0 +1,18 @@
+{
+  "schema_version": "langmani-v2-phase2c-b-authorization-state-v0",
+  "result_d_stop": true,
+  "smolvla_baselines_validated": false,
+  "other_full_models_authorized": false,
+  "shared_full_training_authorized": false,
+  "stack_full_training_authorized": false,
+  "push_full_training_authorized": false,
+  "second_bounded_repair_authorized": false,
+  "final_evaluation_authorized": false,
+  "vla_jepa_phase_eligible": false,
+  "vla_jepa_training_authorized": false,
+  "latentguard_authorized": false,
+  "sarm_authorized": false,
+  "ppo_authorized": false,
+  "new_data_phase_authorized": false,
+  "server_shutdown_requested": false
+}

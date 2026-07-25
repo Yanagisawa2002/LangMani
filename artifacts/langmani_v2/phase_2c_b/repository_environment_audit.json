@@ -1,0 +1,30 @@
+{
+  "schema_version": "langmani-v2-phase2c-b-repository-environment-audit-v0",
+  "branch": "codex/langmani-v2-phase2c-b-smolvla",
+  "source_baseline_commit": "4c38190a36ec41349ef39774ee95dc666537eed6",
+  "training_git_commit": "73268338b73b4ae2edc32397ed733fb1edddf598",
+  "initial_evaluation_git_commit": "4e6240bafbce65cccc0ecb1648e88b214cdd45bd",
+  "repair_evaluation_git_commit": "c07e735e77fd2ee299eb97bc98b2b569ea32f945",
+  "training_repository_clean": true,
+  "evaluation_repository_clean": true,
+  "remote_origin": "git@github.com:Yanagisawa2002/LangMani.git",
+  "remote_host": "autodl-container-1qjylxm03k-eda0d680",
+  "remote_repository": "/root/autodl-tmp/langmani-phase2c-b",
+  "runtime": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu128",
+    "cuda": "12.8",
+    "cudnn": 91900,
+    "transformers": "5.4.0",
+    "tokenizers": "0.22.2",
+    "safetensors": "0.8.0",
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "gpu_memory_bytes": 34351349760,
+    "nvidia_driver": "595.71.05",
+    "vulkan": "1.4.329",
+    "vulkan_icd": "/etc/vulkan/icd.d/my_nvidia_icd.json"
+  },
+  "network_acceleration_enabled_before_remote_downloads": true,
+  "aliyun_mirror_default": true,
+  "server_shutdown_requested": false
+}

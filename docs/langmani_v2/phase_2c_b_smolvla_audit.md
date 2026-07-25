@@ -131,3 +131,60 @@ diagnosis.
 
 No VLA-JEPA, LatentGuard, SARM, PPO, Diffusion Policy, dataset writer,
 replay, ACT training, or additional model family is authorized or started.
+
+## Authoritative Pick training and checkpoint selection
+
+Only the Pick-specific model entered full training. The clean authoritative
+run completed all 20,000 optimizer steps in 10,031.31 seconds. Fixed-batch
+loss decreased from 9.4365 to 0.01206, the final checkpoint and processor
+reloaded strictly, and no generated action required clipping or projection.
+The retained checkpoint tree identities are:
+
+- step 5,000:
+  `sha256:8c4f4b3aaa4f6438240da5627173577b51eea74a188f266ed89dc89463a1dcbb`;
+- step 10,000:
+  `sha256:12866771186063d82c324a0bf5952e0e871d5e523d5a734b66588ed8fc6dae79`;
+- step 20,000:
+  `sha256:3667a1250c1afefcda363dae34d374737ddf46af87a79397b0d2f5da49c77e80`.
+
+All three checkpoints passed the same 128-frame validation-only offline
+diagnostic. The frozen ranking retained 20k and 10k. All six cells in the
+two-checkpoint by H=1/4/8 closed-loop screen reached 0/6, so the unchanged
+tie-break selected 20k/H=1 on the lowest action-smoothness metric. No final
+identity was opened.
+
+## Pick gate, bounded repair, and independent verification
+
+The initial 20k/H=1 Pick validation gate completed 30 episodes with 0
+successes, 26 `no_initial_motion` failures, four `failed_grasp` failures,
+zero invalid actions, and zero simulator errors. The independent verifier
+accepted the execution evidence and permitted one bounded repair.
+
+The frozen horizon screen demonstrated the eligible defect: H=1 produced six
+no-motion failures on the same six identities, while H=8 produced five
+contact-bearing failed-grasp attempts and one no-motion failure. The sole
+repair therefore changed only `H_exec` from 1 to 8. Model bytes, training,
+data, splits, resets, observations, language, native action bounds, success,
+and final identities remained unchanged.
+
+The repaired 20k/H=8 gate again completed 0/30, with 16 failed grasps, 13
+no-initial-motion failures, one object drop, zero invalid actions, and zero
+simulator errors. Independent verification produced fingerprint
+`sha256:9bc6bc202b118adb015a502b1111107b9c8c74e8e5eea92320a71a8ee98a33b21`
+and set `result_d_stop=true`, `bounded_repair_permitted=false`, and
+`other_full_models_authorized=false`.
+
+## Final classification
+
+Phase 2C-B is `RESULT_D`: generic SmolVLA competence failure. The pipeline,
+official-base reconstruction, bounded action contract, optimizer path,
+checkpoint reload, and simulator execution were valid, but the Pick policy
+did not achieve a single closed-loop success before or after the sole
+repair. This is not an infrastructure result.
+
+Shared, Stack, and Push full training, final/test evaluation, language
+intervention, held-out paraphrase evaluation, visual-shift evaluation,
+multi-skill transfer measurement, VLA-JEPA, LatentGuard, SARM, PPO, and new
+data were not run. Their metrics are unavailable, not zero. The compact
+closure is indexed by
+`artifacts/langmani_v2/phase_2c_b/artifact_manifest.json`.
