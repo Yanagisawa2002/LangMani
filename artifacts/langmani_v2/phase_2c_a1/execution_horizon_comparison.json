@@ -1,0 +1,45 @@
+{
+  "candidates": [
+    {
+      "episode_count": 5,
+      "execution_horizon": 1,
+      "invalid_action_count": 0,
+      "mean_action_smoothness_l2": 0.059565324761977644,
+      "mean_p95_inference_latency_ms": 5.942776892334222,
+      "mean_policy_query_count": 50.0,
+      "success_count": 0,
+      "success_rate": 0.0,
+      "timeout_count": 5
+    },
+    {
+      "episode_count": 5,
+      "execution_horizon": 4,
+      "invalid_action_count": 0,
+      "mean_action_smoothness_l2": 0.057090190943140814,
+      "mean_p95_inference_latency_ms": 6.206751242280006,
+      "mean_policy_query_count": 13.0,
+      "success_count": 0,
+      "success_rate": 0.0,
+      "timeout_count": 5
+    },
+    {
+      "episode_count": 5,
+      "execution_horizon": 8,
+      "invalid_action_count": 0,
+      "mean_action_smoothness_l2": 0.0624185388434378,
+      "mean_p95_inference_latency_ms": 6.6946864128112775,
+      "mean_policy_query_count": 7.0,
+      "success_count": 0,
+      "success_rate": 0.0,
+      "timeout_count": 5
+    }
+  ],
+  "final_test_outcomes_available": false,
+  "fingerprint": "sha256:4f833e1b78ea64bfdf4799a166946ccbe26a958b6252e6369e0e2746775aa884",
+  "passed": true,
+  "schema_version": "langmani-v2-phase2c-a-horizon-selection-v0",
+  "selected_execution_horizon": 4,
+  "selection_rule": "maximize aggregate success; then minimize timeout, smoothness, policy queries, p95 latency, and execution horizon; any invalid action is ineligible",
+  "selection_scope": "one_common_horizon_for_all_primary_act_models",
+  "selection_split": "validation"
+}

@@ -1,0 +1,82 @@
+{
+  "groups": {
+    "per_task": {
+      "test_unseen_reset": {
+        "PickCube-v1": {
+          "failed_grasp": 6,
+          "no_initial_motion": 24
+        },
+        "PushCube-v1": {
+          "no_initial_motion": 30
+        },
+        "StackCube-v1": {
+          "failed_grasp": 2,
+          "no_initial_motion": 28
+        }
+      },
+      "test_visual_shift": {
+        "PickCube-v1": {
+          "no_initial_motion": 29,
+          "object_drop": 1
+        },
+        "PushCube-v1": {
+          "no_initial_motion": 30
+        },
+        "StackCube-v1": {
+          "no_initial_motion": 30
+        }
+      },
+      "validation": {
+        "PickCube-v1": {
+          "failed_grasp": 14,
+          "no_initial_motion": 16
+        },
+        "PushCube-v1": {
+          "no_initial_motion": 30
+        },
+        "StackCube-v1": {
+          "failed_grasp": 1,
+          "no_initial_motion": 29
+        }
+      }
+    },
+    "shared": {
+      "test_unseen_reset": {
+        "PickCube-v1": {
+          "no_initial_motion": 30
+        },
+        "PushCube-v1": {
+          "insufficient_push": 2,
+          "no_initial_motion": 28
+        },
+        "StackCube-v1": {
+          "no_initial_motion": 30
+        }
+      },
+      "test_visual_shift": {
+        "PickCube-v1": {
+          "no_initial_motion": 30
+        },
+        "PushCube-v1": {
+          "no_initial_motion": 30
+        },
+        "StackCube-v1": {
+          "no_initial_motion": 30
+        }
+      },
+      "validation": {
+        "PickCube-v1": {
+          "no_initial_motion": 30
+        },
+        "PushCube-v1": {
+          "no_initial_motion": 30
+        },
+        "StackCube-v1": {
+          "no_initial_motion": 30
+        }
+      }
+    }
+  },
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "schema_version": "langmani-v2-phase2c-a1-failure-taxonomy-v0"
+}

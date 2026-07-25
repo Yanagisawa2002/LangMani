@@ -1,0 +1,311 @@
+{
+  "models": {
+    "pick_act": {
+      "effective_samples_by_task": {
+        "PickCube-v1": 1092160,
+        "PushCube-v1": 0,
+        "StackCube-v1": 0
+      },
+      "examples_processed": 1092160,
+      "final_step": 2680,
+      "first_metric": {
+        "action_loss": 0.9659586548805237,
+        "batch_samples_by_task": {
+          "PickCube-v1": 408,
+          "PushCube-v1": 0,
+          "StackCube-v1": 0
+        },
+        "checkpoint_path": null,
+        "dataloader_time_s": 7.060111820697784,
+        "examples_processed": 408,
+        "gpu_allocated_bytes": 1179009024,
+        "gpu_reserved_bytes": 17093885952,
+        "gradient_norm": 1289.5609130859375,
+        "kl_loss": 6.722579479217529,
+        "learning_rate": 1e-05,
+        "padding_timestep_fraction": 0.10661764442920685,
+        "samples_by_task": {
+          "PickCube-v1": 408,
+          "PushCube-v1": 0,
+          "StackCube-v1": 0
+        },
+        "schema_version": "langmani-v2-phase2c-a-training-metric-v0",
+        "step": 1,
+        "step_time_s": 1.0013705175369978,
+        "throughput_examples_per_s": 407.4415941499152,
+        "total_loss": 68.1917495727539,
+        "wall_elapsed_s": 8.062204224988818
+      },
+      "last_metric": {
+        "action_loss": 0.059444084763526917,
+        "batch_samples_by_task": {
+          "PickCube-v1": 344,
+          "PushCube-v1": 0,
+          "StackCube-v1": 0
+        },
+        "checkpoint_path": "checkpoints/step-00002680-faebd0043e8d",
+        "dataloader_time_s": 0.5811588875949383,
+        "examples_processed": 1092160,
+        "gpu_allocated_bytes": 1126074880,
+        "gpu_reserved_bytes": 18834522112,
+        "gradient_norm": 6.7246599197387695,
+        "kl_loss": 0.005356866866350174,
+        "learning_rate": 1e-05,
+        "padding_timestep_fraction": 0.09447674453258514,
+        "samples_by_task": {
+          "PickCube-v1": 1092160,
+          "PushCube-v1": 0,
+          "StackCube-v1": 0
+        },
+        "schema_version": "langmani-v2-phase2c-a-training-metric-v0",
+        "step": 2680,
+        "step_time_s": 0.16544249095022678,
+        "throughput_examples_per_s": 2079.27236844791,
+        "total_loss": 0.11301275342702866,
+        "wall_elapsed_s": 2422.7204266209155
+      },
+      "mean_examples_per_second": 2161.510957134921,
+      "metric_row_count": 2680,
+      "metrics_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/training/59ffd19955ee79d2f85508a354fb7c5148d95fccf17e9af5df27d6277b94a877/metrics.jsonl",
+        "sha256": "bbf258028211ccdce884e8957e1a22e7d18db049b97a130e70ecb95e5c029f00",
+        "size_bytes": 1988615
+      },
+      "peak_gpu_allocated_bytes": 1185104384,
+      "peak_gpu_reserved_bytes": 18834522112,
+      "run_fingerprint": "sha256:59ffd19955ee79d2f85508a354fb7c5148d95fccf17e9af5df27d6277b94a877",
+      "training_duration_s": 2422.7204266209155
+    },
+    "push_act": {
+      "effective_samples_by_task": {
+        "PickCube-v1": 0,
+        "PushCube-v1": 964380,
+        "StackCube-v1": 0
+      },
+      "examples_processed": 964380,
+      "final_step": 2380,
+      "first_metric": {
+        "action_loss": 0.9277817606925964,
+        "batch_samples_by_task": {
+          "PickCube-v1": 0,
+          "PushCube-v1": 408,
+          "StackCube-v1": 0
+        },
+        "checkpoint_path": null,
+        "dataloader_time_s": 6.936624012887478,
+        "examples_processed": 408,
+        "gpu_allocated_bytes": 1179009024,
+        "gpu_reserved_bytes": 17093885952,
+        "gradient_norm": 1197.5753173828125,
+        "kl_loss": 6.943199157714844,
+        "learning_rate": 1e-05,
+        "padding_timestep_fraction": 0.11764705926179886,
+        "samples_by_task": {
+          "PickCube-v1": 0,
+          "PushCube-v1": 408,
+          "StackCube-v1": 0
+        },
+        "schema_version": "langmani-v2-phase2c-a-training-metric-v0",
+        "step": 1,
+        "step_time_s": 1.0174454022198915,
+        "throughput_examples_per_s": 401.00431837405125,
+        "total_loss": 70.35977172851562,
+        "wall_elapsed_s": 7.955002726987004
+      },
+      "last_metric": {
+        "action_loss": 0.04813483729958534,
+        "batch_samples_by_task": {
+          "PickCube-v1": 0,
+          "PushCube-v1": 75,
+          "StackCube-v1": 0
+        },
+        "checkpoint_path": "checkpoints/step-00002380-7096f41a3a2c",
+        "dataloader_time_s": 0.12004896998405457,
+        "examples_processed": 964380,
+        "gpu_allocated_bytes": 917446656,
+        "gpu_reserved_bytes": 18840813568,
+        "gradient_norm": 11.544817924499512,
+        "kl_loss": 0.005403055809438229,
+        "learning_rate": 1e-05,
+        "padding_timestep_fraction": 0.08583333343267441,
+        "samples_by_task": {
+          "PickCube-v1": 0,
+          "PushCube-v1": 964380,
+          "StackCube-v1": 0
+        },
+        "schema_version": "langmani-v2-phase2c-a-training-metric-v0",
+        "step": 2380,
+        "step_time_s": 0.056621359661221504,
+        "throughput_examples_per_s": 1324.588467121632,
+        "total_loss": 0.10216540098190308,
+        "wall_elapsed_s": 2153.5999074410647
+      },
+      "mean_examples_per_second": 2176.438262549802,
+      "metric_row_count": 2380,
+      "metrics_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/training/6583d27a51aa30660ee4402204290e99ee0220c672317692fd80b1a4511feef4/metrics.jsonl",
+        "sha256": "fcffe796968171d842f943a7deefd89d1c7c81ef36203245e609f77649b40d19",
+        "size_bytes": 1765546
+      },
+      "peak_gpu_allocated_bytes": 1184850944,
+      "peak_gpu_reserved_bytes": 18840813568,
+      "run_fingerprint": "sha256:6583d27a51aa30660ee4402204290e99ee0220c672317692fd80b1a4511feef4",
+      "training_duration_s": 2153.5999074410647
+    },
+    "shared_task_id_act": {
+      "effective_samples_by_task": {
+        "PickCube-v1": 1184832,
+        "PushCube-v1": 1184832,
+        "StackCube-v1": 1184832
+      },
+      "examples_processed": 3554496,
+      "final_step": 8712,
+      "first_metric": {
+        "action_loss": 0.9477444291114807,
+        "batch_samples_by_task": {
+          "PickCube-v1": 136,
+          "PushCube-v1": 136,
+          "StackCube-v1": 136
+        },
+        "checkpoint_path": null,
+        "dataloader_time_s": 7.199385782703757,
+        "examples_processed": 408,
+        "gpu_allocated_bytes": 1181388800,
+        "gpu_reserved_bytes": 17142120448,
+        "gradient_norm": 1298.1138916015625,
+        "kl_loss": 7.241111755371094,
+        "learning_rate": 1e-05,
+        "padding_timestep_fraction": 0.10814950615167618,
+        "samples_by_task": {
+          "PickCube-v1": 136,
+          "PushCube-v1": 136,
+          "StackCube-v1": 136
+        },
+        "schema_version": "langmani-v2-phase2c-a-training-metric-v0",
+        "step": 1,
+        "step_time_s": 1.0212678518146276,
+        "throughput_examples_per_s": 399.5034204543402,
+        "total_loss": 73.3588638305664,
+        "wall_elapsed_s": 8.221712544560432
+      },
+      "last_metric": {
+        "action_loss": 0.11060788482427597,
+        "batch_samples_by_task": {
+          "PickCube-v1": 136,
+          "PushCube-v1": 136,
+          "StackCube-v1": 136
+        },
+        "checkpoint_path": "checkpoints/step-00008712-0a44b1b2f677",
+        "dataloader_time_s": 0.7513654623180628,
+        "examples_processed": 3554496,
+        "gpu_allocated_bytes": 1174627840,
+        "gpu_reserved_bytes": 18882756608,
+        "gradient_norm": 4.899730682373047,
+        "kl_loss": 0.004783618729561567,
+        "learning_rate": 1e-05,
+        "padding_timestep_fraction": 0.10049019753932953,
+        "samples_by_task": {
+          "PickCube-v1": 1184832,
+          "PushCube-v1": 1184832,
+          "StackCube-v1": 1184832
+        },
+        "schema_version": "langmani-v2-phase2c-a-training-metric-v0",
+        "step": 8712,
+        "step_time_s": 0.18713754042983055,
+        "throughput_examples_per_s": 2180.2146114717398,
+        "total_loss": 0.15844407677650452,
+        "wall_elapsed_s": 8322.653172744438
+      },
+      "mean_examples_per_second": 2144.319882771758,
+      "metric_row_count": 8712,
+      "metrics_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/training/2185fd2725f40de1e28ce88656219af5fdbf9a25988b8992f2876f9b6e9e68f0/metrics.jsonl",
+        "sha256": "c9582c0836fa8cca7dc484e18128438d4dcecdbd0794fbe270d2640e41f7d687",
+        "size_bytes": 6598802
+      },
+      "peak_gpu_allocated_bytes": 1182790144,
+      "peak_gpu_reserved_bytes": 18882756608,
+      "run_fingerprint": "sha256:2185fd2725f40de1e28ce88656219af5fdbf9a25988b8992f2876f9b6e9e68f0",
+      "training_duration_s": 8322.653172744438
+    },
+    "stack_act": {
+      "effective_samples_by_task": {
+        "PickCube-v1": 0,
+        "PushCube-v1": 0,
+        "StackCube-v1": 1497820
+      },
+      "examples_processed": 1497820,
+      "final_step": 3680,
+      "first_metric": {
+        "action_loss": 1.4448881149291992,
+        "batch_samples_by_task": {
+          "PickCube-v1": 0,
+          "PushCube-v1": 0,
+          "StackCube-v1": 408
+        },
+        "checkpoint_path": null,
+        "dataloader_time_s": 6.96907976642251,
+        "examples_processed": 408,
+        "gpu_allocated_bytes": 1179009024,
+        "gpu_reserved_bytes": 17093885952,
+        "gradient_norm": 1385.4051513671875,
+        "kl_loss": 8.109926223754883,
+        "learning_rate": 1e-05,
+        "padding_timestep_fraction": 0.06985294073820114,
+        "samples_by_task": {
+          "PickCube-v1": 0,
+          "PushCube-v1": 0,
+          "StackCube-v1": 408
+        },
+        "schema_version": "langmani-v2-phase2c-a-training-metric-v0",
+        "step": 1,
+        "step_time_s": 0.9884706735610962,
+        "throughput_examples_per_s": 412.75883130667506,
+        "total_loss": 82.54414367675781,
+        "wall_elapsed_s": 7.958389304578304
+      },
+      "last_metric": {
+        "action_loss": 0.06508281826972961,
+        "batch_samples_by_task": {
+          "PickCube-v1": 0,
+          "PushCube-v1": 0,
+          "StackCube-v1": 227
+        },
+        "checkpoint_path": "checkpoints/step-00003680-8391ba9784bc",
+        "dataloader_time_s": 0.4196458887308836,
+        "examples_processed": 1497820,
+        "gpu_allocated_bytes": 1034570752,
+        "gpu_reserved_bytes": 18836619264,
+        "gradient_norm": 5.390111446380615,
+        "kl_loss": 0.0040615638718008995,
+        "learning_rate": 1e-05,
+        "padding_timestep_fraction": 0.06360132247209549,
+        "samples_by_task": {
+          "PickCube-v1": 0,
+          "PushCube-v1": 0,
+          "StackCube-v1": 1497820
+        },
+        "schema_version": "langmani-v2-phase2c-a-training-metric-v0",
+        "step": 3680,
+        "step_time_s": 0.1131475679576397,
+        "throughput_examples_per_s": 2006.229599959095,
+        "total_loss": 0.10569845885038376,
+        "wall_elapsed_s": 3519.7227634489536
+      },
+      "mean_examples_per_second": 2155.623184875166,
+      "metric_row_count": 3680,
+      "metrics_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/training/25789faefc4a9940bf7c4ae3ebcae0a7814e3e85f889e27d36fcc04e8ab4ce0e/metrics.jsonl",
+        "sha256": "d7b970b294bdc311df00ea681d0da12d5a5abe98d08eed6225ae9bae335e0e6b",
+        "size_bytes": 2733453
+      },
+      "peak_gpu_allocated_bytes": 1184732672,
+      "peak_gpu_reserved_bytes": 18836619264,
+      "run_fingerprint": "sha256:25789faefc4a9940bf7c4ae3ebcae0a7814e3e85f889e27d36fcc04e8ab4ce0e",
+      "training_duration_s": 3519.7227634489536
+    }
+  },
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "raw_metrics_committed": false,
+  "schema_version": "langmani-v2-phase2c-a1-training-metrics-registry-v0"
+}

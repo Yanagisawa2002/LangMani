@@ -1,0 +1,149 @@
+{
+  "act_phase_closed": true,
+  "checkpoint_verification": [
+    {
+      "all_artifacts_rehashed": true,
+      "artifact_bytes": 618916999,
+      "artifact_count": 10,
+      "checkpoint_fingerprint": "sha256:819259d5ff2d60f055706360ae327e5812a679e80d5abeb19ee38a7946fccf8e",
+      "model_kind": "pick_act"
+    },
+    {
+      "all_artifacts_rehashed": true,
+      "artifact_bytes": 618916999,
+      "artifact_count": 10,
+      "checkpoint_fingerprint": "sha256:4bbfaab5355e48c6164bda8d779b5f7f2deb35b7ff5c49ab7505f9d429cf164d",
+      "model_kind": "pick_act"
+    },
+    {
+      "all_artifacts_rehashed": true,
+      "artifact_bytes": 618916999,
+      "artifact_count": 10,
+      "checkpoint_fingerprint": "sha256:f6f47328ec67c6847f49cf856790d96dbe6d43ff4e4df326389e26c67b5b7e53",
+      "model_kind": "pick_act"
+    },
+    {
+      "all_artifacts_rehashed": true,
+      "artifact_bytes": 618916999,
+      "artifact_count": 10,
+      "checkpoint_fingerprint": "sha256:faebd0043e8dc948f283ac86f893b6f6cd520e80339705e1e868dceacf4db653",
+      "model_kind": "pick_act"
+    },
+    {
+      "all_artifacts_rehashed": true,
+      "artifact_bytes": 618916999,
+      "artifact_count": 10,
+      "checkpoint_fingerprint": "sha256:96b64486d9833c513b1eb2dc9d9a348863939bbc15337a14c75b6759dfe8d3c5",
+      "model_kind": "stack_act"
+    },
+    {
+      "all_artifacts_rehashed": true,
+      "artifact_bytes": 618916999,
+      "artifact_count": 10,
+      "checkpoint_fingerprint": "sha256:7a663352f0546f04b9c4023e7d12e7b2f6a491552935a9cb5634bbf0033fa86e",
+      "model_kind": "stack_act"
+    },
+    {
+      "all_artifacts_rehashed": true,
+      "artifact_bytes": 618916999,
+      "artifact_count": 10,
+      "checkpoint_fingerprint": "sha256:136b566f0ffa80ba6e1cc4bfb2958a8fccce3a665c335e972f5955bc58c4e4f2",
+      "model_kind": "stack_act"
+    },
+    {
+      "all_artifacts_rehashed": true,
+      "artifact_bytes": 618916999,
+      "artifact_count": 10,
+      "checkpoint_fingerprint": "sha256:8391ba9784bc3ec3ed630d6c51bc78e0172eeef7b27bd585df0b3036178c312e",
+      "model_kind": "stack_act"
+    },
+    {
+      "all_artifacts_rehashed": true,
+      "artifact_bytes": 618916999,
+      "artifact_count": 10,
+      "checkpoint_fingerprint": "sha256:6dafe0898ecf29c806b0f5e1322189e6684f4521fe84b916ecf8c0e869fdca7f",
+      "model_kind": "push_act"
+    },
+    {
+      "all_artifacts_rehashed": true,
+      "artifact_bytes": 618916999,
+      "artifact_count": 10,
+      "checkpoint_fingerprint": "sha256:b82fb0cab8b14bfd424218d317d937f2e8b9642296b047dd1b9e3ef660c6ef4b",
+      "model_kind": "push_act"
+    },
+    {
+      "all_artifacts_rehashed": true,
+      "artifact_bytes": 618916999,
+      "artifact_count": 10,
+      "checkpoint_fingerprint": "sha256:e9c3ca40d27f1d2b5b01c52f01045aeaeec7c397b84b1ed54954a904e77304bc",
+      "model_kind": "push_act"
+    },
+    {
+      "all_artifacts_rehashed": true,
+      "artifact_bytes": 618916999,
+      "artifact_count": 10,
+      "checkpoint_fingerprint": "sha256:7096f41a3a2cf7d8c51f22ce8337bcf198db0b54d1b7d62ed6bba68ca2f02797",
+      "model_kind": "push_act"
+    },
+    {
+      "all_artifacts_rehashed": true,
+      "artifact_bytes": 618948848,
+      "artifact_count": 10,
+      "checkpoint_fingerprint": "sha256:ff669f5227f28fc583618d02f7b5c50732e173eaeb3bbe7cc2827f2c56d7ecf8",
+      "model_kind": "shared_task_id_act"
+    },
+    {
+      "all_artifacts_rehashed": true,
+      "artifact_bytes": 618948848,
+      "artifact_count": 10,
+      "checkpoint_fingerprint": "sha256:e12a520beb5dbba2446c3675b270e4044540722aa2ddd1374df018f9d9c1c73b",
+      "model_kind": "shared_task_id_act"
+    },
+    {
+      "all_artifacts_rehashed": true,
+      "artifact_bytes": 618948848,
+      "artifact_count": 10,
+      "checkpoint_fingerprint": "sha256:72739f682449977c648861afb9912b05dd8461748c3e0c59b21051f5f3b4d253",
+      "model_kind": "shared_task_id_act"
+    },
+    {
+      "all_artifacts_rehashed": true,
+      "artifact_bytes": 618948848,
+      "artifact_count": 10,
+      "checkpoint_fingerprint": "sha256:0a44b1b2f677522ae71084d8bee8c765ae472b77ac20fefc572a9cdf1dd5f355",
+      "model_kind": "shared_task_id_act"
+    }
+  ],
+  "checks": {
+    "bounded_head": true,
+    "checkpoint_screens": true,
+    "checkpoint_selections": true,
+    "closed_loop_smoke": true,
+    "development_and_final_evaluations": true,
+    "execution_horizon": true,
+    "final_policy_lock": true,
+    "gpu_smoke_and_micro": true,
+    "input_verification": true,
+    "native_action_bounds": true,
+    "padding_loss": true,
+    "random_action_audit": true,
+    "repository": true,
+    "result_and_closure": true,
+    "sixteen_checkpoints_rehashed": true,
+    "task_intervention": true,
+    "training_runs": true
+  },
+  "failed_checks": [],
+  "final_evaluation_git_commit": "a5c3dcc7c944e02114faaf5b304620cfa7b6cd03",
+  "fingerprint": "sha256:5bd960e7c44705258c5cf6ef7c1ba82089556723fbb698796338cb1e3c5a0a19",
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "passed": true,
+  "pre_final_evaluation_git_commit": "160d6c31b6e3708ee982edfa0118152cd7489e0f",
+  "result": "RESULT_B",
+  "schema_version": "langmani-v2-phase2c-a1-final-verification-v0",
+  "smolvla_phase_eligible": true,
+  "smolvla_training_authorized": false,
+  "training_git_commit": "852658d60d8924d53fb7eb0d26cccbc4e54424ad",
+  "verifier_git_commit": "4fe0757786502d0f810231dc385dfe5f6b127125",
+  "vla_jepa_training_authorized": false
+}

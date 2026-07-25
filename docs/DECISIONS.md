@@ -3601,3 +3601,40 @@ videos were not run. Their metrics remain unavailable rather than zero.
 `smolvla_training_authorized=false`, and `vla_jepa_training_authorized=false`. Any future
 action-representation investigation requires a separate authorization and cannot reinterpret or
 mutate this Result D evidence.
+
+## D-140 - Accept Phase 2C-A.1 Result B and permanently close ACT
+
+Phase 2C-A.1 is the one and only authorized repair of the Phase 2C-A action-contract failure. It
+replaces the unbounded linear consumer output with `bounded_action_head_v1`: raw logits pass
+through float32 `tanh` and `torch.lerp` against the exact native `pd_joint_pos[8]` bounds. Training
+targets and predictions remain in physical coordinates, `action_is_pad` contributes zero action
+loss, and inference processors are identity mappings. The evaluator remains an independent hard
+gate and never clips, projects, thresholds, rejects-and-resamples, or substitutes an action.
+
+The random audit covered 100,000 chunks and 1,600,000 actions with zero non-finite values, bound
+violations, clipping events, or projection events. The padding audit, real LeRobot GPU smoke, Pick
+and shared real-data micro-overfits, and all four full seed-0 runs passed. Every one of the 16
+retained checkpoints completed 10,000 ordered validation queries and passed the frozen contract
+and degeneration filters. One validation-ranked checkpoint per model was selected and retained.
+
+The selected Pick policy executed 50 real actions and environment steps during the closed-loop
+smoke, proving that the former pre-step action failure was removed. The preregistered five-episode
+comparison selected `H_exec=4`. All 180 development episodes, 45 Task-ID intervention episodes,
+and 360 final episodes then completed. Development and final policy quality was uniformly weak:
+every per-task and shared group had zero success, while the complete final run executed 18,000
+native actions with zero invalid actions and zero simulator errors. Wrong and shuffled Task IDs
+changed actions and occasionally the failure-category behavior, proving condition sensitivity but
+not correct control or language grounding.
+
+Shared-minus-per-task success and timeout differences are numerically zero because both families
+are at the same zero-success floor. This cannot establish that multi-skill interference is absent.
+The preregistered Result-C condition, which requires a shared-specific failure relative to useful
+per-task controls, is therefore not met. The phase is Result B:
+`act_baselines_validated=true`, `act_policy_quality_weak=true`, `shared_act_failed=false`,
+`act_phase_closed=true`, `further_act_architecture_authorized=false`, and
+`smolvla_phase_eligible=true`.
+
+ACT cannot be reopened through another head, seed, architecture, checkpoint, hyperparameter sweep,
+dataset mutation, or outcome-informed selection. Result B makes only a separately invoked
+SmolVLA phase eligible. It does not load or train that model:
+`smolvla_training_authorized=false` and `vla_jepa_training_authorized=false`.

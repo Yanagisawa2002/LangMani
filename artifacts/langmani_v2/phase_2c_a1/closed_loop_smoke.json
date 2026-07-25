@@ -1,0 +1,146 @@
+{
+  "actions_executed": 50,
+  "episodes_file": {
+    "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/evaluation/closed_loop_smoke/episodes.jsonl",
+    "sha256": "9d053f7086f316c8341bacd1758bd9fa916dcd3b9e493e30b70d4d8937cb5074",
+    "size_bytes": 10725
+  },
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "passed": true,
+  "runtime_manifest": {
+    "action_clipping": false,
+    "action_projection": false,
+    "bounded_action_head_v1_required": true,
+    "environment_kwargs": {
+      "control_mode": "pd_joint_pos",
+      "num_envs": 1,
+      "obs_mode": "rgb",
+      "render_backend": "sapien_cuda",
+      "render_mode": null,
+      "reward_mode": "none",
+      "sensor_configs": {
+        "height": 256,
+        "shader_pack": "default",
+        "width": 256
+      },
+      "shader_dir": "default",
+      "sim_backend": "physx_cpu"
+    },
+    "evaluation_git_commit": "160d6c31b6e3708ee982edfa0118152cd7489e0f",
+    "final_policy_lock_fingerprint": null,
+    "fingerprint": "sha256:a95c324a0f8f4f6d96e6ee8f04d28843055994b8873311d7fcab8b795ef54c77",
+    "invalid_output_policy": "hard_reject",
+    "maximum_steps": 200,
+    "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+    "policy_runtime": {
+      "action_clipping": false,
+      "action_handling": "hard_reject_nonfinite_malformed_or_out_of_bounds",
+      "action_projection": false,
+      "bounded_action_head": {
+        "action_bounds_fingerprint": "sha256:9838da7b5e929b8390e3b3353366ad33988529e785fae48baf6068207a7d2b06",
+        "action_normalization_mode": "IDENTITY",
+        "clipping": false,
+        "environment_correction_relied_upon": false,
+        "fingerprint": "sha256:6462a774ad6dad33d5f3853b056d16c0c63f18e882b026ea7329b708119a2fa3",
+        "gripper_thresholding": false,
+        "identity": "bounded_action_head_v1",
+        "inference_action_representation": "native_physical_pd_joint_pos_float32",
+        "loss": "padding_masked_physical_action_l1_plus_existing_act_kl",
+        "normalized_mapping": "z = tanh(u)",
+        "numerically_stable_implementation": "torch.lerp(lower_float32, upper_float32, 0.5 * (z_float32 + 1))",
+        "physical_mapping": "a = lower + 0.5 * (z + 1) * (upper - lower)",
+        "projection": false,
+        "raw_head": "torch.nn.Linear(dim_model, 8)",
+        "rejection_sampling": false,
+        "schema_version": "langmani-v2-phase2c-a1-bounded-action-head-v1",
+        "training_action_representation": "native_physical_pd_joint_pos_float32",
+        "zero_or_previous_action_replacement": false
+      },
+      "checkpoint_identity": "sha256:faebd0043e8dc948f283ac86f893b6f6cd520e80339705e1e868dceacf4db653",
+      "device": "cuda",
+      "execution_horizon": 4,
+      "fingerprint": "sha256:752f8893c8751bca72d790bfd161b33e01ef28f1b84001cc032aa2cfb9c86a2f",
+      "model_kind": "pick_act",
+      "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+      "policy_identity": {
+        "adapter_name": "phase2c_a1_bounded_act",
+        "checkpoint_identity": "sha256:faebd0043e8dc948f283ac86f893b6f6cd520e80339705e1e868dceacf4db653",
+        "compatible_skill_families": [
+          "pick"
+        ],
+        "compatible_task_ids": [
+          "PickCube-v1"
+        ],
+        "implementation": "lerobot-0.6.0-act-bounded_action_head_v1",
+        "policy_id": "phase2c-a1:pick_act:sha256:59ffd19955ee79d2f85508a354fb7c5148d95fccf17e9af5df27d6277b94a877",
+        "schema_version": "langmani-v2-policy-interface-v0"
+      },
+      "predicted_chunk_size": 16,
+      "processor_components": {
+        "model": "sha256:eec88ab6aef69c1688e3fac13a766694e9b882ac276918db6db26bebd9ff2474",
+        "postprocessor": "sha256:5d79b3fa6e345f19d5e053ffed3d34acd90b4fba11239976eba2c4ad93ca8a4a",
+        "preprocessor": "sha256:7cf243ae108afdcb70e599442a8cf8aa9fd95ffba2a15be7d584543f8e3a9887"
+      },
+      "run_fingerprint": "sha256:59ffd19955ee79d2f85508a354fb7c5148d95fccf17e9af5df27d6277b94a877",
+      "schema_version": "langmani-v2-phase2c-a-act-runtime-v0",
+      "task_conditioning": "none"
+    },
+    "schedule_fingerprint": "sha256:096e657348beb58cb81ffeecfd2627b5ef36dfc3969cece246a7df5f1b15223f",
+    "scheduled_episode_count": 1,
+    "schema_version": "langmani-v2-phase2c-a-evaluation-run-v0",
+    "source_root": "/root/autodl-tmp/langmani-external/phase2b5/maniskill_d674485bbffdd533914e52d272fdda34c0515608",
+    "split": "validation",
+    "task_condition_id": "PickCube-v1",
+    "task_id": "PickCube-v1",
+    "task_intervention_lock_fingerprint": null,
+    "task_intervention_role": null,
+    "visual_shift": null
+  },
+  "schema_version": "langmani-v2-phase2c-a1-closed-loop-smoke-registry-v0",
+  "summary": {
+    "checkpoint_identities": [
+      "sha256:faebd0043e8dc948f283ac86f893b6f6cd520e80339705e1e868dceacf4db653"
+    ],
+    "completed": true,
+    "episode_count": 1,
+    "execution_horizon": 4,
+    "failure_categories": {
+      "failed_grasp": 1
+    },
+    "inference_latency_p50_ms": 6.92986324429512,
+    "inference_latency_p95_ms": 181.83277659118113,
+    "invalid_action_count": 0,
+    "mean_action_saturation_rate": 0.12,
+    "mean_action_smoothness_l2": 0.06623715312416892,
+    "mean_episode_length": 50.0,
+    "mean_policy_query_count": 13.0,
+    "outcomes": {
+      "timeout": 1
+    },
+    "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+    "policy_ids": [
+      "phase2c-a1:pick_act:sha256:59ffd19955ee79d2f85508a354fb7c5148d95fccf17e9af5df27d6277b94a877"
+    ],
+    "post_contact_divergence_mean_m": 0.007023820403184261,
+    "runtime_manifest_fingerprint": "sha256:a95c324a0f8f4f6d96e6ee8f04d28843055994b8873311d7fcab8b795ef54c77",
+    "schema_version": "langmani-v2-phase2c-a-evaluation-summary-v0",
+    "simulator_error_count": 0,
+    "split": "validation",
+    "success_count": 0,
+    "success_rate": 0.0,
+    "success_wilson_95": [
+      0.0,
+      0.7934506856227626
+    ],
+    "task_condition_id": "PickCube-v1",
+    "task_condition_ids": [
+      "PickCube-v1"
+    ],
+    "task_id": "PickCube-v1",
+    "task_ids": [
+      "PickCube-v1"
+    ],
+    "task_intervention_lock_fingerprint": null,
+    "task_intervention_role": null
+  }
+}

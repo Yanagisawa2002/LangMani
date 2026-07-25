@@ -95,7 +95,7 @@ def _prohibited_processes() -> list[dict[str, object]]:
 
 
 def _evaluation_registry(root: Path, *, final: bool) -> list[dict[str, object]]:
-    records = []
+    records: list[dict[str, object]] = []
     splits = FINAL_SPLITS if final else ("validation",)
     stage = "final" if final else "development"
     for scope in ("per_task", "shared"):

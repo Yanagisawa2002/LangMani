@@ -203,6 +203,21 @@ training/consumer-pipeline result, not an ACT quality result:
 `act_baselines_validated=false`, `smolvla_phase_eligible=false`, and both SmolVLA and VLA-JEPA
 training remain unauthorized.
 
+Phase 2C-A.1 is the completed single bounded-ACT repair. It replaced only the unbounded action
+output with `bounded_action_head_v1`, trained directly against native physical actions with
+padding-masked L1, and left the evaluator as a rejecting, non-correcting gate. The 100,000-chunk
+audit, padding audit, real GPU smoke, Pick/shared micro-overfits, four seed-0 full runs, and all 16
+10,000-query checkpoint screens passed. The selected Pick policy reached 50 real environment
+steps, and `H_exec=4` was frozen from the preregistered five-episode comparison. All 180
+development and 360 final episodes completed with zero invalid actions and zero simulator errors,
+but every policy/task/split group had zero success. Task-ID intervention changed actions without
+producing success. The phase is Result B:
+`act_baselines_validated=true`, `act_policy_quality_weak=true`, `shared_act_failed=false`,
+`act_phase_closed=true`, `further_act_architecture_authorized=false`, and
+`smolvla_phase_eligible=true`. The zero shared-minus-per-task success difference is a floor effect,
+not evidence that interference is absent. SmolVLA and VLA-JEPA remain untrained and unauthorized;
+no further ACT repair, architecture, seed, checkpoint reselection, or data change is authorized.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
@@ -372,6 +387,11 @@ python environment/prepare_v2_phase2c_a.py --help
 python scripts/train_v2_phase2c_a_act.py --help
 python scripts/evaluate_v2_phase2c_a_act.py --help
 python environment/verify_v2_phase2c_a.py --help
+
+# Phase 2C-A.1 bounded-ACT compact Result B verification.
+# This reads compact evidence plus externally retained checkpoint components and starts no
+# simulator, optimizer, SmolVLA, or VLA-JEPA work.
+python environment/verify_v2_phase2c_a1.py --help
 
 # Phase 2B.3.1-RR compact Result D evidence verification (no simulator execution)
 python environment/verify_v2_phase2b3_rr.py

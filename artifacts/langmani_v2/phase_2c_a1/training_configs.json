@@ -1,0 +1,547 @@
+{
+  "models": {
+    "pick_act": {
+      "identity": {
+        "git_commit": "852658d60d8924d53fb7eb0d26cccbc4e54424ad",
+        "m3b_split_manifest_digest": "sha256:5bb231f808008630ef81417d8a4cc15d1ec1e13293844546d8755d0b7ee285c6",
+        "model_config": {
+          "action_dimension": 8,
+          "action_head": {
+            "action_bounds_fingerprint": "sha256:9838da7b5e929b8390e3b3353366ad33988529e785fae48baf6068207a7d2b06",
+            "action_normalization_mode": "IDENTITY",
+            "clipping": false,
+            "environment_correction_relied_upon": false,
+            "fingerprint": "sha256:6462a774ad6dad33d5f3853b056d16c0c63f18e882b026ea7329b708119a2fa3",
+            "gripper_thresholding": false,
+            "identity": "bounded_action_head_v1",
+            "inference_action_representation": "native_physical_pd_joint_pos_float32",
+            "loss": "padding_masked_physical_action_l1_plus_existing_act_kl",
+            "normalized_mapping": "z = tanh(u)",
+            "numerically_stable_implementation": "torch.lerp(lower_float32, upper_float32, 0.5 * (z_float32 + 1))",
+            "physical_mapping": "a = lower + 0.5 * (z + 1) * (upper - lower)",
+            "projection": false,
+            "raw_head": "torch.nn.Linear(dim_model, 8)",
+            "rejection_sampling": false,
+            "schema_version": "langmani-v2-phase2c-a1-bounded-action-head-v1",
+            "training_action_representation": "native_physical_pd_joint_pos_float32",
+            "zero_or_previous_action_replacement": false
+          },
+          "augmentation": "none",
+          "chunk_size": 16,
+          "dim_feedforward": 3200,
+          "dim_model": 512,
+          "dropout": 0.1,
+          "image_shape_chw": [
+            3,
+            256,
+            256
+          ],
+          "kl_weight": 10.0,
+          "latent_dim": 32,
+          "n_action_steps": 16,
+          "n_decoder_layers": 1,
+          "n_encoder_layers": 4,
+          "n_heads": 8,
+          "n_vae_encoder_layers": 4,
+          "native_action_bounds": {
+            "control_mode": "pd_joint_pos",
+            "dtype": "float32",
+            "fingerprint": "sha256:9838da7b5e929b8390e3b3353366ad33988529e785fae48baf6068207a7d2b06",
+            "lower": [
+              -2.8973000049591064,
+              -1.7627999782562256,
+              -2.8973000049591064,
+              -3.0717999935150146,
+              -2.8973000049591064,
+              -0.017500000074505806,
+              -2.8973000049591064,
+              -1.0
+            ],
+            "schema_version": "langmani-v2-phase2c-a1-native-action-bounds-v0",
+            "shape": [
+              8
+            ],
+            "source": "ManiSkill 3.0.1 Panda pd_joint_pos action space; independently observed identical for PickCube-v1, StackCube-v1, and PushCube-v1",
+            "task_consistency_verified": true,
+            "tasks": [
+              "PickCube-v1",
+              "StackCube-v1",
+              "PushCube-v1"
+            ],
+            "upper": [
+              2.8973000049591064,
+              1.7627999782562256,
+              2.8973000049591064,
+              -0.0697999969124794,
+              2.8973000049591064,
+              3.752500057220459,
+              2.8973000049591064,
+              1.0
+            ]
+          },
+          "pretrained_backbone_weights": null,
+          "state_dimension": 9,
+          "task_condition_dimension": null,
+          "task_condition_feature": null,
+          "use_vae": true,
+          "vision_backbone": "resnet18"
+        },
+        "model_kind": "pick_act",
+        "normalization_fingerprint": "sha256:9e08cc0cc6f719298655d250e75b59fda85f9a8414fa3d53e99397a6c4ee58a6",
+        "optimization_config": {
+          "backbone_learning_rate": 1e-05,
+          "batch_size": 408,
+          "checkpoint_steps": [
+            670,
+            1340,
+            2010,
+            2680
+          ],
+          "dataloader_workers": 8,
+          "effective_passes_by_task": {
+            "PickCube-v1": 20.0
+          },
+          "gradient_clip_norm": 10.0,
+          "learning_rate": 1e-05,
+          "optimizer": "adamw",
+          "precision": "bfloat16",
+          "scheduler": "none",
+          "seed": 0,
+          "target_samples_by_task": {
+            "PickCube-v1": 1092160
+          },
+          "training_steps": 2680,
+          "validation_steps": [
+            670,
+            1340,
+            2010,
+            2680
+          ],
+          "warmup_steps": 0,
+          "weight_decay": 0.0001
+        },
+        "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+        "run_fingerprint": "sha256:59ffd19955ee79d2f85508a354fb7c5148d95fccf17e9af5df27d6277b94a877",
+        "run_role": "primary_training",
+        "runtime_fingerprint": "sha256:7c3c3041cf8a5a3ef476811f0cb314a5c9913bab762d4ff0ad613591f8f10b66",
+        "sampler_fingerprint": "sha256:66c8531ae623c295e5cdca008f684da2b654069b79eb779ae2d1c62d85202704",
+        "schema_version": "langmani-v2-phase2c-a-act-run-v0",
+        "train_statistics_fingerprint": "sha256:7a14753cfa241afc9ecc475b30b12372b24323224c70833c0a6a899a7eae3b6b"
+      },
+      "report_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/reports/train-pick.json",
+        "sha256": "c437b70c2b6c3baa1e6e040f501c1dfe85eee6c46158739bfb0322f944ca50cb",
+        "size_bytes": 9056
+      }
+    },
+    "push_act": {
+      "identity": {
+        "git_commit": "852658d60d8924d53fb7eb0d26cccbc4e54424ad",
+        "m3b_split_manifest_digest": "sha256:5bb231f808008630ef81417d8a4cc15d1ec1e13293844546d8755d0b7ee285c6",
+        "model_config": {
+          "action_dimension": 8,
+          "action_head": {
+            "action_bounds_fingerprint": "sha256:9838da7b5e929b8390e3b3353366ad33988529e785fae48baf6068207a7d2b06",
+            "action_normalization_mode": "IDENTITY",
+            "clipping": false,
+            "environment_correction_relied_upon": false,
+            "fingerprint": "sha256:6462a774ad6dad33d5f3853b056d16c0c63f18e882b026ea7329b708119a2fa3",
+            "gripper_thresholding": false,
+            "identity": "bounded_action_head_v1",
+            "inference_action_representation": "native_physical_pd_joint_pos_float32",
+            "loss": "padding_masked_physical_action_l1_plus_existing_act_kl",
+            "normalized_mapping": "z = tanh(u)",
+            "numerically_stable_implementation": "torch.lerp(lower_float32, upper_float32, 0.5 * (z_float32 + 1))",
+            "physical_mapping": "a = lower + 0.5 * (z + 1) * (upper - lower)",
+            "projection": false,
+            "raw_head": "torch.nn.Linear(dim_model, 8)",
+            "rejection_sampling": false,
+            "schema_version": "langmani-v2-phase2c-a1-bounded-action-head-v1",
+            "training_action_representation": "native_physical_pd_joint_pos_float32",
+            "zero_or_previous_action_replacement": false
+          },
+          "augmentation": "none",
+          "chunk_size": 16,
+          "dim_feedforward": 3200,
+          "dim_model": 512,
+          "dropout": 0.1,
+          "image_shape_chw": [
+            3,
+            256,
+            256
+          ],
+          "kl_weight": 10.0,
+          "latent_dim": 32,
+          "n_action_steps": 16,
+          "n_decoder_layers": 1,
+          "n_encoder_layers": 4,
+          "n_heads": 8,
+          "n_vae_encoder_layers": 4,
+          "native_action_bounds": {
+            "control_mode": "pd_joint_pos",
+            "dtype": "float32",
+            "fingerprint": "sha256:9838da7b5e929b8390e3b3353366ad33988529e785fae48baf6068207a7d2b06",
+            "lower": [
+              -2.8973000049591064,
+              -1.7627999782562256,
+              -2.8973000049591064,
+              -3.0717999935150146,
+              -2.8973000049591064,
+              -0.017500000074505806,
+              -2.8973000049591064,
+              -1.0
+            ],
+            "schema_version": "langmani-v2-phase2c-a1-native-action-bounds-v0",
+            "shape": [
+              8
+            ],
+            "source": "ManiSkill 3.0.1 Panda pd_joint_pos action space; independently observed identical for PickCube-v1, StackCube-v1, and PushCube-v1",
+            "task_consistency_verified": true,
+            "tasks": [
+              "PickCube-v1",
+              "StackCube-v1",
+              "PushCube-v1"
+            ],
+            "upper": [
+              2.8973000049591064,
+              1.7627999782562256,
+              2.8973000049591064,
+              -0.0697999969124794,
+              2.8973000049591064,
+              3.752500057220459,
+              2.8973000049591064,
+              1.0
+            ]
+          },
+          "pretrained_backbone_weights": null,
+          "state_dimension": 9,
+          "task_condition_dimension": null,
+          "task_condition_feature": null,
+          "use_vae": true,
+          "vision_backbone": "resnet18"
+        },
+        "model_kind": "push_act",
+        "normalization_fingerprint": "sha256:9e08cc0cc6f719298655d250e75b59fda85f9a8414fa3d53e99397a6c4ee58a6",
+        "optimization_config": {
+          "backbone_learning_rate": 1e-05,
+          "batch_size": 408,
+          "checkpoint_steps": [
+            595,
+            1190,
+            1785,
+            2380
+          ],
+          "dataloader_workers": 8,
+          "effective_passes_by_task": {
+            "PushCube-v1": 20.0
+          },
+          "gradient_clip_norm": 10.0,
+          "learning_rate": 1e-05,
+          "optimizer": "adamw",
+          "precision": "bfloat16",
+          "scheduler": "none",
+          "seed": 0,
+          "target_samples_by_task": {
+            "PushCube-v1": 964380
+          },
+          "training_steps": 2380,
+          "validation_steps": [
+            595,
+            1190,
+            1785,
+            2380
+          ],
+          "warmup_steps": 0,
+          "weight_decay": 0.0001
+        },
+        "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+        "run_fingerprint": "sha256:6583d27a51aa30660ee4402204290e99ee0220c672317692fd80b1a4511feef4",
+        "run_role": "primary_training",
+        "runtime_fingerprint": "sha256:7c3c3041cf8a5a3ef476811f0cb314a5c9913bab762d4ff0ad613591f8f10b66",
+        "sampler_fingerprint": "sha256:112845de4b7bba450d9919c0c2413368b66ac0fcb62553051213f70797524ac2",
+        "schema_version": "langmani-v2-phase2c-a-act-run-v0",
+        "train_statistics_fingerprint": "sha256:a891db886d751ae0e06488d75c6459fd91b7904a71d8861498d2e18b653bcf0f"
+      },
+      "report_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/reports/train-push.json",
+        "sha256": "660ef1b4ec2b8a9757f5cc83f14a0257bc68d4477cf95a7ca95958c2f1bdd928",
+        "size_bytes": 9054
+      }
+    },
+    "shared_task_id_act": {
+      "identity": {
+        "git_commit": "852658d60d8924d53fb7eb0d26cccbc4e54424ad",
+        "m3b_split_manifest_digest": "sha256:5bb231f808008630ef81417d8a4cc15d1ec1e13293844546d8755d0b7ee285c6",
+        "model_config": {
+          "action_dimension": 8,
+          "action_head": {
+            "action_bounds_fingerprint": "sha256:9838da7b5e929b8390e3b3353366ad33988529e785fae48baf6068207a7d2b06",
+            "action_normalization_mode": "IDENTITY",
+            "clipping": false,
+            "environment_correction_relied_upon": false,
+            "fingerprint": "sha256:6462a774ad6dad33d5f3853b056d16c0c63f18e882b026ea7329b708119a2fa3",
+            "gripper_thresholding": false,
+            "identity": "bounded_action_head_v1",
+            "inference_action_representation": "native_physical_pd_joint_pos_float32",
+            "loss": "padding_masked_physical_action_l1_plus_existing_act_kl",
+            "normalized_mapping": "z = tanh(u)",
+            "numerically_stable_implementation": "torch.lerp(lower_float32, upper_float32, 0.5 * (z_float32 + 1))",
+            "physical_mapping": "a = lower + 0.5 * (z + 1) * (upper - lower)",
+            "projection": false,
+            "raw_head": "torch.nn.Linear(dim_model, 8)",
+            "rejection_sampling": false,
+            "schema_version": "langmani-v2-phase2c-a1-bounded-action-head-v1",
+            "training_action_representation": "native_physical_pd_joint_pos_float32",
+            "zero_or_previous_action_replacement": false
+          },
+          "augmentation": "none",
+          "chunk_size": 16,
+          "dim_feedforward": 3200,
+          "dim_model": 512,
+          "dropout": 0.1,
+          "image_shape_chw": [
+            3,
+            256,
+            256
+          ],
+          "kl_weight": 10.0,
+          "latent_dim": 32,
+          "n_action_steps": 16,
+          "n_decoder_layers": 1,
+          "n_encoder_layers": 4,
+          "n_heads": 8,
+          "n_vae_encoder_layers": 4,
+          "native_action_bounds": {
+            "control_mode": "pd_joint_pos",
+            "dtype": "float32",
+            "fingerprint": "sha256:9838da7b5e929b8390e3b3353366ad33988529e785fae48baf6068207a7d2b06",
+            "lower": [
+              -2.8973000049591064,
+              -1.7627999782562256,
+              -2.8973000049591064,
+              -3.0717999935150146,
+              -2.8973000049591064,
+              -0.017500000074505806,
+              -2.8973000049591064,
+              -1.0
+            ],
+            "schema_version": "langmani-v2-phase2c-a1-native-action-bounds-v0",
+            "shape": [
+              8
+            ],
+            "source": "ManiSkill 3.0.1 Panda pd_joint_pos action space; independently observed identical for PickCube-v1, StackCube-v1, and PushCube-v1",
+            "task_consistency_verified": true,
+            "tasks": [
+              "PickCube-v1",
+              "StackCube-v1",
+              "PushCube-v1"
+            ],
+            "upper": [
+              2.8973000049591064,
+              1.7627999782562256,
+              2.8973000049591064,
+              -0.0697999969124794,
+              2.8973000049591064,
+              3.752500057220459,
+              2.8973000049591064,
+              1.0
+            ]
+          },
+          "pretrained_backbone_weights": null,
+          "state_dimension": 9,
+          "task_condition_dimension": 3,
+          "task_condition_feature": "observation.environment_state",
+          "use_vae": true,
+          "vision_backbone": "resnet18"
+        },
+        "model_kind": "shared_task_id_act",
+        "normalization_fingerprint": "sha256:9e08cc0cc6f719298655d250e75b59fda85f9a8414fa3d53e99397a6c4ee58a6",
+        "optimization_config": {
+          "backbone_learning_rate": 1e-05,
+          "batch_size": 408,
+          "checkpoint_steps": [
+            2178,
+            4356,
+            6534,
+            8712
+          ],
+          "dataloader_workers": 8,
+          "effective_passes_by_task": {
+            "PickCube-v1": 21.69704072663346,
+            "PushCube-v1": 24.571890748460152,
+            "StackCube-v1": 15.82075282744255
+          },
+          "gradient_clip_norm": 10.0,
+          "learning_rate": 1e-05,
+          "optimizer": "adamw",
+          "precision": "bfloat16",
+          "scheduler": "none",
+          "seed": 0,
+          "target_samples_by_task": {
+            "PickCube-v1": 1184832,
+            "PushCube-v1": 1184832,
+            "StackCube-v1": 1184832
+          },
+          "training_steps": 8712,
+          "validation_steps": [
+            2178,
+            4356,
+            6534,
+            8712
+          ],
+          "warmup_steps": 0,
+          "weight_decay": 0.0001
+        },
+        "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+        "run_fingerprint": "sha256:2185fd2725f40de1e28ce88656219af5fdbf9a25988b8992f2876f9b6e9e68f0",
+        "run_role": "primary_training",
+        "runtime_fingerprint": "sha256:7c3c3041cf8a5a3ef476811f0cb314a5c9913bab762d4ff0ad613591f8f10b66",
+        "sampler_fingerprint": "sha256:ceb25abf5e731c1bf57de17b9bcda99f620eab591eb3ead20c9326c13ee2244d",
+        "schema_version": "langmani-v2-phase2c-a-act-run-v0",
+        "train_statistics_fingerprint": "sha256:05c6ed7756b1101c0194f6510c1c410ff73a6accb6b0b12b3c000c6099f803f4"
+      },
+      "report_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/reports/train-shared.json",
+        "sha256": "75f19cf2726cb25175feb9df1aa393a9fc313e2ce27ed64bf9239776d50d6ddc",
+        "size_bytes": 9278
+      }
+    },
+    "stack_act": {
+      "identity": {
+        "git_commit": "852658d60d8924d53fb7eb0d26cccbc4e54424ad",
+        "m3b_split_manifest_digest": "sha256:5bb231f808008630ef81417d8a4cc15d1ec1e13293844546d8755d0b7ee285c6",
+        "model_config": {
+          "action_dimension": 8,
+          "action_head": {
+            "action_bounds_fingerprint": "sha256:9838da7b5e929b8390e3b3353366ad33988529e785fae48baf6068207a7d2b06",
+            "action_normalization_mode": "IDENTITY",
+            "clipping": false,
+            "environment_correction_relied_upon": false,
+            "fingerprint": "sha256:6462a774ad6dad33d5f3853b056d16c0c63f18e882b026ea7329b708119a2fa3",
+            "gripper_thresholding": false,
+            "identity": "bounded_action_head_v1",
+            "inference_action_representation": "native_physical_pd_joint_pos_float32",
+            "loss": "padding_masked_physical_action_l1_plus_existing_act_kl",
+            "normalized_mapping": "z = tanh(u)",
+            "numerically_stable_implementation": "torch.lerp(lower_float32, upper_float32, 0.5 * (z_float32 + 1))",
+            "physical_mapping": "a = lower + 0.5 * (z + 1) * (upper - lower)",
+            "projection": false,
+            "raw_head": "torch.nn.Linear(dim_model, 8)",
+            "rejection_sampling": false,
+            "schema_version": "langmani-v2-phase2c-a1-bounded-action-head-v1",
+            "training_action_representation": "native_physical_pd_joint_pos_float32",
+            "zero_or_previous_action_replacement": false
+          },
+          "augmentation": "none",
+          "chunk_size": 16,
+          "dim_feedforward": 3200,
+          "dim_model": 512,
+          "dropout": 0.1,
+          "image_shape_chw": [
+            3,
+            256,
+            256
+          ],
+          "kl_weight": 10.0,
+          "latent_dim": 32,
+          "n_action_steps": 16,
+          "n_decoder_layers": 1,
+          "n_encoder_layers": 4,
+          "n_heads": 8,
+          "n_vae_encoder_layers": 4,
+          "native_action_bounds": {
+            "control_mode": "pd_joint_pos",
+            "dtype": "float32",
+            "fingerprint": "sha256:9838da7b5e929b8390e3b3353366ad33988529e785fae48baf6068207a7d2b06",
+            "lower": [
+              -2.8973000049591064,
+              -1.7627999782562256,
+              -2.8973000049591064,
+              -3.0717999935150146,
+              -2.8973000049591064,
+              -0.017500000074505806,
+              -2.8973000049591064,
+              -1.0
+            ],
+            "schema_version": "langmani-v2-phase2c-a1-native-action-bounds-v0",
+            "shape": [
+              8
+            ],
+            "source": "ManiSkill 3.0.1 Panda pd_joint_pos action space; independently observed identical for PickCube-v1, StackCube-v1, and PushCube-v1",
+            "task_consistency_verified": true,
+            "tasks": [
+              "PickCube-v1",
+              "StackCube-v1",
+              "PushCube-v1"
+            ],
+            "upper": [
+              2.8973000049591064,
+              1.7627999782562256,
+              2.8973000049591064,
+              -0.0697999969124794,
+              2.8973000049591064,
+              3.752500057220459,
+              2.8973000049591064,
+              1.0
+            ]
+          },
+          "pretrained_backbone_weights": null,
+          "state_dimension": 9,
+          "task_condition_dimension": null,
+          "task_condition_feature": null,
+          "use_vae": true,
+          "vision_backbone": "resnet18"
+        },
+        "model_kind": "stack_act",
+        "normalization_fingerprint": "sha256:9e08cc0cc6f719298655d250e75b59fda85f9a8414fa3d53e99397a6c4ee58a6",
+        "optimization_config": {
+          "backbone_learning_rate": 1e-05,
+          "batch_size": 408,
+          "checkpoint_steps": [
+            920,
+            1840,
+            2760,
+            3680
+          ],
+          "dataloader_workers": 8,
+          "effective_passes_by_task": {
+            "StackCube-v1": 20.0
+          },
+          "gradient_clip_norm": 10.0,
+          "learning_rate": 1e-05,
+          "optimizer": "adamw",
+          "precision": "bfloat16",
+          "scheduler": "none",
+          "seed": 0,
+          "target_samples_by_task": {
+            "StackCube-v1": 1497820
+          },
+          "training_steps": 3680,
+          "validation_steps": [
+            920,
+            1840,
+            2760,
+            3680
+          ],
+          "warmup_steps": 0,
+          "weight_decay": 0.0001
+        },
+        "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+        "run_fingerprint": "sha256:25789faefc4a9940bf7c4ae3ebcae0a7814e3e85f889e27d36fcc04e8ab4ce0e",
+        "run_role": "primary_training",
+        "runtime_fingerprint": "sha256:7c3c3041cf8a5a3ef476811f0cb314a5c9913bab762d4ff0ad613591f8f10b66",
+        "sampler_fingerprint": "sha256:1480247c4628a1a5b369cd6f51443e73b293e2790f6ed153ec9bee78668decfa",
+        "schema_version": "langmani-v2-phase2c-a-act-run-v0",
+        "train_statistics_fingerprint": "sha256:626f98755057cbeb6272dd947ebc6e861970bebb89aacb4ab458165785a5af93"
+      },
+      "report_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/reports/train-stack.json",
+        "sha256": "88cd01ced1d560af3b92ab6344bbe5e6b2995379ee4eb3bd3d7d8b1bca705867",
+        "size_bytes": 9060
+      }
+    }
+  },
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "schema_version": "langmani-v2-phase2c-a1-training-config-registry-v0",
+  "training_git_commit": "852658d60d8924d53fb7eb0d26cccbc4e54424ad"
+}

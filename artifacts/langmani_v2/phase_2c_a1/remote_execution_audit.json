@@ -1,0 +1,19 @@
+{
+  "credentials_recorded": false,
+  "evaluation_root": "/root/autodl-tmp/langmani-phase2c-a1-evidence/evaluation",
+  "evidence_root": "/root/autodl-tmp/langmani-phase2c-a1-evidence",
+  "final_evaluation_git_commit": "a5c3dcc7c944e02114faaf5b304620cfa7b6cd03",
+  "hostname": "autodl-container-ac0644ba4a-b09696d8",
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "pre_final_evaluation_git_commit": "160d6c31b6e3708ee982edfa0118152cd7489e0f",
+  "process_id": 148451,
+  "prohibited_processes": [],
+  "python": "3.12.13",
+  "repository_clean_before_compaction": true,
+  "repository_commit_before_compaction": "6c7d0c94b0672ed08e25461c964302bf5e3354f7",
+  "schema_version": "langmani-v2-phase2c-a1-remote-execution-audit-v0",
+  "server_shutdown_requested": false,
+  "smolvla_or_vla_jepa_loaded": false,
+  "smolvla_or_vla_jepa_process_found": false,
+  "training_git_commit": "852658d60d8924d53fb7eb0d26cccbc4e54424ad"
+}

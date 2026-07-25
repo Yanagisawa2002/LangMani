@@ -1,0 +1,165 @@
+{
+  "artifact_root": "artifacts/langmani_v2/phase_2c_a1",
+  "external_evidence_referenced_by_content_hash": true,
+  "file_count": 30,
+  "files": [
+    {
+      "path": "act_closure_state.json",
+      "sha256": "45183469f23435a783339640e06b8e2b5bab6dc36a83215023b5b967f7af5d7b",
+      "size_bytes": 264
+    },
+    {
+      "path": "action_100k_audit.json",
+      "sha256": "7e48e2b18e4428fcd59e579a4ff9f7f3ceeaf1e5eaa3c1def38691b84e0514a9",
+      "size_bytes": 1943
+    },
+    {
+      "path": "action_bound_manifest.json",
+      "sha256": "8e3645355a1043e6309c39d29f9c8e41d0fdc6a3fadeb167bb013348770b3b76",
+      "size_bytes": 899
+    },
+    {
+      "path": "action_path_audit.json",
+      "sha256": "64b342a424bfa02afc469e34873d6a57a29bf34839450d459340841037836d8e",
+      "size_bytes": 7619
+    },
+    {
+      "path": "authorization_state.json",
+      "sha256": "227092a4d053f46d5b133080a9500b6874270f1817ca7a8c5c9ecbd971ceb3af",
+      "size_bytes": 274
+    },
+    {
+      "path": "bounded_head_manifest.json",
+      "sha256": "77d3da73c32f22c734a927fa1a7d7c25efa0ca3f071c6e425271595455d464c9",
+      "size_bytes": 1038
+    },
+    {
+      "path": "checkpoint_registry.json",
+      "sha256": "becce9ae643b991a873bd5f7632390f06933801f80568c426954c1bf01b729b0",
+      "size_bytes": 12141
+    },
+    {
+      "path": "checkpoint_screen.json",
+      "sha256": "86e84e745026dadb202ae9ace502f02525763024de2e2c6fcb1dbb7e889ac5ba",
+      "size_bytes": 94630
+    },
+    {
+      "path": "closed_loop_smoke.json",
+      "sha256": "f4ae59cbc8a35afcc46cb5737226183fbc4b7a20cf36c82659ba4e92ebf7e629",
+      "size_bytes": 6299
+    },
+    {
+      "path": "development_evaluation.json",
+      "sha256": "3e672613cbb3861247d209907922616e38bbe5488e7237133f465f4bd46868aa",
+      "size_bytes": 14469
+    },
+    {
+      "path": "execution_horizon_comparison.json",
+      "sha256": "1a9fa10ddf8b82d41d76eea80a5e98107c2ef4a56b5a6693a1df86829d9ef230",
+      "size_bytes": 1554
+    },
+    {
+      "path": "failure_taxonomy.json",
+      "sha256": "4b5a42364d6e0dd03bdbe2ba45203669c04d751bcbfa33d444c5dfbcaa754f5f",
+      "size_bytes": 1886
+    },
+    {
+      "path": "final_evaluation.json",
+      "sha256": "f65ce165aa9bcfea96fa3aaa43104bcf5939d0a6f0a952dc5a5ff19303d58727",
+      "size_bytes": 29170
+    },
+    {
+      "path": "final_policy_manifests.json",
+      "sha256": "6e57c757e7a44d6c1204e2c0651b2054d4a80d14b2bc00cdf157d6d618cb8282",
+      "size_bytes": 41262
+    },
+    {
+      "path": "final_verification.json",
+      "sha256": "ab12450b162f0882bfa25d8d741a51e2e6579f5852a35f91aa0e58421b1097bf",
+      "size_bytes": 5443
+    },
+    {
+      "path": "input_verification.json",
+      "sha256": "52036f23fb2a662b9c7f68f11e6f7e92ad866fed5d6065787688ff7333a77dc7",
+      "size_bytes": 3252
+    },
+    {
+      "path": "latency.json",
+      "sha256": "664405040ca599fe4c8759e949dced541866f4ba4814564b6b0fee8c37cbc0a9",
+      "size_bytes": 2471
+    },
+    {
+      "path": "micro_pick_result.json",
+      "sha256": "0e761717cef16991c477b5c96e514d247200bba193124c1d7c11f5912d1ae620",
+      "size_bytes": 25918
+    },
+    {
+      "path": "micro_shared_result.json",
+      "sha256": "ecebd9afb578a3b80a515cd3b1d7358d200f205050c9f6051056201b7007eee0",
+      "size_bytes": 26285
+    },
+    {
+      "path": "multiskill_interference.json",
+      "sha256": "7497b48336651a6f412cdf9fbbd556e189338a7435305544328d2989becfd67f",
+      "size_bytes": 8503
+    },
+    {
+      "path": "padding_loss_audit.json",
+      "sha256": "b4fd7efb70842facb2840846b7175edf557d35e5083ff136a85a5e08a9466f0f",
+      "size_bytes": 1168
+    },
+    {
+      "path": "processor_registry.json",
+      "sha256": "2df1657da696ca290f46305629c3039ef1d559c067b71a63dfdd298af17d5c6f",
+      "size_bytes": 7703
+    },
+    {
+      "path": "remote_execution_audit.json",
+      "sha256": "2fcf7db69f6509052634f9de9c280b656a7bfbf13bb34b985a70295bea29d375",
+      "size_bytes": 969
+    },
+    {
+      "path": "repository_environment_audit.json",
+      "sha256": "3ffe0d4ea08328e6a4b9b5a6c04172186f7a8376d1ac78667f9db6b1dca1ad98",
+      "size_bytes": 2108
+    },
+    {
+      "path": "result_classification.json",
+      "sha256": "c8161472aa55765b57fea046db4035520a1d84a03c55ef4c115bfa6c60523814",
+      "size_bytes": 39598
+    },
+    {
+      "path": "smoke_result.json",
+      "sha256": "44cd9cd40538701b21ee5a4443c1bb0b4aaabef1b592f7bf58166443dc82f019",
+      "size_bytes": 10113
+    },
+    {
+      "path": "smolvla_eligibility.json",
+      "sha256": "227092a4d053f46d5b133080a9500b6874270f1817ca7a8c5c9ecbd971ceb3af",
+      "size_bytes": 274
+    },
+    {
+      "path": "task_id_intervention.json",
+      "sha256": "fffece7b159a2f4643e8fc7b90145871016ea381dbfb61e9cbd5faa77424c4ed",
+      "size_bytes": 32866
+    },
+    {
+      "path": "training_configs.json",
+      "sha256": "1f1835d1db3017638724589e9045f9524250a8225ed3ab553ff749d977716795",
+      "size_bytes": 22072
+    },
+    {
+      "path": "training_metrics.json",
+      "sha256": "f49e401a0ec9ee78a9b4820269a0cb881f45c5becf6b5e4b8eba568f124a2a19",
+      "size_bytes": 11761
+    }
+  ],
+  "fingerprint": "sha256:57606d6114f2befe43be85c62ddb075bcf7d1c0eb76503b75c5c74dc0cc88d2e",
+  "generated_datasets_committed": false,
+  "model_checkpoints_committed": false,
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "raw_episode_logs_committed": false,
+  "schema_version": "langmani-v2-phase2c-a1-artifact-manifest-v0",
+  "total_bytes": 413952,
+  "videos_committed": false
+}

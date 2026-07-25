@@ -1,0 +1,8 @@
+{
+  "additional_act_phase_authorized": false,
+  "phase2c_a1_training_authorized": false,
+  "schema_version": "langmani-v2-phase2c-a1-authorization-state-v0",
+  "smolvla_phase_eligible": true,
+  "smolvla_training_authorized": false,
+  "vla_jepa_training_authorized": false
+}

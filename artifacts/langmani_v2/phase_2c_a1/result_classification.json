@@ -1,0 +1,1345 @@
+{
+  "act_baselines_validated": true,
+  "act_phase_closed": true,
+  "act_policy_quality_weak": true,
+  "classification_rule": "D if the consumer pipeline is invalid; C if every per-task combined-final rate exceeds 0.10 and any shared rate does not; B if any remaining policy-task rate is at most 0.10; A otherwise",
+  "combined_final": {
+    "per_task": {
+      "PickCube-v1": {
+        "action_variance_by_dimension": [
+          0.03456141799688339,
+          0.052711375057697296,
+          0.01676793210208416,
+          0.1290014535188675,
+          0.01708010956645012,
+          0.03354083374142647,
+          0.54276442527771,
+          0.30914175510406494
+        ],
+        "actions_executed": 3000,
+        "checkpoint_identities": [
+          "sha256:faebd0043e8dc948f283ac86f893b6f6cd520e80339705e1e868dceacf4db653"
+        ],
+        "episode_count": 60,
+        "execution_horizons": [
+          4
+        ],
+        "failure_categories": {
+          "failed_grasp": 6,
+          "no_initial_motion": 53,
+          "object_drop": 1
+        },
+        "inference_latency_p50_ms": 6.158635951578617,
+        "inference_latency_p95_ms": 7.580773904919624,
+        "invalid_action_count": 0,
+        "mean_action_smoothness_l2": 0.06008849428319537,
+        "outcomes": {
+          "timeout": 60
+        },
+        "policy_queries": 780,
+        "simulator_error_count": 0,
+        "success_count": 0,
+        "success_rate": 0.0,
+        "success_wilson_95": [
+          0.0,
+          0.06017185214208986
+        ],
+        "timeout_count": 60
+      },
+      "PushCube-v1": {
+        "action_variance_by_dimension": [
+          0.002009747549891472,
+          0.004801163449883461,
+          0.0004671074275393039,
+          0.02424129657447338,
+          0.0009648880222812295,
+          0.04326041042804718,
+          0.0054977391846477985,
+          3.0364388781123353e-10
+        ],
+        "actions_executed": 3000,
+        "checkpoint_identities": [
+          "sha256:7096f41a3a2cf7d8c51f22ce8337bcf198db0b54d1b7d62ed6bba68ca2f02797"
+        ],
+        "episode_count": 60,
+        "execution_horizons": [
+          4
+        ],
+        "failure_categories": {
+          "no_initial_motion": 60
+        },
+        "inference_latency_p50_ms": 6.189404055476189,
+        "inference_latency_p95_ms": 7.053633872419595,
+        "invalid_action_count": 0,
+        "mean_action_smoothness_l2": 0.021944206695153432,
+        "outcomes": {
+          "timeout": 60
+        },
+        "policy_queries": 780,
+        "simulator_error_count": 0,
+        "success_count": 0,
+        "success_rate": 0.0,
+        "success_wilson_95": [
+          0.0,
+          0.06017185214208986
+        ],
+        "timeout_count": 60
+      },
+      "StackCube-v1": {
+        "action_variance_by_dimension": [
+          0.10399828851222992,
+          0.07976867258548737,
+          0.040372513234615326,
+          0.20371094346046448,
+          0.043038710951805115,
+          0.06650298833847046,
+          1.1557354927062988,
+          0.018004242330789566
+        ],
+        "actions_executed": 3000,
+        "checkpoint_identities": [
+          "sha256:8391ba9784bc3ec3ed630d6c51bc78e0172eeef7b27bd585df0b3036178c312e"
+        ],
+        "episode_count": 60,
+        "execution_horizons": [
+          4
+        ],
+        "failure_categories": {
+          "failed_grasp": 2,
+          "no_initial_motion": 58
+        },
+        "inference_latency_p50_ms": 6.843856535851955,
+        "inference_latency_p95_ms": 7.122900988906622,
+        "invalid_action_count": 0,
+        "mean_action_smoothness_l2": 0.05386771020432246,
+        "outcomes": {
+          "timeout": 60
+        },
+        "policy_queries": 780,
+        "simulator_error_count": 0,
+        "success_count": 0,
+        "success_rate": 0.0,
+        "success_wilson_95": [
+          0.0,
+          0.06017185214208986
+        ],
+        "timeout_count": 60
+      }
+    },
+    "shared": {
+      "PickCube-v1": {
+        "action_variance_by_dimension": [
+          0.0014354404993355274,
+          0.025662068277597427,
+          0.001085021998733282,
+          0.09462916105985641,
+          0.0002005582646233961,
+          0.06216847151517868,
+          0.013295437209308147,
+          1.8955628733330343e-11
+        ],
+        "actions_executed": 3000,
+        "checkpoint_identities": [
+          "sha256:0a44b1b2f677522ae71084d8bee8c765ae472b77ac20fefc572a9cdf1dd5f355"
+        ],
+        "episode_count": 60,
+        "execution_horizons": [
+          4
+        ],
+        "failure_categories": {
+          "no_initial_motion": 60
+        },
+        "inference_latency_p50_ms": 6.200907751917839,
+        "inference_latency_p95_ms": 6.8213037215173244,
+        "invalid_action_count": 0,
+        "mean_action_smoothness_l2": 0.034828633806690774,
+        "outcomes": {
+          "timeout": 60
+        },
+        "policy_queries": 780,
+        "simulator_error_count": 0,
+        "success_count": 0,
+        "success_rate": 0.0,
+        "success_wilson_95": [
+          0.0,
+          0.06017185214208986
+        ],
+        "timeout_count": 60
+      },
+      "PushCube-v1": {
+        "action_variance_by_dimension": [
+          0.003408599179238081,
+          0.024160252884030342,
+          0.0008023280533961952,
+          0.03535989299416542,
+          0.0012733623152598739,
+          0.07688647508621216,
+          0.009278928861021996,
+          2.2277802866343954e-11
+        ],
+        "actions_executed": 3000,
+        "checkpoint_identities": [
+          "sha256:0a44b1b2f677522ae71084d8bee8c765ae472b77ac20fefc572a9cdf1dd5f355"
+        ],
+        "episode_count": 60,
+        "execution_horizons": [
+          4
+        ],
+        "failure_categories": {
+          "insufficient_push": 2,
+          "no_initial_motion": 58
+        },
+        "inference_latency_p50_ms": 6.19188416749239,
+        "inference_latency_p95_ms": 7.393287774175396,
+        "invalid_action_count": 0,
+        "mean_action_smoothness_l2": 0.0206054844851534,
+        "outcomes": {
+          "timeout": 60
+        },
+        "policy_queries": 780,
+        "simulator_error_count": 0,
+        "success_count": 0,
+        "success_rate": 0.0,
+        "success_wilson_95": [
+          0.0,
+          0.06017185214208986
+        ],
+        "timeout_count": 60
+      },
+      "StackCube-v1": {
+        "action_variance_by_dimension": [
+          0.0074536679312586784,
+          0.036734867841005325,
+          0.0014314851723611355,
+          0.09589821100234985,
+          0.0005176812992431223,
+          0.024700528010725975,
+          0.03571338579058647,
+          2.3641210517011402e-11
+        ],
+        "actions_executed": 3000,
+        "checkpoint_identities": [
+          "sha256:0a44b1b2f677522ae71084d8bee8c765ae472b77ac20fefc572a9cdf1dd5f355"
+        ],
+        "episode_count": 60,
+        "execution_horizons": [
+          4
+        ],
+        "failure_categories": {
+          "no_initial_motion": 60
+        },
+        "inference_latency_p50_ms": 6.519626826047897,
+        "inference_latency_p95_ms": 7.214711327105759,
+        "invalid_action_count": 0,
+        "mean_action_smoothness_l2": 0.041838409975481224,
+        "outcomes": {
+          "timeout": 60
+        },
+        "policy_queries": 780,
+        "simulator_error_count": 0,
+        "success_count": 0,
+        "success_rate": 0.0,
+        "success_wilson_95": [
+          0.0,
+          0.06017185214208986
+        ],
+        "timeout_count": 60
+      }
+    }
+  },
+  "fingerprint": "sha256:b5606a256b857485ffcc55a19fe777b95ea832e7c9fdb9de6c3c2b5d8fd54b48",
+  "further_act_architecture_authorized": false,
+  "multi_skill_action_variance_difference_by_dimension": {
+    "combined_final": {
+      "PickCube-v1": [
+        -0.033125977497547865,
+        -0.02704930678009987,
+        -0.015682910103350878,
+        -0.03437229245901108,
+        -0.016879551301826723,
+        0.028627637773752213,
+        -0.5294689880684018,
+        -0.3091417550851093
+      ],
+      "PushCube-v1": [
+        0.0013988516293466091,
+        0.01935908943414688,
+        0.0003352206258568913,
+        0.01111859641969204,
+        0.00030847429297864437,
+        0.03362606465816498,
+        0.003781189676374197,
+        -2.8136608494488957e-10
+      ],
+      "StackCube-v1": [
+        -0.09654462058097124,
+        -0.04303380474448204,
+        -0.03894102806225419,
+        -0.10781273245811462,
+        -0.04252102965256199,
+        -0.041802460327744484,
+        -1.1200221069157124,
+        -0.018004242307148356
+      ]
+    },
+    "test_unseen_reset": {
+      "PickCube-v1": [
+        -0.02686525252647698,
+        -0.020114362239837646,
+        -0.008272388658951968,
+        -0.07369739562273026,
+        -0.010643089379300363,
+        0.00995740294456482,
+        -0.3886318262666464,
+        -0.4534941315491992
+      ],
+      "PushCube-v1": [
+        0.00029535358771681786,
+        0.019977186806499958,
+        0.0004998841613996774,
+        0.014205427840352058,
+        -0.000125938153360039,
+        0.016254328191280365,
+        0.0007551079615950584,
+        1.4310030157366205e-11
+      ],
+      "StackCube-v1": [
+        -0.06690648943185806,
+        -0.05202350951731205,
+        -0.037129849777556956,
+        -0.1569403111934662,
+        -0.04181463993154466,
+        -0.05520156491547823,
+        -1.009554885327816,
+        -0.015361974926245544
+      ]
+    },
+    "test_visual_shift": {
+      "PickCube-v1": [
+        -0.03922628390137106,
+        -0.036647909320890903,
+        -0.021336572128348053,
+        -0.011210419237613678,
+        -0.021357198143959977,
+        0.040953418239951134,
+        -0.6386122996918857,
+        -0.14616802333084739
+      ],
+      "PushCube-v1": [
+        0.0014701714972034097,
+        0.011143018724396825,
+        9.787883027456701e-05,
+        0.009587140753865242,
+        0.0005673051346093416,
+        0.033884674310684204,
+        0.006540039088577032,
+        1.490179334096009e-11
+      ],
+      "StackCube-v1": [
+        -0.1252970159985125,
+        -0.014361798763275146,
+        -0.04065487068146467,
+        -0.04620695859193802,
+        -0.0431065677839797,
+        -0.0404035784304142,
+        -1.2300125658512115,
+        -0.020641064250572765
+      ]
+    },
+    "validation": {
+      "PickCube-v1": [
+        -0.025152991991490126,
+        -0.018463747575879097,
+        -0.013278708443976939,
+        -0.040941271930933,
+        -0.015441879397258162,
+        0.01910979300737381,
+        -0.43174809217453003,
+        -0.5150853991349182
+      ],
+      "PushCube-v1": [
+        0.002247732598334551,
+        0.0123173245228827,
+        0.0003305062709841877,
+        0.002803649753332138,
+        -0.0003106686635874212,
+        0.014873884618282318,
+        0.005744846537709236,
+        1.210045084965028e-11
+      ],
+      "StackCube-v1": [
+        -0.07723403349518776,
+        -0.05775251053273678,
+        -0.03497166757006198,
+        -0.17745337262749672,
+        -0.039152367680799216,
+        -0.049990979954600334,
+        -0.9550841264426708,
+        -0.004700008758654435
+      ]
+    }
+  },
+  "multi_skill_failure_category_comparison": {
+    "combined_final": {
+      "PickCube-v1": {
+        "per_task": {
+          "failed_grasp": 6,
+          "no_initial_motion": 53,
+          "object_drop": 1
+        },
+        "shared": {
+          "no_initial_motion": 60
+        },
+        "shared_minus_per_task": {
+          "failed_grasp": -6,
+          "no_initial_motion": 7,
+          "object_drop": -1
+        }
+      },
+      "PushCube-v1": {
+        "per_task": {
+          "no_initial_motion": 60
+        },
+        "shared": {
+          "insufficient_push": 2,
+          "no_initial_motion": 58
+        },
+        "shared_minus_per_task": {
+          "insufficient_push": 2,
+          "no_initial_motion": -2
+        }
+      },
+      "StackCube-v1": {
+        "per_task": {
+          "failed_grasp": 2,
+          "no_initial_motion": 58
+        },
+        "shared": {
+          "no_initial_motion": 60
+        },
+        "shared_minus_per_task": {
+          "failed_grasp": -2,
+          "no_initial_motion": 2
+        }
+      }
+    },
+    "test_unseen_reset": {
+      "PickCube-v1": {
+        "per_task": {
+          "failed_grasp": 6,
+          "no_initial_motion": 24
+        },
+        "shared": {
+          "no_initial_motion": 30
+        },
+        "shared_minus_per_task": {
+          "failed_grasp": -6,
+          "no_initial_motion": 6
+        }
+      },
+      "PushCube-v1": {
+        "per_task": {
+          "no_initial_motion": 30
+        },
+        "shared": {
+          "insufficient_push": 2,
+          "no_initial_motion": 28
+        },
+        "shared_minus_per_task": {
+          "insufficient_push": 2,
+          "no_initial_motion": -2
+        }
+      },
+      "StackCube-v1": {
+        "per_task": {
+          "failed_grasp": 2,
+          "no_initial_motion": 28
+        },
+        "shared": {
+          "no_initial_motion": 30
+        },
+        "shared_minus_per_task": {
+          "failed_grasp": -2,
+          "no_initial_motion": 2
+        }
+      }
+    },
+    "test_visual_shift": {
+      "PickCube-v1": {
+        "per_task": {
+          "no_initial_motion": 29,
+          "object_drop": 1
+        },
+        "shared": {
+          "no_initial_motion": 30
+        },
+        "shared_minus_per_task": {
+          "no_initial_motion": 1,
+          "object_drop": -1
+        }
+      },
+      "PushCube-v1": {
+        "per_task": {
+          "no_initial_motion": 30
+        },
+        "shared": {
+          "no_initial_motion": 30
+        },
+        "shared_minus_per_task": {
+          "no_initial_motion": 0
+        }
+      },
+      "StackCube-v1": {
+        "per_task": {
+          "no_initial_motion": 30
+        },
+        "shared": {
+          "no_initial_motion": 30
+        },
+        "shared_minus_per_task": {
+          "no_initial_motion": 0
+        }
+      }
+    },
+    "validation": {
+      "PickCube-v1": {
+        "per_task": {
+          "failed_grasp": 14,
+          "no_initial_motion": 16
+        },
+        "shared": {
+          "no_initial_motion": 30
+        },
+        "shared_minus_per_task": {
+          "failed_grasp": -14,
+          "no_initial_motion": 14
+        }
+      },
+      "PushCube-v1": {
+        "per_task": {
+          "no_initial_motion": 30
+        },
+        "shared": {
+          "no_initial_motion": 30
+        },
+        "shared_minus_per_task": {
+          "no_initial_motion": 0
+        }
+      },
+      "StackCube-v1": {
+        "per_task": {
+          "failed_grasp": 1,
+          "no_initial_motion": 29
+        },
+        "shared": {
+          "no_initial_motion": 30
+        },
+        "shared_minus_per_task": {
+          "failed_grasp": -1,
+          "no_initial_motion": 1
+        }
+      }
+    }
+  },
+  "multi_skill_interference_average": {
+    "combined_final": 0.0,
+    "test_unseen_reset": 0.0,
+    "test_visual_shift": 0.0
+  },
+  "multi_skill_interference_success_rate_difference": {
+    "combined_final": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    },
+    "test_unseen_reset": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    },
+    "test_visual_shift": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    }
+  },
+  "multi_skill_timeout_rate_difference": {
+    "combined_final": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    },
+    "test_unseen_reset": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    },
+    "test_visual_shift": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    },
+    "validation": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    }
+  },
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "pipeline_checks": {
+    "checkpoints_recoverable": true,
+    "closed_loop_smoke_passed": true,
+    "every_evaluation_group_executed_actions": true,
+    "expected_episode_counts_valid": true,
+    "invalid_action_episode_count": 0,
+    "padding_mask_verified": true,
+    "pipeline_valid": true,
+    "simulator_error_episode_count": 0,
+    "training_runs_complete": true
+  },
+  "result": "RESULT_B",
+  "schema_version": "langmani-v2-phase2c-a1-result-analysis-v0",
+  "shared_act_failed": false,
+  "smolvla_phase_eligible": true,
+  "smolvla_training_authorized": false,
+  "summaries": {
+    "per_task": {
+      "test_unseen_reset": {
+        "PickCube-v1": {
+          "action_variance_by_dimension": [
+            0.028349317610263824,
+            0.05585777759552002,
+            0.008991366252303123,
+            0.13964757323265076,
+            0.010839423164725304,
+            0.03442168980836868,
+            0.404318630695343,
+            0.453494131565094
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:faebd0043e8dc948f283ac86f893b6f6cd520e80339705e1e868dceacf4db653"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "failed_grasp": 6,
+            "no_initial_motion": 24
+          },
+          "inference_latency_p50_ms": 5.9955064207315445,
+          "inference_latency_p95_ms": 6.15073312073946,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.06730858824900302,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        },
+        "PushCube-v1": {
+          "action_variance_by_dimension": [
+            0.002977244323119521,
+            0.005847197957336903,
+            0.0002881601976696402,
+            0.026280077174305916,
+            0.0009323643753305078,
+            0.044602055102586746,
+            0.0075009651482105255,
+            5.803294043232876e-12
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:7096f41a3a2cf7d8c51f22ce8337bcf198db0b54d1b7d62ed6bba68ca2f02797"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "no_initial_motion": 30
+          },
+          "inference_latency_p50_ms": 5.960168316960335,
+          "inference_latency_p95_ms": 6.495596468448635,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.023151076708176493,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        },
+        "StackCube-v1": {
+          "action_variance_by_dimension": [
+            0.07647476345300674,
+            0.07864139974117279,
+            0.038310665637254715,
+            0.21718329191207886,
+            0.04234058037400246,
+            0.06841770559549332,
+            1.0433553457260132,
+            0.015361974947154522
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:8391ba9784bc3ec3ed630d6c51bc78e0172eeef7b27bd585df0b3036178c312e"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "failed_grasp": 2,
+            "no_initial_motion": 28
+          },
+          "inference_latency_p50_ms": 6.051359698176384,
+          "inference_latency_p95_ms": 6.998459063470364,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.05242428976410872,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        }
+      },
+      "test_visual_shift": {
+        "PickCube-v1": {
+          "action_variance_by_dimension": [
+            0.0405428372323513,
+            0.04933628812432289,
+            0.02254701778292656,
+            0.11821282655000687,
+            0.021550115197896957,
+            0.03077620454132557,
+            0.6434499621391296,
+            0.14616802334785461
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:faebd0043e8dc948f283ac86f893b6f6cd520e80339705e1e868dceacf4db653"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "no_initial_motion": 29,
+            "object_drop": 1
+          },
+          "inference_latency_p50_ms": 6.666378118097782,
+          "inference_latency_p95_ms": 7.614338863641024,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.05286840031738772,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        },
+        "PushCube-v1": {
+          "action_variance_by_dimension": [
+            0.0010397137375548482,
+            0.003685182658955455,
+            0.0004102444218005985,
+            0.02056453749537468,
+            0.0009706633863970637,
+            0.0386333093047142,
+            0.0032822065986692905,
+            4.099566172643954e-12
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:7096f41a3a2cf7d8c51f22ce8337bcf198db0b54d1b7d62ed6bba68ca2f02797"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "no_initial_motion": 30
+          },
+          "inference_latency_p50_ms": 6.510607898235321,
+          "inference_latency_p95_ms": 7.275082264095542,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.020737336682130368,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        },
+        "StackCube-v1": {
+          "action_variance_by_dimension": [
+            0.13022208213806152,
+            0.06018213555216789,
+            0.04181899130344391,
+            0.15547826886177063,
+            0.0435657761991024,
+            0.060528386384248734,
+            1.2672998905181885,
+            0.020641064271330833
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:8391ba9784bc3ec3ed630d6c51bc78e0172eeef7b27bd585df0b3036178c312e"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "no_initial_motion": 30
+          },
+          "inference_latency_p50_ms": 6.8967631086707115,
+          "inference_latency_p95_ms": 7.198803126811981,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.0553111306445362,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        }
+      },
+      "validation": {
+        "PickCube-v1": {
+          "action_variance_by_dimension": [
+            0.027127515524625778,
+            0.0384637825191021,
+            0.0142739312723279,
+            0.08176275342702866,
+            0.01572880707681179,
+            0.024162348359823227,
+            0.45124080777168274,
+            0.5150853991508484
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:faebd0043e8dc948f283ac86f893b6f6cd520e80339705e1e868dceacf4db653"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "failed_grasp": 14,
+            "no_initial_motion": 16
+          },
+          "inference_latency_p50_ms": 6.050156429409981,
+          "inference_latency_p95_ms": 6.359546072781079,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.06521623027136007,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        },
+        "PushCube-v1": {
+          "action_variance_by_dimension": [
+            0.003355031367391348,
+            0.005642944481223822,
+            0.0003212772135157138,
+            0.026104824617505074,
+            0.0009492138051427901,
+            0.043818406760692596,
+            0.009110953658819199,
+            8.034651069466214e-12
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:7096f41a3a2cf7d8c51f22ce8337bcf198db0b54d1b7d62ed6bba68ca2f02797"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "no_initial_motion": 30
+          },
+          "inference_latency_p50_ms": 5.868334323167801,
+          "inference_latency_p95_ms": 8.41508898884058,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.022945290317727025,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        },
+        "StackCube-v1": {
+          "action_variance_by_dimension": [
+            0.08586262911558151,
+            0.07643907517194748,
+            0.03613276779651642,
+            0.21355216205120087,
+            0.03964861482381821,
+            0.06044654920697212,
+            0.9882486462593079,
+            0.004700008779764175
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:8391ba9784bc3ec3ed630d6c51bc78e0172eeef7b27bd585df0b3036178c312e"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "failed_grasp": 1,
+            "no_initial_motion": 29
+          },
+          "inference_latency_p50_ms": 5.984730087220669,
+          "inference_latency_p95_ms": 6.18011001497507,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.048613039502242904,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        }
+      }
+    },
+    "shared": {
+      "test_unseen_reset": {
+        "PickCube-v1": {
+          "action_variance_by_dimension": [
+            0.0014840650837868452,
+            0.03574341535568237,
+            0.0007189775933511555,
+            0.0659501776099205,
+            0.0001963337854249403,
+            0.0443790927529335,
+            0.015686804428696632,
+            1.5894808039207398e-11
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:0a44b1b2f677522ae71084d8bee8c765ae472b77ac20fefc572a9cdf1dd5f355"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "no_initial_motion": 30
+          },
+          "inference_latency_p50_ms": 6.090541370213032,
+          "inference_latency_p95_ms": 6.219976767897605,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.030802073211015687,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        },
+        "PushCube-v1": {
+          "action_variance_by_dimension": [
+            0.003272597910836339,
+            0.02582438476383686,
+            0.0007880443590693176,
+            0.040485505014657974,
+            0.0008064262219704688,
+            0.06085638329386711,
+            0.008256073109805584,
+            2.011332420059908e-11
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:0a44b1b2f677522ae71084d8bee8c765ae472b77ac20fefc572a9cdf1dd5f355"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "insufficient_push": 2,
+            "no_initial_motion": 28
+          },
+          "inference_latency_p50_ms": 6.074155680835247,
+          "inference_latency_p95_ms": 6.282826233655214,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.02305773969306781,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        },
+        "StackCube-v1": {
+          "action_variance_by_dimension": [
+            0.009568274021148682,
+            0.02661789022386074,
+            0.0011808158596977592,
+            0.06024298071861267,
+            0.0005259404424577951,
+            0.013216140680015087,
+            0.033800460398197174,
+            2.090897767426103e-11
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:0a44b1b2f677522ae71084d8bee8c765ae472b77ac20fefc572a9cdf1dd5f355"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "no_initial_motion": 30
+          },
+          "inference_latency_p50_ms": 6.11893180757761,
+          "inference_latency_p95_ms": 7.1475885808467865,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.04761035618348818,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        }
+      },
+      "test_visual_shift": {
+        "PickCube-v1": {
+          "action_variance_by_dimension": [
+            0.0013165533309802413,
+            0.012688378803431988,
+            0.001210445654578507,
+            0.10700240731239319,
+            0.00019291705393698066,
+            0.0717296227812767,
+            0.004837662447243929,
+            1.700724110154095e-11
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:0a44b1b2f677522ae71084d8bee8c765ae472b77ac20fefc572a9cdf1dd5f355"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "no_initial_motion": 30
+          },
+          "inference_latency_p50_ms": 6.652559153735638,
+          "inference_latency_p95_ms": 6.91445879638195,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.03885519440236586,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        },
+        "PushCube-v1": {
+          "action_variance_by_dimension": [
+            0.002509885234758258,
+            0.01482820138335228,
+            0.0005081232520751655,
+            0.03015167824923992,
+            0.0015379685210064054,
+            0.07251798361539841,
+            0.009822245687246323,
+            1.9001359513604044e-11
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:0a44b1b2f677522ae71084d8bee8c765ae472b77ac20fefc572a9cdf1dd5f355"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "no_initial_motion": 30
+          },
+          "inference_latency_p50_ms": 6.433271802961826,
+          "inference_latency_p95_ms": 8.589363377541304,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.01815322927723899,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        },
+        "StackCube-v1": {
+          "action_variance_by_dimension": [
+            0.004925066139549017,
+            0.045820336788892746,
+            0.0011641206219792366,
+            0.10927131026983261,
+            0.0004592084151227027,
+            0.020124807953834534,
+            0.03728732466697693,
+            2.0758070609638857e-11
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:0a44b1b2f677522ae71084d8bee8c765ae472b77ac20fefc572a9cdf1dd5f355"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "no_initial_motion": 30
+          },
+          "inference_latency_p50_ms": 6.569847464561462,
+          "inference_latency_p95_ms": 7.570318225771185,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.03606646376747426,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        }
+      },
+      "validation": {
+        "PickCube-v1": {
+          "action_variance_by_dimension": [
+            0.0019745235331356525,
+            0.020000034943223,
+            0.0009952228283509612,
+            0.04082148149609566,
+            0.00028692767955362797,
+            0.04327214136719704,
+            0.01949271559715271,
+            1.593017211198866e-11
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:0a44b1b2f677522ae71084d8bee8c765ae472b77ac20fefc572a9cdf1dd5f355"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "no_initial_motion": 30
+          },
+          "inference_latency_p50_ms": 6.5749408677220345,
+          "inference_latency_p95_ms": 7.234517671167849,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.03082444173285888,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        },
+        "PushCube-v1": {
+          "action_variance_by_dimension": [
+            0.005602763965725899,
+            0.01796026900410652,
+            0.0006517834844999015,
+            0.02890847437083721,
+            0.0006385451415553689,
+            0.058692291378974915,
+            0.014855800196528435,
+            2.0135101919116494e-11
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:0a44b1b2f677522ae71084d8bee8c765ae472b77ac20fefc572a9cdf1dd5f355"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "no_initial_motion": 30
+          },
+          "inference_latency_p50_ms": 6.005655974149704,
+          "inference_latency_p95_ms": 9.141144622117277,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.022986109965334747,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        },
+        "StackCube-v1": {
+          "action_variance_by_dimension": [
+            0.008628595620393753,
+            0.0186865646392107,
+            0.0011611002264544368,
+            0.03609878942370415,
+            0.0004962471430189908,
+            0.010455569252371788,
+            0.03316451981663704,
+            2.110974069158278e-11
+          ],
+          "actions_executed": 1500,
+          "checkpoint_identities": [
+            "sha256:0a44b1b2f677522ae71084d8bee8c765ae472b77ac20fefc572a9cdf1dd5f355"
+          ],
+          "episode_count": 30,
+          "execution_horizons": [
+            4
+          ],
+          "failure_categories": {
+            "no_initial_motion": 30
+          },
+          "inference_latency_p50_ms": 6.237011402845383,
+          "inference_latency_p95_ms": 6.444913800805807,
+          "invalid_action_count": 0,
+          "mean_action_smoothness_l2": 0.04567395803949058,
+          "outcomes": {
+            "timeout": 30
+          },
+          "policy_queries": 390,
+          "simulator_error_count": 0,
+          "success_count": 0,
+          "success_rate": 0.0,
+          "success_wilson_95": [
+            0.0,
+            0.11351339317396876
+          ],
+          "timeout_count": 30
+        }
+      }
+    }
+  },
+  "visual_shift_success_rate_difference": {
+    "per_task": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    },
+    "shared": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    }
+  },
+  "vla_jepa_training_authorized": false,
+  "weak_or_near_zero_success_rate_maximum": 0.1
+}

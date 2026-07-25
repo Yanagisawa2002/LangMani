@@ -1,0 +1,352 @@
+{
+  "action_variance_difference_by_dimension": {
+    "combined_final": {
+      "PickCube-v1": [
+        -0.033125977497547865,
+        -0.02704930678009987,
+        -0.015682910103350878,
+        -0.03437229245901108,
+        -0.016879551301826723,
+        0.028627637773752213,
+        -0.5294689880684018,
+        -0.3091417550851093
+      ],
+      "PushCube-v1": [
+        0.0013988516293466091,
+        0.01935908943414688,
+        0.0003352206258568913,
+        0.01111859641969204,
+        0.00030847429297864437,
+        0.03362606465816498,
+        0.003781189676374197,
+        -2.8136608494488957e-10
+      ],
+      "StackCube-v1": [
+        -0.09654462058097124,
+        -0.04303380474448204,
+        -0.03894102806225419,
+        -0.10781273245811462,
+        -0.04252102965256199,
+        -0.041802460327744484,
+        -1.1200221069157124,
+        -0.018004242307148356
+      ]
+    },
+    "test_unseen_reset": {
+      "PickCube-v1": [
+        -0.02686525252647698,
+        -0.020114362239837646,
+        -0.008272388658951968,
+        -0.07369739562273026,
+        -0.010643089379300363,
+        0.00995740294456482,
+        -0.3886318262666464,
+        -0.4534941315491992
+      ],
+      "PushCube-v1": [
+        0.00029535358771681786,
+        0.019977186806499958,
+        0.0004998841613996774,
+        0.014205427840352058,
+        -0.000125938153360039,
+        0.016254328191280365,
+        0.0007551079615950584,
+        1.4310030157366205e-11
+      ],
+      "StackCube-v1": [
+        -0.06690648943185806,
+        -0.05202350951731205,
+        -0.037129849777556956,
+        -0.1569403111934662,
+        -0.04181463993154466,
+        -0.05520156491547823,
+        -1.009554885327816,
+        -0.015361974926245544
+      ]
+    },
+    "test_visual_shift": {
+      "PickCube-v1": [
+        -0.03922628390137106,
+        -0.036647909320890903,
+        -0.021336572128348053,
+        -0.011210419237613678,
+        -0.021357198143959977,
+        0.040953418239951134,
+        -0.6386122996918857,
+        -0.14616802333084739
+      ],
+      "PushCube-v1": [
+        0.0014701714972034097,
+        0.011143018724396825,
+        9.787883027456701e-05,
+        0.009587140753865242,
+        0.0005673051346093416,
+        0.033884674310684204,
+        0.006540039088577032,
+        1.490179334096009e-11
+      ],
+      "StackCube-v1": [
+        -0.1252970159985125,
+        -0.014361798763275146,
+        -0.04065487068146467,
+        -0.04620695859193802,
+        -0.0431065677839797,
+        -0.0404035784304142,
+        -1.2300125658512115,
+        -0.020641064250572765
+      ]
+    },
+    "validation": {
+      "PickCube-v1": [
+        -0.025152991991490126,
+        -0.018463747575879097,
+        -0.013278708443976939,
+        -0.040941271930933,
+        -0.015441879397258162,
+        0.01910979300737381,
+        -0.43174809217453003,
+        -0.5150853991349182
+      ],
+      "PushCube-v1": [
+        0.002247732598334551,
+        0.0123173245228827,
+        0.0003305062709841877,
+        0.002803649753332138,
+        -0.0003106686635874212,
+        0.014873884618282318,
+        0.005744846537709236,
+        1.210045084965028e-11
+      ],
+      "StackCube-v1": [
+        -0.07723403349518776,
+        -0.05775251053273678,
+        -0.03497166757006198,
+        -0.17745337262749672,
+        -0.039152367680799216,
+        -0.049990979954600334,
+        -0.9550841264426708,
+        -0.004700008758654435
+      ]
+    }
+  },
+  "average": {
+    "combined_final": 0.0,
+    "test_unseen_reset": 0.0,
+    "test_visual_shift": 0.0
+  },
+  "failure_category_comparison": {
+    "combined_final": {
+      "PickCube-v1": {
+        "per_task": {
+          "failed_grasp": 6,
+          "no_initial_motion": 53,
+          "object_drop": 1
+        },
+        "shared": {
+          "no_initial_motion": 60
+        },
+        "shared_minus_per_task": {
+          "failed_grasp": -6,
+          "no_initial_motion": 7,
+          "object_drop": -1
+        }
+      },
+      "PushCube-v1": {
+        "per_task": {
+          "no_initial_motion": 60
+        },
+        "shared": {
+          "insufficient_push": 2,
+          "no_initial_motion": 58
+        },
+        "shared_minus_per_task": {
+          "insufficient_push": 2,
+          "no_initial_motion": -2
+        }
+      },
+      "StackCube-v1": {
+        "per_task": {
+          "failed_grasp": 2,
+          "no_initial_motion": 58
+        },
+        "shared": {
+          "no_initial_motion": 60
+        },
+        "shared_minus_per_task": {
+          "failed_grasp": -2,
+          "no_initial_motion": 2
+        }
+      }
+    },
+    "test_unseen_reset": {
+      "PickCube-v1": {
+        "per_task": {
+          "failed_grasp": 6,
+          "no_initial_motion": 24
+        },
+        "shared": {
+          "no_initial_motion": 30
+        },
+        "shared_minus_per_task": {
+          "failed_grasp": -6,
+          "no_initial_motion": 6
+        }
+      },
+      "PushCube-v1": {
+        "per_task": {
+          "no_initial_motion": 30
+        },
+        "shared": {
+          "insufficient_push": 2,
+          "no_initial_motion": 28
+        },
+        "shared_minus_per_task": {
+          "insufficient_push": 2,
+          "no_initial_motion": -2
+        }
+      },
+      "StackCube-v1": {
+        "per_task": {
+          "failed_grasp": 2,
+          "no_initial_motion": 28
+        },
+        "shared": {
+          "no_initial_motion": 30
+        },
+        "shared_minus_per_task": {
+          "failed_grasp": -2,
+          "no_initial_motion": 2
+        }
+      }
+    },
+    "test_visual_shift": {
+      "PickCube-v1": {
+        "per_task": {
+          "no_initial_motion": 29,
+          "object_drop": 1
+        },
+        "shared": {
+          "no_initial_motion": 30
+        },
+        "shared_minus_per_task": {
+          "no_initial_motion": 1,
+          "object_drop": -1
+        }
+      },
+      "PushCube-v1": {
+        "per_task": {
+          "no_initial_motion": 30
+        },
+        "shared": {
+          "no_initial_motion": 30
+        },
+        "shared_minus_per_task": {
+          "no_initial_motion": 0
+        }
+      },
+      "StackCube-v1": {
+        "per_task": {
+          "no_initial_motion": 30
+        },
+        "shared": {
+          "no_initial_motion": 30
+        },
+        "shared_minus_per_task": {
+          "no_initial_motion": 0
+        }
+      }
+    },
+    "validation": {
+      "PickCube-v1": {
+        "per_task": {
+          "failed_grasp": 14,
+          "no_initial_motion": 16
+        },
+        "shared": {
+          "no_initial_motion": 30
+        },
+        "shared_minus_per_task": {
+          "failed_grasp": -14,
+          "no_initial_motion": 14
+        }
+      },
+      "PushCube-v1": {
+        "per_task": {
+          "no_initial_motion": 30
+        },
+        "shared": {
+          "no_initial_motion": 30
+        },
+        "shared_minus_per_task": {
+          "no_initial_motion": 0
+        }
+      },
+      "StackCube-v1": {
+        "per_task": {
+          "failed_grasp": 1,
+          "no_initial_motion": 29
+        },
+        "shared": {
+          "no_initial_motion": 30
+        },
+        "shared_minus_per_task": {
+          "failed_grasp": -1,
+          "no_initial_motion": 1
+        }
+      }
+    }
+  },
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "schema_version": "langmani-v2-phase2c-a1-multiskill-interference-v0",
+  "success_rate_difference": {
+    "combined_final": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    },
+    "test_unseen_reset": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    },
+    "test_visual_shift": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    }
+  },
+  "timeout_rate_difference": {
+    "combined_final": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    },
+    "test_unseen_reset": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    },
+    "test_visual_shift": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    },
+    "validation": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    }
+  },
+  "visual_shift_success_rate_difference": {
+    "per_task": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    },
+    "shared": {
+      "PickCube-v1": 0.0,
+      "PushCube-v1": 0.0,
+      "StackCube-v1": 0.0
+    }
+  }
+}

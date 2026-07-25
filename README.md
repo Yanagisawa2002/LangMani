@@ -225,6 +225,29 @@ remain untrained and unauthorized. See the
 [`training report`](docs/langmani_v2/phase_2c_a_training_report.md), and
 [`evaluation report`](docs/langmani_v2/phase_2c_a_evaluation_report.md).
 
+Phase 2C-A.1 is complete as
+[`Result B`](docs/langmani_v2/phase_2c_a1_result.md). The one authorized ACT repair replaced only
+the unbounded output with a trainable native-bound `tanh`/`lerp` head and retrained the same four
+seed-0 baselines. The random 1.6-million-action audit, padding-loss audit, real GPU smoke, two
+micro-overfits, all four full runs, and all 16 checkpoint screens passed. The selected Pick policy
+then executed 50 real actions during the infrastructure smoke with zero invalid actions and zero
+simulator errors, proving that the Phase 2C-A action-contract defect was removed. `H_exec=4` was
+selected on the frozen five-episode validation subset.
+
+Policy quality was nevertheless weak. All six 30-episode development groups and all twelve
+30-episode final unseen-reset/visual-shift groups achieved zero success; the final evaluation
+completed 360 episodes and 18,000 native environment actions with zero invalid actions and zero
+simulator errors. Wrong and shuffled Task IDs changed shared-policy actions, but no intervention
+episode succeeded. Shared-minus-per-task success is an uninformative zero-floor equality, not proof
+that interference is absent. `act_baselines_validated=true`, `act_policy_quality_weak=true`,
+`act_phase_closed=true`, `further_act_architecture_authorized=false`, and
+`smolvla_phase_eligible=true`. Eligibility is not execution authorization:
+`smolvla_training_authorized=false` and `vla_jepa_training_authorized=false`. See the
+[`training report`](docs/langmani_v2/phase_2c_a1_training_report.md),
+[`evaluation report`](docs/langmani_v2/phase_2c_a1_evaluation_report.md),
+[`multi-skill analysis`](docs/langmani_v2/phase_2c_a1_multiskill_analysis.md), and
+[`failure analysis`](docs/langmani_v2/phase_2c_a1_failure_analysis.md).
+
 The compact result package can be checked against the immutable external training/evaluation
 evidence without starting a simulator or loading a policy:
 
@@ -232,6 +255,15 @@ evidence without starting a simulator or loading a policy:
 python environment/verify_v2_phase2c_a.py \
   --evidence-root /path/to/phase2c-a-evidence \
   --report /new/path/to/result-verification.json
+
+python environment/verify_v2_phase2c_a1.py \
+  --artifact-root artifacts/langmani_v2/phase_2c_a1 \
+  --evidence-root /path/to/phase2c-a1-evidence \
+  --evaluation-root /path/to/phase2c-a1-evidence/evaluation \
+  --expected-training-commit 852658d60d8924d53fb7eb0d26cccbc4e54424ad \
+  --expected-pre-final-evaluation-commit 160d6c31b6e3708ee982edfa0118152cd7489e0f \
+  --expected-final-evaluation-commit a5c3dcc7c944e02114faaf5b304620cfa7b6cd03 \
+  --report /new/path/to/phase2c-a1-verification.json
 ```
 
 The no-training v2 production entry point is:

@@ -160,6 +160,26 @@ task-ID intervention, and representative videos. Those metrics are unavailable r
 untrained and unauthorized. Any action-representation investigation requires a separately
 authorized milestone.
 
+Phase 2C-A.1 is complete as Result B. The single authorized ACT repair introduced only
+`bounded_action_head_v1`, kept actions in native physical coordinates for padding-masked training
+and identity-processor inference, and retrained the same Pick, Stack, Push, and shared Task-ID
+seed-0 models. The 100,000-chunk action audit, padding audit, real GPU smoke, Pick/shared
+micro-overfits, four full runs, and all 16 validation checkpoint screens passed. The first
+closed-loop smoke executed 50 real environment steps with no invalid action or simulator error,
+and the frozen horizon comparison selected `H_exec=4`.
+
+All six 30-episode development groups and all twelve 30-episode final unseen-reset/visual-shift
+groups then achieved zero successes. The final stage completed all 360 episodes and 18,000 native
+actions without an action-contract or simulator failure. Task-ID intervention proved that the
+oracle condition changes actions, but no condition produced success. Because both per-task and
+shared controls are at a zero-success floor, the measured zero interference delta is not evidence
+that interference is absent. The phase closes with `act_baselines_validated=true`,
+`act_policy_quality_weak=true`, `shared_act_failed=false`, `act_phase_closed=true`,
+`further_act_architecture_authorized=false`, and `smolvla_phase_eligible=true`.
+`shared_act_failed=false` means only that the Result-C condition was not met; the shared policy did
+not pass a quality gate. SmolVLA and VLA-JEPA remain untrained, with both training-authorized flags
+false. Any next phase requires a new explicit authorization and cannot reopen ACT.
+
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected

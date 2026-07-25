@@ -1,0 +1,375 @@
+{
+  "episode_count": 180,
+  "groups": [
+    {
+      "episodes_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/evaluation/development/per_task/PickCube-v1/episodes.jsonl",
+        "sha256": "74d8556e0cc4977b4fa8a82c36775b479819347577c12fa622a678feafdb2e6c",
+        "size_bytes": 318068
+      },
+      "scope": "per_task",
+      "split": "validation",
+      "summary": {
+        "checkpoint_identities": [
+          "sha256:faebd0043e8dc948f283ac86f893b6f6cd520e80339705e1e868dceacf4db653"
+        ],
+        "completed": true,
+        "episode_count": 30,
+        "execution_horizon": 4,
+        "failure_categories": {
+          "failed_grasp": 14,
+          "no_initial_motion": 16
+        },
+        "inference_latency_p50_ms": 6.050156429409981,
+        "inference_latency_p95_ms": 6.359546072781079,
+        "invalid_action_count": 0,
+        "mean_action_saturation_rate": 0.11966666666666666,
+        "mean_action_smoothness_l2": 0.06521623027136007,
+        "mean_episode_length": 50.0,
+        "mean_policy_query_count": 13.0,
+        "outcomes": {
+          "timeout": 30
+        },
+        "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+        "policy_ids": [
+          "phase2c-a1:pick_act:sha256:59ffd19955ee79d2f85508a354fb7c5148d95fccf17e9af5df27d6277b94a877"
+        ],
+        "post_contact_divergence_mean_m": 0.010416716084850649,
+        "runtime_manifest_fingerprint": "sha256:e9c2114c13a8b7f43896a02676b6a28ccae2b3d963a4be9204ff56ec8de802ea",
+        "schema_version": "langmani-v2-phase2c-a-evaluation-summary-v0",
+        "simulator_error_count": 0,
+        "split": "validation",
+        "success_count": 0,
+        "success_rate": 0.0,
+        "success_wilson_95": [
+          0.0,
+          0.11351339317396876
+        ],
+        "task_condition_id": "PickCube-v1",
+        "task_condition_ids": [
+          "PickCube-v1"
+        ],
+        "task_id": "PickCube-v1",
+        "task_ids": [
+          "PickCube-v1"
+        ],
+        "task_intervention_lock_fingerprint": null,
+        "task_intervention_role": null
+      },
+      "summary_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/evaluation/development/per_task/PickCube-v1/summary.json",
+        "sha256": "465f5d08464bac5d104740ad241d42c30a727321517e36d649096c749ff6f3e3",
+        "size_bytes": 1458
+      },
+      "task_id": "PickCube-v1"
+    },
+    {
+      "episodes_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/evaluation/development/per_task/StackCube-v1/episodes.jsonl",
+        "sha256": "436b089c821d265f1dc3a9b8c6fe8f7dd536ebcd5fdcb0548c6a9bc02c402f16",
+        "size_bytes": 318231
+      },
+      "scope": "per_task",
+      "split": "validation",
+      "summary": {
+        "checkpoint_identities": [
+          "sha256:8391ba9784bc3ec3ed630d6c51bc78e0172eeef7b27bd585df0b3036178c312e"
+        ],
+        "completed": true,
+        "episode_count": 30,
+        "execution_horizon": 4,
+        "failure_categories": {
+          "failed_grasp": 1,
+          "no_initial_motion": 29
+        },
+        "inference_latency_p50_ms": 5.984730087220669,
+        "inference_latency_p95_ms": 6.18011001497507,
+        "invalid_action_count": 0,
+        "mean_action_saturation_rate": 0.12383333333333332,
+        "mean_action_smoothness_l2": 0.048613039502242904,
+        "mean_episode_length": 50.0,
+        "mean_policy_query_count": 13.0,
+        "outcomes": {
+          "timeout": 30
+        },
+        "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+        "policy_ids": [
+          "phase2c-a1:stack_act:sha256:25789faefc4a9940bf7c4ae3ebcae0a7814e3e85f889e27d36fcc04e8ab4ce0e"
+        ],
+        "post_contact_divergence_mean_m": 0.002616064115046451,
+        "runtime_manifest_fingerprint": "sha256:affa869ba0eaaed7525a57e976b8221913d1f8e0a6e46993e1b19f4ddb3034c3",
+        "schema_version": "langmani-v2-phase2c-a-evaluation-summary-v0",
+        "simulator_error_count": 0,
+        "split": "validation",
+        "success_count": 0,
+        "success_rate": 0.0,
+        "success_wilson_95": [
+          0.0,
+          0.11351339317396876
+        ],
+        "task_condition_id": "StackCube-v1",
+        "task_condition_ids": [
+          "StackCube-v1"
+        ],
+        "task_id": "StackCube-v1",
+        "task_ids": [
+          "StackCube-v1"
+        ],
+        "task_intervention_lock_fingerprint": null,
+        "task_intervention_role": null
+      },
+      "summary_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/evaluation/development/per_task/StackCube-v1/summary.json",
+        "sha256": "20812d713a50be91eff4facdeca9bfb12620292704bd400d4a50faceb7e8e66b",
+        "size_bytes": 1462
+      },
+      "task_id": "StackCube-v1"
+    },
+    {
+      "episodes_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/evaluation/development/per_task/PushCube-v1/episodes.jsonl",
+        "sha256": "2e6adeca3bb5af592acc7be794ab20eb4065af7a03da5a79dcb5ad315a99a96b",
+        "size_bytes": 316951
+      },
+      "scope": "per_task",
+      "split": "validation",
+      "summary": {
+        "checkpoint_identities": [
+          "sha256:7096f41a3a2cf7d8c51f22ce8337bcf198db0b54d1b7d62ed6bba68ca2f02797"
+        ],
+        "completed": true,
+        "episode_count": 30,
+        "execution_horizon": 4,
+        "failure_categories": {
+          "no_initial_motion": 30
+        },
+        "inference_latency_p50_ms": 5.868334323167801,
+        "inference_latency_p95_ms": 8.41508898884058,
+        "invalid_action_count": 0,
+        "mean_action_saturation_rate": 0.125,
+        "mean_action_smoothness_l2": 0.022945290317727025,
+        "mean_episode_length": 50.0,
+        "mean_policy_query_count": 13.0,
+        "outcomes": {
+          "timeout": 30
+        },
+        "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+        "policy_ids": [
+          "phase2c-a1:push_act:sha256:6583d27a51aa30660ee4402204290e99ee0220c672317692fd80b1a4511feef4"
+        ],
+        "post_contact_divergence_mean_m": null,
+        "runtime_manifest_fingerprint": "sha256:8a857e77ab4ca36b9238d333b4b4623daea0d3ce5b33f2bf7a407548789b2e80",
+        "schema_version": "langmani-v2-phase2c-a-evaluation-summary-v0",
+        "simulator_error_count": 0,
+        "split": "validation",
+        "success_count": 0,
+        "success_rate": 0.0,
+        "success_wilson_95": [
+          0.0,
+          0.11351339317396876
+        ],
+        "task_condition_id": "PushCube-v1",
+        "task_condition_ids": [
+          "PushCube-v1"
+        ],
+        "task_id": "PushCube-v1",
+        "task_ids": [
+          "PushCube-v1"
+        ],
+        "task_intervention_lock_fingerprint": null,
+        "task_intervention_role": null
+      },
+      "summary_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/evaluation/development/per_task/PushCube-v1/summary.json",
+        "sha256": "9a414f9bb2788a9e57c31ebe1b6f1ff5b72217a8753481823cc2c92cdd79a103",
+        "size_bytes": 1404
+      },
+      "task_id": "PushCube-v1"
+    },
+    {
+      "episodes_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/evaluation/development/shared/PickCube-v1/episodes.jsonl",
+        "sha256": "4dd8147b274d192466dc4bfeedc5a82a6d7c9c70a3c5bedbc89cb7e850915e24",
+        "size_bytes": 322805
+      },
+      "scope": "shared",
+      "split": "validation",
+      "summary": {
+        "checkpoint_identities": [
+          "sha256:0a44b1b2f677522ae71084d8bee8c765ae472b77ac20fefc572a9cdf1dd5f355"
+        ],
+        "completed": true,
+        "episode_count": 30,
+        "execution_horizon": 4,
+        "failure_categories": {
+          "no_initial_motion": 30
+        },
+        "inference_latency_p50_ms": 6.5749408677220345,
+        "inference_latency_p95_ms": 7.234517671167848,
+        "invalid_action_count": 0,
+        "mean_action_saturation_rate": 0.125,
+        "mean_action_smoothness_l2": 0.03082444173285888,
+        "mean_episode_length": 50.0,
+        "mean_policy_query_count": 13.0,
+        "outcomes": {
+          "timeout": 30
+        },
+        "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+        "policy_ids": [
+          "phase2c-a1:shared_task_id_act:sha256:2185fd2725f40de1e28ce88656219af5fdbf9a25988b8992f2876f9b6e9e68f0"
+        ],
+        "post_contact_divergence_mean_m": null,
+        "runtime_manifest_fingerprint": "sha256:7ecfebbe0ca28f7232cfaaf1a9f1f1b745a0d9d54f2f6a993aa2655f38d06147",
+        "schema_version": "langmani-v2-phase2c-a-evaluation-summary-v0",
+        "simulator_error_count": 0,
+        "split": "validation",
+        "success_count": 0,
+        "success_rate": 0.0,
+        "success_wilson_95": [
+          0.0,
+          0.11351339317396876
+        ],
+        "task_condition_id": "PickCube-v1",
+        "task_condition_ids": [
+          "PickCube-v1"
+        ],
+        "task_id": "PickCube-v1",
+        "task_ids": [
+          "PickCube-v1"
+        ],
+        "task_intervention_lock_fingerprint": null,
+        "task_intervention_role": null
+      },
+      "summary_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/evaluation/development/shared/PickCube-v1/summary.json",
+        "sha256": "705642ec33b0c2a247f1102c03fbb2b7922b9c4d1e5587903c2f4aa10fccf3c3",
+        "size_bytes": 1415
+      },
+      "task_id": "PickCube-v1"
+    },
+    {
+      "episodes_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/evaluation/development/shared/StackCube-v1/episodes.jsonl",
+        "sha256": "1aed6a23a58bd71d9cae19cd0bec6529116bda001f6965a8cdb71d15723db8c2",
+        "size_bytes": 322271
+      },
+      "scope": "shared",
+      "split": "validation",
+      "summary": {
+        "checkpoint_identities": [
+          "sha256:0a44b1b2f677522ae71084d8bee8c765ae472b77ac20fefc572a9cdf1dd5f355"
+        ],
+        "completed": true,
+        "episode_count": 30,
+        "execution_horizon": 4,
+        "failure_categories": {
+          "no_initial_motion": 30
+        },
+        "inference_latency_p50_ms": 6.237011402845383,
+        "inference_latency_p95_ms": 6.444913800805806,
+        "invalid_action_count": 0,
+        "mean_action_saturation_rate": 0.125,
+        "mean_action_smoothness_l2": 0.04567395803949058,
+        "mean_episode_length": 50.0,
+        "mean_policy_query_count": 13.0,
+        "outcomes": {
+          "timeout": 30
+        },
+        "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+        "policy_ids": [
+          "phase2c-a1:shared_task_id_act:sha256:2185fd2725f40de1e28ce88656219af5fdbf9a25988b8992f2876f9b6e9e68f0"
+        ],
+        "post_contact_divergence_mean_m": null,
+        "runtime_manifest_fingerprint": "sha256:7dfd42b0d33168c006c8660e8b273e49af90ac244e804559a9341549662733ec",
+        "schema_version": "langmani-v2-phase2c-a-evaluation-summary-v0",
+        "simulator_error_count": 0,
+        "split": "validation",
+        "success_count": 0,
+        "success_rate": 0.0,
+        "success_wilson_95": [
+          0.0,
+          0.11351339317396876
+        ],
+        "task_condition_id": "StackCube-v1",
+        "task_condition_ids": [
+          "StackCube-v1"
+        ],
+        "task_id": "StackCube-v1",
+        "task_ids": [
+          "StackCube-v1"
+        ],
+        "task_intervention_lock_fingerprint": null,
+        "task_intervention_role": null
+      },
+      "summary_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/evaluation/development/shared/StackCube-v1/summary.json",
+        "sha256": "ee7e0bce24ef31f602de66b53b700cf988f97eb3a39cddbdb3e9e8e1818ffb84",
+        "size_bytes": 1418
+      },
+      "task_id": "StackCube-v1"
+    },
+    {
+      "episodes_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/evaluation/development/shared/PushCube-v1/episodes.jsonl",
+        "sha256": "2c1c258a9d0334a471ff3cbf195c633032a24f94e05b969d181617506ac66621",
+        "size_bytes": 318631
+      },
+      "scope": "shared",
+      "split": "validation",
+      "summary": {
+        "checkpoint_identities": [
+          "sha256:0a44b1b2f677522ae71084d8bee8c765ae472b77ac20fefc572a9cdf1dd5f355"
+        ],
+        "completed": true,
+        "episode_count": 30,
+        "execution_horizon": 4,
+        "failure_categories": {
+          "no_initial_motion": 30
+        },
+        "inference_latency_p50_ms": 6.005655974149704,
+        "inference_latency_p95_ms": 9.141144622117277,
+        "invalid_action_count": 0,
+        "mean_action_saturation_rate": 0.125,
+        "mean_action_smoothness_l2": 0.022986109965334747,
+        "mean_episode_length": 50.0,
+        "mean_policy_query_count": 13.0,
+        "outcomes": {
+          "timeout": 30
+        },
+        "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+        "policy_ids": [
+          "phase2c-a1:shared_task_id_act:sha256:2185fd2725f40de1e28ce88656219af5fdbf9a25988b8992f2876f9b6e9e68f0"
+        ],
+        "post_contact_divergence_mean_m": null,
+        "runtime_manifest_fingerprint": "sha256:07f879acdfdf45c07d6d7039ee106facc5d67741b89bff630eca7602eed21ae2",
+        "schema_version": "langmani-v2-phase2c-a-evaluation-summary-v0",
+        "simulator_error_count": 0,
+        "split": "validation",
+        "success_count": 0,
+        "success_rate": 0.0,
+        "success_wilson_95": [
+          0.0,
+          0.11351339317396876
+        ],
+        "task_condition_id": "PushCube-v1",
+        "task_condition_ids": [
+          "PushCube-v1"
+        ],
+        "task_id": "PushCube-v1",
+        "task_ids": [
+          "PushCube-v1"
+        ],
+        "task_intervention_lock_fingerprint": null,
+        "task_intervention_role": null
+      },
+      "summary_file": {
+        "external_path": "/root/autodl-tmp/langmani-phase2c-a1-evidence/evaluation/development/shared/PushCube-v1/summary.json",
+        "sha256": "842a64848afb764730189494ff2b32353ebb41682661035293c56a9af5c20124",
+        "size_bytes": 1415
+      },
+      "task_id": "PushCube-v1"
+    }
+  ],
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "schema_version": "langmani-v2-phase2c-a1-development-registry-v0"
+}
