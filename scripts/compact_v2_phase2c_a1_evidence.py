@@ -129,6 +129,25 @@ def _summary_episode_count(record: dict[str, object]) -> int:
     return count
 
 
+def _screen_component_fingerprints(
+    screens: list[dict[str, object]],
+) -> dict[str, dict[str, str]]:
+    result: dict[str, dict[str, str]] = {}
+    for screen in screens:
+        checkpoint = screen.get("checkpoint_fingerprint")
+        components = screen.get("checkpoint_components")
+        if (
+            not isinstance(checkpoint, str)
+            or checkpoint in result
+            or not isinstance(components, dict)
+            or set(components) != {"model", "preprocessor", "postprocessor"}
+            or not all(isinstance(value, str) for value in components.values())
+        ):
+            raise RuntimeError("checkpoint screen component registry is invalid")
+        result[checkpoint] = {name: str(value) for name, value in components.items()}
+    return result
+
+
 def _integer_field(record: dict[str, object], key: str) -> int:
     value = record.get(key)
     if not isinstance(value, int):
@@ -162,6 +181,9 @@ def main() -> int:
         model_kind: _read_object(evidence_root / "reports" / filename)
         for model_kind, filename in MODEL_REPORT_NAMES.items()
     }
+    screen_paths = sorted((evidence_root / "reports/screens").glob("*.json"))
+    screens = [_read_object(path) for path in screen_paths]
+    screen_components = _screen_component_fingerprints(screens)
     training_configs = {
         model_kind: {
             "identity": report["identity"],
@@ -216,8 +238,9 @@ def main() -> int:
                     **checkpoint,
                 }
             )
-            components = checkpoint["component_fingerprints"]
-            assert isinstance(components, dict)
+            components = screen_components.get(str(checkpoint["checkpoint_fingerprint"]))
+            if components is None:
+                raise RuntimeError("training checkpoint lacks a matching screen")
             processor_records.append(
                 {
                     "model_kind": model_kind,
@@ -259,7 +282,6 @@ def main() -> int:
         },
     )
 
-    screen_paths = sorted((evidence_root / "reports/screens").glob("*.json"))
     selection_paths = sorted((evidence_root / "reports/selections").glob("*.json"))
     _write_new(
         artifact_root,
@@ -268,8 +290,8 @@ def main() -> int:
             "schema_version": "langmani-v2-phase2c-a1-checkpoint-screen-registry-v0",
             "package_fingerprint": PACKAGE_FINGERPRINT,
             "screens": [
-                {"result": _read_object(path), "file": _external_file(path)}
-                for path in screen_paths
+                {"result": screen, "file": _external_file(path)}
+                for path, screen in zip(screen_paths, screens, strict=True)
             ],
             "selections": [
                 {"result": _read_object(path), "file": _external_file(path)}
