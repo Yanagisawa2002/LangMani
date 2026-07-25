@@ -16,7 +16,7 @@ from typing import Any
 
 import torch
 
-from langmani.datasets.identity import sha256_file
+from langmani.v2.phase2c import sha256_file
 from langmani.v2.phase2c_a import (
     PACKAGE_FINGERPRINT,
     UniformTaskBatchSampler,

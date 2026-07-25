@@ -15,7 +15,7 @@ from pathlib import Path
 
 import torch
 
-from langmani.datasets.identity import sha256_file
+from langmani.v2.phase2c import sha256_file
 from langmani.v2.phase2c_b import (
     OFFICIAL_BASE_CONFIG_SHA256,
     OFFICIAL_BASE_MODEL,
