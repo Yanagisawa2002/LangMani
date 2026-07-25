@@ -260,7 +260,7 @@ def _reload_audit(
     )
 
     processors = make_pre_post_processors(policy.config, pretrained_path=checkpoint)
-    policy.to(device=torch.device("cuda"), dtype=torch.bfloat16)
+    policy.to(device=torch.device("cuda"))
     policy.eval()
     processed = processors[0](dict(raw_batch))
     if not isinstance(processed, Mapping):
@@ -278,7 +278,10 @@ def _reload_audit(
         device=state.device,
         dtype=state.dtype,
     )
-    with torch.inference_mode():
+    with (
+        torch.inference_mode(),
+        torch.autocast(device_type="cuda", dtype=torch.bfloat16),
+    ):
         actions = processors[1](policy.predict_action_chunk(dict(processed), noise=noise))
     if (
         not isinstance(actions, torch.Tensor)
@@ -596,7 +599,7 @@ def main() -> int:
         if not accelerator.sync_gradients:
             continue
         global_step += 1
-        last_loss = float(loss)
+        last_loss = float(loss.detach())
         if accelerator.is_main_process and (
             global_step == 1 or global_step % 10 == 0 or global_step == target_steps
         ):

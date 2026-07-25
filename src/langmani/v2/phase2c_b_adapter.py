@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import time
 from collections.abc import Mapping
+from contextlib import nullcontext
 from pathlib import Path
 from typing import Any, cast
 
@@ -103,8 +104,7 @@ class Phase2CBSmolVLAPolicyAdapter:
         )
         self.preprocessor = processors[0]
         self.postprocessor = processors[1]
-        target_dtype = torch.bfloat16 if dtype == "bfloat16" else torch.float32
-        self.policy.to(device=torch.device(device), dtype=target_dtype)
+        self.policy.to(device=torch.device(device))
         self.policy.eval()
         for component in (self.policy, self.preprocessor, self.postprocessor):
             reset = getattr(component, "reset", None)
@@ -197,7 +197,12 @@ class Phase2CBSmolVLAPolicyAdapter:
         mapped = map_smolvla_observation(observation, task=instruction)
         started = time.perf_counter()
         try:
-            with torch.inference_mode():
+            inference_autocast = (
+                torch.autocast(device_type="cuda", dtype=torch.bfloat16)
+                if self.device == "cuda" and self.dtype == "bfloat16"
+                else nullcontext()
+            )
+            with torch.inference_mode(), inference_autocast:
                 processed = self.preprocessor(mapped)
                 if not isinstance(processed, Mapping):
                     raise Phase2CBSmolVLAAdapterError("preprocessor returned a non-mapping")
