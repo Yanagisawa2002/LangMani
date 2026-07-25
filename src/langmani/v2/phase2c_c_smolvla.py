@@ -82,8 +82,12 @@ def project_relative_policy_batch(
         or padding.shape != action.shape[:2]
     ):
         raise Phase2CCSmolVLAError("real relative-action batch is malformed")
-    latent = active.encode(action, state)
-    latent = latent.masked_fill(padding.unsqueeze(-1), 0.0)
+    valid = ~padding
+    if not bool(torch.any(valid)):
+        raise Phase2CCSmolVLAError("relative-action batch contains no valid targets")
+    state_per_target = state[:, None, :].expand(-1, action.shape[1], -1)
+    latent = torch.zeros_like(action)
+    latent[valid] = active.encode(action[valid], state_per_target[valid])
     batch[ACTION_FEATURE_KEY] = latent
     return batch
 

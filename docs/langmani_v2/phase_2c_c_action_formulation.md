@@ -61,6 +61,10 @@ Both are exactly 1.01 times the corresponding train-only maximum safe-logit disp
 float32 rounding. They are frozen before training. No clipping, projection, action replacement,
 or scale sweep exists.
 
+The immutable `action_is_pad` mask is applied before bounded encoding: only valid chunk targets
+enter the transform, while padded positions receive the loss-mask sentinel zero. This does not
+replace any accepted action target and padded positions remain excluded from the official loss.
+
 ## Gates
 
 Training is blocked until all of these pass:

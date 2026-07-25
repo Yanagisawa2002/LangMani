@@ -3765,6 +3765,11 @@ before any optimizer exists. The pre-registered float32 scales are `0.0775754973
 seven arm components and `16.947166442871094` for the normalized gripper component. There is no
 scale sweep, clipping, projection, rejection sampling, or replacement action.
 
+The frozen `action_is_pad` mask excludes padded chunk positions before the bounded encoder. Only
+valid accepted targets are transformed; padded positions receive the existing zero loss-mask
+sentinel. This is not an action replacement and cannot affect a physical or accepted dataset
+action.
+
 Static preparation must independently recompute those exact float32 scales, exercise at least
 100,000 random 50-action residual chunks, and reconstruct every accepted Pick train, validation,
 and unseen-reset frame within absolute error `1e-6`. It also freezes the phase-diagnostic frame

@@ -16,6 +16,7 @@ from langmani.v2.phase2c_c import (
     derive_frozen_scales,
     relative_training_config,
 )
+from langmani.v2.phase2c_c_smolvla import project_relative_policy_batch
 
 
 def _state_from_reference(reference: torch.Tensor) -> torch.Tensor:
@@ -123,3 +124,29 @@ def test_static_relative_action_audit_checks_100k_chunks() -> None:
     assert report["upper_bound_violation_count"] == 0
     assert report["clipping_event_count"] == 0
     assert report["projection_event_count"] == 0
+
+
+def test_relative_batch_excludes_padding_before_bounded_encoding() -> None:
+    reference = torch.tensor(
+        [[0.1, 0.2, -0.1, -1.5, 0.05, 2.0, 0.3, 0.25]],
+        dtype=torch.float32,
+    )
+    state = _state_from_reference(reference)
+    actions = reference[:, None, :].repeat(1, 50, 1)
+    padding = torch.zeros((1, 50), dtype=torch.bool)
+    padding[:, -1] = True
+    actions[:, -1, :7] = torch.tensor(ACTION_LOWER[:7], dtype=torch.float32)
+    actions[:, -1, 7] = -1.0
+    batch = project_relative_policy_batch(
+        {
+            "observation.images.base_camera": torch.zeros((1, 3, 256, 256), dtype=torch.uint8),
+            "observation.state": state,
+            "action": actions,
+            "action_is_pad": padding,
+            "task": ["Pick up the cube."],
+        }
+    )
+    latent = batch["action"]
+    assert isinstance(latent, torch.Tensor)
+    assert torch.max(torch.abs(latent[:, :-1])).item() <= 1e-6
+    assert torch.equal(latent[:, -1], torch.zeros((1, 8), dtype=torch.float32))
