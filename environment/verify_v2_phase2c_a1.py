@@ -174,6 +174,7 @@ def _verify_evaluation_group(
     path: Path,
     *,
     expected_count: int,
+    expected_evaluation_commit: str,
     final_policy_lock: str | None,
 ) -> EvaluationGroupVerification:
     rows = _read_jsonl(path / "episodes.jsonl")
@@ -187,7 +188,9 @@ def _verify_evaluation_group(
         or manifest.get("action_clipping") is not False
         or manifest.get("action_projection") is not False
         or manifest.get("bounded_action_head_v1_required") is not True
+        or manifest.get("evaluation_git_commit") != expected_evaluation_commit
         or manifest.get("final_policy_lock_fingerprint") != final_policy_lock
+        or not _fingerprint_matches(manifest)
     ):
         raise Phase2CA1VerificationError(f"evaluation group is incomplete: {path}")
     action_count = sum(_verify_action_sequence(record) for record in rows)
@@ -314,6 +317,7 @@ def main() -> int:
     ]
     checks["checkpoint_screens"] = len(screens) == 16 and all(
         screen.get("schema_version") == "langmani-v2-phase2c-a1-checkpoint-screen-v0"
+        and _fingerprint_matches(screen)
         and screen.get("policy_query_count") == 10_000
         and screen.get("lower_bound_violations") == 0
         and screen.get("upper_bound_violations") == 0
@@ -324,11 +328,14 @@ def main() -> int:
         _read_object(evidence_root / "reports/selections" / f"{kind}.json")
         for kind in EXPECTED_STEPS
     ]
-    checks["checkpoint_selections"] = all(_valid_selection(selection) for selection in selections)
+    checks["checkpoint_selections"] = all(
+        _fingerprint_matches(selection) and _valid_selection(selection) for selection in selections
+    )
 
     smoke_group = _verify_evaluation_group(
         evaluation_root / "closed_loop_smoke",
         expected_count=1,
+        expected_evaluation_commit=args.expected_evaluation_commit,
         final_policy_lock=None,
     )
     checks["closed_loop_smoke"] = (
@@ -360,6 +367,7 @@ def main() -> int:
                 _verify_evaluation_group(
                     evaluation_root / "development" / scope / task_id,
                     expected_count=30,
+                    expected_evaluation_commit=args.expected_evaluation_commit,
                     final_policy_lock=None,
                 )
             )
@@ -368,6 +376,7 @@ def main() -> int:
                     _verify_evaluation_group(
                         evaluation_root / "final" / scope / split / task_id,
                         expected_count=30,
+                        expected_evaluation_commit=args.expected_evaluation_commit,
                         final_policy_lock=str(final_lock_fingerprint),
                     )
                 )
@@ -380,13 +389,15 @@ def main() -> int:
     )
     intervention = _read_object(evidence_root / "reports/task-intervention-analysis.json")
     checks["task_intervention"] = (
-        intervention.get("split") == "validation"
+        _fingerprint_matches(intervention)
+        and intervention.get("split") == "validation"
         and intervention.get("language_grounding_claimed") is False
         and intervention.get("passed") is True
     )
     analysis = _read_object(evidence_root / "reports/result-analysis.json")
     checks["result_and_closure"] = (
-        analysis.get("result") in {"RESULT_A", "RESULT_B", "RESULT_C"}
+        _fingerprint_matches(analysis)
+        and analysis.get("result") in {"RESULT_A", "RESULT_B", "RESULT_C"}
         and analysis.get("act_baselines_validated") is True
         and analysis.get("act_phase_closed") is True
         and analysis.get("further_act_architecture_authorized") is False

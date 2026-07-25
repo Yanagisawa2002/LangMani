@@ -312,6 +312,7 @@ def _diagnose(args: argparse.Namespace) -> dict[str, object]:
     result["passed"] = bool(report["passed"]) and bool(
         query_audit.get("policy_query_action_audit_passed", True)
     )
+    result["fingerprint"] = f"sha256:{sha256_hex(result)}"
     _write_new_json(args.report.resolve(), result)
     return result
 
