@@ -31,11 +31,11 @@ SOURCE_BRANCH: Final = "codex/langmani-v2-phase2c-b-smolvla"
 SOURCE_COMMIT: Final = "15daf852238edac39a65f6837340dfc5c9817ed3"
 TARGET_BRANCH: Final = "codex/langmani-v2-phase2c-c-action-formulation"
 
-RELATIVE_ACTION_TRANSFORM_ID: Final = "pick_state_relative_bounded_residual_v0"
+RELATIVE_ACTION_TRANSFORM_ID: Final = "pick_state_relative_bounded_residual_v1"
 RELATIVE_ACTION_TRANSFORM_SCHEMA: Final = (
-    "langmani-v2-phase2c-c-pick-state-relative-bounded-residual-v0"
+    "langmani-v2-phase2c-c-pick-state-relative-bounded-residual-v1"
 )
-RELATIVE_ACTION_TRANSFORM_FILE: Final = "pick_state_relative_bounded_residual_v0.json"
+RELATIVE_ACTION_TRANSFORM_FILE: Final = "pick_state_relative_bounded_residual_v1.json"
 
 # The safe inverse-tanh margin is one float32 half-ULP at 1.0.  The resulting
 # full accepted-Pick reconstruction error is required to remain <= 1e-6.
@@ -44,10 +44,11 @@ FLOAT32_RECONSTRUCTION_ATOL: Final = 1e-6
 RESIDUAL_SCALE_MARGIN: Final = 1.01
 
 # These two float32 values are the single pre-registered scale choice.  They
-# are 1.01 times the maximum train-only safe-logit displacement, using one
-# common arm scale and one gripper scale.  Static preparation must recompute
-# and exactly verify them before any optimizer is created.
-ARM_RESIDUAL_SCALE: Final = 0.07757549732923508
+# are 1.01 times the maximum train-only, query-anchored chunk safe-logit
+# displacement, using one common arm scale and one gripper scale.  Static
+# preparation must recompute and exactly verify them before any optimizer is
+# created.
+ARM_RESIDUAL_SCALE: Final = 0.6531111598014832
 GRIPPER_RESIDUAL_SCALE: Final = 16.947166442871094
 
 # ManiSkill Panda's normalized mimic command maps [-1, 1] to the physical
@@ -339,11 +340,18 @@ class StateRelativeBoundedActionV0:
 def derive_frozen_scales(
     physical_targets: torch.Tensor,
     current_states: torch.Tensor,
+    *,
+    train_query_count: int | None = None,
 ) -> dict[str, object]:
-    """Recompute the sole scale choice from the immutable Pick train view."""
+    """Recompute the sole scale choice from valid query-anchored train targets."""
 
     transform = StateRelativeBoundedActionV0()
     physical = transform._validate_physical(physical_targets)
+    if physical.ndim != 2 or current_states.shape != (physical.shape[0], STATE_DIMENSION):
+        raise Phase2CCContractError("train scale inputs must be aligned valid chunk targets")
+    query_count = physical.shape[0] if train_query_count is None else train_query_count
+    if not 1 <= query_count <= physical.shape[0]:
+        raise Phase2CCContractError("train query count is invalid")
     reference = transform._broadcast_reference(current_states, physical)
     displacement = transform._safe_logit(physical) - transform._safe_logit(reference)
     arm_maximum = float(torch.abs(displacement[..., :7]).max())
@@ -351,8 +359,11 @@ def derive_frozen_scales(
     derived_arm = _float32(arm_maximum * RESIDUAL_SCALE_MARGIN)
     derived_gripper = _float32(gripper_maximum * RESIDUAL_SCALE_MARGIN)
     semantic: dict[str, object] = {
-        "schema_version": "langmani-v2-phase2c-c-train-scale-audit-v0",
-        "train_frame_count": int(physical.shape[0]),
+        "schema_version": "langmani-v2-phase2c-c-train-scale-audit-v1",
+        "scale_source": "all_valid_query_anchored_train_chunk_targets",
+        "chunk_size": CHUNK_SIZE,
+        "train_query_count": int(query_count),
+        "train_valid_chunk_target_count": int(physical.shape[0]),
         "safe_logit_arm_absolute_maximum": arm_maximum,
         "safe_logit_gripper_absolute_maximum": gripper_maximum,
         "margin": RESIDUAL_SCALE_MARGIN,

@@ -22,6 +22,7 @@ import torch
 from langmani.v2.phase2c import sha256_file
 from langmani.v2.phase2c_a import PACKAGE_FINGERPRINT
 from langmani.v2.phase2c_b import (
+    CHUNK_SIZE,
     BoundedActionLatentV1,
     ModelKind,
     SmolVLATrainingConfig,
@@ -267,6 +268,41 @@ def _split_data(primary: Path, split: str) -> tuple[dict[str, np.ndarray], dict[
     }
     identity["fingerprint"] = canonical_fingerprint(identity)
     return arrays, identity
+
+
+def _query_anchored_targets(
+    arrays: Mapping[str, np.ndarray],
+) -> tuple[torch.Tensor, torch.Tensor, dict[str, object]]:
+    states = arrays["state"]
+    actions = arrays["action"]
+    episode_indices = arrays["episode_index"]
+    frame_indices = arrays["frame_index"]
+    target_parts: list[np.ndarray] = []
+    state_parts: list[np.ndarray] = []
+    query_count = 0
+    for episode_index in np.unique(episode_indices):
+        indices = np.flatnonzero(episode_indices == episode_index)
+        indices = indices[np.argsort(frame_indices[indices])]
+        if not np.array_equal(frame_indices[indices], np.arange(len(indices), dtype=np.int64)):
+            raise Phase2CCContractError("accepted episode frame order is not contiguous")
+        for position, query_index in enumerate(indices):
+            target_indices = indices[position : position + CHUNK_SIZE]
+            target_parts.append(actions[target_indices])
+            state_parts.append(np.repeat(states[query_index][None, :], len(target_indices), axis=0))
+            query_count += 1
+    targets = torch.from_numpy(np.concatenate(target_parts, axis=0))
+    current_states = torch.from_numpy(np.concatenate(state_parts, axis=0))
+    if query_count != len(actions) or targets.shape[0] < query_count:
+        raise Phase2CCContractError("query-anchored target construction is incomplete")
+    identity = {
+        "query_count": query_count,
+        "valid_chunk_target_count": int(targets.shape[0]),
+        "chunk_size": CHUNK_SIZE,
+        "anchor": "current_observation_state_at_policy_query",
+        "future_state_used": False,
+        "padded_target_count": query_count * CHUNK_SIZE - int(targets.shape[0]),
+    }
+    return targets, current_states, identity
 
 
 def _image_identity(split: str, derived_identity: str, frame_index: int) -> str:
@@ -623,28 +659,49 @@ def main() -> int:
         split_identities[split] = identity
         state = torch.from_numpy(cast(np.ndarray, arrays["state"]))
         action = torch.from_numpy(cast(np.ndarray, arrays["action"]))
+        chunk_targets, chunk_states, chunk_identity = _query_anchored_targets(arrays)
+        if split == "train":
+            train_scale = derive_frozen_scales(
+                chunk_targets,
+                chunk_states,
+                train_query_count=int(chunk_identity["query_count"]),
+            )
+            if train_scale["exact_scale_match"] is not True:
+                raise Phase2CCContractError(
+                    "frozen residual scales do not match query-anchored train chunks"
+                )
         residual = transform.physical_residual(action, state)
         reconstructed_delta = transform.reconstruct_from_physical_residual(residual, state)
         latent = transform.encode(action, state)
         reconstructed_latent = transform.decode(latent, state)
+        chunk_latent = transform.encode(chunk_targets, chunk_states)
+        reconstructed_chunks = transform.decode(chunk_latent, chunk_states)
         delta_error = torch.abs(reconstructed_delta - action)
         latent_error = torch.abs(reconstructed_latent - action)
+        chunk_error = torch.abs(reconstructed_chunks - chunk_targets)
         reconstruction_by_split[split] = {
             "frame_count": len(action),
+            **chunk_identity,
             "physical_delta_inverse_maximum_absolute_error": float(delta_error.max()),
             "bounded_latent_inverse_maximum_absolute_error": float(latent_error.max()),
+            "query_anchored_chunk_inverse_maximum_absolute_error": float(chunk_error.max()),
             "physical_delta_inverse_over_tolerance_count": int(
                 torch.count_nonzero(delta_error > FLOAT32_RECONSTRUCTION_ATOL)
             ),
             "bounded_latent_inverse_over_tolerance_count": int(
                 torch.count_nonzero(latent_error > FLOAT32_RECONSTRUCTION_ATOL)
             ),
+            "query_anchored_chunk_inverse_over_tolerance_count": int(
+                torch.count_nonzero(chunk_error > FLOAT32_RECONSTRUCTION_ATOL)
+            ),
             "nonfinite_count": int(torch.count_nonzero(~torch.isfinite(reconstructed_latent))),
+            "query_anchored_chunk_nonfinite_count": int(
+                torch.count_nonzero(~torch.isfinite(reconstructed_chunks))
+            ),
         }
         residual_numpy = residual.numpy()
         derived_views.append(_write_derived_view(output, split, arrays, residual_numpy))
         if split == "train":
-            train_scale = derive_frozen_scales(action, state)
             train_residual = residual_numpy
     if train_scale is None or train_residual is None:
         raise Phase2CCContractError("train-only residual statistics were not computed")
@@ -652,11 +709,14 @@ def main() -> int:
         raise Phase2CCContractError("frozen residual scales do not match train statistics")
     total_frames = sum(int(value["frame_count"]) for value in reconstruction_by_split.values())
     maximum_error = max(
-        float(value["bounded_latent_inverse_maximum_absolute_error"])
+        max(
+            float(value["bounded_latent_inverse_maximum_absolute_error"]),
+            float(value["query_anchored_chunk_inverse_maximum_absolute_error"]),
+        )
         for value in reconstruction_by_split.values()
     )
     reconstruction_semantic: dict[str, object] = {
-        "schema_version": "langmani-v2-phase2c-c-full-reconstruction-audit-v0",
+        "schema_version": "langmani-v2-phase2c-c-full-reconstruction-audit-v1",
         "package_fingerprint": PACKAGE_FINGERPRINT,
         "task_id": "PickCube-v1",
         "splits": list(PICK_SPLITS),
@@ -666,6 +726,7 @@ def main() -> int:
         "maximum_absolute_error": maximum_error,
         "over_tolerance_count": sum(
             int(value["bounded_latent_inverse_over_tolerance_count"])
+            + int(value["query_anchored_chunk_inverse_over_tolerance_count"])
             for value in reconstruction_by_split.values()
         ),
         "native_bound_violation_count": 0,
@@ -773,7 +834,7 @@ def main() -> int:
     real_view_fingerprint = canonical_fingerprint(real_view_semantic)
     training = SmolVLATrainingConfig()
     completion_semantic: dict[str, object] = {
-        "schema_version": "langmani-v2-phase2c-c-static-preparation-complete-v0",
+        "schema_version": "langmani-v2-phase2c-c-static-preparation-complete-v1",
         "package_fingerprint": PACKAGE_FINGERPRINT,
         "input_verification_fingerprint": input_report["fingerprint"],
         "state_action_audit_fingerprint": state_action["fingerprint"],

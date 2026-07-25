@@ -484,7 +484,7 @@ def main() -> int:
     repository = _repository_identity(str(args.training_git_commit))
     static = _read_fingerprinted(
         args.static_preparation.resolve(),
-        schema_version="langmani-v2-phase2c-c-static-preparation-complete-v0",
+        schema_version="langmani-v2-phase2c-c-static-preparation-complete-v1",
     )
     base_audit = _read_fingerprinted(
         args.base_audit_completion.resolve(),
@@ -562,17 +562,6 @@ def main() -> int:
     config_equivalence = validate_unchanged_training_config(policy.config, training)
     processor = processor_manifest(config=policy.config, statistics=statistics)
     policy.to(device=torch.device("cuda"))
-    optimizer = torch.optim.AdamW(
-        [parameter for parameter in policy.parameters() if parameter.requires_grad],
-        lr=training.learning_rate,
-        betas=training.betas,
-        eps=training.optimizer_epsilon,
-        weight_decay=training.weight_decay,
-    )
-    scheduler = LambdaLR(optimizer, lr_lambda=lambda step: _lr_factor(training, step))
-    if resume_state is not None:
-        optimizer.load_state_dict(cast(dict[str, Any], resume_state["optimizer"]))
-        scheduler.load_state_dict(cast(dict[str, Any], resume_state["scheduler"]))
     loader = _dataloader(
         view,
         kind=ModelKind.PICK,
@@ -588,6 +577,17 @@ def main() -> int:
         postprocessor,
         fixed_physical,
     )
+    optimizer = torch.optim.AdamW(
+        [parameter for parameter in policy.parameters() if parameter.requires_grad],
+        lr=training.learning_rate,
+        betas=training.betas,
+        eps=training.optimizer_epsilon,
+        weight_decay=training.weight_decay,
+    )
+    scheduler = LambdaLR(optimizer, lr_lambda=lambda step: _lr_factor(training, step))
+    if resume_state is not None:
+        optimizer.load_state_dict(cast(dict[str, Any], resume_state["optimizer"]))
+        scheduler.load_state_dict(cast(dict[str, Any], resume_state["scheduler"]))
     accelerator = Accelerator(
         mixed_precision="bf16",
         gradient_accumulation_steps=training.gradient_accumulation,

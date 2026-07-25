@@ -53,13 +53,13 @@ physical_action = normalized_to_physical(z_next)
 components and one scale is used for the normalized gripper component:
 
 ```text
-arm scale:     0.07757549732923508
+arm scale:     0.6531111598014832
 gripper scale: 16.947166442871094
 ```
 
-Both are exactly 1.01 times the corresponding train-only maximum safe-logit displacement after
-float32 rounding. They are frozen before training. No clipping, projection, action replacement,
-or scale sweep exists.
+Both are exactly 1.01 times the corresponding train-only maximum safe-logit displacement across
+all valid query-anchored chunk targets after float32 rounding. They are frozen before training.
+No clipping, projection, action replacement, or scale sweep exists.
 
 The immutable `action_is_pad` mask is applied before bounded encoding: only valid chunk targets
 enter the transform, while padded positions receive the loss-mask sentinel zero. This does not
@@ -71,6 +71,8 @@ Training is blocked until all of these pass:
 
 - the source/dataset/Phase 2C-A.1/Phase 2C-B/checkpoint identities;
 - exact recomputation of the two frozen scales;
+- reconstruction of every valid query-anchored target in the accepted Pick train, validation, and
+  unseen-reset chunk views;
 - 100,000 random 50-action chunks with no non-finite value or bound violation;
 - zero-residual identity within `1e-6`;
 - reconstruction of every accepted Pick train, validation, and unseen-reset frame within `1e-6`;

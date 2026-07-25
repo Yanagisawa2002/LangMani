@@ -3761,14 +3761,24 @@ success, and offline phase labels never enter the policy or action transform.
 The sole bounded composition is
 `native_affine(tanh(safe_logit(current)+scale*tanh(model_output)))`. One arm scale and one gripper
 scale are derived once from immutable Pick train statistics with a fixed 1.01 margin, then frozen
-before any optimizer exists. The pre-registered float32 scales are `0.07757549732923508` for all
-seven arm components and `16.947166442871094` for the normalized gripper component. There is no
-scale sweep, clipping, projection, rejection sampling, or replacement action.
+before any optimizer exists. The accepted v1 float32 scales are `0.6531111598014832` for all seven
+arm components and `16.947166442871094` for the normalized gripper component. There is no scale
+sweep, clipping, projection, rejection sampling, or replacement action.
 
 The frozen `action_is_pad` mask excludes padded chunk positions before the bounded encoder. Only
 valid accepted targets are transformed; padded positions receive the existing zero loss-mask
 sentinel. This is not an action replacement and cannot affect a physical or accepted dataset
 action.
+
+The first preflight implementation incorrectly computed its arm scale from same-frame
+state/action pairs even though the registered formulation anchors all valid future actions in a
+chunk to the query state. It failed closed during the fixed-batch smoke before an optimizer step.
+That invalid diagnostic used arm scale `0.07757549732923508`.
+The accepted v1 preflight therefore computes the sole train-derived scale over every valid
+query-anchored 50-step target. This yields the frozen float32 arm scale
+`0.6531111598014832`; the gripper scale remains `16.947166442871094`. Static preparation must also
+reconstruct all valid query-anchored targets in train, validation, and unseen-reset views before
+training. The failed frame-scale artifact is diagnostic only and is not a second experiment.
 
 Static preparation must independently recompute those exact float32 scales, exercise at least
 100,000 random 50-action residual chunks, and reconstruct every accepted Pick train, validation,
