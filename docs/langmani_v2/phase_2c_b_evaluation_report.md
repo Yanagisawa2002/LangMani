@@ -36,6 +36,7 @@ tied, the frozen ranking selected 20k/H=1 on action smoothness.
 The selected 20k/H=1 policy completed 30 validation episodes:
 
 - 0 successes and 30 timeouts;
+- success rate 0.0, with Wilson 95% confidence interval `[0.0, 0.1135]`;
 - 26 `no_initial_motion`, 4 `failed_grasp`;
 - zero invalid actions and zero simulator errors;
 - 50 environment steps and 50 policy queries per episode;
@@ -55,6 +56,7 @@ or training.
 The repaired 30-episode gate completed with:
 
 - 0 successes and 30 timeouts;
+- success rate 0.0, with Wilson 95% confidence interval `[0.0, 0.1135]`;
 - 16 `failed_grasp`, 13 `no_initial_motion`, and 1 `object_drop`;
 - zero invalid actions and zero simulator errors;
 - 50 environment steps and 7 policy queries per episode;

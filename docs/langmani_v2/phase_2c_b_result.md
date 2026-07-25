@@ -11,6 +11,7 @@ result = RESULT_D
 pipeline_valid = true
 pick_initial_success = 0/30
 pick_repaired_success = 0/30
+pick_repaired_success_rate_wilson_95 = [0.0, 0.1135]
 invalid_action_episodes = 0
 simulator_error_episodes = 0
 bounded_repair_used = true
