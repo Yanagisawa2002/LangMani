@@ -286,12 +286,19 @@ def main() -> int:
         report = _read_object(evidence_root / "reports" / filename)
         identity = report.get("identity")
         result = report.get("result")
+        model_config = _mapping(_mapping(identity).get("model_config"))
+        action_head = _mapping(model_config.get("action_head"))
         if (
             report.get("passed") is not True
             or report.get("model_kind") != model_kind
+            or report.get("bounded_action_head_v1") is not True
             or not isinstance(identity, dict)
             or identity.get("git_commit") != args.expected_training_commit
             or identity.get("package_fingerprint") != PACKAGE_FINGERPRINT
+            or action_head.get("identity") != "bounded_action_head_v1"
+            or action_head.get("action_normalization_mode") != "IDENTITY"
+            or action_head.get("clipping") is not False
+            or action_head.get("projection") is not False
             or not isinstance(result, dict)
             or result.get("final_step") != EXPECTED_STEPS[model_kind][-1]
         ):
