@@ -126,6 +126,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--task-condition-id", choices=TASK_IDS)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--capture-representatives", action="store_true")
+    parser.add_argument("--require-bounded-action-head-v1", action="store_true")
     return parser.parse_args()
 
 
@@ -151,6 +152,8 @@ def main() -> int:
         execution_horizon=args.execution_horizon,
         device="cuda",
     )
+    if args.require_bounded_action_head_v1 and not adapter.bounded_action_head_v1:
+        raise RuntimeError("evaluation requires a bounded_action_head_v1 checkpoint")
     if args.task_condition_id is None and args.task_id not in adapter.identity.compatible_task_ids:
         raise RuntimeError("policy is incompatible with the scheduled environment task")
     source_document = _source_document(args.source_root.resolve(), args.task_id)
@@ -172,6 +175,7 @@ def main() -> int:
         "maximum_steps": args.maximum_steps,
         "task_condition_id": args.task_condition_id or args.task_id,
         "policy_runtime": dict(adapter.runtime_manifest),
+        "bounded_action_head_v1_required": args.require_bounded_action_head_v1,
         "environment_kwargs": kwargs,
         "action_clipping": False,
         "action_projection": False,

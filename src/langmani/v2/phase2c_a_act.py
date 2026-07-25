@@ -747,6 +747,7 @@ def create_policy_and_processors(
     optimization: Phase2CAOptimizationConfig,
     statistics: ProcessorStatistics,
     device: str,
+    bounded_action_head_v1: bool = False,
 ) -> tuple[ACTPolicy, PolicyProcessorPipeline, PolicyProcessorPipeline, ACTConfig]:
     kind = ModelKind(model_kind)
     config = build_phase2c_a_act_config(
@@ -755,13 +756,29 @@ def create_policy_and_processors(
         use_amp=optimization.precision == "bfloat16",
         optimization=optimization,
     )
+    policy_factory = None
+    if bounded_action_head_v1:
+        from langmani.v2.phase2c_a1_bounded_act import (
+            BoundedACTPolicyV1,
+            build_bounded_act_config,
+        )
+
+        config = build_bounded_act_config(config)
+        policy_factory = BoundedACTPolicyV1
     policy, preprocessor, postprocessor = build_policy_and_processors(
         config,
         statistics.tensors,
+        policy_factory=policy_factory,
     )
     if kind is ModelKind.SHARED:
         validate_shared_act_config(config, policy)
     return policy, preprocessor, postprocessor, config
+
+
+def _bounded_policy_class() -> type[ACTPolicy]:
+    from langmani.v2.phase2c_a1_bounded_act import BoundedACTPolicyV1
+
+    return BoundedACTPolicyV1
 
 
 def _postprocess_action_chunk(
@@ -812,6 +829,7 @@ def _save_and_reload_probe(
     step: int,
     examples_processed: int,
     metric: Mapping[str, object],
+    policy_class: type[ACTPolicy] | None = None,
 ) -> tuple[Mapping[str, object], ACTPolicy, PolicyProcessorPipeline, PolicyProcessorPipeline]:
     record = save_act_checkpoint(
         run_root=run_root,
@@ -832,6 +850,7 @@ def _save_and_reload_probe(
         checkpoint_relative_path=record.relative_path,
         expected_identity=run_identity,
         for_resume=False,
+        policy_class=policy_class,
     )
     if not isinstance(loaded.policy, ACTPolicy):
         raise Phase2CAActError("checkpoint smoke did not reload ACTPolicy")
@@ -863,6 +882,7 @@ def run_one_batch_gpu_smoke(
     statistics: ProcessorStatistics,
     run_identity: Phase2CARunIdentity,
     output_root: str | Path,
+    bounded_action_head_v1: bool = False,
 ) -> dict[str, object]:
     """Exercise one real full-architecture batch through save/reload/inference."""
 
@@ -888,6 +908,7 @@ def run_one_batch_gpu_smoke(
         optimization=optimization,
         statistics=statistics,
         device="cuda",
+        bounded_action_head_v1=bounded_action_head_v1,
     )
     optimizer = _optimizer(policy, optimization)
     processed = preprocessor(projected)
@@ -960,6 +981,7 @@ def run_one_batch_gpu_smoke(
         step=1,
         examples_processed=int(projected[STATE_FEATURE_KEY].shape[0]),
         metric=metric,
+        policy_class=_bounded_policy_class() if bounded_action_head_v1 else None,
     )
     reloaded_processed = reloaded_preprocessor(projected)
     if not isinstance(reloaded_processed, Mapping):
@@ -1048,6 +1070,7 @@ def run_micro_overfit(
     run_identity: Phase2CARunIdentity,
     output_root: str | Path,
     steps: int = 200,
+    bounded_action_head_v1: bool = False,
 ) -> dict[str, object]:
     """Overfit one deterministic tiny real-data batch using the primary model."""
 
@@ -1071,6 +1094,7 @@ def run_micro_overfit(
         optimization=optimization,
         statistics=statistics,
         device="cuda",
+        bounded_action_head_v1=bounded_action_head_v1,
     )
     optimizer = _optimizer(policy, optimization)
     initial_processed = preprocessor(projected)
@@ -1136,6 +1160,7 @@ def run_micro_overfit(
         step=steps,
         examples_processed=steps * int(projected[STATE_FEATURE_KEY].shape[0]),
         metric=metric,
+        policy_class=_bounded_policy_class() if bounded_action_head_v1 else None,
     )
     loaded_processed = loaded_preprocessor(projected)
     if not isinstance(loaded_processed, Mapping):
@@ -1200,6 +1225,7 @@ def train_primary_act(
     output_root: str | Path,
     device: str = "cuda",
     maximum_steps: int | None = None,
+    bounded_action_head_v1: bool = False,
 ) -> TrainingOutcome:
     """Run one new immutable primary ACT training job."""
 
@@ -1221,13 +1247,14 @@ def train_primary_act(
         optimization=optimization,
         statistics=statistics,
         device=device,
+        bounded_action_head_v1=bounded_action_head_v1,
     )
     optimizer = _optimizer(policy, optimization)
     run_manifest = {
         "schema_version": "langmani-v2-phase2c-a-act-training-run-v0",
         "identity": run_identity.to_dict(),
         "model_kind": kind.value,
-        "model_config": Phase2CAModelConfig.for_model(kind).to_dict(),
+        "model_config": dict(run_identity.model_config),
         "effective_act_config": act_config_dict(config),
         "optimization_config": optimization.to_dict(),
         "processor_statistics": dict(statistics.manifest),
@@ -1237,6 +1264,7 @@ def train_primary_act(
         "task_lengths": dict(view.task_lengths),
         "maximum_steps": target_steps,
         "primary_budget_complete": target_steps == optimization.training_steps,
+        "bounded_action_head_v1": bounded_action_head_v1,
         "smolvla_training_authorized": False,
         "vla_jepa_training_authorized": False,
     }

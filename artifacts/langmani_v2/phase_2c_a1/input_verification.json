@@ -1,0 +1,78 @@
+{
+  "canonical_package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "dataset_identity_verification": {
+    "check_count": 33,
+    "fingerprint": "sha256:a035c293858fb8c6966b614eb758a385e42a9b50ee63edd2600245080e82e2fc",
+    "passed": true,
+    "protected_payload_classes_unchanged": true
+  },
+  "gpu_preflight": {
+    "compute_application_count": 0,
+    "device": "NVIDIA GeForce RTX 5090",
+    "device_index": 0,
+    "idle_by_memory_and_process_contract": true,
+    "memory_total_mib": 32607,
+    "memory_used_mib": 0,
+    "nvidia_pmon_process_count": 0,
+    "reported_utilization_percent": 100,
+    "utilization_note": "The driver counter remained at 100 percent with zero memory, zero compute applications, and no pmon process. GPU allocation remains gated by the zero-process and below-500-MiB contract and must be rechecked immediately before a GPU command."
+  },
+  "native_environment_preflight": {
+    "environment_steps": 0,
+    "failed_glx_icd": "/etc/vulkan/icd.d/nvidia_icd.json",
+    "failed_glx_result": "vk::createInstanceUnique: ErrorIncompatibleDriver",
+    "official_tasks_constructed_with_egl_icd": [
+      "PickCube-v1",
+      "StackCube-v1",
+      "PushCube-v1"
+    ],
+    "passed_egl_icd": "/etc/vulkan/icd.d/my_nvidia_icd.json",
+    "task_action_bounds_match": true
+  },
+  "phase2c_a_result_verification": {
+    "checkpoint_artifact_bytes_rehashed": true,
+    "checkpoint_count": 16,
+    "check_count": 9,
+    "fingerprint": "sha256:d8b42978845249ccfcb0019c05b5e6a73fd16b01c993029a62864dd3fac1d12b",
+    "passed": true,
+    "result": "RESULT_D"
+  },
+  "phase2c_a_terminal_observation": {
+    "actions_executed": 0,
+    "environment_steps": 0,
+    "gripper_high": 1.0,
+    "gripper_prediction_max": 1.0591456890106201,
+    "gripper_prediction_min": 1.0180935859680176,
+    "outcome": "invalid_policy_output",
+    "policy_queries": 1,
+    "simulator_error": false
+  },
+  "repository": {
+    "github_source_sha": "135f13d11f0f47173abe42fa19d969e519d7b1d9",
+    "local_source_branch": "codex/langmani-v2-phase2c-a-act-baselines",
+    "local_source_clean": true,
+    "local_source_sha": "135f13d11f0f47173abe42fa19d969e519d7b1d9",
+    "phase2c_a1_branch": "codex/langmani-v2-phase2c-a1-bounded-act",
+    "phase2c_a1_initial_sha": "135f13d11f0f47173abe42fa19d969e519d7b1d9",
+    "phase2c_a1_worktree": "D:/LangMani-worktrees/phase2c-a1-bounded-act",
+    "server_clean": true,
+    "server_source_branch": "codex/langmani-v2-phase2c-a-act-baselines",
+    "server_source_sha": "135f13d11f0f47173abe42fa19d969e519d7b1d9"
+  },
+  "schema_version": "langmani-v2-phase2c-a1-input-verification-v0",
+  "storage_cleanup": {
+    "data_disk_available_after_gib_approx": 39,
+    "data_disk_available_before_gib_approx": 28,
+    "deleted_only_reconstructable_caches_and_compact-report-backed_diagnostics": true,
+    "phase2c_a_training_v2_preserved": true,
+    "protected_dataset_archive_restore_preserved": true
+  },
+  "training_authorization_boundary": {
+    "phase2c_a1_optimizer_created": false,
+    "phase2c_a1_training_started": false,
+    "smolvla_process_found": false,
+    "smolvla_training_authorized": false,
+    "vla_jepa_process_found": false,
+    "vla_jepa_training_authorized": false
+  }
+}

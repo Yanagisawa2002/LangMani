@@ -1,4 +1,4 @@
-"""Smoke, micro-overfit, train, or diagnose one Phase 2C-A ACT baseline."""
+"""Smoke, micro-overfit, train, or diagnose a Phase 2C-A/A.1 ACT baseline."""
 
 from __future__ import annotations
 
@@ -33,6 +33,11 @@ from langmani.v2.phase2c_a_act import (
     run_micro_overfit,
     run_one_batch_gpu_smoke,
     train_primary_act,
+)
+from langmani.v2.phase2c_a1_bounded_act import (
+    BoundedACTPolicyV1,
+    identity_uses_bounded_action_head,
+    model_identity_with_bounded_head,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -144,11 +149,17 @@ def _identity(
     role: str,
     optimization: Any,
     statistics: ProcessorStatistics,
+    bounded_action_head_v1: bool,
 ) -> Phase2CARunIdentity:
     branch = _git("branch", "--show-current")
     status = _git("status", "--porcelain")
-    if branch != "codex/langmani-v2-phase2c-a-act-baselines" or status:
-        raise RuntimeError("ACT evidence requires the clean Phase 2C-A branch")
+    expected_branch = (
+        "codex/langmani-v2-phase2c-a1-bounded-act"
+        if bounded_action_head_v1
+        else "codex/langmani-v2-phase2c-a-act-baselines"
+    )
+    if branch != expected_branch or status:
+        raise RuntimeError(f"ACT evidence requires the clean {expected_branch} branch")
     git_commit = _git("rev-parse", "HEAD")
     split_manifest = _read_object(SPLIT_MANIFEST_PATH)
     split_fingerprint = split_manifest.get("fingerprint")
@@ -158,7 +169,13 @@ def _identity(
     identity = Phase2CARunIdentity(
         model_kind=kind,
         run_role=role,
-        model_config=Phase2CAModelConfig.for_model(kind).to_dict(),
+        model_config=(
+            model_identity_with_bounded_head(
+                Phase2CAModelConfig.for_model(kind).to_dict()
+            )
+            if bounded_action_head_v1
+            else Phase2CAModelConfig.for_model(kind).to_dict()
+        ),
         optimization_config=optimization.to_dict(),
         sampler_fingerprint=_sampler_fingerprint(
             kind,
@@ -187,6 +204,7 @@ def parse_args() -> argparse.Namespace:
         child.add_argument("--batch-size", type=int, required=True)
         child.add_argument("--dataloader-workers", type=int, default=8)
         child.add_argument("--seed", type=int, default=0)
+        child.add_argument("--bounded-action-head-v1", action="store_true")
         child.add_argument("--output-root", type=Path, required=command != "config")
         child.add_argument("--report", type=Path, required=command != "config")
         if command == "micro":
@@ -225,6 +243,11 @@ def _diagnose(args: argparse.Namespace) -> dict[str, object]:
         checkpoint_relative_path=args.checkpoint_relative_path,
         expected_identity=identity,
         for_resume=False,
+        policy_class=(
+            BoundedACTPolicyV1
+            if identity_uses_bounded_action_head(identity.model_config)
+            else None
+        ),
     )
     policy = loaded.policy
     if not hasattr(policy, "forward"):
@@ -276,7 +299,13 @@ def main() -> int:
             json.dumps(
                 {
                     "model_kind": kind.value,
-                    "model_config": Phase2CAModelConfig.for_model(kind).to_dict(),
+                    "model_config": (
+                        model_identity_with_bounded_head(
+                            Phase2CAModelConfig.for_model(kind).to_dict()
+                        )
+                        if args.bounded_action_head_v1
+                        else Phase2CAModelConfig.for_model(kind).to_dict()
+                    ),
                     "optimization_config": optimization.to_dict(),
                 },
                 indent=2,
@@ -299,6 +328,7 @@ def main() -> int:
         role=role,
         optimization=optimization,
         statistics=statistics,
+        bounded_action_head_v1=args.bounded_action_head_v1,
     )
     started = __import__("time").perf_counter()
     if args.command == "smoke":
@@ -309,6 +339,7 @@ def main() -> int:
             statistics=statistics,
             run_identity=identity,
             output_root=args.output_root,
+            bounded_action_head_v1=args.bounded_action_head_v1,
         )
     elif args.command == "micro":
         result = run_micro_overfit(
@@ -319,6 +350,7 @@ def main() -> int:
             run_identity=identity,
             output_root=args.output_root,
             steps=args.steps,
+            bounded_action_head_v1=args.bounded_action_head_v1,
         )
     else:
         outcome = train_primary_act(
@@ -328,6 +360,7 @@ def main() -> int:
             statistics=statistics,
             run_identity=identity,
             output_root=args.output_root,
+            bounded_action_head_v1=args.bounded_action_head_v1,
         )
         result = outcome.to_dict()
     elapsed = __import__("time").perf_counter() - started
@@ -336,6 +369,7 @@ def main() -> int:
         "command": args.command,
         "model_kind": kind.value,
         "package_fingerprint": PACKAGE_FINGERPRINT,
+        "bounded_action_head_v1": args.bounded_action_head_v1,
         "identity": identity.to_dict(),
         "runtime": _runtime_identity()[0],
         "wall_time_s": elapsed,

@@ -34,6 +34,12 @@ from langmani.v2.phase2c_a_act import (
     prepare_policy_batch,
     validate_shared_act_config,
 )
+from langmani.v2.phase2c_a1_bounded_act import (
+    BoundedACTPolicyV1,
+    bounded_action_head_manifest,
+    identity_uses_bounded_action_head,
+    validate_bounded_act_policy,
+)
 from langmani.v2.policy import (
     ActionChunk,
     ObservationBatch,
@@ -101,6 +107,7 @@ class Phase2CAActPolicyAdapter:
         execution_horizon: int,
         component_fingerprints: CheckpointComponentFingerprints | None = None,
         device: str = "cuda",
+        bounded_action_head_v1: bool = False,
     ) -> None:
         self.model_kind = ModelKind(model_kind)
         if execution_horizon not in EXECUTION_HORIZONS:
@@ -112,8 +119,15 @@ class Phase2CAActPolicyAdapter:
         self.postprocessor = postprocessor
         self.execution_horizon = execution_horizon
         self.device = torch.device(device)
+        self.bounded_action_head_v1 = bounded_action_head_v1
         self.policy.to(self.device)
         self.policy.eval()
+        if self.bounded_action_head_v1:
+            if not isinstance(self.policy, BoundedACTPolicyV1):
+                raise Phase2CAAdapterError(
+                    "bounded run did not reconstruct BoundedACTPolicyV1"
+                )
+            validate_bounded_act_policy(self.policy)
         if self.model_kind is ModelKind.SHARED:
             validate_shared_act_config(self.policy.config, self.policy)
         self._checkpoint_identity = checkpoint_identity
@@ -126,9 +140,21 @@ class Phase2CAActPolicyAdapter:
         self._latencies_ms: list[float] = []
         compatible = self.model_kind.compatible_task_ids
         self._identity = PolicyIdentity(
-            policy_id=f"phase2c-a:{self.model_kind.value}:{run_fingerprint}",
-            adapter_name="phase2c_a_act",
-            implementation="lerobot-0.6.0-maintained-act",
+            policy_id=(
+                f"phase2c-a1:{self.model_kind.value}:{run_fingerprint}"
+                if self.bounded_action_head_v1
+                else f"phase2c-a:{self.model_kind.value}:{run_fingerprint}"
+            ),
+            adapter_name=(
+                "phase2c_a1_bounded_act"
+                if self.bounded_action_head_v1
+                else "phase2c_a_act"
+            ),
+            implementation=(
+                "lerobot-0.6.0-act-bounded_action_head_v1"
+                if self.bounded_action_head_v1
+                else "lerobot-0.6.0-maintained-act"
+            ),
             checkpoint_identity=checkpoint_identity,
             compatible_skill_families=tuple(SKILL_FAMILIES[task_id] for task_id in compatible),
             compatible_task_ids=compatible,
@@ -149,11 +175,13 @@ class Phase2CAActPolicyAdapter:
         if not isinstance(identity_value, Mapping):
             raise Phase2CAAdapterError("run manifest lacks its semantic identity")
         identity = Phase2CARunIdentity.from_dict(identity_value)
+        bounded = identity_uses_bounded_action_head(identity.model_config)
         loaded = load_act_checkpoint(
             run_root=root,
             checkpoint_relative_path=checkpoint_relative_path,
             expected_identity=identity,
             for_resume=False,
+            policy_class=BoundedACTPolicyV1 if bounded else None,
         )
         if not isinstance(loaded.policy, ACTPolicy):
             raise Phase2CAAdapterError("checkpoint did not reload an ACTPolicy")
@@ -171,6 +199,7 @@ class Phase2CAActPolicyAdapter:
             execution_horizon=execution_horizon,
             component_fingerprints=loaded.component_fingerprints,
             device=device,
+            bounded_action_head_v1=bounded,
         )
 
     @property
@@ -195,6 +224,9 @@ class Phase2CAActPolicyAdapter:
                 else "none"
             ),
             "action_handling": "hard_reject_nonfinite_malformed_or_out_of_bounds",
+            "bounded_action_head": (
+                bounded_action_head_manifest() if self.bounded_action_head_v1 else None
+            ),
             "action_projection": False,
             "action_clipping": False,
             "device": str(self.device),
