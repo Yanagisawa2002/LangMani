@@ -751,6 +751,27 @@ def build_horizon_selection_lock(
     return {**semantic, "fingerprint": canonical_fingerprint(semantic)}
 
 
+def build_failure_taxonomy_manifest() -> dict[str, object]:
+    """Freeze the minimum required Phase 2C-B failure categories."""
+
+    semantic: dict[str, object] = {
+        "schema_version": "langmani-v2-phase2c-b-failure-taxonomy-v0",
+        "categories": list(FAILURE_CATEGORIES),
+        "episode_outcomes_kept_separate": [
+            "success",
+            "timeout",
+            "invalid_policy_output",
+            "simulator_error",
+            "terminated",
+        ],
+        "wrong_skill_behavior_requires_observed_behavior": True,
+        "instruction_ignored_is_aggregate_intervention_analysis": True,
+        "unobserved_categories_reported_as_zero_not_removed": True,
+        "settings_mutable_after_results": False,
+    }
+    return {**semantic, "fingerprint": canonical_fingerprint(semantic)}
+
+
 def validate_model_batch(
     batch: Mapping[str, object],
     *,
@@ -873,6 +894,7 @@ __all__ = [
     "apply_padding_mask",
     "build_model_view_manifest",
     "build_evaluation_schedule",
+    "build_failure_taxonomy_manifest",
     "build_horizon_selection_lock",
     "build_language_intervention_manifest",
     "build_padding_audit",

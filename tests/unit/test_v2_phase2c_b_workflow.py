@@ -6,6 +6,7 @@ from pathlib import Path
 from langmani.v2.phase2c_a import PACKAGE_FINGERPRINT
 from langmani.v2.phase2c_b import (
     HORIZON_SELECTION_EPISODES_PER_TASK,
+    build_failure_taxonomy_manifest,
     build_horizon_selection_lock,
     canonical_fingerprint,
 )
@@ -169,3 +170,7 @@ def test_horizon_lock_freezes_first_six_validation_ids() -> None:
     assert lock["episodes_per_task"] == HORIZON_SELECTION_EPISODES_PER_TASK
     assert len(lock["evaluation_ids"]["PickCube-v1"]) == 6
     assert lock["settings_mutable_after_results"] is False
+    taxonomy = build_failure_taxonomy_manifest()
+    assert "instruction_ignored" in taxonomy["categories"]
+    assert "wrong_skill_behavior" in taxonomy["categories"]
+    assert taxonomy["settings_mutable_after_results"] is False

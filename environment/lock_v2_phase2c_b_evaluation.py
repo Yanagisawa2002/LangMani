@@ -9,6 +9,7 @@ from pathlib import Path
 
 from langmani.v2.phase2c_b import (
     Phase2CBContractError,
+    build_failure_taxonomy_manifest,
     build_horizon_selection_lock,
     build_language_intervention_manifest,
     canonical_fingerprint,
@@ -52,13 +53,16 @@ def main() -> int:
     if existing_language != expected_language:
         raise Phase2CBContractError("preflight language-intervention lock changed")
     horizon = build_horizon_selection_lock(schedule)
+    taxonomy = build_failure_taxonomy_manifest()
     output_root = args.output_root.resolve()
     _write_new_or_equal(output_root / "horizon_selection_lock.json", horizon)
+    _write_new_or_equal(output_root / "failure_taxonomy.json", taxonomy)
     completion_semantic: dict[str, object] = {
         "schema_version": "langmani-v2-phase2c-b-evaluation-lock-complete-v0",
         "evaluation_schedule_fingerprint": schedule["fingerprint"],
         "horizon_selection_fingerprint": horizon["fingerprint"],
         "language_intervention_fingerprint": existing_language["fingerprint"],
+        "failure_taxonomy_fingerprint": taxonomy["fingerprint"],
         "validation_results_opened": False,
         "final_test_opened": False,
         "passed": True,
