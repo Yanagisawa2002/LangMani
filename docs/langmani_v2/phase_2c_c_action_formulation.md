@@ -80,3 +80,9 @@ Training is blocked until all of these pass:
 
 The final unseen-reset schedule stays closed unless the relative policy reaches at least 3/30
 validation successes.
+
+For the terminal matrix, one or more deterministic physical successes on the 30 frozen training
+resets is the pre-registered minimum for "meaningful" training-reset success. A sub-threshold
+validation-only result of 1--2/30 with zero training-reset successes is not assigned to A, B, C,
+or D and must stop for an explicit matrix amendment; it is never silently called a pipeline
+failure.

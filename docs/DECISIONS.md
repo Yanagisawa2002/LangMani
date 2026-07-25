@@ -3789,7 +3789,9 @@ the 30-reset validation gate, and the conditional 50-reset unseen test before mo
 Validation-only offline metrics select one of the 5k, 10k, and 20k checkpoints. The six-reset
 screen alone selects H=1 or H=8. The 50-reset unseen evaluation remains closed unless the relative
 policy first reaches at least 3/30 validation successes. If relative validation is below 3/30 but
-training resets have meaningful success, the outcome is Case B. Zero training-reset and validation
-success is Case C and permanently freezes the custom LangMani model-training route. Transform,
-checkpoint, or evaluator invalidity is Case D and is not a model-quality conclusion. No Case C or
-D may create Phase 2C-C.1.
+training resets have at least one deterministic physical success, the outcome is Case B. Zero
+training-reset and validation success is Case C and permanently freezes the custom LangMani
+model-training route. A 1--2/30 validation-only result with zero training-reset successes is an
+unregistered matrix gap and must fail closed for an explicit amendment. Transform, checkpoint, or
+evaluator invalidity is Case D and is not a model-quality conclusion. No Case C or D may create
+Phase 2C-C.1.

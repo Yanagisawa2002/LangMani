@@ -466,6 +466,58 @@ def relative_training_config() -> dict[str, object]:
     return {**semantic, "fingerprint": canonical_fingerprint(semantic)}
 
 
+def classify_action_formulation(
+    *,
+    validation_success_count: int,
+    training_reset_success_count: int,
+    pipeline_valid: bool,
+) -> dict[str, object]:
+    """Apply the frozen Phase 2C-C A/B/C/D decision matrix."""
+
+    if (
+        not isinstance(validation_success_count, int)
+        or isinstance(validation_success_count, bool)
+        or not 0 <= validation_success_count <= 30
+        or not isinstance(training_reset_success_count, int)
+        or isinstance(training_reset_success_count, bool)
+        or not 0 <= training_reset_success_count <= 30
+    ):
+        raise Phase2CCContractError("Phase 2C-C success counts are malformed")
+    if not pipeline_valid:
+        case = "CASE_D"
+    elif validation_success_count >= 3:
+        case = "CASE_A"
+    elif training_reset_success_count >= 1:
+        case = "CASE_B"
+    elif validation_success_count == 0:
+        case = "CASE_C"
+    else:
+        raise Phase2CCContractError(
+            "decision matrix does not classify sub-threshold validation-only success"
+        )
+    semantic: dict[str, object] = {
+        "schema_version": "langmani-v2-phase2c-c-result-classification-v0",
+        "package_fingerprint": PACKAGE_FINGERPRINT,
+        "pipeline_valid": pipeline_valid,
+        "validation_success_count": validation_success_count,
+        "validation_episode_count": 30,
+        "validation_success_minimum": 3,
+        "training_reset_success_count": training_reset_success_count,
+        "training_reset_episode_count": 30,
+        "meaningful_training_reset_success_minimum": 1,
+        "case": case,
+        "relative_action_formulation_validated": case == "CASE_A",
+        "action_formulation_partially_validated": case == "CASE_B",
+        "absolute_action_material_bottleneck": case == "CASE_A",
+        "langmani_model_route_eligible": case == "CASE_A",
+        "langmani_generalization_route_blocked": case in {"CASE_B", "CASE_C"},
+        "langmani_custom_model_route_eligible": case == "CASE_A",
+        "model_quality_interpretation_available": case != "CASE_D",
+        "passed": True,
+    }
+    return {**semantic, "fingerprint": canonical_fingerprint(semantic)}
+
+
 __all__ = [
     "ARM_RESIDUAL_SCALE",
     "FLOAT32_RECONSTRUCTION_ATOL",
@@ -481,6 +533,7 @@ __all__ = [
     "Phase2CCContractError",
     "build_static_relative_action_audit",
     "canonical_fingerprint",
+    "classify_action_formulation",
     "derive_frozen_scales",
     "relative_training_config",
 ]

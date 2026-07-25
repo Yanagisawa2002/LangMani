@@ -13,6 +13,7 @@ from langmani.v2.phase2c_c import (
     Phase2CCContractError,
     StateRelativeBoundedActionV0,
     build_static_relative_action_audit,
+    classify_action_formulation,
     derive_frozen_scales,
     relative_training_config,
 )
@@ -150,3 +151,36 @@ def test_relative_batch_excludes_padding_before_bounded_encoding() -> None:
     assert isinstance(latent, torch.Tensor)
     assert torch.max(torch.abs(latent[:, :-1])).item() <= 1e-6
     assert torch.equal(latent[:, -1], torch.zeros((1, 8), dtype=torch.float32))
+
+
+@pytest.mark.parametrize(
+    ("validation", "training", "pipeline_valid", "expected"),
+    [
+        (3, 0, True, "CASE_A"),
+        (0, 1, True, "CASE_B"),
+        (0, 0, True, "CASE_C"),
+        (30, 30, False, "CASE_D"),
+    ],
+)
+def test_phase2c_c_decision_matrix(
+    validation: int,
+    training: int,
+    pipeline_valid: bool,
+    expected: str,
+) -> None:
+    result = classify_action_formulation(
+        validation_success_count=validation,
+        training_reset_success_count=training,
+        pipeline_valid=pipeline_valid,
+    )
+    assert result["case"] == expected
+    assert result["passed"] is True
+
+
+def test_phase2c_c_decision_matrix_rejects_unregistered_gap() -> None:
+    with pytest.raises(Phase2CCContractError, match="does not classify"):
+        classify_action_formulation(
+            validation_success_count=1,
+            training_reset_success_count=0,
+            pipeline_valid=True,
+        )
