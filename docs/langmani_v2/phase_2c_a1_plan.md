@@ -62,6 +62,24 @@ contracts remain frozen.
     repository/remote identity checks.
 18. Classify Result A/B/C/D and set `act_phase_closed=true` in every case.
 
+Before any closed-loop result is observed, this run further freezes the
+following bounded choices:
+
+- checkpoint retention is one validation-ranked checkpoint per model
+  (`maximum=1`);
+- the horizon comparison uses the first five rows of the immutable
+  PickCube-v1 validation schedule:
+  `phase2c-a:validation:pickcube:000` through
+  `phase2c-a:validation:pickcube:004`;
+- the Task-ID intervention uses the first five immutable validation rows per
+  task, with seed `20260725`, the cyclic-next wrong-ID rule, and the
+  nondegenerate balanced shuffled-ID rule;
+- the official evaluation-schedule fingerprint is
+  `sha256:096e657348beb58cb81ffeecfd2627b5ef36dfc3969cece246a7df5f1b15223f`.
+
+These choices use validation identities only and cannot change after their
+results are visible.
+
 ## Hard stops
 
 Stop the active stage if any dataset identity changes, excluded input enters a
