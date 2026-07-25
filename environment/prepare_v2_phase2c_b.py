@@ -197,7 +197,11 @@ def _repository_audit() -> dict[str, object]:
         or upstream != head
         or not source_is_ancestor
         or status
-        or origin != "https://github.com/Yanagisawa2002/LangMani.git"
+        or origin
+        not in {
+            "https://github.com/Yanagisawa2002/LangMani.git",
+            "git@github.com:Yanagisawa2002/LangMani.git",
+        }
     ):
         raise RuntimeError("Phase 2C-B repository isolation audit failed")
     return {
