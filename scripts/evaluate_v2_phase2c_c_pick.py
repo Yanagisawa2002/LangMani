@@ -23,10 +23,6 @@ from langmani.v2.phase2c_a_evaluator import (
 from langmani.v2.phase2c_b_adapter import Phase2CBSmolVLAPolicyAdapter
 from langmani.v2.phase2c_c import Phase2CCContractError, canonical_fingerprint
 from langmani.v2.phase2c_c_adapter import Phase2CCRelativeSmolVLAAdapter
-from scripts.evaluate_v2_phase2c_b_smolvla import (
-    _environment_kwargs,
-    _source_document,
-)
 
 EXPECTED_COUNTS = {
     "smoke": 1,
@@ -95,6 +91,36 @@ def _append_jsonl(path: Path, value: Mapping[str, object]) -> None:
         stream.write(json.dumps(dict(value), sort_keys=True, allow_nan=False) + "\n")
         stream.flush()
         os.fsync(stream.fileno())
+
+
+def _source_document(source_root: Path, task_id: str) -> dict[str, object]:
+    path = source_root / "expanded" / task_id / "motionplanning" / "trajectory.json"
+    document = _read_object(path)
+    if not isinstance(document.get("env_info"), dict):
+        raise Phase2CCContractError(f"source document lacks env_info: {path}")
+    return document
+
+
+def _environment_kwargs(document: Mapping[str, object]) -> dict[str, object]:
+    env_info = document["env_info"]
+    if not isinstance(env_info, Mapping):
+        raise Phase2CCContractError("source env_info is malformed")
+    source_kwargs = env_info.get("env_kwargs")
+    if not isinstance(source_kwargs, Mapping):
+        raise Phase2CCContractError("source env_info lacks env_kwargs")
+    kwargs = dict(source_kwargs)
+    kwargs.update(
+        {
+            "obs_mode": "rgb",
+            "reward_mode": "none",
+            "render_mode": None,
+            "sim_backend": "physx_cpu",
+            "render_backend": "sapien_cuda",
+            "sensor_configs": {"width": 256, "height": 256},
+            "num_envs": 1,
+        }
+    )
+    return kwargs
 
 
 def _numpy(value: object) -> np.ndarray:

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import random
 import re
 import subprocess
@@ -18,7 +19,9 @@ import numpy as np
 import torch
 from accelerate import Accelerator
 from torch.optim.lr_scheduler import LambdaLR
+from torch.utils.data import DataLoader, Dataset, Subset
 
+from langmani.policies.act_training import DeterministicResumeBatchSampler
 from langmani.v2.phase2c_a import PACKAGE_FINGERPRINT
 from langmani.v2.phase2c_b import (
     OFFICIAL_BASE_MODEL,
@@ -52,17 +55,99 @@ from langmani.v2.phase2c_c_smolvla import (
     validate_unchanged_training_config,
 )
 from langmani.v2.smolvla_adapter import sha256_directory
-from scripts.train_v2_phase2c_b_smolvla import (
-    MICRO_STEPS,
-    _append_jsonl,
-    _checkpoint_path,
-    _dataloader,
-    _lr_factor,
-    _micro_view,
-    _restore_rng,
-    _rng_state,
-    _write_new_or_equal,
-)
+
+MICRO_STEPS = 500
+MICRO_FRAMES = 64
+
+
+def _write_new_or_equal(path: Path, value: Mapping[str, object]) -> None:
+    encoded = json.dumps(dict(value), indent=2, sort_keys=True, allow_nan=False) + "\n"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        if path.read_text(encoding="utf-8") != encoded:
+            raise Phase2CCContractError(f"existing immutable artifact differs: {path}")
+        return
+    path.write_text(encoded, encoding="utf-8", newline="\n")
+
+
+def _append_jsonl(path: Path, value: Mapping[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(dict(value), sort_keys=True, allow_nan=False) + "\n")
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def _micro_view(view: LoadedSmolVLAView, kind: ModelKind) -> LoadedSmolVLAView:
+    if kind is not ModelKind.PICK:
+        raise Phase2CCContractError("Phase 2C-C micro data must remain Pick-only")
+    length = view.task_lengths["PickCube-v1"]
+    selected = min(MICRO_FRAMES, length)
+    return LoadedSmolVLAView(
+        dataset=cast(Dataset[Mapping[str, object]], Subset(view.dataset, range(selected))),
+        task_lengths={"PickCube-v1": selected},
+        task_roots=view.task_roots,
+        split=view.split,
+    )
+
+
+def _dataloader(
+    view: LoadedSmolVLAView,
+    *,
+    kind: ModelKind,
+    training: SmolVLATrainingConfig,
+    start_optimizer_step: int,
+    num_workers: int,
+) -> DataLoader[Mapping[str, object]]:
+    if kind is not ModelKind.PICK:
+        raise Phase2CCContractError("Phase 2C-C training must remain Pick-only")
+    start_batch = start_optimizer_step * training.gradient_accumulation
+    sampler = DeterministicResumeBatchSampler(
+        dataset_size=len(cast(Any, view.dataset)),
+        batch_size=training.batch_size,
+        seed=training.seed,
+        start_step=start_batch,
+    )
+    generator = torch.Generator().manual_seed(training.seed)
+    return DataLoader(
+        view.dataset,
+        batch_sampler=cast(Any, sampler),
+        num_workers=num_workers,
+        pin_memory=True,
+        persistent_workers=num_workers > 0,
+        generator=generator,
+    )
+
+
+def _lr_factor(training: SmolVLATrainingConfig, step: int) -> float:
+    if step < training.warmup_steps:
+        return (step + 1) / training.warmup_steps
+    progress = min(
+        1.0,
+        (step - training.warmup_steps) / max(1, training.decay_steps - training.warmup_steps),
+    )
+    minimum = training.decay_learning_rate / training.learning_rate
+    return minimum + 0.5 * (1.0 - minimum) * (1.0 + math.cos(math.pi * progress))
+
+
+def _checkpoint_path(run_root: Path, step: int) -> Path:
+    return run_root / "checkpoints" / f"step-{step:08d}"
+
+
+def _rng_state() -> dict[str, object]:
+    return {
+        "python": random.getstate(),
+        "numpy": np.random.get_state(),
+        "torch": torch.get_rng_state(),
+        "cuda": torch.cuda.get_rng_state_all(),
+    }
+
+
+def _restore_rng(value: Mapping[str, object]) -> None:
+    random.setstate(cast(tuple[Any, ...], value["python"]))
+    np.random.set_state(cast(tuple[Any, ...], value["numpy"]))
+    torch.set_rng_state(cast(torch.Tensor, value["torch"]))
+    torch.cuda.set_rng_state_all(cast(list[torch.Tensor], value["cuda"]))
 
 
 def parse_args() -> argparse.Namespace:
