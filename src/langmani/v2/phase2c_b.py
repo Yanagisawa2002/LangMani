@@ -34,8 +34,10 @@ from langmani.v2.phase2c_a import (
     PACKAGE_IDENTITY,
     STATE_DIMENSION,
     TASK_IDS,
+    TASK_SLUGS,
     TRAIN_EPISODES,
     TRAIN_FRAMES,
+    VISUAL_SHIFT_IDENTITY,
 )
 
 PHASE2C_B_SCHEMA_VERSION: Final = "langmani-v2-phase2c-b-v0"
@@ -528,6 +530,178 @@ def build_model_view_manifest(model_kind: ModelKind | str) -> dict[str, object]:
     return {**semantic, "fingerprint": canonical_fingerprint(semantic)}
 
 
+def build_evaluation_schedule(
+    split_manifest: Mapping[str, object],
+    source_inventory: Mapping[str, object],
+) -> dict[str, object]:
+    """Freeze all validation/final reset and language identities before results."""
+
+    assignments = split_manifest.get("assignments")
+    sources = source_inventory.get("episodes")
+    if not isinstance(assignments, list) or not isinstance(sources, list):
+        raise Phase2CBContractError("evaluation schedule sources are malformed")
+    reset_by_source: dict[tuple[str, int], Mapping[str, object]] = {}
+    for raw in sources:
+        if not isinstance(raw, Mapping):
+            raise Phase2CBContractError("source inventory episode is malformed")
+        task_id = raw.get("task_id")
+        source_episode_id = raw.get("source_episode_id")
+        if task_id in TASK_IDS and isinstance(source_episode_id, int):
+            reset_by_source[(str(task_id), source_episode_id)] = raw
+    counts = {
+        "validation": VALIDATION_EPISODES_PER_TASK,
+        "test_unseen_reset": 50,
+        "test_unseen_task_language": 50,
+        "test_visual_shift": 50,
+    }
+    schedules: dict[str, dict[str, list[dict[str, object]]]] = {}
+    for split, maximum in counts.items():
+        schedules[split] = {}
+        for task_id in TASK_IDS:
+            selected = [
+                raw
+                for raw in assignments
+                if isinstance(raw, Mapping)
+                and raw.get("task_id") == task_id
+                and raw.get("primary_split") == split
+            ]
+            selected.sort(key=lambda value: int(value["source_episode_id"]))
+            selected = selected[:maximum]
+            if len(selected) != maximum:
+                raise Phase2CBContractError(f"{task_id}/{split} lacks {maximum} identities")
+            rows: list[dict[str, object]] = []
+            for ordinal, assignment in enumerate(selected):
+                source_episode_id = assignment.get("source_episode_id")
+                instruction = assignment.get("instruction")
+                template_id = assignment.get("instruction_template_id")
+                if (
+                    not isinstance(source_episode_id, int)
+                    or not isinstance(instruction, str)
+                    or not instruction.strip()
+                    or not isinstance(template_id, str)
+                    or not template_id
+                ):
+                    raise Phase2CBContractError("scheduled language identity is malformed")
+                source = reset_by_source.get((task_id, source_episode_id))
+                if source is None:
+                    raise Phase2CBContractError("scheduled episode lacks source reset metadata")
+                rows.append(
+                    {
+                        "evaluation_id": (f"phase2c-b:{split}:{TASK_SLUGS[task_id]}:{ordinal:03d}"),
+                        "task_id": task_id,
+                        "split": split,
+                        "source_episode_id": source_episode_id,
+                        "derived_episode_identity": assignment.get("derived_episode_identity"),
+                        "reset_identity": assignment.get("reset_identity"),
+                        "reset_kwargs": source.get("reset_kwargs"),
+                        "language_instruction": instruction,
+                        "instruction_template_id": template_id,
+                        "language_bank": assignment.get("language_bank"),
+                        "visual_transform": (
+                            VISUAL_SHIFT_IDENTITY if split == "test_visual_shift" else None
+                        ),
+                    }
+                )
+            schedules[split][task_id] = rows
+    semantic: dict[str, object] = {
+        "schema_version": "langmani-v2-phase2c-b-evaluation-schedule-v0",
+        "package_fingerprint": PACKAGE_FINGERPRINT,
+        "source_split_manifest_fingerprint": split_manifest.get("fingerprint"),
+        "source_inventory_fingerprint": source_inventory.get("fingerprint"),
+        "validation_role": "checkpoint_and_execution_horizon_selection_only",
+        "final_splits": [
+            "test_unseen_reset",
+            "test_unseen_task_language",
+            "test_visual_shift",
+        ],
+        "final_settings_mutable_after_results": False,
+        "execution_horizons": list(EXECUTION_HORIZONS),
+        "schedules": schedules,
+    }
+    return {**semantic, "fingerprint": canonical_fingerprint(semantic)}
+
+
+def build_language_intervention_manifest(
+    evaluation_schedule: Mapping[str, object],
+    *,
+    seed: int = 20_260_725,
+    episodes_per_task: int = 20,
+) -> dict[str, object]:
+    """Freeze correct/wrong/blank/shuffled instructions before model results."""
+
+    schedules = evaluation_schedule.get("schedules")
+    validation = schedules.get("validation") if isinstance(schedules, Mapping) else None
+    if (
+        evaluation_schedule.get("schema_version") != "langmani-v2-phase2c-b-evaluation-schedule-v0"
+        or evaluation_schedule.get("package_fingerprint") != PACKAGE_FINGERPRINT
+        or not isinstance(validation, Mapping)
+        or episodes_per_task < 20
+    ):
+        raise Phase2CBContractError("language intervention schedule is malformed")
+    base: list[dict[str, object]] = []
+    for task_id in TASK_IDS:
+        rows = validation.get(task_id)
+        if not isinstance(rows, list) or len(rows) < episodes_per_task:
+            raise Phase2CBContractError("language intervention lacks validation rows")
+        for ordinal, raw in enumerate(rows[:episodes_per_task]):
+            if (
+                not isinstance(raw, Mapping)
+                or not isinstance(raw.get("evaluation_id"), str)
+                or not isinstance(raw.get("language_instruction"), str)
+            ):
+                raise Phase2CBContractError("language intervention row is malformed")
+            base.append(
+                {
+                    "task_id": task_id,
+                    "ordinal": ordinal,
+                    "evaluation_id": raw["evaluation_id"],
+                    "correct_instruction": raw["language_instruction"],
+                }
+            )
+    import random
+
+    rng = random.Random(seed)
+    shuffled_sources = list(range(len(base)))
+    while all(
+        base[index]["task_id"] == base[source]["task_id"]
+        for index, source in enumerate(shuffled_sources)
+    ):
+        rng.shuffle(shuffled_sources)
+    records: list[dict[str, object]] = []
+    for index, row in enumerate(base):
+        task_id = str(row["task_id"])
+        raw_ordinal = row["ordinal"]
+        if not isinstance(raw_ordinal, int):
+            raise Phase2CBContractError("language intervention ordinal is malformed")
+        ordinal = raw_ordinal
+        wrong_task = TASK_IDS[(TASK_IDS.index(task_id) + 1) % len(TASK_IDS)]
+        wrong_row = base[TASK_IDS.index(wrong_task) * episodes_per_task + ordinal]
+        shuffled_row = base[shuffled_sources[index]]
+        records.append(
+            {
+                **row,
+                "wrong_skill_source_task_id": wrong_task,
+                "wrong_skill_instruction": wrong_row["correct_instruction"],
+                "blank_instruction": "",
+                "shuffled_source_task_id": shuffled_row["task_id"],
+                "shuffled_source_evaluation_id": shuffled_row["evaluation_id"],
+                "shuffled_instruction": shuffled_row["correct_instruction"],
+            }
+        )
+    semantic: dict[str, object] = {
+        "schema_version": "langmani-v2-phase2c-b-language-intervention-lock-v0",
+        "package_fingerprint": PACKAGE_FINGERPRINT,
+        "evaluation_schedule_fingerprint": evaluation_schedule.get("fingerprint"),
+        "split": "validation",
+        "seed": seed,
+        "episodes_per_task": episodes_per_task,
+        "conditions": ["correct", "wrong_skill", "blank", "shuffled"],
+        "records": records,
+        "settings_mutable_after_results": False,
+    }
+    return {**semantic, "fingerprint": canonical_fingerprint(semantic)}
+
+
 def validate_model_batch(
     batch: Mapping[str, object],
     *,
@@ -628,6 +802,8 @@ __all__ = [
     "VALIDATION_EPISODES_PER_TASK",
     "apply_padding_mask",
     "build_model_view_manifest",
+    "build_evaluation_schedule",
+    "build_language_intervention_manifest",
     "build_padding_audit",
     "build_static_action_audit",
     "canonical_fingerprint",

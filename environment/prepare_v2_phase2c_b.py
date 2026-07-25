@@ -28,11 +28,14 @@ from langmani.v2.phase2c_b import (
     BoundedActionLatentV1,
     ModelKind,
     SmolVLATrainingConfig,
+    build_evaluation_schedule,
+    build_language_intervention_manifest,
     build_model_view_manifest,
     build_padding_audit,
     build_static_action_audit,
     canonical_fingerprint,
 )
+from langmani.v2.phase2c_b_smolvla import audit_real_view
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ARTIFACT_ROOT = PROJECT_ROOT / "artifacts" / "langmani_v2" / "phase_2b6_v2"
@@ -230,7 +233,11 @@ def main() -> int:
     ):
         raise RuntimeError("live accepted package differs from the canonical committed package")
     config = _read_object(config_path)
-    if config.get("dataset", {}).get("fingerprint") != PACKAGE_FINGERPRINT:
+    config_dataset = config.get("dataset")
+    if (
+        not isinstance(config_dataset, Mapping)
+        or config_dataset.get("fingerprint") != PACKAGE_FINGERPRINT
+    ):
         raise RuntimeError("Phase 2C-B configuration uses a noncanonical package")
     if not torch.cuda.is_available() and not args.allow_noncuda_static:
         raise RuntimeError("Phase 2C-B target preparation requires an available CUDA device")
@@ -318,17 +325,37 @@ def main() -> int:
     _write_new_or_equal(output_root / "bounded_action_manifest.json", transform_manifest)
     _write_new_or_equal(output_root / "training_configs.json", training_manifest)
     views_root = output_root / "model_views"
+    real_view_fingerprints: dict[str, object] = {}
     for kind in ModelKind:
         _write_new_or_equal(
             views_root / f"{kind.slug}.json",
             build_model_view_manifest(kind),
         )
+        real_view_audit = audit_real_view(
+            primary_root,
+            model_kind=kind,
+        )
+        _write_new_or_equal(
+            views_root / f"{kind.slug}_real_view_audit.json",
+            real_view_audit,
+        )
+        real_view_fingerprints[kind.value] = real_view_audit["fingerprint"]
     sampler = UniformTaskBatchSampler(
         {"PickCube-v1": 54_608, "StackCube-v1": 74_891, "PushCube-v1": 48_219},
         batch_size=training.batch_size,
         seed=training.seed,
     ).audit(training.total_steps * training.gradient_accumulation)
     _write_new_or_equal(output_root / "sampler_manifest.json", sampler)
+    evaluation_schedule = build_evaluation_schedule(
+        _read_object(primary_root / "metadata" / "primary_split_manifest.json"),
+        _read_object(primary_root / "metadata" / "source_inventory.json"),
+    )
+    _write_new_or_equal(output_root / "evaluation_schedule.json", evaluation_schedule)
+    language_intervention = build_language_intervention_manifest(evaluation_schedule)
+    _write_new_or_equal(
+        output_root / "language_intervention_lock.json",
+        language_intervention,
+    )
     completion_semantic: dict[str, object] = {
         "schema_version": "langmani-v2-phase2c-b-static-preparation-complete-v0",
         "input_verification_fingerprint": input_report["fingerprint"],
@@ -337,9 +364,12 @@ def main() -> int:
         "bounded_action_fingerprint": transform.fingerprint,
         "training_config_fingerprint": training.fingerprint,
         "sampler_fingerprint": sampler["fingerprint"],
+        "evaluation_schedule_fingerprint": evaluation_schedule["fingerprint"],
+        "language_intervention_fingerprint": language_intervention["fingerprint"],
         "model_view_fingerprints": {
             kind.value: build_model_view_manifest(kind)["fingerprint"] for kind in ModelKind
         },
+        "real_view_fingerprints": real_view_fingerprints,
         "passed": True,
     }
     completion = {

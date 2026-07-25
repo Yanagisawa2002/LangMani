@@ -3655,6 +3655,10 @@ model's 32-dimensional internal state/action padding keeps every published tenso
 unchanged. Strict loading must therefore load all pretrained tensors; no visual-language,
 state-projection, action-projection, or flow-expert tensor may be silently reinitialized.
 
+The generic `PolicyContext` keeps non-empty language as its default contract but permits one
+explicitly flagged blank-language intervention. The policy-agnostic evaluator forwards an optional
+instruction string and contains no SmolVLA-specific execution branch.
+
 The reviewed official flow decoder produces an unconstrained latent action. Physical bounds are
 therefore guaranteed by the isolated parameter-free
 `smolvla_bounded_action_latent_v1` representation. Physical dataset actions are affine-mapped to

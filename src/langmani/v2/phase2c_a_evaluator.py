@@ -16,7 +16,7 @@ import time
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import torch
@@ -304,7 +304,7 @@ class OfficialManiSkillPolicyEvaluator:
             raise Phase2CAEvaluationError("official evaluator received an unknown task")
         if maximum_steps < 1:
             raise ValueError("maximum_steps must be positive")
-        self.environment = environment
+        self.environment: Any = environment
         self.base = getattr(environment, "unwrapped", environment)
         self.task_id = task_id
         self.maximum_steps = maximum_steps
@@ -326,6 +326,8 @@ class OfficialManiSkillPolicyEvaluator:
         policy: PolicyAdapter,
         schedule: Mapping[str, object],
         task_condition_id: str | None = None,
+        language_instruction: str | None = None,
+        allow_blank_language_instruction: bool = False,
         capture_video: bool = False,
     ) -> EvaluatedEpisode:
         evaluation_id = schedule.get("evaluation_id")
@@ -356,6 +358,8 @@ class OfficialManiSkillPolicyEvaluator:
                 evaluation_task=None,
                 evaluation_id=evaluation_id,
                 task_id=condition,
+                language_instruction=language_instruction,
+                allow_blank_language_instruction=allow_blank_language_instruction,
             )
         )
         try:
@@ -545,7 +549,7 @@ class OfficialManiSkillPolicyEvaluator:
             reset_identity=reset_identity,
             task_condition_id=condition,
             visual_transform=visual_transform if isinstance(visual_transform, str) else None,
-            execution_horizon=int(policy.runtime_manifest["execution_horizon"]),
+            execution_horizon=int(cast(int, policy.runtime_manifest["execution_horizon"])),
             outcome=outcome,
             success=success,
             timeout=outcome == "timeout",
@@ -609,7 +613,7 @@ def summarize_evaluation(
         for record in normalized
         if isinstance((value := record.get("action_smoothness_mean_l2")), int | float)
     ]
-    episode_lengths = [int(record["episode_length"]) for record in normalized]
+    episode_lengths = [int(cast(int, record["episode_length"])) for record in normalized]
     return {
         "schema_version": "langmani-v2-phase2c-a-evaluation-summary-v0",
         **base,
@@ -624,10 +628,10 @@ def summarize_evaluation(
         ),
         "mean_episode_length": statistics.fmean(episode_lengths),
         "mean_policy_query_count": statistics.fmean(
-            int(record["policy_query_count"]) for record in normalized
+            int(cast(int, record["policy_query_count"])) for record in normalized
         ),
         "mean_action_saturation_rate": statistics.fmean(
-            float(record["action_saturation_rate"]) for record in normalized
+            float(cast(float, record["action_saturation_rate"])) for record in normalized
         ),
         "mean_action_smoothness_l2": statistics.fmean(smoothness) if smoothness else None,
         "inference_latency_p50_ms": _percentile(latencies, 0.50),
@@ -665,16 +669,19 @@ def select_execution_horizon(
         grouped[int(horizon)].append(report)
     if any(not values for values in grouped.values()):
         raise Phase2CAContractError("horizon selection lacks one pre-registered candidate")
-    candidates = []
+    candidates: list[dict[str, Any]] = []
     for horizon, values in grouped.items():
-        episode_count = sum(int(value["episode_count"]) for value in values)
-        success_count = sum(int(value["success_count"]) for value in values)
-        invalid_count = sum(int(value["invalid_action_count"]) for value in values)
+        episode_count = sum(int(cast(int, value["episode_count"])) for value in values)
+        success_count = sum(int(cast(int, value["success_count"])) for value in values)
+        invalid_count = sum(int(cast(int, value["invalid_action_count"])) for value in values)
         timeout_count = sum(
-            int(cast_mapping(value.get("outcomes")).get("timeout", 0)) for value in values
+            int(cast(int, cast_mapping(value.get("outcomes")).get("timeout", 0)))
+            for value in values
         )
         smoothness = _optional_mean(value.get("mean_action_smoothness_l2") for value in values)
-        queries = statistics.fmean(float(value["mean_policy_query_count"]) for value in values)
+        queries = statistics.fmean(
+            float(cast(float, value["mean_policy_query_count"])) for value in values
+        )
         p95 = _optional_mean(value.get("inference_latency_p95_ms") for value in values)
         candidates.append(
             {

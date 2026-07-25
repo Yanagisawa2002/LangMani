@@ -88,14 +88,23 @@ class PolicyContext:
     evaluation_id: str
     language_instruction: str | None = None
     task_id: str | None = None
+    allow_blank_language_instruction: bool = False
 
     def __post_init__(self) -> None:
         if not isinstance(self.evaluation_id, str) or not self.evaluation_id:
             raise PolicyContractError("evaluation_id must be a non-empty string")
-        if self.language_instruction is not None and (
-            not isinstance(self.language_instruction, str) or not self.language_instruction.strip()
+        if self.language_instruction is not None and not isinstance(self.language_instruction, str):
+            raise PolicyContractError("language_instruction must be None or a string")
+        if (
+            isinstance(self.language_instruction, str)
+            and not self.language_instruction.strip()
+            and not self.allow_blank_language_instruction
         ):
-            raise PolicyContractError("language_instruction must be None or a non-empty string")
+            raise PolicyContractError(
+                "blank language_instruction requires an explicit intervention flag"
+            )
+        if not isinstance(self.allow_blank_language_instruction, bool):
+            raise PolicyContractError("allow_blank_language_instruction must be bool")
         if self.evaluation_task is None:
             if not isinstance(self.task_id, str) or not self.task_id:
                 raise PolicyContractError(

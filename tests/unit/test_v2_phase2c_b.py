@@ -15,6 +15,8 @@ from langmani.v2.phase2c_b import (
     Phase2CBContractError,
     SmolVLATrainingConfig,
     apply_padding_mask,
+    build_evaluation_schedule,
+    build_language_intervention_manifest,
     build_model_view_manifest,
     build_padding_audit,
     build_static_action_audit,
@@ -22,6 +24,7 @@ from langmani.v2.phase2c_b import (
     validate_model_batch,
 )
 from langmani.v2.phase2c_b_smolvla import BoundedSmolVLAPolicyV1
+from langmani.v2.policy import PolicyContext, PolicyContractError
 
 
 def test_bounded_action_transform_is_finite_and_inside_native_bounds(tmp_path: Path) -> None:
@@ -96,6 +99,27 @@ def test_model_views_keep_language_and_exclude_task_id_input() -> None:
     assert sum(shared["uniform_task_probabilities"].values()) == pytest.approx(1.0)
 
 
+def test_evaluation_schedule_freezes_language_and_final_identities() -> None:
+    root = Path(__file__).resolve().parents[2] / "artifacts" / "langmani_v2" / "phase_2b6_v2"
+    split = json.loads((root / "accepted_primary_split_manifest.json").read_text())
+    inventory = json.loads((root / "source_inventory.json").read_text())
+    schedule = build_evaluation_schedule(split, inventory)
+    schedules = schedule["schedules"]
+    assert len(schedules["validation"]["PickCube-v1"]) == 30
+    assert len(schedules["test_unseen_reset"]["StackCube-v1"]) == 50
+    assert len(schedules["test_unseen_task_language"]["PushCube-v1"]) == 50
+    assert len(schedules["test_visual_shift"]["PickCube-v1"]) == 50
+    row = schedules["test_unseen_task_language"]["PickCube-v1"][0]
+    assert row["language_instruction"]
+    assert row["instruction_template_id"]
+    assert row["language_bank"] == "held_out"
+    assert schedule["final_settings_mutable_after_results"] is False
+    intervention = build_language_intervention_manifest(schedule)
+    assert len(intervention["records"]) == 60
+    assert intervention["conditions"] == ["correct", "wrong_skill", "blank", "shuffled"]
+    assert intervention["records"][0]["blank_instruction"] == ""
+
+
 def test_exact_policy_batch_allowlist_requires_natural_language() -> None:
     batch = {
         "observation.images.base_camera": torch.zeros((2, 3, 256, 256)),
@@ -109,6 +133,24 @@ def test_exact_policy_batch_allowlist_requires_natural_language() -> None:
         validate_model_batch({**batch, "task_id": ["PickCube-v1"]}, shared=True)
     with pytest.raises(Phase2CBContractError, match="non-empty"):
         validate_model_batch({**batch, "task": ["", "stack the cubes"]}, shared=True)
+
+
+def test_blank_language_requires_explicit_intervention_flag() -> None:
+    with pytest.raises(PolicyContractError, match="intervention flag"):
+        PolicyContext(
+            evaluation_task=None,
+            evaluation_id="blank-probe",
+            task_id="PickCube-v1",
+            language_instruction="",
+        )
+    context = PolicyContext(
+        evaluation_task=None,
+        evaluation_id="blank-probe",
+        task_id="PickCube-v1",
+        language_instruction="",
+        allow_blank_language_instruction=True,
+    )
+    assert context.language_instruction == ""
 
 
 def test_primary_training_configuration_is_single_and_frozen() -> None:
