@@ -1285,9 +1285,7 @@ def run_micro_overfit(
         "gripper_output_varies_across_examples": gripper_range > 1e-6,
         "same_observation_task_condition_max_abs_difference": task_condition_difference,
         "task_condition_changes_output": (
-            task_condition_difference > 1e-8
-            if task_condition_difference is not None
-            else None
+            task_condition_difference > 1e-8 if task_condition_difference is not None else None
         ),
         "checkpoint": checkpoint,
         "checkpoint_reload_max_abs_error": reload_error,
