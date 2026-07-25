@@ -85,7 +85,9 @@ class Phase2CAEpisodeResult:
     final_evaluation: Mapping[str, object]
     action_min: tuple[float, ...] | None
     action_max: tuple[float, ...] | None
-    schema_version: str = "langmani-v2-phase2c-a-evaluation-episode-v0"
+    action_sequence: tuple[tuple[float, ...], ...]
+    action_sequence_fingerprint: str
+    schema_version: str = "langmani-v2-phase2c-a1-evaluation-episode-v0"
 
     def to_dict(self) -> dict[str, object]:
         value = asdict(self)
@@ -93,6 +95,7 @@ class Phase2CAEpisodeResult:
             "inference_latency_samples_ms",
             "action_min",
             "action_max",
+            "action_sequence",
         ):
             if value[key] is not None:
                 value[key] = list(value[key])
@@ -528,6 +531,9 @@ class OfficialManiSkillPolicyEvaluator:
             raise Phase2CAEvaluationError(f"unknown failure category {category!r}")
         initial_to_final = _maximum_translation(initial_positions, last_positions)
         action_array = np.stack(actions) if actions else None
+        action_sequence = tuple(
+            tuple(float(component) for component in action) for action in actions
+        )
         result = Phase2CAEpisodeResult(
             evaluation_id=evaluation_id,
             split=split,
@@ -578,6 +584,8 @@ class OfficialManiSkillPolicyEvaluator:
                 if action_array is not None
                 else None
             ),
+            action_sequence=action_sequence,
+            action_sequence_fingerprint=f"sha256:{sha256_hex(action_sequence)}",
         )
         return EvaluatedEpisode(result=result, frames=tuple(frames))
 

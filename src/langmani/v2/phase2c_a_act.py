@@ -1503,6 +1503,7 @@ def offline_diagnostics(
     postprocessor: PolicyProcessorPipeline,
     validation_batches: Iterable[Mapping[str, object]],
     maximum_batches: int | None = None,
+    enforce_native_action_bounds: bool = False,
 ) -> dict[str, object]:
     """Compute validation-only ACT diagnostics with explicit padding masks."""
 
@@ -1520,8 +1521,11 @@ def offline_diagnostics(
     per_dimension_abs = np.zeros(ACTION_DIMENSION, dtype=np.float64)
     per_dimension_count = np.zeros(ACTION_DIMENSION, dtype=np.int64)
     prediction_values: list[np.ndarray] = []
+    audited_prediction_values: list[np.ndarray] = []
     saturation_components = 0
     predicted_components = 0
+    lower_bound_violations = 0
+    upper_bound_violations = 0
     by_task: dict[str, dict[str, float]] = {
         task_id: {"absolute_sum": 0.0, "component_count": 0.0}
         for task_id in kind.compatible_task_ids
@@ -1587,8 +1591,19 @@ def offline_diagnostics(
             per_dimension_abs[dimension] += float(values.sum())
             per_dimension_count[dimension] += values.size
         prediction_values.append(predicted_np[valid_np])
-        low = np.array([-3.0] * 7 + [-1.0], dtype=np.float32)
-        high = np.array([3.0] * 7 + [1.0], dtype=np.float32)
+        audited_prediction_values.append(predicted_np.reshape(-1, ACTION_DIMENSION))
+        low = (
+            PANDA_ACTION_LOW
+            if enforce_native_action_bounds
+            else np.array([-3.0] * 7 + [-1.0], dtype=np.float32)
+        )
+        high = (
+            PANDA_ACTION_HIGH
+            if enforce_native_action_bounds
+            else np.array([3.0] * 7 + [1.0], dtype=np.float32)
+        )
+        lower_bound_violations += int(np.count_nonzero(predicted_np < low))
+        upper_bound_violations += int(np.count_nonzero(predicted_np > high))
         margin = np.maximum((high - low) * 0.01, 1e-8)
         valid_predictions = predicted_np[valid_np]
         saturation_components += int(
@@ -1608,12 +1623,23 @@ def offline_diagnostics(
     if total_samples < 1 or valid_steps < 1:
         raise Phase2CAActError("offline validation consumed no samples")
     predictions = np.concatenate(prediction_values, axis=0)
+    audited_predictions = np.concatenate(audited_prediction_values, axis=0)
     component_count = valid_steps * ACTION_DIMENSION
+    observed_minimum = audited_predictions.min(axis=0)
+    observed_maximum = audited_predictions.max(axis=0)
+    passed = (
+        lower_bound_violations == 0 and upper_bound_violations == 0
+        if enforce_native_action_bounds
+        else True
+    )
     return {
         "schema_version": "langmani-v2-phase2c-a-offline-diagnostics-v0",
         "model_kind": kind.value,
         "split": "validation",
         "sample_count": total_samples,
+        "policy_query_count": total_samples,
+        "audited_action_chunk_count": total_samples,
+        "audited_action_count": int(audited_predictions.shape[0]),
         "valid_action_count": valid_steps,
         "total_action_loss": weighted_loss / total_samples,
         "unpadded_normalized_l1": normalized_abs / component_count,
@@ -1628,10 +1654,21 @@ def offline_diagnostics(
         "gripper_raw_l1": float(per_dimension_abs[7] / per_dimension_count[7]),
         "predicted_action_variance_by_dimension": np.var(predictions, axis=0).tolist(),
         "constant_action_prediction": bool(np.all(np.var(predictions, axis=0) <= 1e-12)),
+        "observed_action_minimum_by_dimension": observed_minimum.tolist(),
+        "observed_action_maximum_by_dimension": observed_maximum.tolist(),
+        "observed_gripper_minimum": float(observed_minimum[-1]),
+        "observed_gripper_maximum": float(observed_maximum[-1]),
+        "lower_bound_violations": lower_bound_violations,
+        "upper_bound_violations": upper_bound_violations,
+        "native_action_lower": PANDA_ACTION_LOW.tolist(),
+        "native_action_upper": PANDA_ACTION_HIGH.tolist(),
         "saturation_rate": (
             saturation_components / predicted_components if predicted_components else 0.0
         ),
         "output_finite": True,
+        "clipping_events": 0,
+        "projection_events": 0,
+        "native_action_bounds_enforced": enforce_native_action_bounds,
         "by_task_raw_l1": {
             task_id: (
                 values["absolute_sum"] / values["component_count"]
@@ -1641,8 +1678,112 @@ def offline_diagnostics(
             for task_id, values in by_task.items()
         },
         "padding_excluded_from_metrics": True,
-        "passed": True,
+        "passed": passed,
     }
+
+
+@torch.no_grad()
+def policy_query_action_audit(
+    *,
+    model_kind: ModelKind | str,
+    policy: ACTPolicy,
+    preprocessor: PolicyProcessorPipeline,
+    postprocessor: PolicyProcessorPipeline,
+    validation_batches: Iterable[Mapping[str, object]],
+    required_policy_queries: int,
+) -> dict[str, object]:
+    """Audit exactly N policy queries over deterministic validation observations.
+
+    A validation split may contain fewer than 10,000 frames.  In that case the
+    ordered loader is replayed from its start and the final batch is truncated.
+    This changes neither the validation error computation nor checkpoint
+    selection evidence; it only supplies the required repeated action-contract
+    stress audit on real, accepted observations.
+    """
+
+    if required_policy_queries < 1:
+        raise ValueError("policy-query audit needs a positive query count")
+    kind = ModelKind(model_kind)
+    policy.eval()
+    query_count = 0
+    pass_count = 0
+    nonfinite_actions = 0
+    lower_bound_violations = 0
+    upper_bound_violations = 0
+    prediction_values: list[np.ndarray] = []
+    while query_count < required_policy_queries:
+        progressed = False
+        pass_count += 1
+        for raw_batch in validation_batches:
+            progressed = True
+            projected = prepare_policy_batch(raw_batch, model_kind=kind)
+            processed = preprocessor(projected)
+            if not isinstance(processed, Mapping):
+                raise Phase2CAActError("action-audit processor did not return a mapping")
+            validate_processed_batch(processed, model_kind=kind)
+            observations = {
+                key: value
+                for key, value in processed.items()
+                if key not in {ACTION_FEATURE_KEY, "action_is_pad"}
+            }
+            available = int(cast(torch.Tensor, next(iter(observations.values()))).shape[0])
+            retained = min(available, required_policy_queries - query_count)
+            observations = {
+                key: value[:retained] if isinstance(value, torch.Tensor) else value
+                for key, value in observations.items()
+            }
+            predicted = policy.predict_action_chunk(cast(dict[str, torch.Tensor], observations))
+            physical = _postprocess_action_chunk(postprocessor, predicted)
+            if tuple(physical.shape) != (retained, CHUNK_SIZE, ACTION_DIMENSION):
+                raise Phase2CAActError("policy-query audit produced a malformed action chunk")
+            array = physical.float().cpu().numpy()
+            nonfinite_actions += int(np.count_nonzero(~np.isfinite(array)))
+            lower_bound_violations += int(np.count_nonzero(array < PANDA_ACTION_LOW))
+            upper_bound_violations += int(np.count_nonzero(array > PANDA_ACTION_HIGH))
+            prediction_values.append(array.reshape(-1, ACTION_DIMENSION))
+            query_count += retained
+            if query_count == required_policy_queries:
+                break
+        if not progressed:
+            raise Phase2CAActError("policy-query audit received an empty validation loader")
+    predictions = np.concatenate(prediction_values, axis=0)
+    finite = nonfinite_actions == 0
+    semantic = {
+        "policy_query_count": query_count,
+        "audited_action_chunk_count": query_count,
+        "audited_action_count": int(predictions.shape[0]),
+        "validation_loader_pass_count": pass_count,
+        "validation_observations_reused": pass_count > 1,
+        "validation_observation_reuse_reason": (
+            "ordered deterministic validation replay to reach the required query count"
+            if pass_count > 1
+            else None
+        ),
+        "nonfinite_actions": nonfinite_actions,
+        "lower_bound_violations": lower_bound_violations,
+        "upper_bound_violations": upper_bound_violations,
+        "observed_action_minimum_by_dimension": (
+            np.nanmin(predictions, axis=0).tolist() if predictions.size else None
+        ),
+        "observed_action_maximum_by_dimension": (
+            np.nanmax(predictions, axis=0).tolist() if predictions.size else None
+        ),
+        "observed_gripper_minimum": (
+            float(np.nanmin(predictions[:, -1])) if predictions.size else None
+        ),
+        "observed_gripper_maximum": (
+            float(np.nanmax(predictions[:, -1])) if predictions.size else None
+        ),
+        "native_action_lower": PANDA_ACTION_LOW.tolist(),
+        "native_action_upper": PANDA_ACTION_HIGH.tolist(),
+        "output_finite": finite,
+        "clipping_events": 0,
+        "projection_events": 0,
+        "policy_query_action_audit_passed": (
+            finite and lower_bound_violations == 0 and upper_bound_violations == 0
+        ),
+    }
+    return semantic
 
 
 def select_checkpoint_diagnostics(
@@ -1715,6 +1856,7 @@ __all__ = [
     "load_processor_statistics",
     "masked_l1_loss",
     "offline_diagnostics",
+    "policy_query_action_audit",
     "prepare_policy_batch",
     "run_micro_overfit",
     "run_one_batch_gpu_smoke",

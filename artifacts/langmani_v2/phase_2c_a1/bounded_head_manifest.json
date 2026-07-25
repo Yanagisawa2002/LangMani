@@ -1,0 +1,20 @@
+{
+  "action_bounds_fingerprint": "sha256:9838da7b5e929b8390e3b3353366ad33988529e785fae48baf6068207a7d2b06",
+  "action_normalization_mode": "IDENTITY",
+  "clipping": false,
+  "environment_correction_relied_upon": false,
+  "fingerprint": "sha256:6462a774ad6dad33d5f3853b056d16c0c63f18e882b026ea7329b708119a2fa3",
+  "gripper_thresholding": false,
+  "identity": "bounded_action_head_v1",
+  "inference_action_representation": "native_physical_pd_joint_pos_float32",
+  "loss": "padding_masked_physical_action_l1_plus_existing_act_kl",
+  "normalized_mapping": "z = tanh(u)",
+  "numerically_stable_implementation": "torch.lerp(lower_float32, upper_float32, 0.5 * (z_float32 + 1))",
+  "physical_mapping": "a = lower + 0.5 * (z + 1) * (upper - lower)",
+  "projection": false,
+  "raw_head": "torch.nn.Linear(dim_model, 8)",
+  "rejection_sampling": false,
+  "schema_version": "langmani-v2-phase2c-a1-bounded-action-head-v1",
+  "training_action_representation": "native_physical_pd_joint_pos_float32",
+  "zero_or_previous_action_replacement": false
+}

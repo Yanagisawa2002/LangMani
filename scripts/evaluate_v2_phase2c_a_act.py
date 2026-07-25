@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -53,6 +54,78 @@ def _write_new_or_equal(path: Path, value: dict[str, object]) -> None:
         encoding="utf-8",
         newline="\n",
     )
+
+
+def _task_intervention_conditions(
+    path: Path,
+    *,
+    role: str,
+    task_id: str,
+    rows: list[dict[str, object]],
+) -> tuple[dict[str, str], str]:
+    document = _read_object(path.resolve())
+    fingerprint = document.pop("fingerprint", None)
+    if (
+        document.get("schema_version") != "langmani-v2-phase2c-a1-task-intervention-lock-v0"
+        or document.get("package_fingerprint") != PACKAGE_FINGERPRINT
+        or document.get("split") != "validation"
+        or role not in {"wrong", "shuffled"}
+        or fingerprint != f"sha256:{sha256_hex(document)}"
+    ):
+        raise RuntimeError("task-intervention lock identity is invalid")
+    by_task = document.get("assignments_by_task")
+    task_rows = by_task.get(task_id) if isinstance(by_task, dict) else None
+    if not isinstance(task_rows, list):
+        raise RuntimeError("task-intervention lock lacks the requested task")
+    conditions: dict[str, str] = {}
+    for record in task_rows:
+        if not isinstance(record, dict):
+            raise RuntimeError("task-intervention assignment is malformed")
+        evaluation_id = record.get("evaluation_id")
+        condition = record.get(role)
+        if (
+            not isinstance(evaluation_id, str)
+            or not isinstance(condition, str)
+            or condition not in TASK_IDS
+        ):
+            raise RuntimeError("task-intervention assignment has an invalid condition")
+        conditions[evaluation_id] = condition
+    expected = [str(row["evaluation_id"]) for row in rows]
+    if list(conditions) != expected:
+        raise RuntimeError("task-intervention assignments do not match the schedule prefix")
+    return conditions, str(fingerprint)
+
+
+def _validate_final_policy_lock(
+    path: Path,
+    *,
+    adapter: Phase2CAActPolicyAdapter,
+    schedule_fingerprint: object,
+    execution_horizon: int,
+    evaluation_git_commit: str,
+) -> str:
+    document = _read_object(path.resolve())
+    fingerprint = document.pop("fingerprint", None)
+    policies = document.get("policies")
+    policy = policies.get(adapter.model_kind.value) if isinstance(policies, dict) else None
+    runtime = adapter.runtime_manifest
+    components = runtime.get("processor_components")
+    if (
+        document.get("schema_version") != "langmani-v2-phase2c-a1-final-policy-lock-v0"
+        or document.get("package_fingerprint") != PACKAGE_FINGERPRINT
+        or document.get("schedule_fingerprint") != schedule_fingerprint
+        or document.get("evaluation_git_commit") != evaluation_git_commit
+        or document.get("execution_horizon") != execution_horizon
+        or document.get("settings_mutable_after_final_results") is not False
+        or document.get("final_results_available") is not False
+        or fingerprint != f"sha256:{sha256_hex(document)}"
+        or not isinstance(policy, dict)
+        or policy.get("checkpoint_fingerprint") != runtime.get("checkpoint_identity")
+        or policy.get("run_fingerprint") != runtime.get("run_fingerprint")
+        or policy.get("checkpoint_components") != components
+    ):
+        raise RuntimeError("final policy lock does not match the requested evaluation")
+    return str(fingerprint)
 
 
 def _source_document(source_root: Path, task_id: str) -> dict[str, object]:
@@ -123,7 +196,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--limit", type=int)
     parser.add_argument("--maximum-steps", type=int, default=200)
-    parser.add_argument("--task-condition-id", choices=TASK_IDS)
+    condition = parser.add_mutually_exclusive_group()
+    condition.add_argument("--task-condition-id", choices=TASK_IDS)
+    condition.add_argument("--task-intervention-manifest", type=Path)
+    parser.add_argument("--task-intervention-role", choices=("wrong", "shuffled"))
+    parser.add_argument("--evaluation-git-commit", required=True)
+    parser.add_argument("--final-policy-lock", type=Path)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--capture-representatives", action="store_true")
     parser.add_argument("--require-bounded-action-head-v1", action="store_true")
@@ -146,6 +224,19 @@ def main() -> int:
         task_id=args.task_id,
         limit=args.limit,
     )
+    if re.fullmatch(r"[0-9a-f]{40}", args.evaluation_git_commit) is None:
+        raise RuntimeError("--evaluation-git-commit must be one full Git SHA")
+    if (args.task_intervention_manifest is None) != (args.task_intervention_role is None):
+        raise RuntimeError("task-intervention manifest and role must be provided together")
+    intervention_conditions: dict[str, str] = {}
+    intervention_fingerprint: str | None = None
+    if args.task_intervention_manifest is not None:
+        intervention_conditions, intervention_fingerprint = _task_intervention_conditions(
+            args.task_intervention_manifest,
+            role=args.task_intervention_role,
+            task_id=args.task_id,
+            rows=rows,
+        )
     adapter = Phase2CAActPolicyAdapter.from_checkpoint(
         run_root=args.run_root,
         checkpoint_relative_path=args.checkpoint_relative_path,
@@ -154,6 +245,26 @@ def main() -> int:
     )
     if args.require_bounded_action_head_v1 and not adapter.bounded_action_head_v1:
         raise RuntimeError("evaluation requires a bounded_action_head_v1 checkpoint")
+    is_final = args.split in {"test_unseen_reset", "test_visual_shift"}
+    if is_final and (
+        args.final_policy_lock is None
+        or args.task_condition_id is not None
+        or intervention_conditions
+    ):
+        raise RuntimeError("final evaluation requires the frozen policy lock and no intervention")
+    if not is_final and args.final_policy_lock is not None:
+        raise RuntimeError("final policy lock cannot be consumed by validation evaluation")
+    final_policy_lock_fingerprint = (
+        _validate_final_policy_lock(
+            args.final_policy_lock,
+            adapter=adapter,
+            schedule_fingerprint=schedule_document.get("fingerprint"),
+            execution_horizon=args.execution_horizon,
+            evaluation_git_commit=args.evaluation_git_commit,
+        )
+        if args.final_policy_lock is not None
+        else None
+    )
     if args.task_condition_id is None and args.task_id not in adapter.identity.compatible_task_ids:
         raise RuntimeError("policy is incompatible with the scheduled environment task")
     source_document = _source_document(args.source_root.resolve(), args.task_id)
@@ -173,7 +284,13 @@ def main() -> int:
         "split": args.split,
         "scheduled_episode_count": len(rows),
         "maximum_steps": args.maximum_steps,
-        "task_condition_id": args.task_condition_id or args.task_id,
+        "task_condition_id": (
+            None if intervention_conditions else args.task_condition_id or args.task_id
+        ),
+        "task_intervention_role": args.task_intervention_role,
+        "task_intervention_lock_fingerprint": intervention_fingerprint,
+        "evaluation_git_commit": args.evaluation_git_commit,
+        "final_policy_lock_fingerprint": final_policy_lock_fingerprint,
         "policy_runtime": dict(adapter.runtime_manifest),
         "bounded_action_head_v1_required": args.require_bounded_action_head_v1,
         "environment_kwargs": kwargs,
@@ -217,8 +334,14 @@ def main() -> int:
     }
     try:
         for row in rows[len(existing) :]:
+            row_id = str(row["evaluation_id"])
+            task_condition_id = intervention_conditions.get(
+                row_id,
+                args.task_condition_id or args.task_id,
+            )
             capture = args.capture_representatives and (
                 args.task_condition_id is not None
+                or bool(intervention_conditions)
                 or f"{args.task_id}:success" not in filled_roles
                 or f"{args.task_id}:failure" not in filled_roles
                 or (
@@ -229,14 +352,17 @@ def main() -> int:
             evaluated = evaluator.run_episode(
                 policy=adapter,
                 schedule=row,
-                task_condition_id=args.task_condition_id,
+                task_condition_id=task_condition_id,
                 capture_video=capture,
             )
             append_episode_jsonl(episodes_path, evaluated.result)
             existing.append(evaluated.result.to_dict())
             if capture and evaluated.frames:
-                if args.task_condition_id is not None:
-                    role = f"{args.task_id}:wrong_task_condition"
+                if args.task_condition_id is not None or intervention_conditions:
+                    role = (
+                        f"{args.task_id}:task_condition:"
+                        f"{args.task_intervention_role or args.task_condition_id}"
+                    )
                 elif args.split == "test_visual_shift":
                     role = f"{args.task_id}:visual_shift"
                 else:
@@ -276,7 +402,14 @@ def main() -> int:
         "execution_horizon": args.execution_horizon,
         "split": args.split,
         "task_id": args.task_id,
-        "task_condition_id": args.task_condition_id or args.task_id,
+        "task_condition_id": (
+            next(iter({str(item["task_condition_id"]) for item in existing}))
+            if len({str(item["task_condition_id"]) for item in existing}) == 1
+            else None
+        ),
+        "task_condition_ids": sorted({str(item["task_condition_id"]) for item in existing}),
+        "task_intervention_role": args.task_intervention_role,
+        "task_intervention_lock_fingerprint": intervention_fingerprint,
         "runtime_manifest_fingerprint": manifest["fingerprint"],
         "completed": True,
     }

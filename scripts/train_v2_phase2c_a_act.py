@@ -35,6 +35,7 @@ from langmani.v2.phase2c_a_act import (
     load_dataset_view,
     load_processor_statistics,
     offline_diagnostics,
+    policy_query_action_audit,
     run_micro_overfit,
     run_one_batch_gpu_smoke,
     train_primary_act,
@@ -214,6 +215,7 @@ def parse_args() -> argparse.Namespace:
     diagnose.add_argument("--batch-size", type=int, default=128)
     diagnose.add_argument("--dataloader-workers", type=int, default=8)
     diagnose.add_argument("--maximum-batches", type=int)
+    diagnose.add_argument("--minimum-policy-queries", type=int, default=0)
     diagnose.add_argument("--report", type=Path, required=True)
     return parser.parse_args()
 
@@ -236,14 +238,13 @@ def _diagnose(args: argparse.Namespace) -> dict[str, object]:
     if not isinstance(identity_value, dict):
         raise RuntimeError("training run lacks identity")
     identity = Phase2CARunIdentity.from_dict(identity_value)
+    bounded = identity_uses_bounded_action_head(identity.model_config)
     loaded = load_act_checkpoint(
         run_root=run_root,
         checkpoint_relative_path=args.checkpoint_relative_path,
         expected_identity=identity,
         for_resume=False,
-        policy_class=(
-            BoundedACTPolicyV1 if identity_uses_bounded_action_head(identity.model_config) else None
-        ),
+        policy_class=(BoundedACTPolicyV1 if bounded else None),
     )
     policy = loaded.policy
     if not hasattr(policy, "forward"):
@@ -269,15 +270,48 @@ def _diagnose(args: argparse.Namespace) -> dict[str, object]:
         postprocessor=loaded.postprocessor,
         validation_batches=loader,
         maximum_batches=args.maximum_batches,
+        enforce_native_action_bounds=bounded,
+    )
+    if not isinstance(args.minimum_policy_queries, int) or args.minimum_policy_queries < 0:
+        raise RuntimeError("minimum policy-query count must be nonnegative")
+    query_audit = (
+        policy_query_action_audit(
+            model_kind=identity.model_kind,
+            policy=policy,
+            preprocessor=loaded.preprocessor,
+            postprocessor=loaded.postprocessor,
+            validation_batches=loader,
+            required_policy_queries=args.minimum_policy_queries,
+        )
+        if args.minimum_policy_queries
+        else {}
     )
     result = {
         **report,
+        "schema_version": (
+            "langmani-v2-phase2c-a1-checkpoint-screen-v0" if bounded else report["schema_version"]
+        ),
+        "offline_validation_sample_count": report["sample_count"],
+        "offline_lower_bound_violations": report["lower_bound_violations"],
+        "offline_upper_bound_violations": report["upper_bound_violations"],
+        **query_audit,
         "run_fingerprint": identity.run_fingerprint,
         "checkpoint_fingerprint": loaded.record.checkpoint_fingerprint,
         "checkpoint_relative_path": loaded.record.relative_path,
         "checkpoint_step": loaded.record.global_step,
+        "checkpoint_components": {
+            "model": loaded.component_fingerprints.model,
+            "preprocessor": loaded.component_fingerprints.preprocessor,
+            "postprocessor": loaded.component_fingerprints.postprocessor,
+        },
         "package_fingerprint": PACKAGE_FINGERPRINT,
+        "bounded_action_head_v1": bounded,
+        "checkpoint_reconstruction_passed": True,
+        "processor_reconstruction_passed": True,
     }
+    result["passed"] = bool(report["passed"]) and bool(
+        query_audit.get("policy_query_action_audit_passed", True)
+    )
     _write_new_json(args.report.resolve(), result)
     return result
 

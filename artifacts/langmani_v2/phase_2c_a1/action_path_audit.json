@@ -1,0 +1,215 @@
+{
+  "canonical_package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "conclusion": {
+    "action_queue_conversion_caused_overflow": false,
+    "checkpoint_processor_mismatch": false,
+    "environment_correction_relied_upon": false,
+    "gripper_specific_scaling_caused_overflow": false,
+    "normalization_inversion_amplified_overflow": true,
+    "overflow_origin": "unbounded_linear_act_output_followed_by_mean_std_inverse_normalization",
+    "post_hoc_clipping_present": false,
+    "processor_mismatch": false,
+    "projection_present": false
+  },
+  "evidence": {
+    "phase2c_a_checkpoint_fingerprint": "sha256:da7128d019689d190523c1f4c6f7f1e4060371ef24f203821afd98dbe316e0f3",
+    "phase2c_a_result_verification_fingerprint": "sha256:d8b42978845249ccfcb0019c05b5e6a73fd16b01c993029a62864dd3fac1d12b",
+    "phase2c_a_run_fingerprint": "sha256:ab6af2aa23406cc05af0397fc7becc50f3bfa35008f814eb580d92012f36319a",
+    "phase2c_a_training_commit": "c0b5106cb1fff5b43f46500321264cec33613673",
+    "phase2c_a_validation_episode": "phase2c-a:validation:pickcube:000",
+    "source_files": [
+      "pretrained_model/config.json",
+      "pretrained_model/policy_preprocessor.json",
+      "pretrained_model/policy_postprocessor.json",
+      "pretrained_model/policy_preprocessor_step_3_normalizer_processor.safetensors",
+      "pretrained_model/policy_postprocessor_step_0_unnormalizer_processor.safetensors",
+      "evaluation-smoke/pick-h4-a3a09d3/episodes.jsonl"
+    ]
+  },
+  "first_closed_loop_observation": {
+    "actions_submitted": 0,
+    "environment_steps": 0,
+    "gripper_native_upper": 1.0,
+    "gripper_physical_max": 1.0591456890106201,
+    "gripper_physical_min": 1.0180935859680176,
+    "gripper_pre_inverse_normalization_max": 0.9724027139967077,
+    "gripper_pre_inverse_normalization_min": 0.9311804931643738,
+    "invalid_action": true,
+    "policy_queries": 1
+  },
+  "phase2c_a_selected_pick_action_statistics": {
+    "count": 54608,
+    "maximum": [
+      0.29251915216445923,
+      0.954268753528595,
+      0.20979943871498108,
+      -1.4122214279174805,
+      0.18632978200912476,
+      2.8199148178100586,
+      1.683265209197998,
+      1.0
+    ],
+    "mean": [
+      0.0019681069534271955,
+      0.5546432137489319,
+      -0.0009360588737763464,
+      -1.9385426044464111,
+      0.0008736645104363561,
+      2.4898457527160645,
+      0.7925223708152771,
+      0.09075593203306198
+    ],
+    "minimum": [
+      -0.2774830162525177,
+      -0.08630277216434479,
+      -0.20903605222702026,
+      -2.368969678878784,
+      -0.18330387771129608,
+      1.8973554372787476,
+      -0.13761861622333527,
+      -1.0
+    ],
+    "normalization_mode": "MEAN_STD",
+    "standard_deviation": [
+      0.08962511271238327,
+      0.17342615127563477,
+      0.06750813871622086,
+      0.2122373211979866,
+      0.062065254896879196,
+      0.1523311287164688,
+      0.3761815130710602,
+      0.9958731532096863
+    ]
+  },
+  "schema_version": "langmani-v2-phase2c-a1-action-path-audit-v0",
+  "stages": [
+    {
+      "bounds_mathematically_guaranteed": false,
+      "dtype": "float32",
+      "implicit_correction": false,
+      "name": "dataset_physical_action",
+      "normalization_mode": "none",
+      "observed_range": "selected Pick train view: per-dimension minimum/maximum recorded above",
+      "semantic_range": "native Panda pd_joint_pos",
+      "shape": ["B", 16, 8]
+    },
+    {
+      "bounds_mathematically_guaranteed": false,
+      "dtype": "float32",
+      "implicit_correction": false,
+      "name": "phase2c_a_preprocessor",
+      "normalization_mode": "MEAN_STD",
+      "observed_range": {
+        "maximum": [
+          3.241848589283697,
+          2.3042980360240968,
+          3.121630985481783,
+          2.4798709932733716,
+          2.9880827494678286,
+          2.1667867091587416,
+          2.367853835003478,
+          0.9130119283128139
+        ],
+        "minimum": [
+          -3.1180002428865436,
+          -3.6957862536809083,
+          -3.0825911854571935,
+          -2.028046113675017,
+          -2.9674822495733175,
+          -3.8894894328532708,
+          -2.472585586264336,
+          -1.095275968146716
+        ]
+      },
+      "semantic_range": "(physical_action - train_mean) / train_std",
+      "shape": ["B", 16, 8]
+    },
+    {
+      "bounds_mathematically_guaranteed": false,
+      "dtype": "float32",
+      "implicit_correction": false,
+      "name": "phase2c_a_training_target_and_loss",
+      "normalization_mode": "MEAN_STD",
+      "observed_range": "same as phase2c_a_preprocessor on unpadded training targets",
+      "semantic_range": "normalized action; padded positions excluded by action_is_pad",
+      "shape": ["B", 16, 8]
+    },
+    {
+      "bounds_mathematically_guaranteed": false,
+      "dtype": "float32",
+      "implicit_correction": false,
+      "name": "phase2c_a_act_output_head",
+      "normalization_mode": "none inside model; output interpreted as MEAN_STD coordinates",
+      "observed_range": {
+        "first_closed_loop_gripper_maximum": 0.9724027139967077,
+        "first_closed_loop_gripper_minimum": 0.9311804931643738,
+        "other_dimensions": "not retained by the terminal Phase 2C-A artifact"
+      },
+      "semantic_range": "unbounded torch.nn.Linear(dim_model, 8)",
+      "shape": [1, 16, 8]
+    },
+    {
+      "bounds_mathematically_guaranteed": false,
+      "dtype": "float32",
+      "implicit_correction": false,
+      "name": "checkpoint_output",
+      "normalization_mode": "MEAN_STD coordinates",
+      "observed_range": "identical tensor semantics to phase2c_a_act_output_head",
+      "semantic_range": "unbounded normalized action",
+      "shape": [1, 16, 8]
+    },
+    {
+      "bounds_mathematically_guaranteed": false,
+      "dtype": "float32",
+      "implicit_correction": false,
+      "name": "postprocessor_inverse_normalization",
+      "normalization_mode": "inverse MEAN_STD",
+      "observed_range": {
+        "first_closed_loop_gripper_maximum": 1.0591456890106201,
+        "first_closed_loop_gripper_minimum": 1.0180935859680176
+      },
+      "semantic_range": "normalized_output * train_std + train_mean",
+      "shape": [1, 16, 8]
+    },
+    {
+      "bounds_mathematically_guaranteed": false,
+      "dtype": "float32",
+      "implicit_correction": false,
+      "name": "ActionChunk",
+      "normalization_mode": "none",
+      "observed_range": "same physical tensor as postprocessor; H_exec mask does not alter values",
+      "semantic_range": "native Panda pd_joint_pos candidate",
+      "shape": [16, 8]
+    },
+    {
+      "bounds_mathematically_guaranteed": false,
+      "dtype": "float32",
+      "implicit_correction": false,
+      "name": "action_queue_iteration",
+      "normalization_mode": "none",
+      "observed_range": "first gripper action exceeded 1.0 before submission",
+      "semantic_range": "first H_exec ActionChunk rows, unchanged",
+      "shape": [8]
+    },
+    {
+      "bounds_mathematically_guaranteed": true,
+      "dtype": "float32",
+      "implicit_correction": false,
+      "name": "evaluator_native_bound_gate",
+      "normalization_mode": "none",
+      "observed_range": "hard rejected before environment.step",
+      "semantic_range": "requires native lower <= action <= native upper",
+      "shape": [8]
+    },
+    {
+      "bounds_mathematically_guaranteed": null,
+      "dtype": "float32",
+      "implicit_correction": false,
+      "name": "environment_action",
+      "normalization_mode": "none",
+      "observed_range": "unavailable because zero actions were submitted",
+      "semantic_range": "not reached",
+      "shape": [8]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "action_loss_representation": "native_physical_pd_joint_pos_float32",
+  "all_padding_synthetic_batch": {
+    "finite": true,
+    "loss": 0.0,
+    "passed": true
+  },
+  "bounded_action_head_fingerprint": "sha256:6462a774ad6dad33d5f3853b056d16c0c63f18e882b026ea7329b708119a2fa3",
+  "gpu_smoke": {
+    "checkpoint_reload_max_abs_error": 0.0,
+    "padded_target_perturbation_action_loss_difference": 0.0,
+    "padded_target_perturbation_total_loss_difference": 0.0,
+    "padded_timestep_count": 97,
+    "report": "smoke_result.json",
+    "report_fingerprint": "sha256:b9594f022880f5831f06c5099868d9365955f1072224e1318633b46044e471b5"
+  },
+  "loss_definition": "sum(abs(prediction-target) * not(action_is_pad)) / (8 * count(not(action_is_pad)))",
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "padded_timesteps_contribute_zero_action_loss": true,
+  "partial_padding_synthetic_batch": {
+    "padded_target_perturbation": 1000000000.0,
+    "reference_loss_unchanged": true
+  },
+  "passed": true,
+  "schema_version": "langmani-v2-phase2c-a1-padding-loss-audit-v0",
+  "unpadded_timesteps_contribute_normally": true
+}

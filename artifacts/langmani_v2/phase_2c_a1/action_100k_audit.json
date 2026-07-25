@@ -1,0 +1,72 @@
+{
+  "chunk_size": 16,
+  "clipping_events": 0,
+  "fingerprint": "sha256:16e67f6c8c7b0889d4888c00e8d05cc448407b785014bd98c7939da5b70ba048",
+  "lower_bound_violations": 0,
+  "mapping": "bounded_action_head_v1",
+  "native_action_bounds": {
+    "control_mode": "pd_joint_pos",
+    "dtype": "float32",
+    "fingerprint": "sha256:9838da7b5e929b8390e3b3353366ad33988529e785fae48baf6068207a7d2b06",
+    "lower": [
+      -2.8973000049591064,
+      -1.7627999782562256,
+      -2.8973000049591064,
+      -3.0717999935150146,
+      -2.8973000049591064,
+      -0.017500000074505806,
+      -2.8973000049591064,
+      -1.0
+    ],
+    "schema_version": "langmani-v2-phase2c-a1-native-action-bounds-v0",
+    "shape": [
+      8
+    ],
+    "source": "ManiSkill 3.0.1 Panda pd_joint_pos action space; independently observed identical for PickCube-v1, StackCube-v1, and PushCube-v1",
+    "task_consistency_verified": true,
+    "tasks": [
+      "PickCube-v1",
+      "StackCube-v1",
+      "PushCube-v1"
+    ],
+    "upper": [
+      2.8973000049591064,
+      1.7627999782562256,
+      2.8973000049591064,
+      -0.0697999969124794,
+      2.8973000049591064,
+      3.752500057220459,
+      2.8973000049591064,
+      1.0
+    ]
+  },
+  "nonfinite_actions": 0,
+  "observed_maximum": [
+    2.897063732147217,
+    1.7625666856765747,
+    2.896848201751709,
+    -0.06987836956977844,
+    2.896888256072998,
+    3.7523257732391357,
+    2.897122859954834,
+    0.9999685287475586
+  ],
+  "observed_minimum": [
+    -2.8971102237701416,
+    -1.7626047134399414,
+    -2.8970415592193604,
+    -3.0716521739959717,
+    -2.8969714641571045,
+    -0.017307424917817116,
+    -2.897010326385498,
+    -0.9999449253082275
+  ],
+  "passed": true,
+  "projection_events": 0,
+  "raw_distribution": "torch.randn float32",
+  "sampled_actions": 1600000,
+  "sampled_chunks": 100000,
+  "schema_version": "langmani-v2-phase2c-a1-100k-action-audit-v0",
+  "seed": 20260725,
+  "upper_bound_violations": 0
+}

@@ -1,0 +1,298 @@
+{
+  "bounded_action_head_v1": true,
+  "command": "smoke",
+  "identity": {
+    "git_commit": "852658d60d8924d53fb7eb0d26cccbc4e54424ad",
+    "m3b_split_manifest_digest": "sha256:5bb231f808008630ef81417d8a4cc15d1ec1e13293844546d8755d0b7ee285c6",
+    "model_config": {
+      "action_dimension": 8,
+      "action_head": {
+        "action_bounds_fingerprint": "sha256:9838da7b5e929b8390e3b3353366ad33988529e785fae48baf6068207a7d2b06",
+        "action_normalization_mode": "IDENTITY",
+        "clipping": false,
+        "environment_correction_relied_upon": false,
+        "fingerprint": "sha256:6462a774ad6dad33d5f3853b056d16c0c63f18e882b026ea7329b708119a2fa3",
+        "gripper_thresholding": false,
+        "identity": "bounded_action_head_v1",
+        "inference_action_representation": "native_physical_pd_joint_pos_float32",
+        "loss": "padding_masked_physical_action_l1_plus_existing_act_kl",
+        "normalized_mapping": "z = tanh(u)",
+        "numerically_stable_implementation": "torch.lerp(lower_float32, upper_float32, 0.5 * (z_float32 + 1))",
+        "physical_mapping": "a = lower + 0.5 * (z + 1) * (upper - lower)",
+        "projection": false,
+        "raw_head": "torch.nn.Linear(dim_model, 8)",
+        "rejection_sampling": false,
+        "schema_version": "langmani-v2-phase2c-a1-bounded-action-head-v1",
+        "training_action_representation": "native_physical_pd_joint_pos_float32",
+        "zero_or_previous_action_replacement": false
+      },
+      "augmentation": "none",
+      "chunk_size": 16,
+      "dim_feedforward": 3200,
+      "dim_model": 512,
+      "dropout": 0.1,
+      "image_shape_chw": [
+        3,
+        256,
+        256
+      ],
+      "kl_weight": 10.0,
+      "latent_dim": 32,
+      "n_action_steps": 16,
+      "n_decoder_layers": 1,
+      "n_encoder_layers": 4,
+      "n_heads": 8,
+      "n_vae_encoder_layers": 4,
+      "native_action_bounds": {
+        "control_mode": "pd_joint_pos",
+        "dtype": "float32",
+        "fingerprint": "sha256:9838da7b5e929b8390e3b3353366ad33988529e785fae48baf6068207a7d2b06",
+        "lower": [
+          -2.8973000049591064,
+          -1.7627999782562256,
+          -2.8973000049591064,
+          -3.0717999935150146,
+          -2.8973000049591064,
+          -0.017500000074505806,
+          -2.8973000049591064,
+          -1.0
+        ],
+        "schema_version": "langmani-v2-phase2c-a1-native-action-bounds-v0",
+        "shape": [
+          8
+        ],
+        "source": "ManiSkill 3.0.1 Panda pd_joint_pos action space; independently observed identical for PickCube-v1, StackCube-v1, and PushCube-v1",
+        "task_consistency_verified": true,
+        "tasks": [
+          "PickCube-v1",
+          "StackCube-v1",
+          "PushCube-v1"
+        ],
+        "upper": [
+          2.8973000049591064,
+          1.7627999782562256,
+          2.8973000049591064,
+          -0.0697999969124794,
+          2.8973000049591064,
+          3.752500057220459,
+          2.8973000049591064,
+          1.0
+        ]
+      },
+      "pretrained_backbone_weights": null,
+      "state_dimension": 9,
+      "task_condition_dimension": null,
+      "task_condition_feature": null,
+      "use_vae": true,
+      "vision_backbone": "resnet18"
+    },
+    "model_kind": "pick_act",
+    "normalization_fingerprint": "sha256:9e08cc0cc6f719298655d250e75b59fda85f9a8414fa3d53e99397a6c4ee58a6",
+    "optimization_config": {
+      "backbone_learning_rate": 1e-05,
+      "batch_size": 64,
+      "checkpoint_steps": [
+        4270,
+        8540,
+        12810,
+        17080
+      ],
+      "dataloader_workers": 0,
+      "effective_passes_by_task": {
+        "PickCube-v1": 20.0
+      },
+      "gradient_clip_norm": 10.0,
+      "learning_rate": 1e-05,
+      "optimizer": "adamw",
+      "precision": "bfloat16",
+      "scheduler": "none",
+      "seed": 0,
+      "target_samples_by_task": {
+        "PickCube-v1": 1092160
+      },
+      "training_steps": 17080,
+      "validation_steps": [
+        4270,
+        8540,
+        12810,
+        17080
+      ],
+      "warmup_steps": 0,
+      "weight_decay": 0.0001
+    },
+    "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+    "run_fingerprint": "sha256:2bd9c1f9d59a5928b67ecc734aa0f5fe6144e6ab704a5792b21db3b29ce4100f",
+    "run_role": "gpu_smoke",
+    "runtime_fingerprint": "sha256:7c3c3041cf8a5a3ef476811f0cb314a5c9913bab762d4ff0ad613591f8f10b66",
+    "sampler_fingerprint": "sha256:486e2cf651d1ff925439bdae1ac5e187152c9ca27fffe74e17d3b222fc2c314d",
+    "schema_version": "langmani-v2-phase2c-a-act-run-v0",
+    "train_statistics_fingerprint": "sha256:7a14753cfa241afc9ecc475b30b12372b24323224c70833c0a6a899a7eae3b6b"
+  },
+  "model_kind": "pick_act",
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "passed": true,
+  "result": {
+    "action_loss": 0.9176435470581055,
+    "backward_completed": true,
+    "batch_size": 64,
+    "checkpoint": {
+      "checkpoint_fingerprint": "sha256:1e1d22ff928fedb3ea288725c6d62bf44c95310a94db61b540a1a898c4b986ed",
+      "complete": true,
+      "component_fingerprints": {
+        "model": "sha256:71f7edc2be41b9009f202f4b72c91bfe3e2f7510068e376c58744ea15fb41db4",
+        "postprocessor": "sha256:5d79b3fa6e345f19d5e053ffed3d34acd90b4fba11239976eba2c4ad93ca8a4a",
+        "preprocessor": "sha256:7cf243ae108afdcb70e599442a8cf8aa9fd95ffba2a15be7d584543f8e3a9887"
+      },
+      "git_commit": "852658d60d8924d53fb7eb0d26cccbc4e54424ad",
+      "global_step": 1,
+      "policy_config_digest": "sha256:0d0d37f541360e9019eb17b8e96ae178861b15b24dc16b436e79f6ed9548c45a",
+      "relative_path": "checkpoints/step-00000001-1e1d22ff928f",
+      "run_fingerprint": "sha256:2bd9c1f9d59a5928b67ecc734aa0f5fe6144e6ab704a5792b21db3b29ce4100f",
+      "split_digest": "sha256:5bb231f808008630ef81417d8a4cc15d1ec1e13293844546d8755d0b7ee285c6",
+      "statistics_fingerprint": "sha256:7a14753cfa241afc9ecc475b30b12372b24323224c70833c0a6a899a7eae3b6b"
+    },
+    "checkpoint_reload_consistent_max_abs_error": 0.0,
+    "effective_act_config": {
+      "chunk_size": 16,
+      "device": "cuda",
+      "dim_feedforward": 3200,
+      "dim_model": 512,
+      "dropout": 0.1,
+      "feedforward_activation": "relu",
+      "input_features": {
+        "observation.images.base_camera": {
+          "shape": [
+            3,
+            256,
+            256
+          ],
+          "type": "VISUAL"
+        },
+        "observation.state": {
+          "shape": [
+            9
+          ],
+          "type": "STATE"
+        }
+      },
+      "kl_weight": 10.0,
+      "latent_dim": 32,
+      "license": null,
+      "n_action_steps": 16,
+      "n_decoder_layers": 1,
+      "n_encoder_layers": 4,
+      "n_heads": 8,
+      "n_obs_steps": 1,
+      "n_vae_encoder_layers": 4,
+      "normalization_mapping": {
+        "ACTION": "IDENTITY",
+        "STATE": "MEAN_STD",
+        "VISUAL": "MEAN_STD"
+      },
+      "optimizer_lr": 1e-05,
+      "optimizer_lr_backbone": 1e-05,
+      "optimizer_weight_decay": 0.0001,
+      "output_features": {
+        "action": {
+          "shape": [
+            8
+          ],
+          "type": "ACTION"
+        }
+      },
+      "pre_norm": false,
+      "pretrained_backbone_weights": null,
+      "pretrained_path": null,
+      "pretrained_revision": null,
+      "private": null,
+      "push_to_hub": false,
+      "replace_final_stride_with_dilation": false,
+      "repo_id": null,
+      "tags": null,
+      "temporal_ensemble_coeff": null,
+      "use_amp": true,
+      "use_peft": false,
+      "use_vae": true,
+      "vision_backbone": "resnet18"
+    },
+    "fingerprint": "sha256:b9594f022880f5831f06c5099868d9365955f1072224e1318633b46044e471b5",
+    "finite_gradient_norm": 1485.9879150390625,
+    "finite_total_loss": 86.36272430419922,
+    "kl_loss": 8.54450798034668,
+    "model_kind": "pick_act",
+    "optimizer_step_completed": true,
+    "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+    "padded_target_perturbation_action_loss_difference": 0.0,
+    "padded_target_perturbation_loss_difference": 0.0,
+    "padded_timestep_count": 97,
+    "padding_mask_applied": true,
+    "passed": true,
+    "peak_gpu_allocated_bytes": 4618587648,
+    "peak_gpu_reserved_bytes": 5054136320,
+    "physical_action_audit": {
+      "clipping_events": 0,
+      "dtype": "float32",
+      "lower_bound_violations": 0,
+      "nonfinite_values": 0,
+      "observed_maximum": [
+        -1.372436761856079,
+        0.3020675480365753,
+        0.06027694791555405,
+        -1.4207234382629395,
+        1.430957317352295,
+        2.8929452896118164,
+        1.2346656322479248,
+        -0.5039268732070923
+      ],
+      "observed_minimum": [
+        -1.6289745569229126,
+        0.11885911971330643,
+        -0.28315427899360657,
+        -1.7089756727218628,
+        1.0873616933822632,
+        2.720702648162842,
+        0.9269489645957947,
+        -0.6115294694900513
+      ],
+      "passed": true,
+      "projection_events": 0,
+      "shape": [
+        64,
+        16,
+        8
+      ],
+      "upper_bound_violations": 0
+    },
+    "prediction_finite": true,
+    "prediction_nonconstant": true,
+    "raw_prediction_error_after_reload": 0.6596804857254028,
+    "raw_prediction_error_before_reload": 0.6596804857254028,
+    "real_action_inference": true,
+    "real_dataset_batch": true,
+    "real_preprocessing": true,
+    "schema_version": "langmani-v2-phase2c-a-gpu-smoke-v0"
+  },
+  "runtime": {
+    "av": "15.1.0",
+    "diffusers": "not_installed",
+    "environment_prefix": "/root/autodl-tmp/conda-envs/langmani",
+    "gpu": {
+      "capability": [
+        12,
+        0
+      ],
+      "name": "NVIDIA GeForce RTX 5090",
+      "total_memory_bytes": 33668988928
+    },
+    "lerobot": "0.6.0",
+    "numpy": "2.2.6",
+    "python": "3.12.13",
+    "python_executable": "/root/autodl-tmp/conda-envs/langmani/bin/python3.12",
+    "torch": "2.11.0+cu128",
+    "torch_cuda": "12.8",
+    "torchvision": "0.26.0+cu128",
+    "transformers": "5.4.0"
+  },
+  "schema_version": "langmani-v2-phase2c-a-act-command-v0",
+  "wall_time_s": 5.3796112183481455
+}
