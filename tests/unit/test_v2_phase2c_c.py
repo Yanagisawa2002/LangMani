@@ -29,7 +29,13 @@ def test_relative_transform_round_trip_zero_identity_bounds_and_reload(tmp_path:
     upper = torch.tensor(ACTION_UPPER, dtype=torch.float32)
     reference = 0.35 * lower + 0.65 * upper
     state = _state_from_reference(reference).unsqueeze(0)
-    targets = torch.stack((lower, reference, upper)).unsqueeze(0)
+    lower_target = reference.clone()
+    lower_target[:7] -= 0.01
+    lower_target[7] = -1.0
+    upper_target = reference.clone()
+    upper_target[:7] += 0.01
+    upper_target[7] = 1.0
+    targets = torch.stack((lower_target, reference, upper_target)).unsqueeze(0)
     latent = transform.encode(targets, state)
     restored = transform.decode(latent, state)
 
