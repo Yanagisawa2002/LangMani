@@ -826,9 +826,8 @@ def _shared_condition_output_difference(
     if not isinstance(token, torch.Tensor) or token.ndim != 2:
         raise Phase2CAActError("shared micro batch lacks its processed task token")
     observations: dict[str, torch.Tensor] = {}
-    for key, value in processed.items():
-        if key in {ACTION_FEATURE_KEY, "action_is_pad"}:
-            continue
+    for key in policy.config.input_features:
+        value = processed.get(key)
         if not isinstance(value, torch.Tensor) or value.ndim < 1 or value.shape[0] < 1:
             raise Phase2CAActError("shared micro observation is malformed")
         observations[key] = value[:1].expand(3, *value.shape[1:]).clone()
