@@ -215,7 +215,7 @@ def _split_data(primary: Path, split: str) -> tuple[dict[str, np.ndarray], dict[
         "episode_index",
         "index",
     )
-    table = pa.concat_tables([pq.read_table(path, columns=columns) for path in paths])
+    table = pa.concat_tables([pq.read_table(path, columns=list(columns)) for path in paths])
     states = np.asarray(table["observation.state"].to_pylist(), dtype=np.float32)
     actions = np.asarray(table["action"].to_pylist(), dtype=np.float32)
     arrays: dict[str, np.ndarray] = {
