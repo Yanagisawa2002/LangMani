@@ -47,6 +47,7 @@ from langmani.policies.act_types import (
     ActOptimizationConfig,
     TrainingState,
 )
+from langmani.v2.phase2b5 import PANDA_ACTION_HIGH, PANDA_ACTION_LOW
 from langmani.v2.phase2c_a import (
     ACTION_DIMENSION,
     CHUNK_SIZE,
@@ -793,6 +794,62 @@ def _postprocess_action_chunk(
     return value
 
 
+def _physical_action_audit(predicted: np.ndarray) -> dict[str, object]:
+    array = np.asarray(predicted)
+    if array.ndim != 3 or array.shape[-2:] != (CHUNK_SIZE, ACTION_DIMENSION):
+        raise Phase2CAActError("physical action audit requires [B,16,8]")
+    nonfinite = int(np.count_nonzero(~np.isfinite(array)))
+    lower_violations = int(np.count_nonzero(array < PANDA_ACTION_LOW))
+    upper_violations = int(np.count_nonzero(array > PANDA_ACTION_HIGH))
+    return {
+        "dtype": str(array.dtype),
+        "shape": list(array.shape),
+        "nonfinite_values": nonfinite,
+        "lower_bound_violations": lower_violations,
+        "upper_bound_violations": upper_violations,
+        "observed_minimum": [float(value) for value in np.min(array, axis=(0, 1))],
+        "observed_maximum": [float(value) for value in np.max(array, axis=(0, 1))],
+        "clipping_events": 0,
+        "projection_events": 0,
+        "passed": nonfinite == lower_violations == upper_violations == 0,
+    }
+
+
+@torch.no_grad()
+def _shared_condition_output_difference(
+    *,
+    policy: ACTPolicy,
+    postprocessor: PolicyProcessorPipeline,
+    processed: Mapping[str, object],
+) -> float:
+    token = processed.get(TASK_TOKEN_FEATURE_KEY)
+    if not isinstance(token, torch.Tensor) or token.ndim != 2:
+        raise Phase2CAActError("shared micro batch lacks its processed task token")
+    observations: dict[str, torch.Tensor] = {}
+    for key, value in processed.items():
+        if key in {ACTION_FEATURE_KEY, "action_is_pad"}:
+            continue
+        if not isinstance(value, torch.Tensor) or value.ndim < 1 or value.shape[0] < 1:
+            raise Phase2CAActError("shared micro observation is malformed")
+        observations[key] = value[:1].expand(3, *value.shape[1:]).clone()
+    observations[TASK_TOKEN_FEATURE_KEY] = torch.eye(
+        len(TASK_IDS),
+        device=token.device,
+        dtype=token.dtype,
+    )
+    policy.eval()
+    predicted = policy.predict_action_chunk(observations)
+    physical = _postprocess_action_chunk(postprocessor, predicted)
+    if tuple(physical.shape) != (len(TASK_IDS), CHUNK_SIZE, ACTION_DIMENSION):
+        raise Phase2CAActError("shared task intervention prediction shape changed")
+    differences = [
+        torch.max(torch.abs(physical[left] - physical[right]))
+        for left in range(len(TASK_IDS))
+        for right in range(left + 1, len(TASK_IDS))
+    ]
+    return float(torch.max(torch.stack(differences)).cpu())
+
+
 @torch.no_grad()
 def _raw_prediction_error(
     *,
@@ -995,6 +1052,9 @@ def run_one_batch_gpu_smoke(
     reload_max_error = float(np.max(np.abs(before_prediction - reloaded_prediction)))
     if reload_max_error > 1e-6:
         raise Phase2CAActError("checkpoint reload changed deterministic ACT inference")
+    physical_action_audit = _physical_action_audit(reloaded_prediction)
+    if not physical_action_audit["passed"]:
+        raise Phase2CAActError("bounded GPU smoke emitted an invalid physical action")
     semantic = {
         "schema_version": "langmani-v2-phase2c-a-gpu-smoke-v0",
         "model_kind": kind.value,
@@ -1022,6 +1082,7 @@ def run_one_batch_gpu_smoke(
         "real_action_inference": True,
         "prediction_finite": bool(np.isfinite(reloaded_prediction).all()),
         "prediction_nonconstant": bool(float(np.var(reloaded_prediction)) > 1e-12),
+        "physical_action_audit": physical_action_audit,
         "peak_gpu_allocated_bytes": int(torch.cuda.max_memory_allocated()),
         "peak_gpu_reserved_bytes": int(torch.cuda.max_memory_reserved()),
         "effective_act_config": act_config_dict(config),
@@ -1174,6 +1235,25 @@ def run_micro_overfit(
     reload_error = float(np.max(np.abs(final_prediction - loaded_prediction)))
     if reload_error > 1e-6:
         raise Phase2CAActError("micro-overfit checkpoint reload changed predictions")
+    physical_action_audit = _physical_action_audit(loaded_prediction)
+    if not physical_action_audit["passed"]:
+        raise Phase2CAActError("micro-overfit emitted an invalid physical action")
+    gripper_minimum = float(np.min(loaded_prediction[..., -1]))
+    gripper_maximum = float(np.max(loaded_prediction[..., -1]))
+    gripper_range = gripper_maximum - gripper_minimum
+    if not math.isfinite(gripper_range) or gripper_range <= 1e-6:
+        raise Phase2CAActError("micro-overfit gripper output did not vary across examples")
+    task_condition_difference = (
+        _shared_condition_output_difference(
+            policy=loaded_policy,
+            postprocessor=loaded_postprocessor,
+            processed=loaded_processed,
+        )
+        if kind is ModelKind.SHARED
+        else None
+    )
+    if task_condition_difference is not None and task_condition_difference <= 1e-8:
+        raise Phase2CAActError("shared micro-overfit did not use its task condition")
     padding = projected["action_is_pad"]
     reference = masked_l1_loss(
         torch.from_numpy(final_prediction).to(projected[ACTION_FEATURE_KEY].device),
@@ -1198,6 +1278,17 @@ def run_micro_overfit(
         "reference_masked_raw_l1": float(reference.cpu()),
         "output_finite": bool(np.isfinite(final_prediction).all()),
         "output_nonconstant": bool(float(np.var(final_prediction)) > 1e-12),
+        "physical_action_audit": physical_action_audit,
+        "gripper_output_minimum": gripper_minimum,
+        "gripper_output_maximum": gripper_maximum,
+        "gripper_output_range": gripper_range,
+        "gripper_output_varies_across_examples": gripper_range > 1e-6,
+        "same_observation_task_condition_max_abs_difference": task_condition_difference,
+        "task_condition_changes_output": (
+            task_condition_difference > 1e-8
+            if task_condition_difference is not None
+            else None
+        ),
         "checkpoint": checkpoint,
         "checkpoint_reload_max_abs_error": reload_error,
         "checkpoint_reload_error": loaded_error,
