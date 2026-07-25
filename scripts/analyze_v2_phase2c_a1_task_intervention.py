@@ -46,8 +46,10 @@ def _optional_float(value: object) -> float:
     return float(value)
 
 
-def _positive_integer(value: object) -> bool:
-    return isinstance(value, int) and value > 0
+def _integer(value: object) -> int:
+    if not isinstance(value, int):
+        raise RuntimeError("task-intervention aggregate count is invalid")
+    return value
 
 
 def _comparison(
@@ -166,9 +168,16 @@ def main() -> int:
         ),
         "comparisons": comparisons,
         "aggregate": aggregate,
+        "task_id_action_effect_observed": any(
+            _integer(value["action_changed_count"]) > 0 for value in aggregate.values()
+        ),
+        "task_id_behavior_effect_observed": any(
+            _integer(value["behavior_changed_count"]) > 0 for value in aggregate.values()
+        ),
         "language_grounding_claimed": False,
+        "diagnostic_completion_requires_positive_effect": False,
         "passed": all(
-            _positive_integer(value["action_changed_count"]) for value in aggregate.values()
+            _integer(value["pair_count"]) == len(TASK_IDS) * 5 for value in aggregate.values()
         ),
     }
     result = {**semantic, "fingerprint": f"sha256:{sha256_hex(semantic)}"}
