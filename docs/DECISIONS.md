@@ -3638,3 +3638,43 @@ ACT cannot be reopened through another head, seed, architecture, checkpoint, hyp
 dataset mutation, or outcome-informed selection. Result B makes only a separately invoked
 SmolVLA phase eligible. It does not load or train that model:
 `smolvla_training_authorized=false` and `vla_jepa_training_authorized=false`.
+
+## D-141 - Freeze Phase 2C-B as the official pretrained SmolVLA comparison
+
+Phase 2C-B is the separately authorized modern VLA phase following permanent ACT closure. It
+consumes only the unchanged `LangManiOfficialMultiSkill-v2` package at
+`sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04`.
+Its four pre-registered policies are Pick-only, Stack-only, Push-only, and one shared
+natural-language-conditioned SmolVLA. The shared policy receives no one-hot, task-index, or other
+explicit task-ID feature; task IDs remain evaluation metadata only.
+
+The implementation is pinned to LeRobot 0.6.0 and `lerobot/smolvla_base` revision
+`c83c3163b8ca9b7e67c509fffd9121e66cb96205`. LangMani replaces only the public policy feature
+mapping with one RGB camera, `PandaPolicyStateV0[9]`, and native `pd_joint_pos[8]`. The official
+model's 32-dimensional internal state/action padding keeps every published tensor shape
+unchanged. Strict loading must therefore load all pretrained tensors; no visual-language,
+state-projection, action-projection, or flow-expert tensor may be silently reinitialized.
+
+The reviewed official flow decoder produces an unconstrained latent action. Physical bounds are
+therefore guaranteed by the isolated parameter-free
+`smolvla_bounded_action_latent_v1` representation. Physical dataset actions are affine-mapped to
+`[-1,1]`, multiplied by `1-epsilon`, and passed through `atanh` before the official training
+forward. Generated latents pass through `tanh` and `torch.lerp` against the exact Panda bounds.
+`epsilon=1e-6` gives finite deterministic endpoint targets. Action normalization is identity
+outside this representation. No clipping, projection, rejection sampling, environment correction,
+or replacement action is permitted.
+
+All four primary runs use the same frozen 50-step chunk, BF16, AdamW, learning-rate, scheduler,
+freezing, seed-0, and 20,000-optimizer-step configuration. The shared data sampler has exact
+long-run one-third task frequency. Validation alone may retain at most two checkpoints and compare
+execution horizons 1, 4, and 8.
+
+Full training is ordered rather than parallel. Pick must first achieve at least 3/30 validation
+successes with zero invalid-action and simulator-error episodes. A 0/30 result permits at most one
+repair and only for a demonstrated implementation/configuration defect. A second 0/30 closes the
+phase as Result D and prohibits full shared, Stack, and Push training. Only a passing Pick gate
+authorizes the shared full run; valid shared closed-loop execution then authorizes the matching
+Stack and Push references.
+
+VLA-JEPA, LatentGuard, SARM, PPO, Diffusion Policy, new data, and another ACT path remain
+unauthorized regardless of the Phase 2C-B outcome.

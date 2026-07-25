@@ -1,0 +1,123 @@
+{
+  "schema_version": "langmani-v2-phase2c-b-primary-training-config-v0",
+  "source": {
+    "branch": "codex/langmani-v2-phase2c-a1-bounded-act",
+    "commit": "4c38190a36ec41349ef39774ee95dc666537eed6"
+  },
+  "dataset": {
+    "identity": "LangManiOfficialMultiSkill-v2",
+    "fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+    "normalization_identity": "LangManiOfficialMultiSkill-v2-primary-train-pooled-natural-frame-v0",
+    "normalization_fingerprint": "sha256:9e08cc0cc6f719298655d250e75b59fda85f9a8414fa3d53e99397a6c4ee58a6",
+    "train_episodes": {
+      "PickCube-v1": 700,
+      "StackCube-v1": 700,
+      "PushCube-v1": 699
+    },
+    "train_frames": {
+      "PickCube-v1": 54608,
+      "StackCube-v1": 74891,
+      "PushCube-v1": 48219
+    }
+  },
+  "base_model": {
+    "repo_id": "lerobot/smolvla_base",
+    "revision": "c83c3163b8ca9b7e67c509fffd9121e66cb96205",
+    "config_sha256": "650584b56c104720f7a3c91d1ec6bec9e8de8ac11e60c92ba2fa82d93eda147d",
+    "model_sha256": "7cd549ac2351fb069c0ddb3c34ad2d09cfc92b56a15dccdfc2e41467aaca01eb",
+    "lerobot_version": "0.6.0",
+    "pretrained_weights_required": true,
+    "vlm_dependency": {
+      "repo_id": "HuggingFaceTB/SmolVLM2-500M-Video-Instruct",
+      "revision": "7b375e1b73b11138ff12fe22c8f2822d8fe03467",
+      "config_sha256": "ea6bc1237e96247f6258de3e202e2e62b93d6f386dc47e7b36b5588bf3a15e17",
+      "model_sha256": "b9bfd456c9472c0acd5719d6e514c4b859891af205ee1a736552fd3497b8b0c3"
+    }
+  },
+  "policy_features": {
+    "inputs": {
+      "observation.images.base_camera": {
+        "type": "VISUAL",
+        "shape": [3, 256, 256]
+      },
+      "observation.state": {
+        "type": "STATE",
+        "shape": [9]
+      },
+      "task": {
+        "semantic": "natural-language instruction"
+      }
+    },
+    "outputs": {
+      "action": {
+        "type": "ACTION",
+        "shape": [8]
+      }
+    },
+    "task_id_model_input": false,
+    "privileged_features": []
+  },
+  "bounded_action": {
+    "identity": "smolvla_bounded_action_latent_v1",
+    "epsilon": 1e-06,
+    "physical_to_latent": "atanh((1-epsilon)*(2*(physical-lower)/(upper-lower)-1))",
+    "latent_to_physical": "lower+0.5*(tanh(latent)+1)*(upper-lower)",
+    "post_hoc_clipping": false,
+    "projection": false,
+    "replacement_action": false
+  },
+  "model": {
+    "chunk_size": 50,
+    "n_action_steps": 50,
+    "execution_horizon_candidates": [1, 4, 8],
+    "normalization_mapping": {
+      "VISUAL": "IDENTITY",
+      "STATE": "MEAN_STD",
+      "ACTION": "IDENTITY"
+    },
+    "resize_imgs_with_padding": [512, 512],
+    "tokenizer_max_length": 48,
+    "num_inference_steps": 10,
+    "freeze_vision_encoder": true,
+    "train_expert_only": true,
+    "train_state_proj": true,
+    "precision": "bfloat16",
+    "augmentation": "none"
+  },
+  "optimization": {
+    "batch_size": 4,
+    "gradient_accumulation": 4,
+    "effective_batch_size": 16,
+    "optimizer": "AdamW",
+    "learning_rate": 0.0001,
+    "betas": [0.9, 0.95],
+    "epsilon": 1e-08,
+    "weight_decay": 1e-10,
+    "gradient_clip_norm": 10.0,
+    "scheduler": "cosine_decay_with_warmup",
+    "warmup_steps": 1000,
+    "decay_steps": 30000,
+    "decay_learning_rate": 2.5e-06,
+    "seed": 0,
+    "total_optimizer_steps": 20000,
+    "checkpoint_steps": [5000, 10000, 20000],
+    "validation_steps": [5000, 10000, 20000],
+    "num_workers": 4
+  },
+  "model_order": [
+    "pick_smolvla",
+    "shared_language_smolvla",
+    "stack_smolvla",
+    "push_smolvla"
+  ],
+  "pick_gate": {
+    "validation_episodes": 30,
+    "minimum_successes": 3,
+    "invalid_action_episodes": 0,
+    "simulator_error_episodes": 0,
+    "bounded_repairs_maximum": 1
+  },
+  "other_model_full_training_before_pick_gate": false,
+  "vla_jepa_authorized": false,
+  "latentguard_authorized": false
+}
