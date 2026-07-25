@@ -339,6 +339,11 @@ def main() -> int:
             "package_fingerprint": PACKAGE_FINGERPRINT,
             "success_rate_difference": analysis["multi_skill_interference_success_rate_difference"],
             "average": analysis["multi_skill_interference_average"],
+            "timeout_rate_difference": analysis["multi_skill_timeout_rate_difference"],
+            "action_variance_difference_by_dimension": analysis[
+                "multi_skill_action_variance_difference_by_dimension"
+            ],
+            "failure_category_comparison": analysis["multi_skill_failure_category_comparison"],
             "visual_shift_success_rate_difference": analysis[
                 "visual_shift_success_rate_difference"
             ],

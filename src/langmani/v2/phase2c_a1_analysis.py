@@ -221,6 +221,57 @@ def analyze_phase2c_a1_results(
     interference_average = {
         split: statistics.fmean(values.values()) for split, values in interference.items()
     }
+    comparison_groups = {
+        **{
+            split: {
+                "per_task": summaries["per_task"][split],
+                "shared": summaries["shared"][split],
+            }
+            for split in ("validation", *FINAL_SPLITS)
+        },
+        "combined_final": combined_final,
+    }
+    timeout_rate_difference = {
+        split: {
+            task_id: (
+                groups["shared"][task_id]["timeout_count"]
+                / groups["shared"][task_id]["episode_count"]
+                - groups["per_task"][task_id]["timeout_count"]
+                / groups["per_task"][task_id]["episode_count"]
+            )
+            for task_id in TASK_IDS
+        }
+        for split, groups in comparison_groups.items()
+    }
+    action_variance_difference: dict[str, dict[str, list[float] | None]] = {}
+    failure_category_comparison: dict[str, dict[str, dict[str, object]]] = {}
+    for split, groups in comparison_groups.items():
+        action_variance_difference[split] = {}
+        failure_category_comparison[split] = {}
+        for task_id in TASK_IDS:
+            per_summary = groups["per_task"][task_id]
+            shared_summary = groups["shared"][task_id]
+            per_variance = per_summary["action_variance_by_dimension"]
+            shared_variance = shared_summary["action_variance_by_dimension"]
+            action_variance_difference[split][task_id] = (
+                (
+                    np.asarray(shared_variance, dtype=np.float64)
+                    - np.asarray(per_variance, dtype=np.float64)
+                ).tolist()
+                if per_variance is not None and shared_variance is not None
+                else None
+            )
+            per_failures = per_summary["failure_categories"]
+            shared_failures = shared_summary["failure_categories"]
+            categories = sorted({*per_failures, *shared_failures})
+            failure_category_comparison[split][task_id] = {
+                "per_task": per_failures,
+                "shared": shared_failures,
+                "shared_minus_per_task": {
+                    category: shared_failures.get(category, 0) - per_failures.get(category, 0)
+                    for category in categories
+                },
+            }
     visual_shift_degradation = {
         scope: {
             task_id: (
@@ -244,6 +295,9 @@ def analyze_phase2c_a1_results(
         "combined_final": combined_final,
         "multi_skill_interference_success_rate_difference": interference,
         "multi_skill_interference_average": interference_average,
+        "multi_skill_timeout_rate_difference": timeout_rate_difference,
+        "multi_skill_action_variance_difference_by_dimension": action_variance_difference,
+        "multi_skill_failure_category_comparison": failure_category_comparison,
         "visual_shift_success_rate_difference": visual_shift_degradation,
         "pipeline_checks": {
             "training_runs_complete": training_runs_complete,
