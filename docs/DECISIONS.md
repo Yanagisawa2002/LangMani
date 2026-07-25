@@ -3694,3 +3694,27 @@ Stack and Push references.
 
 VLA-JEPA, LatentGuard, SARM, PPO, Diffusion Policy, new data, and another ACT path remain
 unauthorized regardless of the Phase 2C-B outcome.
+
+## D-142 - Bind the sole Phase 2C-B repair to the execution horizon
+
+The full Pick-only SmolVLA run completed all 20,000 optimizer steps and retained only the
+pre-registered 5,000, 10,000, and 20,000-step checkpoints. Validation-only offline diagnostics
+ranked the 20,000-step checkpoint first. The frozen two-checkpoint by three-horizon screen had
+zero successes in all six cells, so the unchanged selection rule chose the 20,000-step checkpoint
+with `H_exec=1` on action smoothness. Its independent 30-episode Pick gate then completed with
+0/30 successes, 26 `no_initial_motion`, four `failed_grasp`, zero invalid actions, and zero
+simulator errors.
+
+This 0/30 result permits at most one repair. The demonstrated defect is restricted to action-chunk
+execution horizon: on the same 20,000-step checkpoint and the same frozen six-episode screen,
+`H_exec=1` produced six `no_initial_motion` failures, while the pre-locked `H_exec=8` cell produced
+five contact-bearing `failed_grasp` attempts and only one `no_initial_motion`. The repair therefore
+changes only `H_exec` from 1 to 8 for one repeated 30-episode Pick gate. It does not change model
+bytes, create an optimizer, retrain, alter data/splits/resets/tasks/success, or change observation,
+language, or physical-action contracts.
+
+The repair must be recorded by a fingerprinted
+`langmani-v2-phase2c-b-bounded-repair-policy-v0` artifact that binds the original selection,
+initial 0/30 summary, and pre-locked H=8 screen. Independent verification must consume both the
+initial and repaired summaries. After this repair, no second repair is permitted. A repaired 0/30
+must set the Result-D stop and keep full shared, Stack, Push, and VLA-JEPA training unauthorized.

@@ -110,6 +110,13 @@ implementation/configuration defect is demonstrated. If the repaired policy
 also remains 0/30, the phase stops as `RESULT_D`; Models M/S/U are not fully
 trained.
 
+The sole repair, if invoked, is materialized by
+`scripts/select_v2_phase2c_b_repair.py`. It must bind the original 0/30 gate to
+one alternate checkpoint/horizon cell that was already present in the frozen
+six-episode selection grid. `environment/verify_v2_phase2c_b.py` then consumes
+the original summary, repair policy, and repaired 30-episode summary together;
+`--repair-used` without both bound repair inputs is invalid.
+
 Only a passing Pick gate authorizes Model M full training. Valid shared
 closed-loop execution then authorizes Models S and U. Final policies,
 processors, action transforms, horizons, and reset identities are frozen

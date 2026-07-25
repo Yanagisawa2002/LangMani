@@ -28,6 +28,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pick-training-result", type=Path, required=True)
     parser.add_argument("--selected-policy", type=Path, required=True)
     parser.add_argument("--pick-validation-summary", type=Path, required=True)
+    parser.add_argument("--initial-pick-validation-summary", type=Path)
+    parser.add_argument("--repair-policy", type=Path)
     parser.add_argument("--repair-used", action="store_true")
     parser.add_argument("--output", type=Path, required=True)
     return parser.parse_args()
@@ -86,6 +88,17 @@ def main() -> int:
         "selected_policy": args.selected_policy.resolve(),
         "pick_validation_summary": args.pick_validation_summary.resolve(),
     }
+    if bool(args.initial_pick_validation_summary) != bool(args.repair_policy):
+        raise Phase2CBContractError(
+            "repair verification requires both initial summary and repair policy"
+        )
+    if args.repair_used != bool(args.repair_policy):
+        raise Phase2CBContractError(
+            "--repair-used must exactly match the presence of repair evidence"
+        )
+    if args.repair_policy is not None and args.initial_pick_validation_summary is not None:
+        paths["initial_pick_validation_summary"] = args.initial_pick_validation_summary.resolve()
+        paths["repair_policy"] = args.repair_policy.resolve()
     documents = {
         key: _read(
             path,
@@ -145,7 +158,60 @@ def main() -> int:
     ):
         raise Phase2CBContractError("Pick-gate evidence contract failed")
     selected_checkpoint = selected.get("selected_checkpoint_sha256")
-    selected_horizon = selected.get("selected_execution_horizon")
+    original_selected_horizon = selected.get("selected_execution_horizon")
+    selected_horizon = original_selected_horizon
+    if args.repair_used:
+        repair = documents["repair_policy"]
+        initial_validation = documents["initial_pick_validation_summary"]
+        initial_identities = initial_validation.get("checkpoint_identities")
+        repair_inputs = repair.get("inputs")
+        repair_initial = (
+            repair_inputs.get("initial_validation_summary")
+            if isinstance(repair_inputs, Mapping)
+            else None
+        )
+        repair_selected = (
+            repair_inputs.get("selected_policy") if isinstance(repair_inputs, Mapping) else None
+        )
+        if (
+            repair.get("schema_version") != "langmani-v2-phase2c-b-bounded-repair-policy-v0"
+            or repair.get("package_fingerprint") != PACKAGE_FINGERPRINT
+            or repair.get("repair_ordinal") != 1
+            or repair.get("repair_kind") != "action_chunk_execution_horizon"
+            or repair.get("selected_checkpoint_sha256") != selected_checkpoint
+            or repair.get("original_execution_horizon") != original_selected_horizon
+            or not isinstance(repair.get("repaired_execution_horizon"), int)
+            or isinstance(repair.get("repaired_execution_horizon"), bool)
+            or repair.get("repaired_execution_horizon") == original_selected_horizon
+            or repair.get("model_bytes_changed") is not False
+            or repair.get("optimizer_created") is not False
+            or repair.get("training_started") is not False
+            or repair.get("dataset_changed") is not False
+            or repair.get("split_changed") is not False
+            or repair.get("observation_contract_changed") is not False
+            or repair.get("physical_action_contract_changed") is not False
+            or repair.get("success_predicate_changed") is not False
+            or repair.get("final_test_opened") is not False
+            or repair.get("passed") is not True
+            or initial_validation.get("package_fingerprint") != PACKAGE_FINGERPRINT
+            or initial_validation.get("model_kind") != "pick_smolvla"
+            or initial_validation.get("task_id") != "PickCube-v1"
+            or initial_validation.get("split") != "validation"
+            or initial_validation.get("instruction_condition") != "correct"
+            or initial_validation.get("episode_count") != 30
+            or initial_validation.get("success_count") != 0
+            or initial_validation.get("invalid_action_count") != 0
+            or initial_validation.get("simulator_error_count") != 0
+            or initial_validation.get("completed") is not True
+            or initial_identities != [selected_checkpoint]
+            or initial_validation.get("execution_horizon") != original_selected_horizon
+            or not isinstance(repair_initial, Mapping)
+            or repair_initial.get("fingerprint") != initial_validation.get("fingerprint")
+            or not isinstance(repair_selected, Mapping)
+            or repair_selected.get("fingerprint") != selected.get("fingerprint")
+        ):
+            raise Phase2CBContractError("bounded repair evidence contract failed")
+        selected_horizon = repair["repaired_execution_horizon"]
     validation_checkpoints = validation.get("checkpoint_identities")
     checkpoint_records = training.get("checkpoint_records")
     if (
@@ -176,6 +242,7 @@ def main() -> int:
         "verify_stage": "pick_gate",
         "inputs": {key: _path_record(paths[key], documents[key]) for key in sorted(paths)},
         "selected_checkpoint_sha256": selected_checkpoint,
+        "original_selected_execution_horizon": original_selected_horizon,
         "selected_execution_horizon": selected_horizon,
         "pick_competence_gate": gate,
         "repair_used": bool(args.repair_used),
