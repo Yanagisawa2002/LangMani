@@ -3741,3 +3741,40 @@ competence failure, not infrastructure failure. Full Shared, Stack, and Push tra
 evaluation, language intervention, held-out paraphrases, visual shift, multi-skill transfer,
 VLA-JEPA, LatentGuard, SARM, PPO, and new-data work remain unrun and unauthorized. No second
 repair or automatic next-model phase is permitted.
+
+## D-144 - Authorize one query-state-relative Pick formulation decision experiment
+
+Phase 2C-C is the final authorized LangMani action-formulation experiment before a project-level
+pivot decision. It compares the frozen failed absolute-action Pick SmolVLA at 20,000 optimizer
+steps against exactly one seed-0 relative-action Pick SmolVLA with the same official base revision,
+RGB/public-state/language inputs, architecture, optimizer, batch size, precision, augmentation,
+checkpoint cadence, and 20,000-step schedule. Shared, Stack, Push, VLA-JEPA, ACT, other policy
+families, new data, and a repair phase remain unauthorized.
+
+The relative consumer maps `PandaPolicyStateV0[9]` to one current native action reference. The
+first seven fields are the measured Panda arm joint positions. The final two fields are measured
+finger positions; their arithmetic mean is mapped from the Panda mimic controller's physical
+`[-0.01,0.04]` metre range to its normalized `[-1,1]` command. The complete predicted chunk is
+anchored to the public state at the policy query. Future state, object pose, goal pose, contacts,
+success, and offline phase labels never enter the policy or action transform.
+
+The sole bounded composition is
+`native_affine(tanh(safe_logit(current)+scale*tanh(model_output)))`. One arm scale and one gripper
+scale are derived once from immutable Pick train statistics with a fixed 1.01 margin, then frozen
+before any optimizer exists. The pre-registered float32 scales are `0.07757549732923508` for all
+seven arm components and `16.947166442871094` for the normalized gripper component. There is no
+scale sweep, clipping, projection, rejection sampling, or replacement action.
+
+Static preparation must independently recompute those exact float32 scales, exercise at least
+100,000 random 50-action residual chunks, and reconstruct every accepted Pick train, validation,
+and unseen-reset frame within absolute error `1e-6`. It also freezes the phase-diagnostic frame
+lock, the same 30 training resets for both formulations, the six-reset H=1/H=8 validation screen,
+the 30-reset validation gate, and the conditional 50-reset unseen test before model results.
+
+Validation-only offline metrics select one of the 5k, 10k, and 20k checkpoints. The six-reset
+screen alone selects H=1 or H=8. The 50-reset unseen evaluation remains closed unless the relative
+policy first reaches at least 3/30 validation successes. If relative validation is below 3/30 but
+training resets have meaningful success, the outcome is Case B. Zero training-reset and validation
+success is Case C and permanently freezes the custom LangMani model-training route. Transform,
+checkpoint, or evaluator invalidity is Case D and is not a model-quality conclusion. No Case C or
+D may create Phase 2C-C.1.
