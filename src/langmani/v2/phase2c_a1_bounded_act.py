@@ -17,7 +17,7 @@ import json
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from pathlib import Path
-from typing import Final, cast
+from typing import Final
 
 import numpy as np
 import torch
@@ -78,9 +78,7 @@ def bounded_action_head_manifest() -> dict[str, object]:
         "identity": BOUNDED_ACTION_HEAD_IDENTITY,
         "raw_head": "torch.nn.Linear(dim_model, 8)",
         "normalized_mapping": "z = tanh(u)",
-        "physical_mapping": (
-            "a = lower + 0.5 * (z + 1) * (upper - lower)"
-        ),
+        "physical_mapping": ("a = lower + 0.5 * (z + 1) * (upper - lower)"),
         "training_action_representation": "native_physical_pd_joint_pos_float32",
         "inference_action_representation": "native_physical_pd_joint_pos_float32",
         "action_normalization_mode": "IDENTITY",
@@ -205,9 +203,7 @@ class BoundedACTPolicyV1(ACTPolicy):
             or destination.is_junction()
             or any(destination.iterdir())
         ):
-            raise BoundedACTContractError(
-                "bounded ACT save destination must be new or empty"
-            )
+            raise BoundedACTContractError("bounded ACT save destination must be new or empty")
         result = super().save_pretrained(
             destination,
             push_to_hub=False,
@@ -224,9 +220,7 @@ class BoundedACTPolicyV1(ACTPolicy):
                 json.dump(payload, stream, sort_keys=True, separators=(",", ":"))
                 stream.write("\n")
         except FileExistsError as error:
-            raise BoundedACTContractError(
-                "refusing to overwrite bounded ACT sidecar"
-            ) from error
+            raise BoundedACTContractError("refusing to overwrite bounded ACT sidecar") from error
         return result
 
     @classmethod
@@ -256,9 +250,7 @@ class BoundedACTPolicyV1(ACTPolicy):
         try:
             payload = json.loads(sidecar.read_text(encoding="utf-8"))
         except (OSError, UnicodeError, json.JSONDecodeError) as error:
-            raise BoundedACTContractError(
-                "bounded ACT sidecar is missing or invalid"
-            ) from error
+            raise BoundedACTContractError("bounded ACT sidecar is missing or invalid") from error
         expected = {
             "bounded_action_head": bounded_action_head_manifest(),
             "native_action_bounds": native_action_bounds_manifest(),

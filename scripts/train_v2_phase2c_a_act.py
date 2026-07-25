@@ -25,6 +25,11 @@ from langmani.v2.phase2c_a import (
     UniformTaskBatchSampler,
     primary_optimization_config,
 )
+from langmani.v2.phase2c_a1_bounded_act import (
+    BoundedACTPolicyV1,
+    identity_uses_bounded_action_head,
+    model_identity_with_bounded_head,
+)
 from langmani.v2.phase2c_a_act import (
     ProcessorStatistics,
     load_dataset_view,
@@ -33,11 +38,6 @@ from langmani.v2.phase2c_a_act import (
     run_micro_overfit,
     run_one_batch_gpu_smoke,
     train_primary_act,
-)
-from langmani.v2.phase2c_a1_bounded_act import (
-    BoundedACTPolicyV1,
-    identity_uses_bounded_action_head,
-    model_identity_with_bounded_head,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -170,9 +170,7 @@ def _identity(
         model_kind=kind,
         run_role=role,
         model_config=(
-            model_identity_with_bounded_head(
-                Phase2CAModelConfig.for_model(kind).to_dict()
-            )
+            model_identity_with_bounded_head(Phase2CAModelConfig.for_model(kind).to_dict())
             if bounded_action_head_v1
             else Phase2CAModelConfig.for_model(kind).to_dict()
         ),
@@ -244,9 +242,7 @@ def _diagnose(args: argparse.Namespace) -> dict[str, object]:
         expected_identity=identity,
         for_resume=False,
         policy_class=(
-            BoundedACTPolicyV1
-            if identity_uses_bounded_action_head(identity.model_config)
-            else None
+            BoundedACTPolicyV1 if identity_uses_bounded_action_head(identity.model_config) else None
         ),
     )
     policy = loaded.policy

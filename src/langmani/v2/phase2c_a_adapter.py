@@ -29,16 +29,16 @@ from langmani.v2.phase2c_a import (
     ModelKind,
     Phase2CARunIdentity,
 )
-from langmani.v2.phase2c_a_act import (
-    TASK_INDEX_KEY,
-    prepare_policy_batch,
-    validate_shared_act_config,
-)
 from langmani.v2.phase2c_a1_bounded_act import (
     BoundedACTPolicyV1,
     bounded_action_head_manifest,
     identity_uses_bounded_action_head,
     validate_bounded_act_policy,
+)
+from langmani.v2.phase2c_a_act import (
+    TASK_INDEX_KEY,
+    prepare_policy_batch,
+    validate_shared_act_config,
 )
 from langmani.v2.policy import (
     ActionChunk,
@@ -124,9 +124,7 @@ class Phase2CAActPolicyAdapter:
         self.policy.eval()
         if self.bounded_action_head_v1:
             if not isinstance(self.policy, BoundedACTPolicyV1):
-                raise Phase2CAAdapterError(
-                    "bounded run did not reconstruct BoundedACTPolicyV1"
-                )
+                raise Phase2CAAdapterError("bounded run did not reconstruct BoundedACTPolicyV1")
             validate_bounded_act_policy(self.policy)
         if self.model_kind is ModelKind.SHARED:
             validate_shared_act_config(self.policy.config, self.policy)
@@ -146,9 +144,7 @@ class Phase2CAActPolicyAdapter:
                 else f"phase2c-a:{self.model_kind.value}:{run_fingerprint}"
             ),
             adapter_name=(
-                "phase2c_a1_bounded_act"
-                if self.bounded_action_head_v1
-                else "phase2c_a_act"
+                "phase2c_a1_bounded_act" if self.bounded_action_head_v1 else "phase2c_a_act"
             ),
             implementation=(
                 "lerobot-0.6.0-act-bounded_action_head_v1"

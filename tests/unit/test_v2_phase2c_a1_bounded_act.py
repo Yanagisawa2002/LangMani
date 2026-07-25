@@ -25,15 +25,15 @@ from langmani.v2.phase2b5 import (  # noqa: E402
     PANDA_ACTION_HIGH,
     PANDA_ACTION_LOW,
 )
-from langmani.v2.phase2c_a_act import masked_l1_loss  # noqa: E402
 from langmani.v2.phase2c_a1_bounded_act import (  # noqa: E402
     BOUNDED_ACTION_HEAD_CONFIG_FILE,
-    BoundedACTPolicyV1,
     BoundedActionHeadV1,
+    BoundedACTPolicyV1,
     build_bounded_act_config,
     independent_bounded_action_audit,
     validate_bounded_act_policy,
 )
+from langmani.v2.phase2c_a_act import masked_l1_loss  # noqa: E402
 
 
 def _stats() -> dict[str, dict[str, torch.Tensor]]:
