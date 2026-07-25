@@ -1726,7 +1726,17 @@ def policy_query_action_audit(
                 for key, value in processed.items()
                 if key not in {ACTION_FEATURE_KEY, "action_is_pad"}
             }
-            available = int(cast(torch.Tensor, next(iter(observations.values()))).shape[0])
+            policy_input_keys = [IMAGE_FEATURE_KEY, STATE_FEATURE_KEY]
+            if kind is ModelKind.SHARED:
+                policy_input_keys.append(TASK_TOKEN_FEATURE_KEY)
+            batch_sizes = {
+                int(cast(torch.Tensor, observations[key]).shape[0]) for key in policy_input_keys
+            }
+            if len(batch_sizes) != 1:
+                raise Phase2CAActError(
+                    "policy-query audit observations have inconsistent batch sizes"
+                )
+            available = next(iter(batch_sizes))
             retained = min(available, required_policy_queries - query_count)
             observations = {
                 key: value[:retained] if isinstance(value, torch.Tensor) else value

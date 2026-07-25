@@ -32,6 +32,7 @@ from langmani.v2.phase2c_a_act import (  # noqa: E402
     build_phase2c_a_act_config,
     load_processor_statistics,
     masked_l1_loss,
+    policy_query_action_audit,
     prepare_policy_batch,
     validate_shared_act_config,
 )
@@ -180,6 +181,33 @@ class _Policy:
         if self.nonfinite:
             result[0, 0, 0] = torch.nan
         return result
+
+
+def test_policy_query_audit_ignores_scalar_processor_metadata() -> None:
+    class _ScalarMetadataProcessor(_Processor):
+        def __call__(self, value: object) -> object:
+            if isinstance(value, dict):
+                return {"scalar_metadata": 0.5, **value}
+            return value
+
+    class _BatchPolicy(_Policy):
+        def predict_action_chunk(self, batch: dict[str, torch.Tensor]) -> torch.Tensor:
+            batch_size = int(batch[IMAGE_FEATURE_KEY].shape[0])
+            result = torch.zeros(batch_size, 16, 8, dtype=torch.float32)
+            result[..., 3] = -0.1
+            return result
+
+    result = policy_query_action_audit(
+        model_kind=ModelKind.PICK,
+        policy=_BatchPolicy(),  # type: ignore[arg-type]
+        preprocessor=_ScalarMetadataProcessor(),  # type: ignore[arg-type]
+        postprocessor=_Processor(),  # type: ignore[arg-type]
+        validation_batches=[_raw_batch()],
+        required_policy_queries=3,
+    )
+    assert result["policy_query_count"] == 3
+    assert result["validation_loader_pass_count"] == 2
+    assert result["policy_query_action_audit_passed"] is True
 
 
 def _adapter(*, horizon: int = 4, nonfinite: bool = False) -> Phase2CAActPolicyAdapter:
