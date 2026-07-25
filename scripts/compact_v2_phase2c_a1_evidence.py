@@ -270,6 +270,25 @@ def main() -> int:
         },
     )
 
+    closed_loop_smoke_root = evaluation_root / "closed_loop_smoke"
+    closed_loop_smoke_summary = _read_object(closed_loop_smoke_root / "summary.json")
+    _write_new(
+        artifact_root,
+        "closed_loop_smoke.json",
+        {
+            "schema_version": "langmani-v2-phase2c-a1-closed-loop-smoke-registry-v0",
+            "package_fingerprint": PACKAGE_FINGERPRINT,
+            "summary": closed_loop_smoke_summary,
+            "runtime_manifest": _read_object(closed_loop_smoke_root / "runtime_manifest.json"),
+            "episodes_file": _external_file(closed_loop_smoke_root / "episodes.jsonl"),
+            "passed": (
+                closed_loop_smoke_summary.get("episode_count") == 1
+                and closed_loop_smoke_summary.get("invalid_action_count") == 0
+                and closed_loop_smoke_summary.get("simulator_error_count") == 0
+            ),
+        },
+    )
+
     horizon = _read_object(evidence_root / "reports/horizon-selection.json")
     _write_new(artifact_root, "execution_horizon_comparison.json", horizon)
     development = _evaluation_registry(evaluation_root, final=False)
@@ -297,8 +316,20 @@ def main() -> int:
         },
     )
 
-    intervention = _read_object(evidence_root / "reports/task-intervention-analysis.json")
-    _write_new(artifact_root, "task_id_intervention.json", intervention)
+    intervention_lock_path = evidence_root / "reports/task-intervention-lock.json"
+    intervention_analysis_path = evidence_root / "reports/task-intervention-analysis.json"
+    _write_new(
+        artifact_root,
+        "task_id_intervention.json",
+        {
+            "schema_version": "langmani-v2-phase2c-a1-task-intervention-registry-v0",
+            "package_fingerprint": PACKAGE_FINGERPRINT,
+            "lock": _read_object(intervention_lock_path),
+            "analysis": _read_object(intervention_analysis_path),
+            "lock_file": _external_file(intervention_lock_path),
+            "analysis_file": _external_file(intervention_analysis_path),
+        },
+    )
     analysis = _read_object(evidence_root / "reports/result-analysis.json")
     _write_new(
         artifact_root,
