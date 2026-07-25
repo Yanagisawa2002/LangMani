@@ -105,6 +105,8 @@ def _comparison(
         "intervention_outcome": intervention["outcome"],
         "correct_success": correct["success"],
         "intervention_success": intervention["success"],
+        "correct_wrong_task_behavior": correct.get("wrong_task_behavior"),
+        "intervention_wrong_task_behavior": intervention.get("wrong_task_behavior"),
         "correct_maximum_object_motion_m": correct.get("maximum_object_motion_m"),
         "intervention_maximum_object_motion_m": intervention.get("maximum_object_motion_m"),
     }
@@ -155,6 +157,9 @@ def main() -> int:
             "correct_success_count": sum(bool(row["correct_success"]) for row in selected),
             "intervention_success_count": sum(
                 bool(row["intervention_success"]) for row in selected
+            ),
+            "intervention_wrong_task_behavior_count": sum(
+                row["intervention_wrong_task_behavior"] is True for row in selected
             ),
         }
     semantic = {
