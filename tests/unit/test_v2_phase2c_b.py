@@ -23,7 +23,10 @@ from langmani.v2.phase2c_b import (
     classify_pick_gate,
     validate_model_batch,
 )
-from langmani.v2.phase2c_b_smolvla import BoundedSmolVLAPolicyV1
+from langmani.v2.phase2c_b_smolvla import (
+    BoundedSmolVLAPolicyV1,
+    project_policy_batch,
+)
 from langmani.v2.policy import PolicyContext, PolicyContractError
 
 
@@ -133,6 +136,26 @@ def test_exact_policy_batch_allowlist_requires_natural_language() -> None:
         validate_model_batch({**batch, "task_id": ["PickCube-v1"]}, shared=True)
     with pytest.raises(Phase2CBContractError, match="non-empty"):
         validate_model_batch({**batch, "task": ["", "stack the cubes"]}, shared=True)
+
+
+def test_real_uint8_camera_batch_is_converted_to_model_float() -> None:
+    batch = {
+        "observation.images.base_camera": torch.full(
+            (2, 3, 256, 256),
+            255,
+            dtype=torch.uint8,
+        ),
+        "observation.state": torch.zeros((2, 9), dtype=torch.float32),
+        "action": torch.zeros((2, 50, 8), dtype=torch.float32),
+        "action_is_pad": torch.zeros((2, 50), dtype=torch.bool),
+        "task": ["pick up the cube", "pick up the cube"],
+    }
+    projected = project_policy_batch(batch, shared=False)
+    image = projected["observation.images.base_camera"]
+    assert isinstance(image, torch.Tensor)
+    assert image.dtype is torch.float32
+    assert torch.equal(image, torch.ones_like(image))
+    assert batch["observation.images.base_camera"].dtype is torch.uint8
 
 
 def test_blank_language_requires_explicit_intervention_flag() -> None:

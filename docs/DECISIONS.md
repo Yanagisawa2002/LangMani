@@ -3655,6 +3655,9 @@ model's 32-dimensional internal state/action padding keeps every published tenso
 unchanged. Strict loading must therefore load all pretrained tensors; no visual-language,
 state-projection, action-projection, or flow-expert tensor may be silently reinitialized.
 
+The immutable LeRobot camera bytes remain `uint8` at the dataset boundary and are converted once,
+before official preprocessing, to `float32` in `[0,1]` by exact division by 255.
+
 The generic `PolicyContext` keeps non-empty language as its default contract but permits one
 explicitly flagged blank-language intervention. The policy-agnostic evaluator forwards an optional
 instruction string and contains no SmolVLA-specific execution branch.

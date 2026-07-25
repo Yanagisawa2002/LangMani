@@ -212,7 +212,7 @@ def load_dataset_view(
 
 
 def project_policy_batch(raw_batch: Mapping[str, object], *, shared: bool) -> dict[str, object]:
-    """Remove every metadata field, including task IDs, before preprocessing."""
+    """Remove metadata and convert immutable uint8 camera bytes to model float input."""
 
     missing = [key for key in POLICY_BATCH_KEYS if key not in raw_batch]
     if missing:
@@ -225,7 +225,7 @@ def project_policy_batch(raw_batch: Mapping[str, object], *, shared: bool) -> di
     padding = batch[ACTION_PAD_KEY]
     if (
         not isinstance(image, torch.Tensor)
-        or image.dtype is not torch.uint8
+        or image.dtype not in {torch.uint8, torch.float32}
         or image.ndim != 4
         or tuple(image.shape[1:]) != IMAGE_SHAPE_CHW
         or not isinstance(state, torch.Tensor)
@@ -243,6 +243,14 @@ def project_policy_batch(raw_batch: Mapping[str, object], *, shared: bool) -> di
         or not bool(torch.isfinite(action).all())
     ):
         raise Phase2CBSmolVLAError("real SmolVLA batch violates the observation/action contract")
+    model_image = image.to(dtype=torch.float32).div_(255.0) if image.dtype is torch.uint8 else image
+    if (
+        not bool(torch.isfinite(model_image).all())
+        or float(model_image.amin()) < 0.0
+        or float(model_image.amax()) > 1.0
+    ):
+        raise Phase2CBSmolVLAError("SmolVLA camera input must lie in [0,1]")
+    batch[IMAGE_FEATURE_KEY] = model_image
     return batch
 
 
@@ -402,6 +410,9 @@ def processor_manifest(
         "state_statistics_source": statistics.manifest["selection"],
         "action_statistics_consumed": False,
         "action_normalization": "IDENTITY_before_bounded_latent_transform",
+        "dataset_image_dtype": "uint8",
+        "model_image_dtype": "float32",
+        "image_conversion": "exact_uint8_divide_255",
         "task_input": LANGUAGE_FEATURE_KEY,
         "task_id_input": False,
         "action_is_pad": True,
