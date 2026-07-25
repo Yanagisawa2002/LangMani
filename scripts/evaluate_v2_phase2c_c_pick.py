@@ -149,6 +149,10 @@ class _DiagnosticEnvironment:
     def unwrapped(self) -> Any:
         return self.environment.unwrapped
 
+    @property
+    def spec(self) -> Any:
+        return self.environment.spec
+
     def reset(self, *args: object, **kwargs: object) -> object:
         result = self.environment.reset(*args, **kwargs)
         cube = _numpy(self.unwrapped.cube.pose.p).reshape(-1, 3)[0]
