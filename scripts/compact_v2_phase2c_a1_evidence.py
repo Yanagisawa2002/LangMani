@@ -143,7 +143,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--evidence-root", type=Path, required=True)
     parser.add_argument("--evaluation-root", type=Path, required=True)
     parser.add_argument("--training-git-commit", required=True)
-    parser.add_argument("--evaluation-git-commit", required=True)
+    parser.add_argument("--pre-final-evaluation-git-commit", required=True)
+    parser.add_argument("--final-evaluation-git-commit", required=True)
     return parser.parse_args()
 
 
@@ -441,7 +442,8 @@ def main() -> int:
         "repository_commit_before_compaction": repository_commit,
         "repository_clean_before_compaction": repository_status == "",
         "training_git_commit": args.training_git_commit,
-        "evaluation_git_commit": args.evaluation_git_commit,
+        "pre_final_evaluation_git_commit": args.pre_final_evaluation_git_commit,
+        "final_evaluation_git_commit": args.final_evaluation_git_commit,
         "evidence_root": evidence_root.as_posix(),
         "evaluation_root": evaluation_root.as_posix(),
         "prohibited_processes": prohibited_processes,
@@ -461,7 +463,8 @@ def main() -> int:
             "repository_commit": repository_commit,
             "repository_clean_before_compaction": repository_status == "",
             "training_git_commit": args.training_git_commit,
-            "evaluation_git_commit": args.evaluation_git_commit,
+            "pre_final_evaluation_git_commit": args.pre_final_evaluation_git_commit,
+            "final_evaluation_git_commit": args.final_evaluation_git_commit,
             "runtime": training_reports[ModelKind.PICK.value]["runtime"],
             "remote_audit": remote_audit,
         },

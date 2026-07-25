@@ -212,7 +212,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--evidence-root", type=Path, required=True)
     parser.add_argument("--evaluation-root", type=Path, required=True)
     parser.add_argument("--expected-training-commit", required=True)
-    parser.add_argument("--expected-evaluation-commit", required=True)
+    parser.add_argument("--expected-pre-final-evaluation-commit", required=True)
+    parser.add_argument("--expected-final-evaluation-commit", required=True)
     parser.add_argument("--report", type=Path, required=True)
     return parser.parse_args()
 
@@ -223,7 +224,11 @@ def main() -> int:
     artifact_root = args.artifact_root.resolve()
     evidence_root = args.evidence_root.resolve()
     evaluation_root = args.evaluation_root.resolve()
-    for commit in (args.expected_training_commit, args.expected_evaluation_commit):
+    for commit in (
+        args.expected_training_commit,
+        args.expected_pre_final_evaluation_commit,
+        args.expected_final_evaluation_commit,
+    ):
         if re.fullmatch(r"[0-9a-f]{40}", commit) is None:
             raise Phase2CA1VerificationError("expected commits must be full Git SHAs")
     checks: dict[str, object] = {}
@@ -342,7 +347,7 @@ def main() -> int:
     smoke_group = _verify_evaluation_group(
         evaluation_root / "closed_loop_smoke",
         expected_count=1,
-        expected_evaluation_commit=args.expected_evaluation_commit,
+        expected_evaluation_commit=args.expected_pre_final_evaluation_commit,
         final_policy_lock=None,
     )
     checks["closed_loop_smoke"] = (
@@ -380,7 +385,7 @@ def main() -> int:
     )
     checks["final_policy_lock"] = (
         _fingerprint_matches(final_lock)
-        and final_lock.get("evaluation_git_commit") == args.expected_evaluation_commit
+        and final_lock.get("evaluation_git_commit") == args.expected_final_evaluation_commit
         and final_lock.get("execution_horizon") == horizon.get("selected_execution_horizon")
         and final_lock.get("final_results_available") is False
         and final_lock.get("settings_mutable_after_final_results") is False
@@ -394,7 +399,7 @@ def main() -> int:
                 _verify_evaluation_group(
                     evaluation_root / "development" / scope / task_id,
                     expected_count=30,
-                    expected_evaluation_commit=args.expected_evaluation_commit,
+                    expected_evaluation_commit=args.expected_pre_final_evaluation_commit,
                     final_policy_lock=None,
                 )
             )
@@ -403,7 +408,7 @@ def main() -> int:
                     _verify_evaluation_group(
                         evaluation_root / "final" / scope / split / task_id,
                         expected_count=30,
-                        expected_evaluation_commit=args.expected_evaluation_commit,
+                        expected_evaluation_commit=args.expected_final_evaluation_commit,
                         final_policy_lock=str(final_lock_fingerprint),
                     )
                 )
@@ -443,7 +448,8 @@ def main() -> int:
         "schema_version": "langmani-v2-phase2c-a1-final-verification-v0",
         "package_fingerprint": PACKAGE_FINGERPRINT,
         "training_git_commit": args.expected_training_commit,
-        "evaluation_git_commit": args.expected_evaluation_commit,
+        "pre_final_evaluation_git_commit": args.expected_pre_final_evaluation_commit,
+        "final_evaluation_git_commit": args.expected_final_evaluation_commit,
         "verifier_git_commit": current_commit,
         "checks": checks,
         "checkpoint_verification": checkpoint_verification,
