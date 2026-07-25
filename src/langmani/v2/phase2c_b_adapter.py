@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 from collections.abc import Mapping
 from contextlib import nullcontext
@@ -94,6 +95,31 @@ class Phase2CBSmolVLAPolicyAdapter:
             or self.manifest.get("action_transform_fingerprint")
             != BoundedActionLatentV1().fingerprint
             or self.manifest.get("task_id_model_input") is not False
+            or re.fullmatch(
+                r"[0-9a-f]{40}",
+                str(self.manifest.get("training_git_commit")),
+            )
+            is None
+            or re.fullmatch(
+                r"sha256:[0-9a-f]{64}",
+                str(self.manifest.get("static_preparation_fingerprint")),
+            )
+            is None
+            or re.fullmatch(
+                r"sha256:[0-9a-f]{64}",
+                str(self.manifest.get("base_audit_fingerprint")),
+            )
+            is None
+            or re.fullmatch(
+                r"sha256:[0-9a-f]{64}",
+                str(self.manifest.get("real_view_fingerprint")),
+            )
+            is None
+            or re.fullmatch(
+                r"sha256:[0-9a-f]{64}",
+                str(self.manifest.get("run_manifest_fingerprint")),
+            )
+            is None
         ):
             raise Phase2CBSmolVLAAdapterError("SmolVLA checkpoint manifest changed")
         BoundedActionLatentV1.load(self.checkpoint)
@@ -140,6 +166,11 @@ class Phase2CBSmolVLAPolicyAdapter:
             "base_revision": OFFICIAL_BASE_REVISION,
             "lerobot_version": OFFICIAL_LEROBOT_VERSION,
             "checkpoint_sha256": f"sha256:{digest}",
+            "training_git_commit": self.manifest["training_git_commit"],
+            "static_preparation_fingerprint": self.manifest["static_preparation_fingerprint"],
+            "base_audit_fingerprint": self.manifest["base_audit_fingerprint"],
+            "real_view_fingerprint": self.manifest["real_view_fingerprint"],
+            "run_manifest_fingerprint": self.manifest["run_manifest_fingerprint"],
             "action_transform_fingerprint": BoundedActionLatentV1().fingerprint,
             "action_transform": "structural_tanh_then_native_affine",
             "post_hoc_clipping": False,

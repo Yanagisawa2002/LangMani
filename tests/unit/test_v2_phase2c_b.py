@@ -20,8 +20,10 @@ from langmani.v2.phase2c_b import (
     build_model_view_manifest,
     build_padding_audit,
     build_static_action_audit,
+    canonical_fingerprint,
     classify_pick_gate,
     validate_model_batch,
+    validate_prerequisite_completion,
 )
 from langmani.v2.phase2c_b_smolvla import (
     BoundedSmolVLAPolicyV1,
@@ -174,6 +176,27 @@ def test_blank_language_requires_explicit_intervention_flag() -> None:
         allow_blank_language_instruction=True,
     )
     assert context.language_instruction == ""
+
+
+def test_training_prerequisite_requires_valid_self_fingerprint() -> None:
+    semantic = {
+        "schema_version": "example-complete-v0",
+        "passed": True,
+        "input_fingerprint": "sha256:" + "1" * 64,
+    }
+    document = {**semantic, "fingerprint": canonical_fingerprint(semantic)}
+    assert (
+        validate_prerequisite_completion(
+            document,
+            schema_version="example-complete-v0",
+        )
+        == document
+    )
+    with pytest.raises(Phase2CBContractError, match="prerequisite"):
+        validate_prerequisite_completion(
+            {**document, "passed": False},
+            schema_version="example-complete-v0",
+        )
 
 
 def test_primary_training_configuration_is_single_and_frozen() -> None:

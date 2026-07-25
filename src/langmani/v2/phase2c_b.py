@@ -727,6 +727,24 @@ def validate_model_batch(
         raise Phase2CBContractError("shared SmolVLA language batch is empty")
 
 
+def validate_prerequisite_completion(
+    document: Mapping[str, object],
+    *,
+    schema_version: str,
+) -> dict[str, object]:
+    """Validate one immutable, self-fingerprinted Phase 2C-B prerequisite."""
+
+    semantic = dict(document)
+    fingerprint = semantic.pop("fingerprint", None)
+    if (
+        semantic.get("schema_version") != schema_version
+        or semantic.get("passed") is not True
+        or fingerprint != canonical_fingerprint(semantic)
+    ):
+        raise Phase2CBContractError("Phase 2C-B prerequisite completion identity is invalid")
+    return dict(document)
+
+
 def classify_pick_gate(
     *,
     success_count: int,

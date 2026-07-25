@@ -7,6 +7,8 @@ import json
 import math
 import os
 import random
+import re
+import subprocess
 import time
 from collections import Counter
 from collections.abc import Mapping
@@ -33,6 +35,7 @@ from langmani.v2.phase2c_b import (
     Phase2CBContractError,
     SmolVLATrainingConfig,
     canonical_fingerprint,
+    validate_prerequisite_completion,
 )
 from langmani.v2.phase2c_b_adapter import CHECKPOINT_MANIFEST
 from langmani.v2.phase2c_b_smolvla import (
@@ -62,6 +65,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model-kind", choices=[kind.value for kind in ModelKind], required=True)
     parser.add_argument("--stage", choices=("smoke", "micro", "full"), required=True)
     parser.add_argument("--run-root", type=Path, required=True)
+    parser.add_argument("--training-git-commit", required=True)
+    parser.add_argument("--static-preparation", type=Path, required=True)
+    parser.add_argument("--base-audit-completion", type=Path, required=True)
     parser.add_argument("--resume-checkpoint", type=Path)
     parser.add_argument("--num-workers", type=int)
     return parser.parse_args()
@@ -83,6 +89,59 @@ def _append_jsonl(path: Path, value: Mapping[str, object]) -> None:
         stream.write(json.dumps(dict(value), sort_keys=True, allow_nan=False) + "\n")
         stream.flush()
         os.fsync(stream.fileno())
+
+
+def _read_fingerprinted_completion(
+    path: Path,
+    *,
+    schema_version: str,
+) -> dict[str, object]:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise Phase2CBContractError(f"cannot read prerequisite {path}: {error}") from error
+    if not isinstance(value, dict):
+        raise Phase2CBContractError(f"prerequisite {path} must contain one object")
+    try:
+        return validate_prerequisite_completion(
+            value,
+            schema_version=schema_version,
+        )
+    except Phase2CBContractError as error:
+        raise Phase2CBContractError(f"prerequisite identity is invalid: {path}") from error
+
+
+def _repository_identity(expected_commit: str) -> dict[str, object]:
+    if re.fullmatch(r"[0-9a-f]{40}", expected_commit) is None:
+        raise Phase2CBContractError("--training-git-commit must be one full Git SHA")
+
+    def run(*command: str) -> str:
+        completed = subprocess.run(
+            command,
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        return completed.stdout.strip()
+
+    head = run("git", "rev-parse", "HEAD")
+    branch = run("git", "branch", "--show-current")
+    status = run("git", "status", "--porcelain")
+    upstream = run("git", "rev-parse", "@{upstream}")
+    if (
+        head != expected_commit
+        or branch != "codex/langmani-v2-phase2c-b-smolvla"
+        or status
+        or upstream != head
+    ):
+        raise Phase2CBContractError("training repository identity/cleanliness check failed")
+    return {
+        "git_commit": head,
+        "branch": branch,
+        "upstream": upstream,
+        "clean": True,
+    }
 
 
 def _micro_view(view: LoadedSmolVLAView, kind: ModelKind) -> LoadedSmolVLAView:
@@ -183,6 +242,11 @@ def _save_checkpoint(
     step: int,
     training: SmolVLATrainingConfig,
     processor_fingerprint: str,
+    training_git_commit: str,
+    static_preparation_fingerprint: str,
+    base_audit_fingerprint: str,
+    real_view_fingerprint: str,
+    run_manifest_fingerprint: str,
 ) -> dict[str, object]:
     accelerator.wait_for_everyone()
     checkpoint = _checkpoint_path(run_root, step)
@@ -203,6 +267,11 @@ def _save_checkpoint(
             "optimizer_step": step,
             "training_config_fingerprint": training.fingerprint,
             "processor_contract_fingerprint": processor_fingerprint,
+            "training_git_commit": training_git_commit,
+            "static_preparation_fingerprint": static_preparation_fingerprint,
+            "base_audit_fingerprint": base_audit_fingerprint,
+            "real_view_fingerprint": real_view_fingerprint,
+            "run_manifest_fingerprint": run_manifest_fingerprint,
             "action_transform_fingerprint": unwrapped.action_transform.fingerprint,
             "base_model": OFFICIAL_BASE_MODEL,
             "base_revision": OFFICIAL_BASE_REVISION,
@@ -443,6 +512,32 @@ def main() -> int:
             SmolVLATrainingConfig().num_workers if args.num_workers is None else args.num_workers
         )
     )
+    repository = _repository_identity(str(args.training_git_commit))
+    static_preparation = _read_fingerprinted_completion(
+        args.static_preparation.resolve(),
+        schema_version="langmani-v2-phase2c-b-static-preparation-complete-v0",
+    )
+    base_audit = _read_fingerprinted_completion(
+        args.base_audit_completion.resolve(),
+        schema_version="langmani-v2-phase2c-b-base-audit-complete-v0",
+    )
+    if (
+        static_preparation.get("training_config_fingerprint") != training.fingerprint
+        or static_preparation.get("bounded_action_fingerprint")
+        != BoundedActionLatentV1().fingerprint
+        or not isinstance(static_preparation.get("real_view_fingerprints"), Mapping)
+        or kind.value
+        not in cast(
+            Mapping[str, object],
+            static_preparation["real_view_fingerprints"],
+        )
+    ):
+        raise Phase2CBContractError("static preparation does not authorize this training config")
+    static_preparation_fingerprint = str(static_preparation["fingerprint"])
+    base_audit_fingerprint = str(base_audit["fingerprint"])
+    real_view_fingerprint = str(
+        cast(Mapping[str, object], static_preparation["real_view_fingerprints"])[kind.value]
+    )
     target_steps = {"smoke": 1, "micro": MICRO_STEPS, "full": training.total_steps}[stage]
     run_root = args.run_root.resolve()
     run_root.mkdir(parents=True, exist_ok=True)
@@ -544,6 +639,16 @@ def main() -> int:
         "package_fingerprint": PACKAGE_FINGERPRINT,
         "model_kind": kind.value,
         "stage": stage,
+        "repository": repository,
+        "static_preparation": {
+            "path": args.static_preparation.resolve().as_posix(),
+            "fingerprint": static_preparation_fingerprint,
+        },
+        "base_audit": {
+            "path": args.base_audit_completion.resolve().as_posix(),
+            "fingerprint": base_audit_fingerprint,
+        },
+        "real_view_fingerprint": real_view_fingerprint,
         "target_optimizer_steps": target_steps,
         "start_optimizer_step": start_step,
         "training_config": training.to_dict(),
@@ -633,6 +738,11 @@ def main() -> int:
                 step=global_step,
                 training=training,
                 processor_fingerprint=str(processor["fingerprint"]),
+                training_git_commit=str(repository["git_commit"]),
+                static_preparation_fingerprint=static_preparation_fingerprint,
+                base_audit_fingerprint=base_audit_fingerprint,
+                real_view_fingerprint=real_view_fingerprint,
+                run_manifest_fingerprint=str(manifest["fingerprint"]),
             )
             if accelerator.is_main_process:
                 checkpoint_records.append(record)

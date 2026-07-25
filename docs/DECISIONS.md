@@ -3658,6 +3658,11 @@ state-projection, action-projection, or flow-expert tensor may be silently reini
 The immutable LeRobot camera bytes remain `uint8` at the dataset boundary and are converted once,
 before official preprocessing, to `float32` in `[0,1]` by exact division by 255.
 
+Every SmolVLA training stage must start from a clean, upstream-equal repository and bind the full
+training Git commit, the fingerprinted static-preparation completion, and the fingerprinted base
+audit completion into both its run manifest and every checkpoint manifest. A directory name or
+operator log containing a short commit is not sufficient provenance.
+
 The generic `PolicyContext` keeps non-empty language as its default contract but permits one
 explicitly flagged blank-language intervention. The policy-agnostic evaluator forwards an optional
 instruction string and contains no SmolVLA-specific execution branch.
