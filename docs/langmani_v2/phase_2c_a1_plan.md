@@ -67,6 +67,8 @@ following bounded choices:
 
 - checkpoint retention is one validation-ranked checkpoint per model
   (`maximum=1`);
+- the closed-loop infrastructure smoke uses
+  `phase2c-a:validation:pickcube:000` at `H_exec=4`;
 - the horizon comparison uses the first five rows of the immutable
   PickCube-v1 validation schedule:
   `phase2c-a:validation:pickcube:000` through
