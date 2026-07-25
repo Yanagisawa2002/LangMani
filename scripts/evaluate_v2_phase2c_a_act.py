@@ -103,6 +103,9 @@ def _validate_final_policy_lock(
     schedule_fingerprint: object,
     execution_horizon: int,
     evaluation_git_commit: str,
+    split: str,
+    task_id: str,
+    rows: list[dict[str, object]],
 ) -> str:
     document = _read_object(path.resolve())
     fingerprint = document.pop("fingerprint", None)
@@ -110,6 +113,18 @@ def _validate_final_policy_lock(
     policy = policies.get(adapter.model_kind.value) if isinstance(policies, dict) else None
     runtime = adapter.runtime_manifest
     components = runtime.get("processor_components")
+    identity_counts = document.get("final_identity_counts")
+    split_counts = identity_counts.get(split) if isinstance(identity_counts, dict) else None
+    identity_prefixes = document.get("final_identity_prefixes")
+    split_prefixes = identity_prefixes.get(split) if isinstance(identity_prefixes, dict) else None
+    task_prefix = split_prefixes.get(task_id) if isinstance(split_prefixes, dict) else None
+    expected_prefix = [
+        {
+            "evaluation_id": row.get("evaluation_id"),
+            "reset_identity": row.get("reset_identity"),
+        }
+        for row in rows
+    ]
     if (
         document.get("schema_version") != "langmani-v2-phase2c-a1-final-policy-lock-v0"
         or document.get("package_fingerprint") != PACKAGE_FINGERPRINT
@@ -123,6 +138,9 @@ def _validate_final_policy_lock(
         or policy.get("checkpoint_fingerprint") != runtime.get("checkpoint_identity")
         or policy.get("run_fingerprint") != runtime.get("run_fingerprint")
         or policy.get("checkpoint_components") != components
+        or not isinstance(split_counts, dict)
+        or split_counts.get(task_id) != len(rows)
+        or task_prefix != expected_prefix
     ):
         raise RuntimeError("final policy lock does not match the requested evaluation")
     return str(fingerprint)
@@ -261,6 +279,9 @@ def main() -> int:
             schedule_fingerprint=schedule_document.get("fingerprint"),
             execution_horizon=args.execution_horizon,
             evaluation_git_commit=args.evaluation_git_commit,
+            split=args.split,
+            task_id=args.task_id,
+            rows=rows,
         )
         if args.final_policy_lock is not None
         else None

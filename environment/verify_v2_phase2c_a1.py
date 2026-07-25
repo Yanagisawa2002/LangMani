@@ -359,12 +359,32 @@ def main() -> int:
     )
     final_lock = _read_object(evidence_root / "reports/final-policy-lock.json")
     final_lock_fingerprint = final_lock.get("fingerprint")
+    final_identity_counts = final_lock.get("final_identity_counts")
+    final_identity_prefixes = final_lock.get("final_identity_prefixes")
+    final_identity_contract = all(
+        isinstance(final_identity_counts, dict)
+        and isinstance((split_counts := final_identity_counts.get(split)), dict)
+        and split_counts.get(task_id) == 30
+        and isinstance(final_identity_prefixes, dict)
+        and isinstance((split_prefixes := final_identity_prefixes.get(split)), dict)
+        and isinstance((prefix := split_prefixes.get(task_id)), list)
+        and len(prefix) == 30
+        and all(
+            isinstance(identity, dict)
+            and isinstance(identity.get("evaluation_id"), str)
+            and isinstance(identity.get("reset_identity"), str)
+            for identity in prefix
+        )
+        for split in ("test_unseen_reset", "test_visual_shift")
+        for task_id in TASK_IDS
+    )
     checks["final_policy_lock"] = (
         _fingerprint_matches(final_lock)
         and final_lock.get("evaluation_git_commit") == args.expected_evaluation_commit
         and final_lock.get("execution_horizon") == horizon.get("selected_execution_horizon")
         and final_lock.get("final_results_available") is False
         and final_lock.get("settings_mutable_after_final_results") is False
+        and final_identity_contract
     )
 
     evaluation_groups: list[EvaluationGroupVerification] = []

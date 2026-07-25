@@ -9,11 +9,12 @@ from pathlib import Path
 
 from langmani.datasets.identity import sha256_hex
 from langmani.v2.phase2c_a import (
-    FINAL_EPISODES_PER_TASK,
     PACKAGE_FINGERPRINT,
     TASK_IDS,
     ModelKind,
 )
+
+FINAL_EVALUATION_EPISODES_PER_TASK = 30
 
 
 def _read_object(path: Path) -> dict[str, object]:
@@ -66,6 +67,43 @@ def _selections(values: list[str]) -> dict[str, dict[str, object]]:
     return result
 
 
+def _final_identity_prefixes(
+    schedules: dict[str, object],
+) -> tuple[dict[str, dict[str, int]], dict[str, dict[str, list[dict[str, str]]]]]:
+    counts: dict[str, dict[str, int]] = {}
+    prefixes: dict[str, dict[str, list[dict[str, str]]]] = {}
+    for split in ("test_unseen_reset", "test_visual_shift"):
+        split_value = schedules.get(split)
+        if not isinstance(split_value, dict):
+            raise RuntimeError(f"final schedule lacks {split}")
+        counts[split] = {}
+        prefixes[split] = {}
+        for task_id in TASK_IDS:
+            rows = split_value.get(task_id)
+            if not isinstance(rows, list) or len(rows) < FINAL_EVALUATION_EPISODES_PER_TASK:
+                raise RuntimeError(f"final schedule count changed for {split}/{task_id}")
+            selected = rows[:FINAL_EVALUATION_EPISODES_PER_TASK]
+            identities: list[dict[str, str]] = []
+            for row in selected:
+                if not isinstance(row, dict):
+                    raise RuntimeError(f"final schedule row is malformed for {split}/{task_id}")
+                evaluation_id = row.get("evaluation_id")
+                reset_identity = row.get("reset_identity")
+                if not isinstance(evaluation_id, str) or not isinstance(reset_identity, str):
+                    raise RuntimeError(
+                        f"final schedule identity is malformed for {split}/{task_id}"
+                    )
+                identities.append(
+                    {
+                        "evaluation_id": evaluation_id,
+                        "reset_identity": reset_identity,
+                    }
+                )
+            counts[split][task_id] = len(identities)
+            prefixes[split][task_id] = identities
+    return counts, prefixes
+
+
 def main() -> int:
     args = parse_args()
     if re.fullmatch(r"[0-9a-f]{40}", args.evaluation_git_commit) is None:
@@ -86,17 +124,7 @@ def main() -> int:
         schedules, dict
     ):
         raise RuntimeError("final schedule identity is invalid")
-    final_identity_counts: dict[str, dict[str, int]] = {}
-    for split in ("test_unseen_reset", "test_visual_shift"):
-        split_value = schedules.get(split)
-        if not isinstance(split_value, dict):
-            raise RuntimeError(f"final schedule lacks {split}")
-        final_identity_counts[split] = {}
-        for task_id in TASK_IDS:
-            rows = split_value.get(task_id)
-            if not isinstance(rows, list) or len(rows) != FINAL_EPISODES_PER_TASK:
-                raise RuntimeError(f"final schedule count changed for {split}/{task_id}")
-            final_identity_counts[split][task_id] = len(rows)
+    final_identity_counts, final_identity_prefixes = _final_identity_prefixes(schedules)
     semantic = {
         "schema_version": "langmani-v2-phase2c-a1-final-policy-lock-v0",
         "package_fingerprint": PACKAGE_FINGERPRINT,
@@ -114,6 +142,7 @@ def main() -> int:
             "shared_act": "three_way_onehot_public_env_token",
         },
         "final_identity_counts": final_identity_counts,
+        "final_identity_prefixes": final_identity_prefixes,
         "settings_mutable_after_final_results": False,
         "final_results_available": False,
     }
