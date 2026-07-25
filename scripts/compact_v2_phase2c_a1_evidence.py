@@ -129,6 +129,13 @@ def _summary_episode_count(record: dict[str, object]) -> int:
     return count
 
 
+def _integer_field(record: dict[str, object], key: str) -> int:
+    value = record.get(key)
+    if not isinstance(value, int):
+        raise RuntimeError(f"evaluation record lacks an integer {key}")
+    return value
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository-root", type=Path, default=Path.cwd())
@@ -272,6 +279,10 @@ def main() -> int:
 
     closed_loop_smoke_root = evaluation_root / "closed_loop_smoke"
     closed_loop_smoke_summary = _read_object(closed_loop_smoke_root / "summary.json")
+    closed_loop_smoke_rows = _read_jsonl(closed_loop_smoke_root / "episodes.jsonl")
+    closed_loop_smoke_actions = sum(
+        _integer_field(row, "actions_executed") for row in closed_loop_smoke_rows
+    )
     _write_new(
         artifact_root,
         "closed_loop_smoke.json",
@@ -281,8 +292,11 @@ def main() -> int:
             "summary": closed_loop_smoke_summary,
             "runtime_manifest": _read_object(closed_loop_smoke_root / "runtime_manifest.json"),
             "episodes_file": _external_file(closed_loop_smoke_root / "episodes.jsonl"),
+            "actions_executed": closed_loop_smoke_actions,
             "passed": (
-                closed_loop_smoke_summary.get("episode_count") == 1
+                len(closed_loop_smoke_rows) == 1
+                and closed_loop_smoke_summary.get("episode_count") == 1
+                and closed_loop_smoke_actions >= 1
                 and closed_loop_smoke_summary.get("invalid_action_count") == 0
                 and closed_loop_smoke_summary.get("simulator_error_count") == 0
             ),
