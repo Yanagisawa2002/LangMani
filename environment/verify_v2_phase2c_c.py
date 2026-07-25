@@ -8,8 +8,23 @@ import json
 from collections.abc import Mapping
 from pathlib import Path
 
-from langmani.v2.phase2c_a import PACKAGE_FINGERPRINT
-from langmani.v2.phase2c_c import Phase2CCContractError, canonical_fingerprint
+PACKAGE_FINGERPRINT = "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04"
+
+
+class Phase2CCContractError(RuntimeError):
+    """Raised when compact evidence violates the independent contract."""
+
+
+def canonical_fingerprint(value: Mapping[str, object]) -> str:
+    encoded = json.dumps(
+        dict(value),
+        ensure_ascii=False,
+        allow_nan=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return f"sha256:{hashlib.sha256(encoded.encode('utf-8')).hexdigest()}"
+
 
 BASE_FILES = {
     "input_verification.json",
