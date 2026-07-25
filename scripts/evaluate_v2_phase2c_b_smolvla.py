@@ -333,7 +333,7 @@ def main() -> int:
         environment.close()
     if len(existing) != len(rows):
         raise RuntimeError("evaluation did not complete its frozen schedule")
-    summary = {
+    summary_semantic = {
         **summarize_evaluation(existing),
         "model_kind": adapter.model_kind.value,
         "task_id": args.task_id,
@@ -344,18 +344,30 @@ def main() -> int:
         "runtime_manifest_fingerprint": manifest["fingerprint"],
         "completed": True,
     }
+    summary = {
+        **summary_semantic,
+        "fingerprint": f"sha256:{sha256_hex(summary_semantic)}",
+    }
     _write_new_or_equal(output_root / "summary.json", summary)
+    completion_semantic: dict[str, object] = {
+        "schema_version": "langmani-v2-phase2c-b-evaluation-complete-v0",
+        "package_fingerprint": PACKAGE_FINGERPRINT,
+        "runtime_manifest_fingerprint": manifest["fingerprint"],
+        "summary_fingerprint": summary["fingerprint"],
+        "episode_count": len(existing),
+        "runtime_manifest": "runtime_manifest.json",
+        "episodes": "episodes.jsonl",
+        "summary": "summary.json",
+        "representative_videos": (
+            "representative_videos.json" if video_registry_path.exists() else None
+        ),
+        "passed": True,
+    }
     _write_new_or_equal(
         output_root / "complete.json",
         {
-            "schema_version": "langmani-v2-phase2c-b-evaluation-complete-v0",
-            "episode_count": len(existing),
-            "runtime_manifest": "runtime_manifest.json",
-            "episodes": "episodes.jsonl",
-            "summary": "summary.json",
-            "representative_videos": (
-                "representative_videos.json" if video_registry_path.exists() else None
-            ),
+            **completion_semantic,
+            "fingerprint": f"sha256:{sha256_hex(completion_semantic)}",
         },
     )
     print(json.dumps(summary, sort_keys=True))
