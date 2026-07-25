@@ -79,6 +79,9 @@ def bounded_action_head_manifest() -> dict[str, object]:
         "raw_head": "torch.nn.Linear(dim_model, 8)",
         "normalized_mapping": "z = tanh(u)",
         "physical_mapping": ("a = lower + 0.5 * (z + 1) * (upper - lower)"),
+        "numerically_stable_implementation": (
+            "torch.lerp(lower_float32, upper_float32, 0.5 * (z_float32 + 1))"
+        ),
         "training_action_representation": "native_physical_pd_joint_pos_float32",
         "inference_action_representation": "native_physical_pd_joint_pos_float32",
         "action_normalization_mode": "IDENTITY",
@@ -141,10 +144,9 @@ class BoundedActionHeadV1(nn.Module):
 
     def forward(self, features: torch.Tensor) -> torch.Tensor:
         raw = self.linear(features)
-        normalized = torch.tanh(raw)
-        lower = self.lower.to(device=raw.device, dtype=raw.dtype)
-        upper = self.upper.to(device=raw.device, dtype=raw.dtype)
-        return lower + 0.5 * (normalized + 1.0) * (upper - lower)
+        normalized = torch.tanh(raw.to(dtype=torch.float32))
+        interpolation = 0.5 * (normalized + 1.0)
+        return torch.lerp(self.lower, self.upper, interpolation)
 
 
 def build_bounded_act_config(base: ACTConfig) -> ACTConfig:
@@ -341,7 +343,7 @@ def independent_bounded_action_audit(
     while remaining:
         count = min(remaining, 2_048)
         raw = torch.randn(count, chunk_size, 8, generator=generator)
-        action = lower + 0.5 * (torch.tanh(raw) + 1.0) * (upper - lower)
+        action = torch.lerp(lower, upper, 0.5 * (torch.tanh(raw) + 1.0))
         nonfinite += int(torch.count_nonzero(~torch.isfinite(action)))
         lower_violations += int(torch.count_nonzero(action < lower))
         upper_violations += int(torch.count_nonzero(action > upper))

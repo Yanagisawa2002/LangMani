@@ -74,7 +74,7 @@ def test_exact_bounded_mapping_handles_finite_extremes_without_correction() -> N
     action = head(raw)
     lower = torch.from_numpy(PANDA_ACTION_LOW)
     upper = torch.from_numpy(PANDA_ACTION_HIGH)
-    expected = lower + 0.5 * (torch.tanh(raw) + 1.0) * (upper - lower)
+    expected = torch.lerp(lower, upper, 0.5 * (torch.tanh(raw) + 1.0))
     torch.testing.assert_close(action, expected, rtol=0, atol=0)
     assert bool(torch.isfinite(action).all())
     assert bool(torch.all(action >= lower))
