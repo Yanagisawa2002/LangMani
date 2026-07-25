@@ -21,8 +21,12 @@ from typing import Final
 
 import numpy as np
 import torch
-from lerobot.configs import FeatureType, NormalizationMode, PreTrainedConfig
-from lerobot.policies.act import ACTConfig, ACTPolicy
+from lerobot.configs import (  # type: ignore[import-untyped]
+    FeatureType,
+    NormalizationMode,
+    PreTrainedConfig,
+)
+from lerobot.policies.act import ACTConfig, ACTPolicy  # type: ignore[import-untyped]
 from torch import nn
 
 from langmani.datasets.identity import sha256_hex
@@ -36,6 +40,8 @@ ACTION_BOUNDS_SOURCE: Final = (
     "ManiSkill 3.0.1 Panda pd_joint_pos action space; independently observed "
     "identical for PickCube-v1, StackCube-v1, and PushCube-v1"
 )
+DEFAULT_ACTION_LOWER: Final = tuple(float(item) for item in PANDA_ACTION_LOW)
+DEFAULT_ACTION_UPPER: Final = tuple(float(item) for item in PANDA_ACTION_HIGH)
 
 
 class BoundedACTContractError(RuntimeError):
@@ -103,12 +109,15 @@ def bounded_action_head_manifest() -> dict[str, object]:
 class BoundedActionHeadV1(nn.Module):
     """Trainable linear ACT head followed by the frozen physical bound map."""
 
+    lower: torch.Tensor
+    upper: torch.Tensor
+
     def __init__(
         self,
         in_features: int,
         *,
-        lower: Sequence[float] = tuple(float(value) for value in PANDA_ACTION_LOW),
-        upper: Sequence[float] = tuple(float(value) for value in PANDA_ACTION_HIGH),
+        lower: Sequence[float] = DEFAULT_ACTION_LOWER,
+        upper: Sequence[float] = DEFAULT_ACTION_UPPER,
     ) -> None:
         super().__init__()
         if in_features < 1:
