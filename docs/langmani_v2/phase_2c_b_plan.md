@@ -100,8 +100,8 @@ sampler. Language remains the only task condition entering Model M.
    submit at least one bounded action to a real simulator `env.step`.
 7. Run deterministic Pick and shared micro-overfit gates.
 8. Train Model P for 20,000 optimizer steps.
-9. Screen at most two P checkpoints and compare horizons only on a fixed
-   validation subset.
+9. Screen at most two P checkpoints and compare horizons only on the first six
+   frozen validation identities per task.
 10. Run 30 Pick validation episodes.
 
 Model P must achieve at least 3/30 with zero invalid-action and zero simulator
@@ -118,9 +118,12 @@ before any final split is opened.
 ## Evaluation
 
 Development uses 30 validation episodes per matching task. Horizon comparison
-uses a fixed small validation-only subset. The shared policy additionally gets
-fixed correct, wrong-skill, blank, and shuffled language interventions plus
-same-observation action comparisons.
+uses the first six frozen validation identities per task. The shared policy
+additionally gets exactly 20 frozen validation identities per task under each
+of correct, wrong-skill, blank, and shuffled language conditions plus
+same-observation action comparisons. Multi-skill transfer uses a pre-registered
+absolute success-rate difference threshold of 0.10 together with confidence
+intervals; smaller observed differences are classified as neutral.
 
 Final task-specific evaluation uses 50 unseen-reset and 50 visual-shift
 episodes per matching task. Shared evaluation uses 50 episodes per task for

@@ -68,6 +68,9 @@ CHUNK_SIZE: Final = 50
 EXECUTION_HORIZONS: Final = (1, 4, 8)
 VALIDATION_EPISODES_PER_TASK: Final = 30
 FULL_TRAINING_STEPS: Final = 20_000
+HORIZON_SELECTION_EPISODES_PER_TASK: Final = 6
+LANGUAGE_INTERVENTION_EPISODES_PER_TASK: Final = 20
+MULTISKILL_PRACTICAL_DIFFERENCE: Final = 0.10
 STATIC_ACTION_AUDIT_CHUNKS: Final = 100_000
 ACTION_EPSILON: Final = 1e-6
 ACTION_LOWER: Final = tuple(float(value) for value in PANDA_ACTION_LOW)
@@ -625,7 +628,7 @@ def build_language_intervention_manifest(
     evaluation_schedule: Mapping[str, object],
     *,
     seed: int = 20_260_725,
-    episodes_per_task: int = 20,
+    episodes_per_task: int = LANGUAGE_INTERVENTION_EPISODES_PER_TASK,
 ) -> dict[str, object]:
     """Freeze correct/wrong/blank/shuffled instructions before model results."""
 
@@ -635,7 +638,7 @@ def build_language_intervention_manifest(
         evaluation_schedule.get("schema_version") != "langmani-v2-phase2c-b-evaluation-schedule-v0"
         or evaluation_schedule.get("package_fingerprint") != PACKAGE_FINGERPRINT
         or not isinstance(validation, Mapping)
-        or episodes_per_task < 20
+        or episodes_per_task != LANGUAGE_INTERVENTION_EPISODES_PER_TASK
     ):
         raise Phase2CBContractError("language intervention schedule is malformed")
     base: list[dict[str, object]] = []
@@ -698,6 +701,52 @@ def build_language_intervention_manifest(
         "conditions": ["correct", "wrong_skill", "blank", "shuffled"],
         "records": records,
         "settings_mutable_after_results": False,
+    }
+    return {**semantic, "fingerprint": canonical_fingerprint(semantic)}
+
+
+def build_horizon_selection_lock(
+    evaluation_schedule: Mapping[str, object],
+    *,
+    episodes_per_task: int = HORIZON_SELECTION_EPISODES_PER_TASK,
+) -> dict[str, object]:
+    """Freeze validation-only identities used for checkpoint/horizon screening."""
+
+    if episodes_per_task != HORIZON_SELECTION_EPISODES_PER_TASK:
+        raise Phase2CBContractError("horizon-selection subset size is frozen")
+    schedules = evaluation_schedule.get("schedules")
+    validation = schedules.get("validation") if isinstance(schedules, Mapping) else None
+    if (
+        evaluation_schedule.get("schema_version") != "langmani-v2-phase2c-b-evaluation-schedule-v0"
+        or evaluation_schedule.get("package_fingerprint") != PACKAGE_FINGERPRINT
+        or not isinstance(validation, Mapping)
+    ):
+        raise Phase2CBContractError("evaluation schedule is invalid for horizon locking")
+    evaluation_ids: dict[str, list[str]] = {}
+    for task_id in TASK_IDS:
+        rows = validation.get(task_id)
+        if not isinstance(rows, list) or len(rows) < episodes_per_task:
+            raise Phase2CBContractError("validation schedule is too short for horizon selection")
+        identifiers = [
+            str(row.get("evaluation_id"))
+            for row in rows[:episodes_per_task]
+            if isinstance(row, Mapping) and isinstance(row.get("evaluation_id"), str)
+        ]
+        if len(identifiers) != episodes_per_task or len(set(identifiers)) != len(identifiers):
+            raise Phase2CBContractError("horizon-selection identities are malformed")
+        evaluation_ids[task_id] = identifiers
+    semantic: dict[str, object] = {
+        "schema_version": "langmani-v2-phase2c-b-horizon-selection-lock-v0",
+        "package_fingerprint": PACKAGE_FINGERPRINT,
+        "evaluation_schedule_fingerprint": evaluation_schedule.get("fingerprint"),
+        "split": "validation",
+        "episodes_per_task": episodes_per_task,
+        "execution_horizons": list(EXECUTION_HORIZONS),
+        "evaluation_ids": evaluation_ids,
+        "one_common_horizon_preferred": True,
+        "multiskill_practical_difference_threshold": MULTISKILL_PRACTICAL_DIFFERENCE,
+        "settings_mutable_after_results": False,
+        "final_test_opened": False,
     }
     return {**semantic, "fingerprint": canonical_fingerprint(semantic)}
 
@@ -799,6 +848,9 @@ __all__ = [
     "EXECUTION_HORIZONS",
     "FAILURE_CATEGORIES",
     "FULL_TRAINING_STEPS",
+    "HORIZON_SELECTION_EPISODES_PER_TASK",
+    "LANGUAGE_INTERVENTION_EPISODES_PER_TASK",
+    "MULTISKILL_PRACTICAL_DIFFERENCE",
     "ModelKind",
     "OFFICIAL_BASE_CONFIG_SHA256",
     "OFFICIAL_BASE_MODEL",
@@ -821,6 +873,7 @@ __all__ = [
     "apply_padding_mask",
     "build_model_view_manifest",
     "build_evaluation_schedule",
+    "build_horizon_selection_lock",
     "build_language_intervention_manifest",
     "build_padding_audit",
     "build_static_action_audit",

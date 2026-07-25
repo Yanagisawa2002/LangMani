@@ -3663,6 +3663,10 @@ training Git commit, the fingerprinted static-preparation completion, and the fi
 audit completion into both its run manifest and every checkpoint manifest. A directory name or
 operator log containing a short commit is not sufficient provenance.
 
+Before any validation rollout is viewed, checkpoint/horizon screening is locked to the first six
+validation identities per task; language interventions are locked to 20 identities per task and
+condition; and the multi-skill practical difference threshold is 0.10 absolute success rate.
+
 The generic `PolicyContext` keeps non-empty language as its default contract but permits one
 explicitly flagged blank-language intervention. The policy-agnostic evaluator forwards an optional
 instruction string and contains no SmolVLA-specific execution branch.

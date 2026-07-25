@@ -16,6 +16,7 @@ from langmani.v2.phase2c_b import Phase2CBContractError, canonical_fingerprint
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--checkpoint-selection", type=Path, required=True)
+    parser.add_argument("--horizon-lock", type=Path, required=True)
     parser.add_argument("--summary", type=Path, action="append", required=True)
     parser.add_argument("--output", type=Path, required=True)
     return parser.parse_args()
@@ -70,6 +71,7 @@ def _write_new_or_equal(path: Path, value: Mapping[str, object]) -> None:
 def main() -> int:
     args = parse_args()
     checkpoint_selection = _read_fingerprinted(args.checkpoint_selection.resolve())
+    horizon_lock = _read_fingerprinted(args.horizon_lock.resolve())
     selected_checkpoints = checkpoint_selection.get("selected")
     if (
         checkpoint_selection.get("schema_version")
@@ -80,6 +82,14 @@ def main() -> int:
         or not 1 <= len(selected_checkpoints) <= 2
     ):
         raise Phase2CBContractError("checkpoint rollout selection is invalid")
+    if (
+        horizon_lock.get("schema_version") != "langmani-v2-phase2c-b-horizon-selection-lock-v0"
+        or horizon_lock.get("package_fingerprint") != PACKAGE_FINGERPRINT
+        or horizon_lock.get("split") != "validation"
+        or horizon_lock.get("settings_mutable_after_results") is not False
+        or horizon_lock.get("final_test_opened") is not False
+    ):
+        raise Phase2CBContractError("horizon-selection lock is invalid")
     checkpoint_ranks = {
         str(item["checkpoint_sha256"]): int(item["rank"])
         for item in selected_checkpoints
@@ -111,6 +121,8 @@ def main() -> int:
             or summary.get("model_kind") != model_kind
             or summary.get("split") != "validation"
             or summary.get("instruction_condition") != "correct"
+            or summary.get("schedule_fingerprint")
+            != horizon_lock.get("evaluation_schedule_fingerprint")
             or checkpoint_sha256 not in checkpoint_ranks
             or not isinstance(horizon, int)
             or isinstance(horizon, bool)
@@ -155,6 +167,8 @@ def main() -> int:
     }
     if observed_pairs != expected_pairs:
         raise Phase2CBContractError("checkpoint/horizon validation grid is incomplete")
+    if common_episode_count != horizon_lock.get("episodes_per_task"):
+        raise Phase2CBContractError("validation summaries do not use the locked subset size")
     eligible = [
         candidate
         for candidate in candidates
@@ -199,6 +213,7 @@ def main() -> int:
         "selection_split": "validation",
         "selection_subset_episode_count": common_episode_count,
         "checkpoint_selection_fingerprint": checkpoint_selection["fingerprint"],
+        "horizon_selection_lock_fingerprint": horizon_lock["fingerprint"],
         "selection_rule": (
             "maximize success; then minimize timeout, action smoothness, policy queries, "
             "p95 latency, offline checkpoint rank, and execution horizon; invalid actions "

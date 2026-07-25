@@ -342,6 +342,7 @@ def main() -> int:
         "instruction_condition": args.instruction_condition,
         "language_intervention_lock_fingerprint": intervention_fingerprint,
         "runtime_manifest_fingerprint": manifest["fingerprint"],
+        "schedule_fingerprint": schedule.get("fingerprint"),
         "completed": True,
     }
     summary = {

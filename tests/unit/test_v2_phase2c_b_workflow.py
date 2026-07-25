@@ -4,7 +4,11 @@ import json
 from pathlib import Path
 
 from langmani.v2.phase2c_a import PACKAGE_FINGERPRINT
-from langmani.v2.phase2c_b import canonical_fingerprint
+from langmani.v2.phase2c_b import (
+    HORIZON_SELECTION_EPISODES_PER_TASK,
+    build_horizon_selection_lock,
+    canonical_fingerprint,
+)
 from scripts.diagnose_v2_phase2c_b_smolvla import _balanced_indices
 from scripts.select_v2_phase2c_b_checkpoints import main as select_checkpoints
 from scripts.select_v2_phase2c_b_policy import main as select_policy
@@ -79,6 +83,24 @@ def test_checkpoint_and_horizon_selection_use_more_than_total_loss(
     assert selected["selected"][0]["checkpoint_sha256"] == checkpoints[1]
     assert selected["selected_on_total_loss_only"] is False
 
+    schedule_fingerprint = "sha256:" + "3" * 64
+    horizon_lock = tmp_path / "horizon-lock.json"
+    _write_fingerprinted(
+        horizon_lock,
+        {
+            "schema_version": "langmani-v2-phase2c-b-horizon-selection-lock-v0",
+            "package_fingerprint": PACKAGE_FINGERPRINT,
+            "evaluation_schedule_fingerprint": schedule_fingerprint,
+            "split": "validation",
+            "episodes_per_task": HORIZON_SELECTION_EPISODES_PER_TASK,
+            "execution_horizons": [1, 4, 8],
+            "evaluation_ids": {},
+            "one_common_horizon_preferred": True,
+            "multiskill_practical_difference_threshold": 0.1,
+            "settings_mutable_after_results": False,
+            "final_test_opened": False,
+        },
+    )
     summaries: list[Path] = []
     for checkpoint_index, checkpoint in enumerate(checkpoints):
         for horizon in (1, 4, 8):
@@ -95,15 +117,16 @@ def test_checkpoint_and_horizon_selection_use_more_than_total_loss(
                     "instruction_condition": "correct",
                     "checkpoint_identities": [checkpoint],
                     "execution_horizon": horizon,
-                    "episode_count": 4,
+                    "episode_count": HORIZON_SELECTION_EPISODES_PER_TASK,
                     "success_count": success_count,
-                    "success_rate": success_count / 4,
+                    "success_rate": success_count / HORIZON_SELECTION_EPISODES_PER_TASK,
                     "invalid_action_count": 0,
                     "simulator_error_count": 0,
-                    "outcomes": {"timeout": 4 - success_count},
+                    "outcomes": {"timeout": HORIZON_SELECTION_EPISODES_PER_TASK - success_count},
                     "mean_action_smoothness_l2": 0.2,
                     "mean_policy_query_count": 10.0,
                     "inference_latency_p95_ms": 20.0,
+                    "schedule_fingerprint": schedule_fingerprint,
                 },
             )
             summaries.append(path)
@@ -112,6 +135,8 @@ def test_checkpoint_and_horizon_selection_use_more_than_total_loss(
         "select-policy",
         "--checkpoint-selection",
         str(checkpoint_selection),
+        "--horizon-lock",
+        str(horizon_lock),
     ]
     for summary in summaries:
         argv.extend(("--summary", str(summary)))
@@ -122,3 +147,25 @@ def test_checkpoint_and_horizon_selection_use_more_than_total_loss(
     assert policy["selected_checkpoint_sha256"] == checkpoints[1]
     assert policy["selected_execution_horizon"] == 4
     assert policy["final_test_opened"] is False
+
+
+def test_horizon_lock_freezes_first_six_validation_ids() -> None:
+    schedules = {
+        "validation": {
+            task_id: [
+                {"evaluation_id": f"{task_id}:{index}"}
+                for index in range(HORIZON_SELECTION_EPISODES_PER_TASK + 1)
+            ]
+            for task_id in ("PickCube-v1", "StackCube-v1", "PushCube-v1")
+        }
+    }
+    semantic = {
+        "schema_version": "langmani-v2-phase2c-b-evaluation-schedule-v0",
+        "package_fingerprint": PACKAGE_FINGERPRINT,
+        "schedules": schedules,
+    }
+    schedule = {**semantic, "fingerprint": canonical_fingerprint(semantic)}
+    lock = build_horizon_selection_lock(schedule)
+    assert lock["episodes_per_task"] == HORIZON_SELECTION_EPISODES_PER_TASK
+    assert len(lock["evaluation_ids"]["PickCube-v1"]) == 6
+    assert lock["settings_mutable_after_results"] is False
