@@ -141,10 +141,17 @@ def _verify_checkpoint(run_root: Path, relative_path: str) -> CheckpointVerifica
             raise Phase2CA1VerificationError(f"checkpoint artifact changed: {path}")
         total_bytes += size
     complete = _read_object(checkpoint_root / "complete.json")
-    if complete.get("checkpoint_fingerprint") != manifest.get("checkpoint_fingerprint"):
+    record = manifest.get("record")
+    checkpoint_fingerprint = (
+        record.get("checkpoint_fingerprint") if isinstance(record, dict) else None
+    )
+    if (
+        not isinstance(checkpoint_fingerprint, str)
+        or complete.get("checkpoint_fingerprint") != checkpoint_fingerprint
+    ):
         raise Phase2CA1VerificationError("checkpoint completion identity changed")
     return {
-        "checkpoint_fingerprint": manifest.get("checkpoint_fingerprint"),
+        "checkpoint_fingerprint": checkpoint_fingerprint,
         "artifact_count": len(artifacts),
         "artifact_bytes": total_bytes,
         "all_artifacts_rehashed": True,
