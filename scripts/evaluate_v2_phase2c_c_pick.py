@@ -191,11 +191,6 @@ def _schedule_rows(
     schedule: Mapping[str, object],
     split_role: str,
 ) -> list[dict[str, object]]:
-    raw = schedule.get(split_role)
-    if not isinstance(raw, Sequence) or isinstance(raw, str | bytes):
-        raise Phase2CCContractError(f"schedule lacks role {split_role}")
-    rows = [dict(row) for row in raw if isinstance(row, Mapping)]
-    expected = EXPECTED_COUNTS[split_role]
     if split_role == "smoke":
         training = schedule.get("training_reset")
         if not isinstance(training, Sequence) or not training:
@@ -203,6 +198,12 @@ def _schedule_rows(
         rows = [dict(cast(Mapping[str, object], training[0]))]
         rows[0]["evaluation_id"] = "phase2c-c:smoke:00"
         rows[0]["split"] = "smoke"
+    else:
+        raw = schedule.get(split_role)
+        if not isinstance(raw, Sequence) or isinstance(raw, str | bytes):
+            raise Phase2CCContractError(f"schedule lacks role {split_role}")
+        rows = [dict(row) for row in raw if isinstance(row, Mapping)]
+    expected = EXPECTED_COUNTS[split_role]
     if len(rows) != expected:
         raise Phase2CCContractError(
             f"schedule role {split_role} must contain exactly {expected} rows"
