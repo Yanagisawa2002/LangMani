@@ -1,0 +1,66 @@
+{
+  "absolute_checkpoint": {
+    "manifest_fingerprint": "sha256:721cfc6242c6de8bb5df512e5f347ec711e6b3a0bdf0c219307def7ef3689adf",
+    "optimizer_step": 20000,
+    "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/training/full-pick-7326833-authoritative/checkpoints/step-00020000",
+    "processor_files": [
+      "policy_postprocessor.json",
+      "policy_postprocessor_step_0_unnormalizer_processor.safetensors",
+      "policy_preprocessor.json",
+      "policy_preprocessor_step_5_normalizer_processor.safetensors"
+    ],
+    "sha256": "sha256:3667a1250c1afefcda363dae34d374737ddf46af87a79397b0d2f5da49c77e80",
+    "transform_fingerprint": "sha256:e509452bdbdb34c8e1684ce4b3730670594c6eb3ebfc43c7aeaaf6ed51d733bf"
+  },
+  "active_model_or_simulator_processes": [],
+  "dataset_package": {
+    "fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+    "path": "/root/autodl-tmp/langmani-external/phase2b6-v2/production_v2/primary/metadata/accepted_multiskill_dataset_package.json",
+    "sha256": "sha256:940272b9dc6386a356f27288870a5e0667d22678fb268f141d15c0c100462a59"
+  },
+  "fingerprint": "sha256:92b5c536dae3b690ddcf6966f9f5c6ade40507bb25c1b5246bf253b5e3e7f8bc",
+  "original_validation": {
+    "episode_count": 30,
+    "execution_horizon": 1,
+    "fingerprint": "sha256:9c865eff92a44313eaf8cf848b0a21486e52669fc66de29634c8aaa1279a0571",
+    "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/evaluation/pick-gate/step-00020000-h1/summary.json",
+    "sha256": "sha256:9d13bc7569e71c3c1b78a834e84ea8f4c7895a06d230e73e79dc419e01ee9e00",
+    "success_count": 0
+  },
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "passed": true,
+  "phase2c_a1_artifacts": {
+    "manifest_fingerprint": "sha256:57606d6114f2befe43be85c62ddb075bcf7d1c0eb76503b75c5c74dc0cc88d2e",
+    "manifest_schema": "langmani-v2-phase2c-a1-artifact-manifest-v0",
+    "manifest_sha256": "sha256:bcd3a5dd8a1794d4c3e014cac6bbff3e48878d5411dfa9795bad2869b7b78500",
+    "record_digest": null,
+    "root": "/root/autodl-tmp/langmani-phase2c-b/artifacts/langmani_v2/phase_2c_a1",
+    "verified_file_count": 30,
+    "verified_total_bytes": 413952
+  },
+  "phase2c_b_artifacts": {
+    "manifest_fingerprint": null,
+    "manifest_schema": "langmani-v2-phase2c-b-artifact-manifest-v0",
+    "manifest_sha256": "sha256:8142d02e6b8e8259f43403f2294bc20dec7e9b6be8eb85dda470acb053bf1ea5",
+    "record_digest": "sha256:f7ef0b16bc885221900c68697c2378332e39f50258dbe253cbb16abb124b946f",
+    "root": "/root/autodl-tmp/langmani-phase2c-b/artifacts/langmani_v2/phase_2c_b",
+    "verified_file_count": 16,
+    "verified_total_bytes": 25136
+  },
+  "repaired_validation": {
+    "episode_count": 30,
+    "execution_horizon": 8,
+    "fingerprint": "sha256:6f205ce9427e1a9c9ce18e89dad6239aaa1606c226d16f307c842fcd6c58e1c6",
+    "path": "/root/autodl-tmp/langmani-phase2c-b-evidence/evaluation/pick-gate-repair/step-00020000-h8/summary.json",
+    "sha256": "sha256:4262862422a7cd23219d152ad85aa01a81cd6f602e509b6b9a557ab490e31fe2",
+    "success_count": 0
+  },
+  "repository": {
+    "branch": "codex/langmani-v2-phase2c-c-action-formulation",
+    "clean": true,
+    "git_commit": "90fdbac6d804487d51252eee8e02aa5c75d77c5b",
+    "source_commit": "15daf852238edac39a65f6837340dfc5c9817ed3",
+    "upstream": "90fdbac6d804487d51252eee8e02aa5c75d77c5b"
+  },
+  "schema_version": "langmani-v2-phase2c-c-input-verification-v0"
+}

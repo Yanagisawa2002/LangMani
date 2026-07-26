@@ -1,0 +1,169 @@
+{
+  "fingerprint": "sha256:3990a5f529d10a592f4e15358a35fd6e8687c2502d4b1bc05a20f71058aa5815",
+  "micro_environment_step": {
+    "checkpoint_identities": [
+      "sha256:9593328a752a983bcb370fb2beadede8becffead85dc47a68d346175bd940433"
+    ],
+    "entered_grasp_region_count": 0,
+    "episode_count": 1,
+    "ever_grasped_count": 0,
+    "ever_lifted_count": 0,
+    "execution_horizon": 1,
+    "failed_grasp_count": 0,
+    "fingerprint": "sha256:7a82a479010c4bd9b72cacd37d7d9bdb4ac44b08142beb98b16d6dd235928d8f",
+    "inference_latency_p50_ms": 566.3214860251173,
+    "inference_latency_p95_ms": 566.3214860251173,
+    "invalid_action_count": 0,
+    "mean_episode_length": 1.0,
+    "no_motion_count": 1,
+    "object_drop_count": 0,
+    "schedule_fingerprint": "sha256:98a4bf7cc58cf6790d753c3a7c6010d34e0e03c639a350d6938d91d05d6d5626",
+    "simulator_error_count": 0,
+    "split_role": "smoke",
+    "success_count": 0,
+    "timeout_count": 1
+  },
+  "micro_training": {
+    "checkpoint_records": [
+      {
+        "file_count": 9,
+        "optimizer_step": 500,
+        "relative_path": "checkpoints/step-00000500",
+        "sha256": "sha256:9593328a752a983bcb370fb2beadede8becffead85dc47a68d346175bd940433",
+        "size_bytes": 1319486918
+      }
+    ],
+    "final_checkpoint_reload": {
+      "action_transform_reconstructed": true,
+      "bounded": true,
+      "checkpoint_reconstructed": true,
+      "checkpoint_sha256": "sha256:9593328a752a983bcb370fb2beadede8becffead85dc47a68d346175bd940433",
+      "generated_maximum": [
+        0.0581880584359169,
+        0.7180252075195312,
+        0.1836792379617691,
+        -1.891762137413025,
+        0.1867714673280716,
+        2.6635854244232178,
+        0.7539929151535034,
+        1.0
+      ],
+      "generated_minimum": [
+        -0.19323638081550598,
+        0.33969348669052124,
+        -0.17301806807518005,
+        -2.060692548751831,
+        -0.16176040470600128,
+        2.262012481689453,
+        0.34520167112350464,
+        -0.9999999403953552
+      ],
+      "generated_nonconstant": true,
+      "generated_shape": [
+        2,
+        50,
+        8
+      ],
+      "passed": true,
+      "processor_reconstructed": true
+    },
+    "final_fixed_batch_loss": 0.17185577750205994,
+    "fingerprint": "sha256:5e63645471accb2abcb239f53c0286369a1030afe5a3b5ff2729f1143b6db509",
+    "fixed_batch_loss_decreased": true,
+    "initial_fixed_batch_loss": 0.6188071966171265,
+    "last_gradient_norm": 1.5861605405807495,
+    "last_training_loss": 0.0518457368016243,
+    "optimizer_steps": 500,
+    "peak_gpu_allocated_bytes": 2354883072,
+    "peak_gpu_reserved_bytes": 2545942528,
+    "physical_action_error_decreased": true,
+    "residual_action_error_decreased": true,
+    "stage": "micro",
+    "training_duration_seconds": 255.36104093503673
+  },
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "passed": true,
+  "real_environment_steps_completed": 2,
+  "schema_version": "langmani-v2-phase2c-c-smoke-micro-result-v0",
+  "smoke_environment_step": {
+    "checkpoint_identities": [
+      "sha256:52991b787fd3d55bef8db585d71e197ed5434c0ed65d9ecfcc39db7169385492"
+    ],
+    "entered_grasp_region_count": 0,
+    "episode_count": 1,
+    "ever_grasped_count": 0,
+    "ever_lifted_count": 0,
+    "execution_horizon": 1,
+    "failed_grasp_count": 0,
+    "fingerprint": "sha256:ead83e3ff41e74d59f1a6536c3c538189c3939968b25a847b566973ef6854606",
+    "inference_latency_p50_ms": 630.0553039181978,
+    "inference_latency_p95_ms": 630.0553039181978,
+    "invalid_action_count": 0,
+    "mean_episode_length": 1.0,
+    "no_motion_count": 1,
+    "object_drop_count": 0,
+    "schedule_fingerprint": "sha256:98a4bf7cc58cf6790d753c3a7c6010d34e0e03c639a350d6938d91d05d6d5626",
+    "simulator_error_count": 0,
+    "split_role": "smoke",
+    "success_count": 0,
+    "timeout_count": 1
+  },
+  "smoke_training": {
+    "checkpoint_records": [
+      {
+        "file_count": 9,
+        "optimizer_step": 1,
+        "relative_path": "checkpoints/step-00000001",
+        "sha256": "sha256:52991b787fd3d55bef8db585d71e197ed5434c0ed65d9ecfcc39db7169385492",
+        "size_bytes": 1319486916
+      }
+    ],
+    "final_checkpoint_reload": {
+      "action_transform_reconstructed": true,
+      "bounded": true,
+      "checkpoint_reconstructed": true,
+      "checkpoint_sha256": "sha256:52991b787fd3d55bef8db585d71e197ed5434c0ed65d9ecfcc39db7169385492",
+      "generated_maximum": [
+        0.8830570578575134,
+        1.2028813362121582,
+        1.6254173517227173,
+        -1.369235634803772,
+        1.6375141143798828,
+        2.9959466457366943,
+        0.7989582419395447,
+        0.9999998807907104
+      ],
+      "generated_minimum": [
+        -0.9580892324447632,
+        -0.38093116879463196,
+        -0.02945495769381523,
+        -2.5154221057891846,
+        1.11859929561615,
+        1.5029250383377075,
+        0.7518449425697327,
+        0.9999997615814209
+      ],
+      "generated_nonconstant": true,
+      "generated_shape": [
+        2,
+        50,
+        8
+      ],
+      "passed": true,
+      "processor_reconstructed": true
+    },
+    "final_fixed_batch_loss": 0.8067700862884521,
+    "fingerprint": "sha256:8013740b1ade0a2630bbcdc1fd175e2152e70aeea7d4aee8b0d8f2fdda51df1c",
+    "fixed_batch_loss_decreased": false,
+    "initial_fixed_batch_loss": 0.6188071966171265,
+    "last_gradient_norm": 25.577253341674805,
+    "last_training_loss": 1.1743122339248657,
+    "optimizer_steps": 1,
+    "peak_gpu_allocated_bytes": 2357331456,
+    "peak_gpu_reserved_bytes": 2510290944,
+    "physical_action_error_decreased": false,
+    "residual_action_error_decreased": false,
+    "stage": "smoke",
+    "training_duration_seconds": 8.204885831917636
+  }
+}

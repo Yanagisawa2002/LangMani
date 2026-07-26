@@ -286,6 +286,8 @@ VLA-JEPA, second seed, repair, or other policy-family training ran or is authori
 [`formulation contract`](docs/langmani_v2/phase_2c_c_action_formulation.md),
 [`training report`](docs/langmani_v2/phase_2c_c_training_report.md), and
 [`evaluation report`](docs/langmani_v2/phase_2c_c_evaluation_report.md).
+The committed compact evidence contains 16 manifest-covered files and can be independently
+verified without loading a model or starting a simulator.
 
 The compact result package can be checked against the immutable external training/evaluation
 evidence without starting a simulator or loading a policy:

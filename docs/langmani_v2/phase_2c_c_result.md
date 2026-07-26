@@ -41,3 +41,13 @@ langmani_custom_model_route_eligible = false
 No automatic next stage is authorized. Shared/Stack/Push SmolVLA, VLA-JEPA, ACT changes, a second
 seed, new data, a repair phase, and final unseen-reset evaluation did not run and remain
 unauthorized.
+
+## Compact evidence
+
+The compact package under `artifacts/langmani_v2/phase_2c_c/` contains 16 manifest-covered evidence
+files totaling 61,584 bytes and no generated dataset or checkpoint. Its producer commit is
+`b52969600beca8650575b9fc1bc204abb12285a9`, and its manifest fingerprint is
+`sha256:3913ad9e37d47d7a8e70391eb04c1a331b5b70e3c7b61ae61e0c3c59e1ff824b`.
+The independent verifier passed on both the native target and the copied repository package with
+fingerprint
+`sha256:3f0a87b9801312dfddbc3143ced02eb898a6660ca054f49b3f6b7b511043e35c`.

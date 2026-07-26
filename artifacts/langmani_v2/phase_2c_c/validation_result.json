@@ -1,0 +1,118 @@
+{
+  "fingerprint": "sha256:866e4773451b79c54861c318c5c6c100639e36f44a719e8b59b04ceffb9e256c",
+  "horizon_screens": [
+    {
+      "checkpoint_identities": [
+        "sha256:f42b6cbd7ce798aef969e7c328e1ccfc7dc677fa407498c9b3b0344bc3e621f3"
+      ],
+      "entered_grasp_region_count": 2,
+      "episode_count": 6,
+      "ever_grasped_count": 0,
+      "ever_lifted_count": 0,
+      "execution_horizon": 1,
+      "failed_grasp_count": 2,
+      "fingerprint": "sha256:1eb21c3b6caa6e7c3abd84ea8aef842c55c65bd3a8149af3db8dbd4e876b8980",
+      "inference_latency_p50_ms": 125.05891552427784,
+      "inference_latency_p95_ms": 127.58700412814505,
+      "invalid_action_count": 0,
+      "mean_episode_length": 50.0,
+      "no_motion_count": 4,
+      "object_drop_count": 0,
+      "schedule_fingerprint": "sha256:98a4bf7cc58cf6790d753c3a7c6010d34e0e03c639a350d6938d91d05d6d5626",
+      "simulator_error_count": 0,
+      "split_role": "validation_horizon_screen",
+      "success_count": 0,
+      "timeout_count": 6
+    },
+    {
+      "checkpoint_identities": [
+        "sha256:f42b6cbd7ce798aef969e7c328e1ccfc7dc677fa407498c9b3b0344bc3e621f3"
+      ],
+      "entered_grasp_region_count": 6,
+      "episode_count": 6,
+      "ever_grasped_count": 6,
+      "ever_lifted_count": 3,
+      "execution_horizon": 8,
+      "failed_grasp_count": 2,
+      "fingerprint": "sha256:5ffdddc7f93b976a6b82ae40747ada2e536e9de744f5203f8d005469acca211a",
+      "inference_latency_p50_ms": 122.7765494841151,
+      "inference_latency_p95_ms": 125.36645572981797,
+      "invalid_action_count": 0,
+      "mean_episode_length": 50.0,
+      "no_motion_count": 0,
+      "object_drop_count": 4,
+      "schedule_fingerprint": "sha256:98a4bf7cc58cf6790d753c3a7c6010d34e0e03c639a350d6938d91d05d6d5626",
+      "simulator_error_count": 0,
+      "split_role": "validation_horizon_screen",
+      "success_count": 0,
+      "timeout_count": 6
+    }
+  ],
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "passed": true,
+  "policy_selection": {
+    "checkpoint_selection_fingerprint": "sha256:5fbdd438f6666e5c7d0b079958be61615cfbd0a65be2bf2b259f5380c44e1b5c",
+    "fingerprint": "sha256:dccb210d3fa0126c2e1c7689b6b58ff54249ab259541934ed4a44e62911ed5bd",
+    "full_validation_results_used": false,
+    "horizon_candidates": [
+      {
+        "ever_grasped_count": 0,
+        "ever_lifted_count": 0,
+        "execution_horizon": 1,
+        "success_count": 0,
+        "summary_fingerprint": "sha256:1eb21c3b6caa6e7c3abd84ea8aef842c55c65bd3a8149af3db8dbd4e876b8980",
+        "timeout_count": 6
+      },
+      {
+        "ever_grasped_count": 6,
+        "ever_lifted_count": 3,
+        "execution_horizon": 8,
+        "success_count": 0,
+        "summary_fingerprint": "sha256:5ffdddc7f93b976a6b82ae40747ada2e536e9de744f5203f8d005469acca211a",
+        "timeout_count": 6
+      }
+    ],
+    "horizon_selection_rule": [
+      "maximum_success_count",
+      "maximum_ever_grasped_count",
+      "maximum_ever_lifted_count",
+      "minimum_timeout_count",
+      "prefer_h1"
+    ],
+    "model_kind": "pick_smolvla_relative",
+    "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+    "passed": true,
+    "schema_version": "langmani-v2-phase2c-c-policy-selection-v0",
+    "selected_checkpoint": "/root/autodl-tmp/langmani-phase2c-c-evidence/training/full-relative-65c3f11/checkpoints/step-00020000",
+    "selected_checkpoint_sha256": "sha256:f42b6cbd7ce798aef969e7c328e1ccfc7dc677fa407498c9b3b0344bc3e621f3",
+    "selected_execution_horizon": 8,
+    "selected_optimizer_step": 20000,
+    "selection_split": "validation",
+    "settings_mutable_after_selection": false,
+    "test_results_used": false
+  },
+  "schema_version": "langmani-v2-phase2c-c-validation-result-v0",
+  "validation": {
+    "checkpoint_identities": [
+      "sha256:f42b6cbd7ce798aef969e7c328e1ccfc7dc677fa407498c9b3b0344bc3e621f3"
+    ],
+    "entered_grasp_region_count": 30,
+    "episode_count": 30,
+    "ever_grasped_count": 22,
+    "ever_lifted_count": 4,
+    "execution_horizon": 8,
+    "failed_grasp_count": 14,
+    "fingerprint": "sha256:406ad5f5b1212accacc087cbdf1476c37708492c7e93fbcc77fdb91e727c026b",
+    "inference_latency_p50_ms": 119.92550297873095,
+    "inference_latency_p95_ms": 121.20580212213099,
+    "invalid_action_count": 0,
+    "mean_episode_length": 50.0,
+    "no_motion_count": 2,
+    "object_drop_count": 14,
+    "schedule_fingerprint": "sha256:98a4bf7cc58cf6790d753c3a7c6010d34e0e03c639a350d6938d91d05d6d5626",
+    "simulator_error_count": 0,
+    "split_role": "validation",
+    "success_count": 0,
+    "timeout_count": 30
+  }
+}

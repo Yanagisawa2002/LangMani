@@ -1,0 +1,77 @@
+{
+  "action_formulation": "pick_state_relative_bounded_residual_v1",
+  "action_transform_fingerprint": "sha256:408a17af1ab69b629431f3fad5d0d623a4a727d2ba05cc92f655e5c9931753ed",
+  "checkpoint_steps": [
+    5000,
+    10000,
+    20000
+  ],
+  "fingerprint": "sha256:22bc586fd156aa9e33dbea8690f836f9b2e01c07e4f3a062cd86aac1251e9b1e",
+  "only_change_from_absolute_baseline": "absolute_action_target_to_query_state_relative_bounded_residual",
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "push_smolvla_authorized": false,
+  "schema_version": "langmani-v2-phase2c-c-relative-training-config-v0",
+  "shared_smolvla_authorized": false,
+  "stack_smolvla_authorized": false,
+  "task_id": "PickCube-v1",
+  "total_optimizer_steps": 20000,
+  "training_config": {
+    "action_dimension": 8,
+    "augmentation": "none",
+    "batch_size": 4,
+    "betas": [
+      0.9,
+      0.95
+    ],
+    "checkpoint_steps": [
+      5000,
+      10000,
+      20000
+    ],
+    "chunk_size": 50,
+    "decay_learning_rate": 2.5e-06,
+    "decay_steps": 30000,
+    "execution_horizon_candidates": [
+      1,
+      4,
+      8
+    ],
+    "freeze_vision_encoder": true,
+    "gradient_accumulation": 4,
+    "gradient_clip_norm": 10.0,
+    "image_shape_chw": [
+      3,
+      256,
+      256
+    ],
+    "learning_rate": 0.0001,
+    "n_action_steps": 50,
+    "num_inference_steps": 10,
+    "num_workers": 4,
+    "optimizer": "AdamW",
+    "optimizer_epsilon": 1e-08,
+    "precision": "bfloat16",
+    "resize_images_with_padding": [
+      512,
+      512
+    ],
+    "scheduler": "cosine_decay_with_warmup",
+    "seed": 0,
+    "state_dimension": 9,
+    "tokenizer_max_length": 48,
+    "total_steps": 20000,
+    "train_expert_only": true,
+    "train_state_projection": true,
+    "validation_steps": [
+      5000,
+      10000,
+      20000
+    ],
+    "warmup_steps": 1000,
+    "weight_decay": 1e-10
+  },
+  "training_config_fingerprint": "sha256:f55a8b39133c6fc80e2de26910c1a8a64b75cc148e14e401990e27478aac8016",
+  "training_seed": 0,
+  "training_seed_count": 1,
+  "vla_jepa_authorized": false
+}

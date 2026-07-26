@@ -1,0 +1,71 @@
+{
+  "by_split": {
+    "test_unseen_reset": {
+      "anchor": "current_observation_state_at_policy_query",
+      "bounded_latent_inverse_maximum_absolute_error": 7.152557373046875e-07,
+      "bounded_latent_inverse_over_tolerance_count": 0,
+      "chunk_size": 50,
+      "frame_count": 7828,
+      "future_state_used": false,
+      "nonfinite_count": 0,
+      "padded_target_count": 122500,
+      "physical_delta_inverse_maximum_absolute_error": 3.725290298461914e-09,
+      "physical_delta_inverse_over_tolerance_count": 0,
+      "query_anchored_chunk_inverse_maximum_absolute_error": 7.152557373046875e-07,
+      "query_anchored_chunk_inverse_over_tolerance_count": 0,
+      "query_anchored_chunk_nonfinite_count": 0,
+      "query_count": 7828,
+      "valid_chunk_target_count": 268900
+    },
+    "train": {
+      "anchor": "current_observation_state_at_policy_query",
+      "bounded_latent_inverse_maximum_absolute_error": 7.152557373046875e-07,
+      "bounded_latent_inverse_over_tolerance_count": 0,
+      "chunk_size": 50,
+      "frame_count": 54608,
+      "future_state_used": false,
+      "nonfinite_count": 0,
+      "padded_target_count": 857500,
+      "physical_delta_inverse_maximum_absolute_error": 3.725290298461914e-09,
+      "physical_delta_inverse_over_tolerance_count": 0,
+      "query_anchored_chunk_inverse_maximum_absolute_error": 7.152557373046875e-07,
+      "query_anchored_chunk_inverse_over_tolerance_count": 0,
+      "query_anchored_chunk_nonfinite_count": 0,
+      "query_count": 54608,
+      "valid_chunk_target_count": 1872900
+    },
+    "validation": {
+      "anchor": "current_observation_state_at_policy_query",
+      "bounded_latent_inverse_maximum_absolute_error": 7.152557373046875e-07,
+      "bounded_latent_inverse_over_tolerance_count": 0,
+      "chunk_size": 50,
+      "frame_count": 7803,
+      "future_state_used": false,
+      "nonfinite_count": 0,
+      "padded_target_count": 122500,
+      "physical_delta_inverse_maximum_absolute_error": 3.725290298461914e-09,
+      "physical_delta_inverse_over_tolerance_count": 0,
+      "query_anchored_chunk_inverse_maximum_absolute_error": 7.152557373046875e-07,
+      "query_anchored_chunk_inverse_over_tolerance_count": 0,
+      "query_anchored_chunk_nonfinite_count": 0,
+      "query_count": 7803,
+      "valid_chunk_target_count": 267650
+    }
+  },
+  "fingerprint": "sha256:54eb9290f1b5b1605713d2f585980b6f3cf3852ec1f45e632868fa5eb17b2f72",
+  "float32_absolute_tolerance": 1e-06,
+  "future_state_used": false,
+  "maximum_absolute_error": 7.152557373046875e-07,
+  "native_bound_violation_count": 0,
+  "over_tolerance_count": 0,
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "passed": true,
+  "schema_version": "langmani-v2-phase2c-c-full-reconstruction-audit-v1",
+  "splits": [
+    "train",
+    "validation",
+    "test_unseen_reset"
+  ],
+  "task_id": "PickCube-v1",
+  "total_frame_count": 70239
+}

@@ -1,0 +1,19 @@
+{
+  "action_count": 5000000,
+  "chunk_count": 100000,
+  "chunk_size": 50,
+  "clipping_event_count": 0,
+  "component_count": 40000000,
+  "fingerprint": "sha256:74718c687e9063db5bdaa0c3a8b12ca08c00c4ef4fc09ca1d6a719f06e71ad2a",
+  "lower_bound_violation_count": 0,
+  "maximum_zero_residual_identity_error": 4.76837158203125e-07,
+  "nonfinite_component_count": 0,
+  "passed": true,
+  "projection_event_count": 0,
+  "random_seed": 20260726,
+  "replacement_action_count": 0,
+  "schema_version": "langmani-v2-phase2c-c-static-relative-action-audit-v0",
+  "transform_fingerprint": "sha256:408a17af1ab69b629431f3fad5d0d623a4a727d2ba05cc92f655e5c9931753ed",
+  "upper_bound_violation_count": 0,
+  "zero_residual_identity_atol": 1e-06
+}

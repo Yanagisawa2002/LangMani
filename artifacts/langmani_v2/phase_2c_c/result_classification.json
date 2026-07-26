@@ -1,0 +1,21 @@
+{
+  "absolute_action_material_bottleneck": false,
+  "action_formulation_partially_validated": true,
+  "case": "CASE_B",
+  "fingerprint": "sha256:14f91158ceff0863966e7cc471dd72ddc2e0cf32635ac33e5daa88b7468e1544",
+  "langmani_custom_model_route_eligible": false,
+  "langmani_generalization_route_blocked": true,
+  "langmani_model_route_eligible": false,
+  "meaningful_training_reset_success_minimum": 1,
+  "model_quality_interpretation_available": true,
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "passed": true,
+  "pipeline_valid": true,
+  "relative_action_formulation_validated": false,
+  "schema_version": "langmani-v2-phase2c-c-result-classification-v0",
+  "training_reset_episode_count": 30,
+  "training_reset_success_count": 1,
+  "validation_episode_count": 30,
+  "validation_success_count": 0,
+  "validation_success_minimum": 3
+}

@@ -1,0 +1,93 @@
+{
+  "case": "CASE_B",
+  "file_count": 16,
+  "final_git_commit": "b52969600beca8650575b9fc1bc204abb12285a9",
+  "fingerprint": "sha256:3913ad9e37d47d7a8e70391eb04c1a331b5b70e3c7b61ae61e0c3c59e1ff824b",
+  "generated_data_or_checkpoint_included": false,
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "passed": true,
+  "records": [
+    {
+      "bytes": 1817,
+      "path": "absolute_training_reset_evaluation.json",
+      "sha256": "sha256:c8c428c4ea3f6fde6ab395ffc8d71a8c3db73b02ff90a57ce58a7d99cd59b8e4"
+    },
+    {
+      "bytes": 725,
+      "path": "action_100k_audit.json",
+      "sha256": "sha256:4719e23e4d1c9632e268108c0beeb9dd81ff4d3382afe354c072e6853e3b9790"
+    },
+    {
+      "bytes": 634,
+      "path": "authorization_state.json",
+      "sha256": "sha256:379d53f242f1d8fdb3bac7370e673160b6b73e65df3ed1e132cb6c072374f14d"
+    },
+    {
+      "bytes": 4994,
+      "path": "baseline_phase_diagnostics.json",
+      "sha256": "sha256:367824bbe8e5ae28c225ebe206bdeade43ee27a0ac46c55d99bb5415009c7955"
+    },
+    {
+      "bytes": 599,
+      "path": "checkpoint_registry.jsonl",
+      "sha256": "sha256:67f18f94f423542598cb8895229bad1d36c6f3a5275da7a973fb51ff21774f8c"
+    },
+    {
+      "bytes": 3456,
+      "path": "input_verification.json",
+      "sha256": "sha256:9d719ff83e015a1624d61676b779fa3b6defb2390c08d963bf963b54c1eb40eb"
+    },
+    {
+      "bytes": 459,
+      "path": "next_route_decision.json",
+      "sha256": "sha256:2e8237a03344f23a573f76a494f8daa949c40846cc8fb91158c654f1bf545075"
+    },
+    {
+      "bytes": 2937,
+      "path": "reconstruction_audit.json",
+      "sha256": "sha256:8e919598079bb794940748e64d141b6ee354fe192cbb6deaa67667a01d8ad920"
+    },
+    {
+      "bytes": 2100,
+      "path": "relative_training_config.json",
+      "sha256": "sha256:50deb9615ba37af4ca3672f639c6bc3da20fffa76926a3a277c3b1d26f885006"
+    },
+    {
+      "bytes": 1800,
+      "path": "relative_training_reset_result.json",
+      "sha256": "sha256:2c7d668fb5e1cd95aae9701850bd129d72619eec44f468e0434c18c246bdbccd"
+    },
+    {
+      "bytes": 2079,
+      "path": "residual_transform_manifest.json",
+      "sha256": "sha256:c64cb11166e9af8d75697d4f4fa0f68966a1f3a4140a6973100146e7acbd6732"
+    },
+    {
+      "bytes": 894,
+      "path": "result_classification.json",
+      "sha256": "sha256:f2f53b87a59451efdd6b1e87d870b94a5a3ddc03b951ad3a804b5303f0e5d75b"
+    },
+    {
+      "bytes": 5737,
+      "path": "smoke_micro_result.json",
+      "sha256": "sha256:3155d8c33e3db4a8b1c1c8ecdf3192f3c72d4f3d26bdd0380bc83a7213c7253d"
+    },
+    {
+      "bytes": 6557,
+      "path": "state_action_audit.json",
+      "sha256": "sha256:a9d8ffb129b5dccda0f9c0e390b0c7d70454e0a0f980893c40e309bf2bc348f3"
+    },
+    {
+      "bytes": 22135,
+      "path": "training_metrics.json",
+      "sha256": "sha256:b7f3d3115f174b0395d3eff192d270fe0993501cd8b9521845afdff414d0fc61"
+    },
+    {
+      "bytes": 4661,
+      "path": "validation_result.json",
+      "sha256": "sha256:95a88b86cd072b4beaca2f0ca777a8cae5674c98e3632aaca07dce0367ba28b3"
+    }
+  ],
+  "schema_version": "langmani-v2-phase2c-c-artifact-manifest-v0",
+  "total_bytes": 61584
+}

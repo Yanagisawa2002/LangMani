@@ -1,0 +1,65 @@
+{
+  "action_dimension": 8,
+  "action_schema": "PandaJointPositionActionV0",
+  "arm_residual_scale": 0.6531111598014832,
+  "chunk_anchor": "current_observation_state_at_policy_query",
+  "decoder": "native_affine(tanh(safe_logit(current_reference)+residual_scale*tanh(model_output)))",
+  "encoder": "atanh((safe_logit(physical_target)-safe_logit(current_reference))/residual_scale)",
+  "epsilon": 5.960464477539063e-08,
+  "fingerprint": "sha256:408a17af1ab69b629431f3fad5d0d623a4a727d2ba05cc92f655e5c9931753ed",
+  "future_state_used": false,
+  "gripper_reference": {
+    "aggregation": "arithmetic_mean",
+    "measured_state_fields": [
+      "panda_finger_joint1",
+      "panda_finger_joint2"
+    ],
+    "normalized_command_lower": -1.0,
+    "normalized_command_upper": 1.0,
+    "physical_lower_metres": -0.01,
+    "physical_upper_metres": 0.04
+  },
+  "gripper_residual_scale": 16.947166442871094,
+  "identity": "pick_state_relative_bounded_residual_v1",
+  "native_lower": [
+    -2.8973000049591064,
+    -1.7627999782562256,
+    -2.8973000049591064,
+    -3.0717999935150146,
+    -2.8973000049591064,
+    -0.017500000074505806,
+    -2.8973000049591064,
+    -1.0
+  ],
+  "native_upper": [
+    2.8973000049591064,
+    1.7627999782562256,
+    2.8973000049591064,
+    -0.0697999969124794,
+    2.8973000049591064,
+    3.752500057220459,
+    2.8973000049591064,
+    1.0
+  ],
+  "object_or_goal_state_used": false,
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "physical_delta_view": "physical_target-current_action_reference",
+  "post_hoc_clipping": false,
+  "projection": false,
+  "reconstruction_atol": 1e-06,
+  "replacement_action": false,
+  "scale_margin_over_train_maximum": 1.01,
+  "schema_version": "langmani-v2-phase2c-c-pick-state-relative-bounded-residual-v1",
+  "state_components": [
+    "panda_joint1",
+    "panda_joint2",
+    "panda_joint3",
+    "panda_joint4",
+    "panda_joint5",
+    "panda_joint6",
+    "panda_joint7",
+    "panda_finger_joint1",
+    "panda_finger_joint2"
+  ],
+  "state_schema": "PandaPolicyStateV0"
+}

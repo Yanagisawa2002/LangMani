@@ -1,0 +1,56 @@
+{
+  "checkpoint_identities": [
+    "sha256:3667a1250c1afefcda363dae34d374737ddf46af87a79397b0d2f5da49c77e80"
+  ],
+  "completed": true,
+  "entered_grasp_region_count": 9,
+  "episode_count": 30,
+  "ever_grasped_count": 2,
+  "ever_lifted_count": 1,
+  "execution_horizon": 8,
+  "failed_grasp_count": 19,
+  "failure_categories": {
+    "failed_grasp": 19,
+    "no_initial_motion": 9,
+    "object_drop": 1,
+    "other": 1
+  },
+  "final_authorization": null,
+  "fingerprint": "sha256:ce127fa0af11b3e43840ab55fb59d1acfa0cd4768c603627e81444d3378cad2a",
+  "formulation": "absolute",
+  "inference_latency_p50_ms": 125.89804199524224,
+  "inference_latency_p95_ms": 127.64917321037501,
+  "invalid_action_count": 0,
+  "mean_action_saturation_rate": 0.125,
+  "mean_action_smoothness_l2": 0.11562934252463798,
+  "mean_episode_length": 48.766666666666666,
+  "mean_policy_query_count": 6.833333333333333,
+  "model_kind": "pick_smolvla_absolute",
+  "no_motion_count": 9,
+  "object_drop_count": 1,
+  "outcomes": {
+    "success": 1,
+    "timeout": 29
+  },
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "policy_ids": [
+    "phase2c-b:pick_smolvla"
+  ],
+  "post_contact_divergence_mean_m": 0.012148692968998797,
+  "runtime_manifest_fingerprint": "sha256:c0504b65e38c17c122530d577af6c95ee4bcdc19facee2bd0bb14d5b338def86",
+  "schedule_fingerprint": "sha256:98a4bf7cc58cf6790d753c3a7c6010d34e0e03c639a350d6938d91d05d6d5626",
+  "schema_version": "langmani-v2-phase2c-c-evaluation-summary-v0",
+  "simulator_error_count": 0,
+  "split_role": "training_reset",
+  "success_count": 1,
+  "success_rate": 0.03333333333333333,
+  "success_wilson_95": [
+    0.005908590381612455,
+    0.16670390991409173
+  ],
+  "task_id": "PickCube-v1",
+  "task_ids": [
+    "PickCube-v1"
+  ],
+  "timeout_count": 29
+}

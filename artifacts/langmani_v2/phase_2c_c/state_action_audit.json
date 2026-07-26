@@ -1,0 +1,174 @@
+{
+  "action_semantics": {
+    "action[0:7]": "absolute Panda arm joint-position targets in radians",
+    "action[7]": "normalized Panda gripper mimic command in [-1,1]"
+  },
+  "additional_state_fields": [],
+  "chunk_anchor": "current_observation_state_at_policy_query",
+  "current_reference_unambiguous": true,
+  "derived_action": "physical_target_action-current_action_reference",
+  "derived_views": [
+    {
+      "bytes": 3722746,
+      "frame_count": 54608,
+      "future_state_used": false,
+      "media_bytes_duplicated": 0,
+      "path": "/root/autodl-tmp/langmani-phase2c-c-evidence/static-query-chunk-v1/derived_action_view/train.parquet",
+      "sha256": "sha256:f124af29f32450cbefd8da3ea951be9ba7766a889dd821da4835013ba7c15bda",
+      "split": "train",
+      "state_values_stored": false
+    },
+    {
+      "bytes": 612022,
+      "frame_count": 7803,
+      "future_state_used": false,
+      "media_bytes_duplicated": 0,
+      "path": "/root/autodl-tmp/langmani-phase2c-c-evidence/static-query-chunk-v1/derived_action_view/validation.parquet",
+      "sha256": "sha256:59feb45c0a4ac953852d5e8aacec486838ab34d98300f0beb10109cdb1f05fe4",
+      "split": "validation",
+      "state_values_stored": false
+    },
+    {
+      "bytes": 614528,
+      "frame_count": 7828,
+      "future_state_used": false,
+      "media_bytes_duplicated": 0,
+      "path": "/root/autodl-tmp/langmani-phase2c-c-evidence/static-query-chunk-v1/derived_action_view/test_unseen_reset.parquet",
+      "sha256": "sha256:c4c1518b24b269ea6882b07bd06a0c6a5f9cb62b582cdb6af7940ea02e60af14",
+      "split": "test_unseen_reset",
+      "state_values_stored": false
+    }
+  ],
+  "fingerprint": "sha256:e0b1fac44dc561b61b3a3d977627898e8b1acc24703427779941f0cf97adc892",
+  "future_state_used": false,
+  "gripper_current_reference": "normalize arithmetic mean of measured finger joint positions from physical range [-0.01,0.04] metres to [-1,1]",
+  "object_or_goal_state_used": false,
+  "observation_action_timing": "observation[t]_immediately_precedes_action[t]",
+  "observations_changed": false,
+  "package_fingerprint": "sha256:77675e2134e4886a97e4bdac2230c64c3da30c080e647433b7c701a79544ed04",
+  "passed": true,
+  "schema_version": "langmani-v2-phase2c-c-state-action-audit-v0",
+  "source_media_duplicated": false,
+  "split_identities": {
+    "test_unseen_reset": {
+      "data_files": [
+        {
+          "bytes": 1104670,
+          "path": "data/chunk-000/file-000.parquet",
+          "sha256": "sha256:4da99570863421085f43bd4f30506f2ac0d2594dd6d331afe423e922c6b17662"
+        }
+      ],
+      "episode_count": 100,
+      "fingerprint": "sha256:ae32c50744876b86969d86e6e06ebae741ff4951ea8e2d2815669d45b22f19df",
+      "frame_count": 7828,
+      "repo_id": "langmani/official-pickcube-v2-test-unseen-reset",
+      "split": "test_unseen_reset",
+      "split_manifest_fingerprint": "sha256:cf633a0787def947c9a681729ad2a45439cc91ace60d0df408d6e54e57f1d28e",
+      "split_manifest_sha256": "sha256:aab1d388165498e3cc016a3e700cc9a88cefc2d5ecadee5bd16d2c94aab9c8ca"
+    },
+    "train": {
+      "data_files": [
+        {
+          "bytes": 7646172,
+          "path": "data/chunk-000/file-000.parquet",
+          "sha256": "sha256:10f5496959f65a1c51a3943162cd2542f020fe55f02e235bd46f3e81f5d40b97"
+        }
+      ],
+      "episode_count": 700,
+      "fingerprint": "sha256:4a3acbbcf27cbd6c8a995b64b41c88627fc6791fb51c4dbdbaf99f5313067798",
+      "frame_count": 54608,
+      "repo_id": "langmani/official-pickcube-v2-train",
+      "split": "train",
+      "split_manifest_fingerprint": "sha256:cf45aa8a8d6a1508d57d0c2d98da181cfb17c0eb642f15e475de9d9974fd1b20",
+      "split_manifest_sha256": "sha256:2bb29c1bfa8b9bcb7e0627299b0d885304f6076efaf6c76bedd46c3260ca5069"
+    },
+    "validation": {
+      "data_files": [
+        {
+          "bytes": 1099173,
+          "path": "data/chunk-000/file-000.parquet",
+          "sha256": "sha256:588ce4b00567558caeb9feaa63778df5af166c799a82e21e0cc0031519ee9105"
+        }
+      ],
+      "episode_count": 100,
+      "fingerprint": "sha256:f8dcd57fab8e4b7f22df93aa13aedf52b391b6b74e6203d41f71174d78a125f0",
+      "frame_count": 7803,
+      "repo_id": "langmani/official-pickcube-v2-validation",
+      "split": "validation",
+      "split_manifest_fingerprint": "sha256:1bd51cc8d163120d52eed62eb2fb26d06ef9f00a3404967b369dfad9c2a4557b",
+      "split_manifest_sha256": "sha256:c64149005b8a51883a2be3e38b5b554c8983629c0b732522022935d7196c520c"
+    }
+  },
+  "state_field_order": [
+    "panda_joint1",
+    "panda_joint2",
+    "panda_joint3",
+    "panda_joint4",
+    "panda_joint5",
+    "panda_joint6",
+    "panda_joint7",
+    "panda_finger_joint1",
+    "panda_finger_joint2"
+  ],
+  "state_schema": "PandaPolicyStateV0",
+  "task_id": "PickCube-v1",
+  "train_only_delta_statistics": {
+    "low_variance_dimensions_below_1e-6": [],
+    "maximum": [
+      0.06016000360250473,
+      0.07661169767379761,
+      0.028053805232048035,
+      0.10489213466644287,
+      0.02875179797410965,
+      0.07215762138366699,
+      0.10873925685882568,
+      1.9550323486328125e-05
+    ],
+    "mean": [
+      0.00014397464938907664,
+      0.000831788182290818,
+      -9.12462243862336e-05,
+      0.0014662713428029838,
+      -1.6887850795127993e-05,
+      -0.0004905476847457774,
+      0.0004545606850661308,
+      -0.5268186531544011
+    ],
+    "minimum": [
+      -0.058622926473617554,
+      -0.11013814806938171,
+      -0.028550613671541214,
+      -0.10767066478729248,
+      -0.027244051918387413,
+      -0.09935617446899414,
+      -0.10937035083770752,
+      -1.9999998807907104
+    ],
+    "standard_deviation": [
+      0.010018991555688563,
+      0.029333697753801846,
+      0.005320997195338024,
+      0.02673203540457668,
+      0.005207095336566386,
+      0.026345482388989972,
+      0.02670941993001231,
+      0.585128544343575
+    ]
+  },
+  "train_scale_audit": {
+    "chunk_size": 50,
+    "derived_arm_scale_float32": 0.6531111598014832,
+    "derived_gripper_scale_float32": 16.947166442871094,
+    "exact_scale_match": true,
+    "fingerprint": "sha256:c4b2b424e4bae406b81ade0784caf16918c9eaa4eb042619d015467aab938641",
+    "frozen_arm_scale": 0.6531111598014832,
+    "frozen_gripper_scale": 16.947166442871094,
+    "margin": 1.01,
+    "safe_logit_arm_absolute_maximum": 0.6466447114944458,
+    "safe_logit_gripper_absolute_maximum": 16.779373168945312,
+    "scale_source": "all_valid_query_anchored_train_chunk_targets",
+    "schema_version": "langmani-v2-phase2c-c-train-scale-audit-v1",
+    "train_query_count": 54608,
+    "train_valid_chunk_target_count": 1872900
+  }
+}
