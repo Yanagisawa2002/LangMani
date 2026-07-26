@@ -233,6 +233,21 @@ language intervention, VLA-JEPA, LatentGuard, SARM, PPO, and new-data work were 
 remain unauthorized. No second repair or additional SmolVLA tuning is permitted within Phase
 2C-B.
 
+Phase 2C-C is complete as Case B after the final authorized Pick action-formulation experiment.
+Its query-state-relative bounded transform reconstructed all 70,239 accepted Pick frames within
+`1e-6`; a 100,000-chunk/5,000,000-action audit had zero non-finite values, native-bound
+violations, clipping, projection, or replacement. The sole seed-0 relative Pick SmolVLA completed
+20,000 optimizer steps, and validation-only offline diagnostics selected step 20,000. The fixed
+six-reset screen selected H=8. On the same 30 accepted training resets, the frozen absolute and
+relative models each achieved 1/30 success. Relative validation reached 0/30 despite 22 grasps and
+four lift events, with zero invalid actions and zero simulator errors. The conditional 50-reset
+unseen test remained sealed. Therefore `action_formulation_partially_validated=true`,
+`relative_action_formulation_validated=false`, `absolute_action_material_bottleneck=false`,
+`langmani_generalization_route_blocked=true`, and `langmani_custom_model_route_eligible=false`.
+The recommended project decision is to pivot to a standard benchmark with an established working
+policy/data contract. Shared/Stack/Push SmolVLA, VLA-JEPA, another policy family, a second seed,
+new data, and Phase 2C-C.1 remain unrun and unauthorized.
+
 M3A remains the sole raw authority and M3B remains the sole derived dataset. M4 must keep
 `num_envs=1`, `pd_joint_pos`, the M1 camera/no-leakage and success contracts, exact M3B scene-level
 splits, train-only normalization, validation-only checkpoint selection, and a locked test split.
@@ -419,6 +434,16 @@ python scripts/select_v2_phase2c_b_policy.py --help
 python scripts/evaluate_v2_phase2c_b_smolvla.py --help
 python scripts/select_v2_phase2c_b_repair.py --help
 python environment/verify_v2_phase2c_b.py --help
+
+# Phase 2C-C final Pick action-formulation experiment and compact no-simulator verification.
+python environment/prepare_v2_phase2c_c.py --help
+python scripts/train_v2_phase2c_c_relative_smolvla.py --help
+python scripts/diagnose_v2_phase2c_c_action.py --help
+python scripts/select_v2_phase2c_c_policy.py --help
+python scripts/evaluate_v2_phase2c_c_pick.py --help
+python scripts/finalize_v2_phase2c_c.py --help
+python environment/verify_v2_phase2c_c.py \
+  --artifact-root artifacts/langmani_v2/phase_2c_c
 
 # Phase 2B.3.1-RR compact Result D evidence verification (no simulator execution)
 python environment/verify_v2_phase2b3_rr.py

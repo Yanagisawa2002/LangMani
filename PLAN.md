@@ -198,6 +198,24 @@ Push full models, final/test schedules, language intervention, VLA-JEPA, LatentG
 and new-data work were not run. This result closes Phase 2C-B without a second repair or automatic
 next-model authorization.
 
+Phase 2C-C is complete as Case B. The one authorized deterministic relative-action formulation
+used only public `PandaPolicyStateV0[9]`, anchored every predicted chunk to its query state, and
+decoded through a structurally bounded safe-logit composition with no clipping, projection, or
+replacement. All 70,239 accepted Pick frames reconstructed within `1e-6`; the 100,000-chunk audit
+had zero legality failures. The sole seed-0 Pick SmolVLA completed 20,000 steps, and
+validation-only diagnostics selected its step-20,000 checkpoint. H=8 was frozen from the six-reset
+H=1/H=8 screen.
+
+The frozen absolute and relative policies each achieved 1/30 on the same accepted training resets.
+Relative validation reached 0/30, although it entered the grasp region on all 30 episodes, grasped
+on 22, and lifted on four; invalid actions and simulator errors were both zero. This is a valid
+consumer result, not infrastructure failure. The 50-reset unseen test remained unopened because
+the 3/30 validation gate failed. Action formulation is only partially validated, the absolute
+formulation is not established as the material bottleneck, and custom LangMani model training is
+not eligible. The recommended next project stage is a standard benchmark with an established
+working policy/data contract. No follow-on phase starts automatically; VLA-JEPA and all other
+model training remain unauthorized.
+
 M0 through M3B, M4 full, M4.1 target smoke, M4.2 target-development, M4.3a, and M4.3b
 target-development are complete on native targets. M4 full is experimentally and physically
 validated, but its declared quality gate is false. M4.2 rejected TaskToken and M4.3b rejected

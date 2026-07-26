@@ -3795,3 +3795,39 @@ model-training route. A 1--2/30 validation-only result with zero training-reset 
 unregistered matrix gap and must fail closed for an explicit amendment. Transform, checkpoint, or
 evaluator invalidity is Case D and is not a model-quality conclusion. No Case C or D may create
 Phase 2C-C.1.
+
+## D-145 - Close Phase 2C-C as Case B and recommend the standard-benchmark pivot
+
+The accepted query-state-relative transform passed the complete static contract. Its single arm
+scale `0.6531111598014832` and gripper scale `16.947166442871094` were derived from all valid
+query-anchored train chunk targets and frozen before training. All 70,239 accepted Pick frames and
+all valid query-anchored chunk targets across train, validation, and unseen-reset views
+reconstructed within absolute error `1e-6`; the maximum was
+`7.152557373046875e-07`. A 100,000-chunk audit exercised 5,000,000 actions with no non-finite
+component, bound violation, clipping, projection, or replacement.
+
+The sole seed-0 relative Pick SmolVLA used the pinned official Phase 2C-B base and unchanged
+optimizer, learning rate, batch, precision, augmentation, checkpoint, and 20,000-step schedule.
+Its real-batch smoke and 500-step micro-overfit passed, and the full run completed. Validation-only
+offline metrics selected step 20,000 with checkpoint SHA-256
+`f42b6cbd7ce798aef969e7c328e1ccfc7dc677fa407498c9b3b0344bc3e621f3`.
+The six-reset screen selected H=8 over H=1 because it produced six grasps and three lifts rather
+than zero grasps, while both horizons remained 0/6.
+
+The frozen absolute checkpoint and the selected relative checkpoint each achieved 1/30 success on
+the same accepted training-reset identities. Relative validation completed 0/30 with 30
+grasp-region entries, 22 grasps, four lifts, 14 failed grasps, 14 object drops, two no-motion
+episodes, zero invalid actions, and zero simulator errors. The valid pipeline and one
+training-reset success require Case B rather than Case C or D. The 3/30 validation authorization
+gate failed, so the 50-reset unseen schedule remained unopened and its metrics are unavailable.
+
+Case B sets `action_formulation_partially_validated=true`,
+`relative_action_formulation_validated=false`, `absolute_action_material_bottleneck=false`,
+`langmani_generalization_route_blocked=true`, and
+`langmani_custom_model_route_eligible=false`. The relative transform improved offline action error
+and produced more grasp/contact behavior, but it did not produce validation success and did not
+improve the training-reset success count. Absolute action representation is therefore not
+established as the material bottleneck. The recommended project decision is to pivot to a standard
+benchmark with an established working policy/data contract. No next stage starts automatically;
+Shared/Stack/Push SmolVLA, VLA-JEPA, ACT changes, another model family, a second seed, new data,
+repair work, and Phase 2C-C.1 remain unrun and unauthorized.

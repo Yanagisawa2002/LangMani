@@ -86,3 +86,18 @@ resets is the pre-registered minimum for "meaningful" training-reset success. A 
 validation-only result of 1--2/30 with zero training-reset successes is not assigned to A, B, C,
 or D and must stop for an explicit matrix amendment; it is never silently called a pipeline
 failure.
+
+## Completed evidence
+
+The accepted transform fingerprint is
+`sha256:408a17af1ab69b629431f3fad5d0d623a4a727dd2ba05cc92f655e5c9931753ed`.
+The 100,000-chunk audit fingerprint is
+`sha256:74718c687e9063db5bdaa0c3a8b12ca08c00c4ef4fc09ca1d6a719ff06e71ad2a`;
+the full reconstruction-audit fingerprint is
+`sha256:54eb9290f1b5b1605713d2f585980b6f3cf3852ec1f45e632868fa55eb17b2f72`.
+Both passed.
+
+The validation-only selector chose the 20,000-step relative checkpoint
+`sha256:f42b6cbd7ce798aef969e7c328e1ccfc7dc677fa407498c9b3b0344bc3e621f3`;
+the six-reset screen selected H=8. The selected policy achieved 1/30 on the frozen training resets
+and 0/30 on validation, producing Case B. The 50-reset unseen test was not opened.

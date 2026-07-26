@@ -8,6 +8,7 @@
 [![Physical](https://img.shields.io/badge/physical_target-validated-1f9d55)](docs/RESULTS_INDEX.md)
 [![Quality](https://img.shields.io/badge/final_quality_gate-failed-c2410c)](docs/RESULTS_INDEX.md)
 [![SmolVLA](https://img.shields.io/badge/SmolVLA-RESULT__D-c2410c)](docs/langmani_v2/phase_2c_b_result.md)
+[![Action formulation](https://img.shields.io/badge/action_formulation-CASE__B-d97706)](docs/langmani_v2/phase_2c_c_result.md)
 
 ## LangMani 2.0
 
@@ -268,6 +269,24 @@ started. See the
 [`multi-skill analysis`](docs/langmani_v2/phase_2c_b_multiskill_analysis.md), and
 [`failure analysis`](docs/langmani_v2/phase_2c_b_failure_analysis.md).
 
+Phase 2C-C is complete as
+[`Case B`](docs/langmani_v2/phase_2c_c_result.md). Its sole query-state-relative Pick formulation
+passed exact reconstruction and structural-bound audits, and its one seed-0 SmolVLA completed
+20,000 optimizer steps. The step-20,000 checkpoint and H=8 were selected using validation-only
+offline metrics and a frozen six-reset horizon screen. On the same 30 accepted training resets,
+both the absolute and relative models achieved 1/30. Relative validation was 0/30 despite 22
+grasps and four lift events, with zero invalid actions and zero simulator errors. The conditional
+50-reset unseen test therefore remained sealed.
+
+The result partially validates the relative formulation but does not establish absolute targets as
+the material bottleneck. `langmani_generalization_route_blocked=true` and
+`langmani_custom_model_route_eligible=false`; the recommended project decision is to pivot to a
+standard benchmark with a known-working policy/data contract. No Shared/Stack/Push SmolVLA,
+VLA-JEPA, second seed, repair, or other policy-family training ran or is authorized. See the
+[`formulation contract`](docs/langmani_v2/phase_2c_c_action_formulation.md),
+[`training report`](docs/langmani_v2/phase_2c_c_training_report.md), and
+[`evaluation report`](docs/langmani_v2/phase_2c_c_evaluation_report.md).
+
 The compact result package can be checked against the immutable external training/evaluation
 evidence without starting a simulator or loading a policy:
 
@@ -284,6 +303,9 @@ python environment/verify_v2_phase2c_a1.py \
   --expected-pre-final-evaluation-commit 160d6c31b6e3708ee982edfa0118152cd7489e0f \
   --expected-final-evaluation-commit a5c3dcc7c944e02114faaf5b304620cfa7b6cd03 \
   --report /new/path/to/phase2c-a1-verification.json
+
+python environment/verify_v2_phase2c_c.py \
+  --artifact-root artifacts/langmani_v2/phase_2c_c
 ```
 
 The no-training v2 production entry point is:
