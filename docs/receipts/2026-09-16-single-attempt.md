@@ -149,5 +149,29 @@ outputs are not committed.
 
 ## Frozen local verification
 
-Pending the single local validation pass. This section will receive only the observed command
-results after the documentation candidate is committed. No physical target acceptance is claimed.
+Frozen documentation candidate: `4e0a3b85094bf987c01e2915f86a7dfd9aea28b1`.
+One local command sequence used Python 3.12.10 on Windows with `PYTHONPATH` explicitly pointing
+to this main checkout's `src`. Every command below exited 0. Receipt-only closeout edits follow
+that candidate; Python/runtime sources did not change.
+
+| Command | Observed result |
+| --- | --- |
+| `ruff format .` | 75 files unchanged |
+| `ruff check .` | Passed |
+| `pytest -m "not gpu and not rendering"` | **360 passed, 5 skipped, 5 deselected**, 1 existing optional-Pinocchio warning; 23.18 seconds |
+| `python -m build` | Source archive and wheel built |
+| `python environment/verify_install.py` | CPU-safe installation diagnostics passed |
+| `python environment/verify_m1.py` | Local structural contract checks passed; native simulation not run |
+| `python environment/verify_m2.py` | Local structural checks passed; target expert execution not run |
+| `python environment/verify_m3a.py` | Structural checks passed; physical collection/replay not run |
+| `python environment/verify_m3b.py` | 114 fixture/contract tests passed; generated-array LeRobot/PyAV integration passed |
+| Export, validation, inspection script `--help` | All three existing dataset entry points exited 0 |
+
+These are Windows CPU/structural/fixture results, **not Linux GPU, Vulkan, physical rollout, or
+policy-quality acceptance**. The five skips are explicitly native-Linux simulation/planner checks;
+the deselected tests require GPU/rendering. The predeclared diagnostics include focused fixture
+suites as well as the CPU test command; they are not repeated experimental attempts.
+
+The four existing portfolio files (technical PDF, narrated MP4, WAV, M3B source MP4) also matched
+their frozen SHA-256 values during read-only inspection. This checks original file integrity, not
+fresh visual acceptance, and does not change the expert-footage provenance.
