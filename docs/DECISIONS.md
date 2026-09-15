@@ -691,3 +691,29 @@ workaround.
     state-restoration videos and source alignments; only `--target-full` can validate all 60 groups,
     360 episodes, scene-level splits, every decoded video, and the first training-ready derived
     dataset.
+
+## D-027 — Index separate version histories and preserve evidence corrections
+
+On 2026-09-16 (Singapore time), a separately authorized bounded delivery refreshed main to
+`6920b52c1f48c278e669cd71b69b8949dd900f3a` and inspected frozen v1
+`58434cb17a7234b6d4b2c4fb15aecf8df0621487` and terminal v2
+`2dcf2ac68e8627cfed98cbbd93272bf1768b190c`. Neither later commit is an ancestor of that main.
+[Versions and evidence](VERSIONS_AND_EVIDENCE.md) now supplies a main entry point to those
+histories without importing their runtime or inheriting their target acceptance.
+
+The v1 index's 72/72 physical-pair claim is corrected to the saved independent report's 61 pairs,
+with `final_paired_states_validated=false`. Eleven pre-execution false rejections are no-runtime
+records. Historical 46/72 end-to-end and 55/72 Oracle success, completed pipeline verification,
+and failed final quality gate remain separate. The frozen source and evidence are unchanged.
+The local 24-file M5A manifest currently has 16 matching entries and 8 missing entries; that
+directory cannot establish complete present-day recovery. Existing portfolio robot footage is
+M3B expert footage and cannot demonstrate final learned control.
+
+The authorized attempt found one red-to-left ACT checkpoint with all nine covered files and
+completion-marker integrity matching. The designated RTX 5090 target lacked its frozen runtime;
+the sole 180-second dependency preflight exited 124 before resolution completed. No dependency
+installation, model load, simulation, training, or video followed. This is an environment-preflight
+skip, with no new physical validation or model-quality result. The bounded route was stopped
+without a replacement candidate. The [receipt](receipts/2026-09-16-single-attempt.md) records
+hashes, exact scope, and process/lock closeout. No dependency, runtime interface, quality gate,
+or environment declaration changed.
