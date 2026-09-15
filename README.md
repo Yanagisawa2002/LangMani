@@ -1,5 +1,18 @@
 # LangMani
 
+## Start here: versions and evidence
+
+[Version guide and evidence corrections](docs/VERSIONS_AND_EVIDENCE.md) separates this M3B
+`main` from the frozen v1 ACT/language system and the stopped v2 research route. It records the
+historical quality gates, the **61 physical state pairs**, incomplete local recovery evidence,
+and the expert source of the existing portfolio video.
+
+[2026-09-16 bounded attempt receipt](docs/receipts/2026-09-16-single-attempt.md): the existing
+red-to-left ACT checkpoint passed file-integrity checks; a new learned-policy video was **skipped**
+after the sole dependency preflight timed out. No policy episode ran in that attempt.
+
+## Current main scope
+
 LangMani is a language-conditioned robotic manipulation research repository. M0 established the
 runtime foundation, M1 added the environment/language contracts, M2 added a deterministic
 privileged Panda expert, and M3A implemented the authoritative ManiSkill-native raw archive. Active
