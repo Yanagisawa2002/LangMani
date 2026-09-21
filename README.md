@@ -2,8 +2,10 @@
 
 LangMani is a language-conditioned robotic manipulation research repository. M0 established the
 runtime foundation, M1 added the environment/language contracts, M2 added a deterministic
-privileged Panda expert, and M3A implemented the authoritative ManiSkill-native raw archive. Active
+privileged Panda expert, and M3A implemented the authoritative ManiSkill-native raw archive.
 M3B deterministically derives accepted episodes into a validated local LeRobotDataset v3.
+M4A adds a single-task upstream ACT baseline; formal data and physical evaluation await regeneration
+on native Linux. Its generated-array CPU fixture is not a manipulation benchmark.
 
 M3B does not train ACT or SmolVLA, publish to the Hub, change M3A acceptance, export failure
 trajectories, add sensors or language paraphrases, use multiprocessing, or change the M1/M2 task.
@@ -447,6 +449,76 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m3b.py --target-full \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1
 ```
 
+## M4A — ACT Baseline
+
+ACT provides a small visual imitation baseline for **red cube → left bin** in the existing M1
+environment. It observes only `observation.images.base_camera` (RGB 256×256) and
+`observation.state` (the nine measured Panda joint positions). It predicts 50 absolute
+`pd_joint_pos` actions of eight components; upstream ACT executes ten queued actions before
+querying again. The expert additionally sees object poses, bin geometry, grasp state, semantic
+target identity, and planner state. None of these expert-only inputs reaches ACT.
+
+ACT does **not** test language understanding. The dataset retains all six `canonical_v0` sentences
+and TaskSpec metadata. This baseline selects one task by metadata and supplies no sentence,
+task token, oracle one-hot feature, or custom language encoder to the policy.
+
+The intended source is a **new, real, complete M3B export** at
+`outputs/datasets/m3b/langmani-pick-place-lerobot-v1`, derived from the separately regenerated M3A
+archive. Its repo ID, export fingerprint, exact file checksums and frame counts are read from
+the actual source, never inferred from historical runs. The existing 48/6/6 scene split yields
+48 training, 6 held-out validation and 6 excluded test episodes for the selected task. The seed
+and every ID are saved in `split.json`. A one-scene M3B smoke export is insufficient for this split.
+
+After the existing full M3A/M3B target gates pass, run from this repository root:
+
+```bash
+DATA=outputs/datasets/m3b/langmani-pick-place-lerobot-v1
+python scripts/act_baseline.py validate --dataset-root "$DATA" \
+  --report results/act_baseline/validation.json
+python scripts/act_baseline.py split --dataset-root "$DATA" \
+  --output results/act_baseline/split.json
+
+# Actual-data smoke: official dataloading, forward/backward, optimizer, save and reload.
+python scripts/act_baseline.py train --dataset-root "$DATA" \
+  --split results/act_baseline/split.json --output results/act_baseline/smoke-seed0 \
+  --mode smoke --device cuda --batch-size 8 --steps 3 --seed 0
+
+# One full baseline; a clean Git commit is required. Optional W&B: add --wandb.
+python scripts/act_baseline.py train --dataset-root "$DATA" \
+  --split results/act_baseline/split.json --output results/act_baseline/full-seed0 \
+  --mode full --device cuda --batch-size 8 --steps 100000 --seed 0
+
+# Fresh, paired ACT/expert reset distribution. No held-out checkpoint tuning here.
+python scripts/act_baseline.py evaluate --dataset-root "$DATA" \
+  --split results/act_baseline/split.json \
+  --checkpoint results/act_baseline/full-seed0/training/checkpoints/100000/pretrained_model \
+  --output results/act_baseline/full-seed0/evaluation-seed42000 \
+  --device cuda --episodes 20 --seed 42000 --sim-backend physx_cpu
+```
+
+Validation decodes every row and rejects invalid schema, nonfinite values, ordering, FPS,
+episode boundaries, task metadata and extra/privileged features without repair. Training uses
+LeRobot **0.6.0's official trainer**, optimizer and checkpoint/resume stack. The narrow dataset
+factory adapter replaces whole-dataset state/action statistics with exact train-view statistics;
+RGB uses fixed ImageNet statistics. Resume, CPU fixture commands, architecture mapping, workload
+estimation and the result schema are in [the M4A guide](docs/M4A_ACT_BASELINE.md).
+
+Run directories contain `config.json`, `split.json`, `validation.json`, `normalization.json`,
+`checkpoint_metadata.json`, `status.json` and upstream `training/checkpoints/`. Evaluation adds
+`metrics.json`, `episodes.csv`, config and split copies. Success rate, length mean/population
+standard deviation, termination reasons, paired initial-state hashes, expert rate and absolute
+rate gap are recorded. Out-of-bounds predictions fail before stepping; actions are not clipped.
+All `results/` artifacts, datasets, videos and checkpoints are ignored by Git.
+
+| Formal benchmark | Expert | ACT | Absolute gap |
+| --- | --- | --- | --- |
+| Regenerated real M3B, red cube → left bin | pending execution | pending execution | pending execution |
+
+Track **implementation complete**, **smoke tested**, **full dataset validated**, **full ACT trained**
+and **closed-loop evaluated** separately. Generated fixtures test code and upstream compatibility;
+the last three remain pending until the new AutoDL Linux runtime and formal data are exercised.
+SmolVLA is outside M4A.
+
 ## Target-machine setup
 
 Install [Miniforge](https://github.com/conda-forge/miniforge) first so `conda` is available. Then
@@ -467,7 +539,8 @@ python -m pip install --no-deps -e .
 python -m pip check
 ```
 
-M3B activates `lerobot[dataset]==0.6.0`; the base package alone deliberately refuses
+M3B activates the dataset extra; M4A additionally activates `lerobot[dataset,training]==0.6.0`
+for the official trainer and optional W&B. The base package alone deliberately refuses
 `lerobot.datasets` imports. The reviewed environment resolved datasets 4.8.5, pandas 2.3.3,
 PyArrow 25.0.0, PyAV 15.1.0, TorchCodec 0.11.1, and jsonlines 4.0.0. M3B explicitly uses PyAV for
 writing and reading because the installed Windows TorchCodec DLL chain is not loadable. Exact

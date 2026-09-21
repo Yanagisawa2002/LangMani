@@ -691,3 +691,51 @@ workaround.
     state-restoration videos and source alignments; only `--target-full` can validate all 60 groups,
     360 episodes, scene-level splits, every decoded video, and the first training-ready derived
     dataset.
+
+## D-027 — M4A single-task upstream ACT consumer (2026-09-21)
+
+The user authorized M4A from the M3B main baseline, then clarified that unrecoverable historical
+data will be regenerated on a new AutoDL Linux instance. This implementation therefore starts
+from `6920b52c1f48c278e669cd71b69b8949dd900f3a` in an isolated branch. It does not import later
+historical ACT/router experiments, modify their results, or substitute generated arrays for formal
+M3A/M3B data. No remote machine was provisioned, accessed, trained or shut down in this change.
+
+Use exactly the existing red-cube/left-bin task. Stock LeRobot 0.6 ACT receives base-camera RGB
+and `PandaPolicyStateV0[9]`, predicts absolute eight-component actions, and consumes its upstream
+50-action/10-execution queue. The six language sentences remain metadata; no language encoder,
+oracle task feature or SmolVLA implementation is introduced. Expose the existing M3B RGB extraction
+logic through a public wrapper without changing reconstruction behavior.
+
+Activate the upstream `training` extra beside `dataset` in both dependency declarations. Call
+the official training stack, including optimizer/checkpoint/RNG resume; no custom optimization
+loop is necessary. The inspected 0.6 dataset factory retains global metadata statistics when
+filtering episodes, so a scoped adapter recomputes state/action statistics from only the exact
+selected train view. RGB uses fixed ImageNet statistics. The adapter restores upstream functions
+after use. Local dataset consumers explicitly forbid automatic Hub download/repair.
+
+Retain the original M3B hash-ranked scene assignments, including their seed. Persist actual
+episode/frame/task metadata and content hashes in an inspectable split manifest. Require full
+M3B acceptance sidecars, all six TaskSpecs per scene, disjoint scene seeds, every decoded row,
+finite vectors, the three-feature allowlist, episode/timestamp order and encoded video FPS/counts.
+One-group smoke exports cannot provide the nonempty held-out partition required by M4A.
+
+Evaluate ACT and the existing expert on the same predeclared fresh seeds, excluding source scenes,
+with exact reset-state hashes and the unchanged 200-step/success contract. Reset audit state and
+expert context never enter policy inputs. Invalid or out-of-bounds actions terminate explicitly
+before stepping. Infrastructure errors invalidate comparison gaps rather than becoming benchmark
+numbers. Fixture-injected environments can test aggregation/artifacts but cannot set physical
+closed-loop completion true. The evaluator makes no checkpoint selection.
+
+The Windows CPU fixture initially exposed upstream's optional `last` symlink failure (WinError
+1314). On Windows only, record `last_checkpoint.json` instead. Upstream continues to save real
+model, configuration, processors and optimizer/RNG state; Linux keeps the upstream symlink. Paths
+for resume/evaluation refer directly to explicit step directories.
+
+Local evidence: Python 3.12.10, torch 2.11.0+cpu, LeRobot 0.6.0 and Accelerate 1.14.0; generated
+36-frame video fixture plus real 51,576,712-parameter ACT optimization, saved model/processor reload,
+and optimizer/RNG resume from step 1 to 2. The CPU-safe suite passed 390 tests with 5 native-Linux
+skips and 5 GPU/rendering deselections. Existing M3B's separate verifier passed 114 fixture/contract
+tests. Installation and M1/M2/M3A non-target diagnostics passed. These results provide no new
+CUDA/Vulkan/ManiSkill physical-validation claim; the full dataset, full ACT run and closed-loop
+benchmark remain pending. The guide records workload formulas because actual new dataset frame
+counts and target GPU throughput are unavailable.

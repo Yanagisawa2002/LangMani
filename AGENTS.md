@@ -3,9 +3,18 @@
 ## Purpose
 
 LangMani supports language-conditioned robotic manipulation in ManiSkill. M0 through M3A are
-implemented. The active M3B scope is deterministic, audited derivation of accepted M3A episodes
+implemented. The M3B scope is deterministic, audited derivation of accepted M3A episodes
 into one local LeRobotDataset v3 with reconstructed policy observations, scene-level splits,
 source-to-derived provenance, staged finalization, independent validation, and target gates.
+
+The active M4A milestone adds one language-independent red-cube/left-bin ACT baseline using
+upstream LeRobot 0.6 training, exhaustive derived-data validation, inherited episode/scene splits,
+and paired ACT/expert evaluation. M4A may train ACT and evaluate this one existing task; the M3B
+prohibitions below continue to describe M3B itself. Do not start SmolVLA or alter existing tasks,
+the six canonical sentences, observations, raw authority, success predicates, or M3B export.
+Track implementation complete, smoke tested, full dataset validated, full ACT trained, and
+closed-loop evaluated separately. Generated-array fixture tests never validate a physical dataset
+or benchmark. Full runs need a clean Git commit and regenerated real Linux M3A/M3B data.
 
 M3A remains the sole authority. M3B must keep `num_envs=1`, `pd_joint_pos`, the existing semantic
 `TaskSpec`, canonical language, M1 camera/no-leakage contract, exact raw actions, and the T actions

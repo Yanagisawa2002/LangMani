@@ -191,6 +191,11 @@ def _extract_base_camera_rgb(observation: object) -> npt.NDArray[np.uint8]:
     return np.array(array[0], dtype=np.uint8, copy=True, order="C")
 
 
+def extract_base_camera_rgb(observation: object) -> npt.NDArray[np.uint8]:
+    """Share the unchanged M3B camera contract with policy inference."""
+    return _extract_base_camera_rgb(observation)
+
+
 def _as_numpy(value: object) -> np.ndarray:
     candidate = value
     detach = getattr(candidate, "detach", None)
@@ -215,4 +220,5 @@ __all__ = [
     "ManiSkillObservationReconstructor",
     "ObservationReconstructionError",
     "ReconstructedPolicyFrame",
+    "extract_base_camera_rgb",
 ]

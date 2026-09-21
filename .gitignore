@@ -23,6 +23,7 @@ Thumbs.db
 /datasets/
 /checkpoints/
 /wandb/
+/results/
 *.arrow
 *.avi
 *.ckpt
