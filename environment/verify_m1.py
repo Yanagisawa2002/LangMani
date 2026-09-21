@@ -13,7 +13,9 @@ import json
 import os
 import platform
 import shutil
+import subprocess
 import sys
+import tempfile
 import traceback
 from dataclasses import dataclass, field
 from importlib import metadata
@@ -44,6 +46,8 @@ EVALUATION_KEYS = (
     "success",
     "fail",
 )
+WORKER_TIMEOUT_SECONDS = 600
+WORKER_CHOICES = ("cpu", "gpu")
 
 
 @dataclass
@@ -65,6 +69,19 @@ class Report:
 
     def check(self, name: str, condition: bool, detail: str) -> None:
         self.record(name, "pass" if condition else "fail", detail)
+
+    def extend(self, checks: list[dict[str, Any]]) -> None:
+        """Merge validated checks emitted by one isolated PhysX worker."""
+        for check in checks:
+            if set(check) != {"name", "status", "detail", "required"}:
+                raise ValueError(f"invalid worker check fields: {sorted(check)}")
+            if not isinstance(check["name"], str) or not isinstance(check["detail"], str):
+                raise TypeError("worker check name and detail must be strings")
+            if check["status"] not in {"pass", "fail", "skip"}:
+                raise ValueError(f"invalid worker check status: {check['status']!r}")
+            if not isinstance(check["required"], bool):
+                raise TypeError("worker check required flag must be boolean")
+        self.checks.extend(checks)
 
     @property
     def failed(self) -> bool:
@@ -94,6 +111,13 @@ class Report:
         REPORT_PATH.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
         print(f"[INFO] report: {REPORT_PATH}")
 
+    def write_worker(self, path: Path) -> None:
+        """Write compact subprocess evidence for the parent verifier."""
+        path.write_text(
+            json.dumps({"checks": self.checks}, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -104,6 +128,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--seed", type=int, default=123, help="Scene seed (default: 123).")
     parser.add_argument("--verbose", action="store_true", help="Print full tracebacks.")
+    parser.add_argument("--_worker", choices=WORKER_CHOICES, help=argparse.SUPPRESS)
+    parser.add_argument("--_worker-output", type=Path, help=argparse.SUPPRESS)
     return parser.parse_args()
 
 
@@ -480,15 +506,127 @@ def run_gpu_rendering(report: Report, seed: int) -> None:
         env.close()
 
 
+def _print_worker_output(value: str | bytes | None, *, stderr: bool = False) -> None:
+    if not value:
+        return
+    text = value.decode("utf-8", errors="replace") if isinstance(value, bytes) else value
+    print(text.rstrip(), file=sys.stderr if stderr else sys.stdout)
+
+
+def run_isolated_worker(
+    report: Report,
+    worker: str,
+    *,
+    seed: int,
+    verbose: bool,
+) -> None:
+    """Run one PhysX backend in a fresh process and merge its checks."""
+    if worker not in WORKER_CHOICES:
+        raise ValueError(f"unsupported M1 worker: {worker!r}")
+    with tempfile.TemporaryDirectory(prefix=f"langmani-m1-{worker}-") as directory:
+        output_path = Path(directory) / "checks.json"
+        command = [
+            sys.executable,
+            str(Path(__file__).resolve()),
+            "--_worker",
+            worker,
+            "--_worker-output",
+            str(output_path),
+            "--seed",
+            str(seed),
+        ]
+        if verbose:
+            command.append("--verbose")
+        try:
+            completed = subprocess.run(
+                command,
+                cwd=PROJECT_ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=WORKER_TIMEOUT_SECONDS,
+                env={**os.environ, "PYTHONUNBUFFERED": "1"},
+            )
+        except subprocess.TimeoutExpired as error:
+            _print_worker_output(error.stdout)
+            _print_worker_output(error.stderr, stderr=True)
+            report.check(
+                f"{worker.upper()} PhysX worker process",
+                False,
+                f"timed out after {WORKER_TIMEOUT_SECONDS} seconds",
+            )
+            return
+
+        _print_worker_output(completed.stdout)
+        _print_worker_output(completed.stderr, stderr=True)
+        if not output_path.is_file():
+            report.check(
+                f"{worker.upper()} PhysX worker process",
+                False,
+                f"exit code {completed.returncode}; worker result file was not written",
+            )
+            return
+
+        try:
+            payload = json.loads(output_path.read_text(encoding="utf-8"))
+            checks = payload.get("checks")
+            if not isinstance(checks, list) or not all(isinstance(item, dict) for item in checks):
+                raise TypeError("worker result checks must be a list of mappings")
+            report.extend(checks)
+        except (OSError, TypeError, ValueError) as error:
+            report.check(
+                f"{worker.upper()} PhysX worker process",
+                False,
+                f"malformed worker result: {type(error).__name__}: {error}",
+            )
+            return
+        report.check(
+            f"{worker.upper()} PhysX worker process",
+            completed.returncode == 0,
+            f"isolated process exit code {completed.returncode}",
+        )
+
+
+def run_worker(args: argparse.Namespace) -> int:
+    """Execute exactly one simulator backend for the parent verifier."""
+    if args._worker_output is None:
+        raise ValueError("an internal M1 worker requires --_worker-output")
+    report = Report()
+    try:
+        if args._worker == "cpu":
+            run_cpu_simulation(report, args.seed)
+        elif args._worker == "gpu":
+            run_gpu_vectorization(report)
+            run_gpu_rendering(report, args.seed)
+        else:
+            raise ValueError(f"unsupported M1 worker: {args._worker!r}")
+    except Exception as error:  # noqa: BLE001 - worker must preserve third-party diagnostics
+        report.record(
+            f"{str(args._worker).upper()} PhysX worker exception",
+            "fail",
+            f"{type(error).__name__}: {error}",
+        )
+        if args.verbose:
+            traceback.print_exc()
+    finally:
+        report.write_worker(args._worker_output)
+    return 1 if report.failed else 0
+
+
 def main() -> int:
     args = parse_args()
+    if args._worker is not None:
+        return run_worker(args)
+    if args._worker_output is not None:
+        raise ValueError("--_worker-output is only valid for an internal M1 worker")
+
     report = Report()
     print(f"LangMani M1 verification: {'target' if args.target else 'cpu-safe'}")
     run_contract_checks(report)
 
     is_native = native_linux()
     if is_native:
-        run_cpu_simulation(report, args.seed)
+        run_isolated_worker(report, "cpu", seed=args.seed, verbose=args.verbose)
     else:
         report.record(
             "native Linux CPU simulation",
@@ -506,8 +644,7 @@ def main() -> int:
         for name, available in prerequisites.items():
             report.check(f"target prerequisite: {name}", available, str(available))
         if all(prerequisites.values()):
-            run_gpu_vectorization(report)
-            run_gpu_rendering(report, args.seed)
+            run_isolated_worker(report, "gpu", seed=args.seed, verbose=args.verbose)
 
     report.write(target=args.target)
     return 1 if report.failed else 0

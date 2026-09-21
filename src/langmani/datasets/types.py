@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import math
 import re
+import sys
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
-from importlib import metadata
 from types import MappingProxyType
 from typing import Any, Self, cast
 
@@ -33,6 +33,10 @@ from langmani.environments.specs import (
     stable_scene_id,
     stable_task_id,
 )
+from langmani.experts.runtime import (
+    PLANNER_RUNTIME_MODULES,
+    query_planner_runtime_versions,
+)
 from langmani.experts.types import (
     ExpertConfig,
     ExpertPhase,
@@ -41,14 +45,7 @@ from langmani.experts.types import (
     PhaseResult,
 )
 
-RUNTIME_VERSION_KEYS = frozenset({"mani_skill", "h5py", "sapien", "torch", "mplib"})
-_RUNTIME_DISTRIBUTIONS = {
-    "mani_skill": "mani-skill",
-    "h5py": "h5py",
-    "sapien": "sapien",
-    "torch": "torch",
-    "mplib": "mplib",
-}
+RUNTIME_VERSION_KEYS = frozenset(PLANNER_RUNTIME_MODULES)
 _SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 
 
@@ -236,14 +233,8 @@ def _default_runtime_versions() -> Mapping[str, str | None]:
 
 
 def detected_runtime_versions() -> dict[str, str | None]:
-    """Capture exact installed packages used for collection and replay provenance."""
-    versions: dict[str, str | None] = {}
-    for key, distribution in _RUNTIME_DISTRIBUTIONS.items():
-        try:
-            versions[key] = metadata.version(distribution)
-        except metadata.PackageNotFoundError:
-            versions[key] = None
-    return versions
+    """Capture effective imported modules used for collection/replay provenance."""
+    return query_planner_runtime_versions(sys.executable)
 
 
 def _parse_expert_result(value: object) -> ExpertResult:

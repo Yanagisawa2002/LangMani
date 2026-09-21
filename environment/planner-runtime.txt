@@ -1,0 +1,5 @@
+# NumPy-1-compatible overlay for mplib 0.1.1. All other packages are inherited
+# from the exact environment/environment.yml base through --system-site-packages.
+numpy==1.26.4
+scipy==1.15.3
+opencv-python==4.11.0.86

@@ -345,7 +345,18 @@ def test_default_config_has_explicit_m3a_bounds_and_round_trips() -> None:
     assert config.maximum_expert_attempts_per_task == 3
     assert config.shard_size == 60
     assert config.final_joint_tolerance_rad == pytest.approx(0.05)
-    assert set(config.runtime_versions) >= {"mani_skill", "h5py", "sapien", "torch", "mplib"}
+    assert set(config.runtime_versions) >= {
+        "gymnasium",
+        "h5py",
+        "mani_skill",
+        "mplib",
+        "numpy",
+        "opencv_python",
+        "pillow",
+        "sapien",
+        "scipy",
+        "torch",
+    }
     assert payload["expert_config_fingerprint"].startswith("sha256:")
     assert CollectionConfig.from_dict(json.loads(json.dumps(payload))) == config
 

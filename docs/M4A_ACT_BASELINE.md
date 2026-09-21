@@ -77,7 +77,11 @@ this adapter. Only dataset/training extras are activated; no SmolVLA dependency 
 
 ## Formal Linux execution order
 
-Set up `environment/environment.yml` and install the checkout as in README. Preserve the output
+Set up `environment/environment.yml`, the NumPy-1 planner overlay, and the checkout as in README.
+Export `LANGMANI_PLANNER_PYTHON` for the entire chain; M2/M3A use it for the expert, and paired M4A
+evaluation retains a separate expert worker result/log/runtime record for each seed. The worker
+uses the same environment configuration as ACT, and exact initial-state hashes must match.
+Preserve the output
 paths across the following commands. They reuse the existing target gates and never replace their
 results with generated arrays:
 

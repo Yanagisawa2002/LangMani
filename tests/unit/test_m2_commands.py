@@ -93,12 +93,19 @@ def test_target_verifier_runs_prior_gates_before_any_m2_check(
 ) -> None:
     verifier = _load_script("langmani_test_verify_order", "environment/verify_m2.py")
     events: list[str] = []
+    commands: dict[str, list[str]] = {}
+    planner_python = "planner-side-python"
     monkeypatch.setattr(verifier, "parse_args", lambda: SimpleNamespace(target=True))
     monkeypatch.setattr(verifier, "_is_native_linux", lambda: True)
+    monkeypatch.setattr(verifier, "resolve_planner_python", lambda value=None: planner_python)
     monkeypatch.setattr(
         verifier,
         "_run_command",
-        lambda report, name, arguments: events.append(name) or True,
+        lambda report, name, arguments: (
+            events.append(name),
+            commands.__setitem__(name, arguments),
+            True,
+        )[-1],
     )
     monkeypatch.setattr(
         verifier,
@@ -113,7 +120,11 @@ def test_target_verifier_runs_prior_gates_before_any_m2_check(
     monkeypatch.setattr(
         verifier,
         "_run_balanced_benchmark",
-        lambda report, arguments: events.append("M2 balanced benchmark") or True,
+        lambda report, arguments: (
+            events.append("M2 balanced benchmark"),
+            commands.__setitem__("M2 balanced benchmark", arguments),
+            True,
+        )[-1],
     )
     monkeypatch.setattr(
         verifier,
@@ -132,6 +143,7 @@ def test_target_verifier_runs_prior_gates_before_any_m2_check(
         "M0 target gate",
         "M1 target gate",
         "M2 structural checks",
+        "M2 planner side-runtime gate",
         "M2 benchmark run A",
         "M2 benchmark run B",
         "M2 comparison",
@@ -140,6 +152,16 @@ def test_target_verifier_runs_prior_gates_before_any_m2_check(
         "M2 rendered rollout",
         "M2 rendered verification",
     ]
+    assert commands["M0 target gate"][0] == sys.executable
+    assert commands["M1 target gate"][0] == sys.executable
+    for name in (
+        "M2 planner side-runtime gate",
+        "M2 benchmark run A",
+        "M2 benchmark run B",
+        "M2 balanced benchmark",
+        "M2 rendered rollout",
+    ):
+        assert commands[name][0] == planner_python
 
 
 def test_target_verifier_does_not_start_m2_after_failed_prior_gate(

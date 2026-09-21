@@ -539,6 +539,22 @@ python -m pip install --no-deps -e .
 python -m pip check
 ```
 
+The native mplib 0.1.1 expert needs a NumPy 1 overlay, while LeRobot retains the
+declared NumPy 2 environment. Create it once from the activated base environment:
+
+```bash
+python -m venv --system-site-packages .venv-planner
+.venv-planner/bin/python -m pip install --no-deps -r environment/planner-runtime.txt
+export LANGMANI_PLANNER_PYTHON="$PWD/.venv-planner/bin/python"
+"$LANGMANI_PLANNER_PYTHON" environment/verify_planner_runtime.py
+```
+
+Keep that variable exported for M2/M3A gates and M4A evaluation. M3A records the
+effective imported planner versions. M4A executes the reference expert in that
+interpreter and checks its reset-state hash against ACT's independent reset;
+worker JSON, runtime pins, and logs are retained alongside evaluation metrics.
+M1 CPU and GPU PhysX diagnostics run in isolated subprocesses.
+
 M3B activates the dataset extra; M4A additionally activates `lerobot[dataset,training]==0.6.0`
 for the official trainer and optional W&B. The base package alone deliberately refuses
 `lerobot.datasets` imports. The reviewed environment resolved datasets 4.8.5, pandas 2.3.3,

@@ -6,6 +6,8 @@ import csv
 import hashlib
 import json
 import platform
+import subprocess
+import sys
 import traceback
 from collections import Counter
 from collections.abc import Callable, Mapping
@@ -17,6 +19,61 @@ import torch
 
 from langmani.policies.m4a_data import TASK, digest, numpy, write_json
 from langmani.policies.m4a_training import load_checkpoint, policy_observation
+
+
+def expert_result(env: Any) -> dict[str, Any]:
+    from langmani.experts import ExpertConfig, PickPlaceExpert
+
+    expert = PickPlaceExpert(env, config=ExpertConfig(max_episode_steps=200)).run()
+    if expert.exception_type or expert.status.value in {
+        "initialization_failure",
+        "invalid_task",
+        "unexpected_exception",
+    }:
+        raise RuntimeError(
+            f"expert infrastructure: {expert.exception_type}: {expert.exception_message}"
+        )
+    success = bool(expert.final_environment_evaluation.get("success", False))
+    return {
+        "success": success,
+        "length": expert.total_environment_steps,
+        "termination_reason": "success" if success else expert.status.value,
+        "expert_status": expert.status.value,
+        "target_off_table": bool(
+            expert.final_environment_evaluation.get("target_off_table", False)
+        ),
+    }
+
+
+def isolated_expert(seed: int, sim_backend: str, output: Path) -> dict[str, Any]:
+    """Run the paired expert in its pinned NumPy-1 interpreter, retaining worker evidence."""
+    from langmani.experts.runtime import resolve_planner_python
+
+    worker_output = output / "expert_workers" / f"seed-{seed}.json"
+    worker_output.parent.mkdir(parents=True, exist_ok=True)
+    command = [
+        resolve_planner_python(),
+        "-m",
+        __name__,
+        "--seed",
+        str(seed),
+        "--sim-backend",
+        sim_backend,
+        "--output",
+        str(worker_output),
+    ]
+    completed = subprocess.run(command, capture_output=True, text=True, timeout=600, check=False)
+    worker_output.with_suffix(".log").write_text(
+        completed.stdout + completed.stderr, encoding="utf-8"
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"expert worker exited {completed.returncode}; see {worker_output.with_suffix('.log')}"
+        )
+    result = json.loads(worker_output.read_text(encoding="utf-8"))
+    if result.pop("seed") != seed or result.pop("sim_backend") != sim_backend:
+        raise ValueError("expert worker reset identity differs")
+    return result
 
 
 def aggregate(episodes: list[dict[str, Any]]) -> dict[str, Any]:
@@ -167,8 +224,6 @@ def evaluate(
     provenance: dict[str, Any],
     environment_factory: Callable[[], Any] | None = None,
 ) -> dict[str, Any]:
-    from langmani.experts import ExpertConfig, PickPlaceExpert
-
     if environment_factory is None and platform.system() != "Linux":
         raise RuntimeError("closed-loop evaluation is pending a native Linux ManiSkill runtime")
     if output.exists():
@@ -209,32 +264,20 @@ def evaluate(
                 "expert_status": None,
             }
             try:
-                env = factory()
-                observation, _ = env.reset(seed=episode_seed, options={"task_spec": TASK.to_dict()})
-                # Audit only. get_state_dict never reaches run_act or its processors.
-                row["initial_state_sha256"] = state_digest(env.unwrapped.get_state_dict())
-                if controller == "expert":
-                    expert = PickPlaceExpert(env, config=ExpertConfig(max_episode_steps=200)).run()
-                    if expert.exception_type or expert.status.value in {
-                        "initialization_failure",
-                        "invalid_task",
-                        "unexpected_exception",
-                    }:
-                        raise RuntimeError(
-                            f"expert infrastructure: {expert.exception_type}: {expert.exception_message}"
-                        )
-                    task_success = expert.final_environment_evaluation.get("success", False)
-                    row.update(
-                        success=bool(task_success),
-                        length=expert.total_environment_steps,
-                        termination_reason="success" if task_success else expert.status.value,
-                        expert_status=expert.status.value,
-                        target_off_table=bool(
-                            expert.final_environment_evaluation.get("target_off_table", False)
-                        ),
-                    )
+                if controller == "expert" and environment_factory is None:
+                    row.update(isolated_expert(episode_seed, sim_backend, output))
                 else:
-                    row.update(run_act(env, observation, policy, pre, post))
+                    env = factory()
+                    observation, _ = env.reset(
+                        seed=episode_seed, options={"task_spec": TASK.to_dict()}
+                    )
+                    # Audit only. get_state_dict never reaches run_act or its processors.
+                    row["initial_state_sha256"] = state_digest(env.unwrapped.get_state_dict())
+                    row.update(
+                        expert_result(env)
+                        if controller == "expert"
+                        else run_act(env, observation, policy, pre, post)
+                    )
             except Exception as error:
                 traceback.print_exc()
                 row["error"] = f"{type(error).__name__}: {error}"
@@ -282,3 +325,43 @@ def evaluate(
     }
     write_json(output / "metrics.json", metrics)
     return metrics
+
+
+def expert_worker_main() -> None:
+    """Internal subprocess entry point; no ACT checkpoint or policy observations cross it."""
+    import argparse
+
+    from langmani.experts.runtime import (
+        planner_runtime_matches_expected,
+        query_planner_runtime_versions,
+    )
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--seed", required=True, type=int)
+    parser.add_argument("--sim-backend", required=True, choices=("physx_cpu", "physx_cuda"))
+    parser.add_argument("--output", required=True, type=Path)
+    args = parser.parse_args()
+    versions = query_planner_runtime_versions(sys.executable)
+    if not planner_runtime_matches_expected(versions):
+        raise RuntimeError(f"expert runtime pins differ: {versions}")
+    env = make_environment(args.sim_backend)
+    try:
+        env.reset(seed=args.seed, options={"task_spec": TASK.to_dict()})
+        initial_state = state_digest(env.unwrapped.get_state_dict())
+        result = expert_result(env)
+    finally:
+        env.close()
+    write_json(
+        args.output,
+        {
+            "seed": args.seed,
+            "sim_backend": args.sim_backend,
+            "initial_state_sha256": initial_state,
+            **result,
+        },
+    )
+    write_json(args.output.with_suffix(".runtime.json"), versions)
+
+
+if __name__ == "__main__":
+    expert_worker_main()

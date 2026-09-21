@@ -16,6 +16,11 @@ Track implementation complete, smoke tested, full dataset validated, full ACT tr
 closed-loop evaluated separately. Generated-array fixture tests never validate a physical dataset
 or benchmark. Full runs need a clean Git commit and regenerated real Linux M3A/M3B data.
 
+The native expert uses the NumPy-1 overlay in `environment/planner-runtime.txt`.
+Set `LANGMANI_PLANNER_PYTHON` to its virtualenv launcher (do not resolve the Python
+symlink) for M2/M3A and paired M4A expert evaluation. Keep the base NumPy-2
+LeRobot environment intact. M1 CPU/GPU PhysX checks use separate processes.
+
 M3A remains the sole authority. M3B must keep `num_envs=1`, `pd_joint_pos`, the existing semantic
 `TaskSpec`, canonical language, M1 camera/no-leakage contract, exact raw actions, and the T actions
 to T+1 states time contract. Do not add ACT, SmolVLA, training, Hub publication, augmentation,

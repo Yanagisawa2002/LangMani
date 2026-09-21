@@ -31,6 +31,7 @@ from langmani.experts import (
     ExpertStatus,
 )
 from langmani.experts.planner import EXPECTED_MPLIB_VERSION, MplibPandaPlannerAdapter
+from langmani.experts.runtime import PlannerRuntimeError, resolve_planner_python
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_DIR = PROJECT_ROOT / "outputs" / "diagnostics" / "m2"
@@ -432,6 +433,10 @@ def _structural_checks(report: Report) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target", action="store_true")
+    parser.add_argument(
+        "--planner-python",
+        help="NumPy-1 side-runtime interpreter; defaults to LANGMANI_PLANNER_PYTHON.",
+    )
     return parser.parse_args()
 
 
@@ -465,6 +470,7 @@ def main() -> int:
             else:
                 prerequisites_passed = False
 
+        planner_python = sys.executable
         if prerequisites_passed:
             _structural_checks(report)
         elif args.target:
@@ -476,11 +482,23 @@ def main() -> int:
             )
 
         if native_linux and prerequisites_passed and not report.failed:
+            try:
+                planner_python = resolve_planner_python(getattr(args, "planner_python", None))
+            except PlannerRuntimeError as error:
+                report.check("M2 planner side-runtime selection", False, str(error))
+            if not report.failed:
+                _run_command(
+                    report,
+                    "M2 planner side-runtime gate",
+                    [planner_python, "environment/verify_planner_runtime.py"],
+                )
+
+        if native_linux and prerequisites_passed and not report.failed:
             benchmark_commands = (
                 (
                     "M2 benchmark run A",
                     [
-                        sys.executable,
+                        planner_python,
                         "environment/benchmark_expert.py",
                         "--seeds",
                         "0",
@@ -491,7 +509,7 @@ def main() -> int:
                 (
                     "M2 benchmark run B",
                     [
-                        sys.executable,
+                        planner_python,
                         "environment/benchmark_expert.py",
                         "--seeds",
                         "0",
@@ -508,7 +526,7 @@ def main() -> int:
                 _compare_benchmarks(report)
             if args.target and not report.failed:
                 balanced_command = [
-                    sys.executable,
+                    planner_python,
                     "environment/benchmark_expert.py",
                     "--seeds",
                     ",".join(str(seed) for seed in TARGET_BALANCED_SEEDS),
@@ -519,7 +537,7 @@ def main() -> int:
                     _validate_balanced_benchmark(report)
             if args.target and not report.failed:
                 rendered_command = [
-                    sys.executable,
+                    planner_python,
                     "environment/run_expert.py",
                     "--seed",
                     "0",

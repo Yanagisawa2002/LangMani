@@ -739,3 +739,30 @@ tests. Installation and M1/M2/M3A non-target diagnostics passed. These results p
 CUDA/Vulkan/ManiSkill physical-validation claim; the full dataset, full ACT run and closed-loop
 benchmark remain pending. The guide records workload formulas because actual new dataset frame
 counts and target GPU throughput are unavailable.
+
+## D-028 — Native target compatibility and isolated expert evaluation
+
+The new AutoDL instance is a native Linux RTX 4090 host. The clean M4A implementation
+is deployed before regenerating data. Vulkan now enumerates the NVIDIA device;
+that system check alone is not ManiSkill target acceptance.
+
+Reuse the narrow compatibility changes from historical commits 9806e3c, cceacb2,
+fd06fb6 and 545e259: isolate M1 CPU/GPU PhysX diagnostics; select a planner
+virtualenv without resolving its launcher symlink; and fingerprint effective
+imported runtime versions rather than inherited distribution metadata. The mplib
+0.1.1 overlay pins NumPy 1.26.4, SciPy 1.15.3 and OpenCV 4.11.0.86 while inheriting
+the other exact base packages. LeRobot keeps NumPy 2.2.6. These runtime/provenance
+changes are needed before creating a new archive; historical archives are not
+silently migrated. Historical expert tolerance changes were not imported.
+
+M4A's paired reference expert runs in that isolated interpreter, with the same
+task, seed, observation mode, backend and 200-step limit as ACT. Its initial
+public simulator-state hash must equal ACT's independent reset hash. Worker
+results, effective runtime pins and logs are retained. Worker failures invalidate
+the comparison, and no privileged observation crosses into ACT action selection.
+Native benchmark acceptance still requires the actual ordered target gates and
+new real data; local fixtures cannot supply that evidence.
+
+Local compatibility regression: 402 passed, five native-Linux skips and five
+GPU/rendering deselections. This includes worker interpreter/path/reset identity
+and failure handling, PhysX verifier isolation and virtualenv launcher tests.

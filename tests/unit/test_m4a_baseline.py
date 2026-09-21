@@ -360,6 +360,41 @@ def test_moments_matches_numpy() -> None:
     np.testing.assert_allclose(moments.report()["std"], x.std(0))
 
 
+@pytest.mark.parametrize("failure", [None, "exit", "seed"])
+def test_isolated_expert_uses_selected_interpreter_and_checks_worker_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: str | None
+) -> None:
+    import langmani.experts.runtime as runtime
+    import langmani.policies.m4a_evaluation as evaluation
+
+    interpreter = str(tmp_path / "planner with spaces" / "python")
+    monkeypatch.setattr(runtime, "resolve_planner_python", lambda: interpreter)
+
+    def run(command: list[str], **kwargs: Any) -> Any:
+        assert command[0] == interpreter
+        assert command[1:3] == ["-m", "langmani.policies.m4a_evaluation"]
+        assert kwargs["timeout"] == 600 and kwargs["check"] is False
+        write_json(
+            Path(command[-1]),
+            {
+                "seed": 8 if failure == "seed" else 7,
+                "sim_backend": "physx_cpu",
+                "success": True,
+                "initial_state_sha256": "a" * 64,
+            },
+        )
+        return SimpleNamespace(returncode=1 if failure == "exit" else 0, stdout="worker", stderr="")
+
+    monkeypatch.setattr(evaluation.subprocess, "run", run)
+    if failure:
+        with pytest.raises((RuntimeError, ValueError), match="exited|identity"):
+            evaluation.isolated_expert(7, "physx_cpu", tmp_path)
+    else:
+        result = evaluation.isolated_expert(7, "physx_cpu", tmp_path)
+        assert result["success"] is True and "seed" not in result
+    assert (tmp_path / "expert_workers/seed-7.log").read_text() == "worker"
+
+
 def test_manifest_gate_rejects_task_or_scene_seed_leakage(tmp_path: Path) -> None:
     manifest = full_manifest()
     sidecar = tmp_path / "langmani"
