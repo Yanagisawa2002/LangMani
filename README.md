@@ -4,9 +4,9 @@ LangMani is a language-conditioned robotic manipulation research repository. M0 
 runtime foundation, M1 added the environment/language contracts, M2 added a deterministic
 privileged Panda expert, and M3A implemented the authoritative ManiSkill-native raw archive.
 M3B deterministically derives accepted episodes into a validated local LeRobotDataset v3.
-M4A adds a single-task upstream ACT baseline. Native Linux formal M3A/M3B validation and
-100,000-step ACT training are complete; final paired evaluation is being rerun after the
-native gripper interface repair described in D-031. Generated-array fixtures are not benchmarks.
+M4A closes the single-task upstream ACT baseline on native Linux: formal M3A/M3B validation,
+100,000-step training and paired closed-loop evaluation are complete. On 20 fresh red-cube/left-bin
+scenes, ACT succeeded 10/20 and the privileged expert 20/20. Generated-array fixtures are not benchmarks.
 
 M3B does not train ACT or SmolVLA, publish to the Hub, change M3A acceptance, export failure
 trajectories, add sensors or language paraphrases, use multiprocessing, or change the M1/M2 task.
@@ -123,8 +123,8 @@ The policy camera and human diagnostic camera are separate:
 | `render_camera` | `(0.78, -0.90, 0.82)` → `(-0.04, 0, 0.08)` | 512×512 | 1.00 | 0.01 / 10.0 | `default` |
 
 There is no wrist camera and no domain randomization. The target diagnostic uses actor
-segmentation to require all three cubes and both bins to be visible in `base_camera`; this physical
-visibility claim remains pending until that diagnostic passes on the native Linux target.
+segmentation to require all three cubes and both bins to be visible in `base_camera`. The native
+M1 target gate passed during the 2026-09-21 acceptance run documented in D-030.
 
 ## M2 privileged expert
 
@@ -241,8 +241,9 @@ success or the known off-table failure still stops execution with a classified e
 
 These commands are not evidence of physical acceptance merely because they import or perform
 structural checks on a non-target host. The current Windows review environment has no mplib
-installation because ManiSkill 3.0.1 declares `mplib==0.1.1` only on Linux. Physical expert
-execution and diagnostic rendering therefore remain pending for the native Linux RTX 4090 target.
+installation because ManiSkill 3.0.1 declares `mplib==0.1.1` only on Linux. Separate native Linux
+RTX 4090 acceptance passed the ordered target gates and expert execution; see D-029/D-030 and
+the M4A delivery record for the effective planner overlay and retained evidence.
 
 ## M3A raw demonstrations
 
@@ -515,7 +516,7 @@ All `results/` artifacts, datasets, videos and checkpoints are ignored by Git.
 
 | Formal benchmark | Expert | ACT | Absolute gap |
 | --- | --- | --- | --- |
-| Regenerated real M3B, red cube → left bin | paired rerun pending | paired rerun pending | pending |
+| Regenerated real M3B, red cube → left bin; 20 paired fresh scenes | 20/20 (100%) | 10/20 (50%) | 50 percentage points |
 
 On 2026-09-21, execution commit `915d823` passed 411 native Linux regression tests,
 the ordered M0/M1/M2 target gates, and real six-episode M3A collection/replay smoke.
@@ -528,12 +529,20 @@ Full ACT training completed 100,000 steps with batch 8, seed 0 and checkpoint re
 sample presentations, 93.153 equivalent train-frame passes, 17,200.83 seconds of training.
 The original final evaluation rejected the first gripper action in every scene and executed zero
 ACT steps, so it is not an executed closed-loop baseline. Evaluation commit `0dafc31` repairs that
-native-controller mismatch and reruns the same checkpoint and 20-scene schedule in a new directory.
-See [the delivery record](docs/M4A_DELIVERY.md) for evidence and preserved failure details.
+native-controller mismatch. The same checkpoint and exact 20-scene schedule completed evaluation
+at 2026-09-21 15:56:06 UTC: ACT executed 3,311 steps, with 10 successes and 10 timeouts at 200 steps;
+the expert succeeded in all 20 scenes. Every initial-state hash pair matched, source scenes were
+excluded, and there were no infrastructure errors. ACT mean/population-standard-deviation episode
+length was 165.55/34.54 steps; expert 178.00/5.83. The native gripper saturation audit counted
+464 commands, maximum overshoot 0.0211761; arm commands remained strictly checked.
+This is one training seed and 20 fresh reset scenes, not evidence of language generalization.
+See [the A–H delivery record](docs/M4A_DELIVERY.md) for measured workload, local recovery archives,
+all 32 changed files, exact commands, test results and preserved failure details.
 
 Track **implementation complete**, **smoke tested**, **full dataset validated**, **full ACT trained**
 and **closed-loop evaluated** separately. Generated fixtures test code and upstream compatibility;
-the first four are complete, while final **closed-loop evaluated** remains pending this rerun.
+all five are now complete for this recorded run. Dataset, final checkpoint and evaluation evidence
+are backed up locally with archive and per-file SHA-256 verification.
 SmolVLA is outside M4A.
 
 ## Target-machine setup

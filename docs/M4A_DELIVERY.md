@@ -1,4 +1,4 @@
-# M4A delivery — 2026-09-21
+# M4A delivery — 2026-09-22 Asia/Singapore
 
 | Stage | Status and evidence boundary |
 | --- | --- |
@@ -6,7 +6,7 @@
 | smoke tested | **Passed real-data Linux CUDA smoke**: three optimizer steps, save/reload and three paired closed-loop scenes; ACT 0/3 timeout with 600 executed steps, expert 3/3. Generated-array fixtures are separate compatibility tests |
 | full dataset validated | **Passed**: real 60-group/360-episode M3A collection and independent replay; complete M3B export/validation; exhaustive M4A validation and inherited split |
 | full ACT trained | **Passed**: 100,000 steps, batch 8, seed 0; final checkpoint saved, hashed and reloaded |
-| closed-loop evaluated | **Final baseline pending rerun**: original full-checkpoint evaluation executed zero ACT steps because of a gripper interface mismatch; D-031 repair preserves the checkpoint and exact 20-scene schedule |
+| closed-loop evaluated | **Passed**: final checkpoint on 20 fresh paired scenes; ACT 10/20, expert 20/20, 3,311 ACT steps, exact initial-state pairing and no infrastructure errors |
 
 SmolVLA was not started. No generated benchmark, dataset or checkpoint is committed.
 
@@ -51,7 +51,7 @@ The [technical guide](M4A_ACT_BASELINE.md) records the inspected source map and 
 | `tests/unit/test_planner_adapter.py` | Cover the native NumPy ABI guard |
 | `tests/unit/test_pick_place_expert.py` | Cover tracking-residual rejection, preserved final task authority and absence of redundant holds |
 | `tests/unit/test_planner_runtime.py` | Cover effective version probes and virtualenv launcher preservation |
-| `docs/DECISIONS.md` | D-027 through D-031 rationale, dependency boundaries, failures and observed evidence |
+| `docs/DECISIONS.md` | D-027 through D-032 rationale, dependency boundaries, failures and observed evidence |
 | `docs/M4A_ACT_BASELINE.md` | Architecture, formal regeneration order, resume, result schema and workload guidance |
 | `docs/M4A_DELIVERY.md` | This delivery inventory and execution status |
 
@@ -113,6 +113,26 @@ matches the native controller and records its count and maximum overshoot. Nonfi
 rejected. The original `evaluation-seed42000` directory remains unchanged as failure evidence.
 Commands describe recorded runs; choose new output paths for a future independent replication.
 
+Accepted results, completed **2026-09-21 15:56:06 UTC** (23:56:06 Asia/Singapore):
+
+| Metric | ACT | Privileged expert |
+| --- | --- | --- |
+| Episodes | 20 | 20 |
+| Successes / failures | 10 / 10 | 20 / 0 |
+| Success rate | 50% | 100% |
+| Mean episode length (steps) | 165.55 | 178.00 |
+| Episode length population standard deviation | 34.544862 | 5.830952 |
+| Termination reasons | 10 success, 10 timeout | 20 success |
+| Target off table | 0 | 0 |
+
+Absolute and expert-minus-ACT success-rate gaps are **0.5 (50 percentage points)**. ACT executed
+3,311 steps; all ten failures reached the unchanged 200-step limit. All 20 exact initial-state
+hash pairs matched, all source scene seeds were excluded, and no infrastructure errors occurred.
+The schedule RNG seed is 42000; the exact generated scene seeds are recorded in `config.json`.
+Its schedule SHA-256 is `d12a28d002aca9cca203a78dde12b6fd761272ba9d4f9f0528b576c63d074ae9`.
+Normalized gripper saturation occurred 464 times, with maximum overshoot 0.0211760998;
+this is the documented native-controller behavior, with no arm clipping or expert rescue.
+
 ## F. Test evidence
 
 - CPU-safe regression after the native-runtime/expert compatibility changes: **406 passed, 5 skipped,
@@ -136,7 +156,7 @@ Commands describe recorded runs; choose new output paths for a future independen
   Main NumPy is 2.2.6; planner NumPy is 1.26.4. Exact main/planner freezes and diagnostic
   reports are retained in `outputs/m4a-review/native-accepted-preflight.tar.gz`.
 
-## G. Remaining blockers
+## G. Blockers, limitations and recovery evidence
 
 Formal data and training ran at `915d8233c2b8897b63c3c46121794021caa31d25`. M3A accepted 60 scene
 groups (360 episodes), rejected five candidate groups, and independently replayed every accepted
@@ -151,10 +171,17 @@ physical targets were verified identical before/after saturation. This was an in
 not an executed ACT benchmark result. The original chain exited 1 and remains preserved.
 
 D-031's narrow repair is committed as `0dafc315c90d68751027621dd396f71ecd5f0187`; it changes only
-evaluation behavior and associated tests/docs. `eval-resume-v2.sh` verifies all original checkpoint
-file hashes, reruns native planner tests, and evaluates the same final checkpoint and exact 20-seed
-schedule in a new directory. It does not repeat data generation or training. Final paired metrics
-and evaluation acceptance remain pending. Optional online W&B was not exercised.
+evaluation behavior and associated tests/docs. `eval-resume-v2.sh` verified all original checkpoint
+file hashes, reran native planner tests, and evaluated the same final checkpoint and exact 20-seed
+schedule in a new directory. It did not repeat data generation or training. The continuation and
+evaluation command both exited zero. Independent local verification recomputed the metrics from
+all 40 CSV rows and checked every pair, source-seed exclusion, original schedule and checkpoint.
+
+There are **no unresolved M4A execution blockers**. The result is limited to one task, one training
+seed, 48 training demonstrations and 20 fresh evaluation scenes. Ten ACT episodes still timed out;
+their exact physical failure mechanism was not diagnosed in this milestone. No checkpoint sweep,
+post-result model tuning, language-generalization claim or SmolVLA work was performed. Optional
+online W&B was not exercised. Pipeline acceptance does not imply expert-level policy performance.
 
 Recovery evidence is stored outside Git in local `outputs/m4a-review/`:
 
@@ -166,17 +193,24 @@ Recovery evidence is stored outside Git in local `outputs/m4a-review/`:
 | `act-full-strict-bounds-failure.tar.gz` | Remote/local archive SHA-256 matched; original zero-step failure retained |
 | `action-bounds-diagnostic.json` | Remote/local SHA-256 matched; all 20 first predictions and native equivalence retained |
 | `act-full-100000-backup.tar.gz` | Archive SHA-256 and all 11 checkpoint file hashes/sizes passed; includes model/processors, optimizer/RNG/step, configs/logs/runtime/GPU evidence |
+| `act-final-evaluation-backup.tar.gz` | Archive SHA-256 and all 80 evidence file hashes/sizes passed; includes metrics, CSV, config/split, expert workers, GPU samples, logs, exits and evaluation commit |
 
 The final checkpoint archive is 553,733,411 bytes; its SHA-256 is
 `29d6cd6d3c9cf9b5d6daf5a6800f7becbcc194dba646b4922e9880478e4ffd90`.
 Local verification at 2026-09-21 15:44:57 UTC checked all 619,200,513 uncompressed checkpoint bytes.
 `act-full-backup-verification.json` records each file hash. The raw/derived backup receipts,
 validation/split reports and exact run configuration are alongside it. The final evaluation archive
-will be added after the active rerun finishes.
+is 25,247 bytes, SHA-256 `b801d17da24b86ba7bdeed61b71c6aae55712a2b224718e36a06e9c38d1290f4`.
+Its 80 evidence files passed local verification at 2026-09-21 16:05:31 UTC.
+Directly inspect `outputs/m4a-review/native-act-final-evaluation/metrics.json`, `episodes.csv`,
+`config.json` and `split.json`; `act-final-evaluation-backup-verification.json` contains all 20
+paired state hashes and the recomputed acceptance receipt. The metrics SHA-256 is
+`4373be2f3d3922405b42e47f6851a162adbe11a5b9e2aa69b851e7e65623e780`; the CSV SHA-256 is
+`563fec209fa60a06a96a40674e822174bb1ead4a72990853bf986b04fd57a6f2`.
 
-The current-task heartbeat checks the active continuation every 15 minutes and reports meaningful
-changes. The local computer/app must remain running for follow-ups; the screen job runs independently.
-The server remains running. No shutdown or reboot is authorized.
+The recurring continuation is paused at delivery after evidence verification and the final push.
+The server remains running; no shutdown or reboot is authorized. Large datasets, model files and
+generated evidence remain outside Git; Git contains implementation, tests and documentation.
 
 ## H. GPU and workload
 
@@ -189,9 +223,10 @@ dataset preflight and final evaluation. The final logged loss was 0.021; loss is
 The full stage has **3,533 five-second NVIDIA samples**, including preflight, with a maximum
 **1,634 MiB** and sampled maximum GPU utilization **22%**. These are sampled maxima, not exact peaks
 or minimum hardware requirements. PyTorch reports **1,036,664,320 bytes** peak allocated during the
-last step/reload only, because upstream resets the counter each optimization step. Evaluation memory
-will be reported separately. These actual measurements replace the earlier 12–16 GB planning estimate
-for this exact batch-8, single-256×256-view configuration.
+last step/reload only, because upstream resets the counter each optimization step. The accepted
+evaluation command took **972 seconds**, including exhaustive data preflight. Its **191** five-second
+samples showed maxima of **1,460 MiB** and **11%** GPU utilization. These actual measurements
+replace the earlier 12–16 GB planning estimate for this exact batch-8, single-256×256-view configuration.
 
 For reproducing the entire validated generation/training/simulation chain, use the tested
 **24 GB RTX 4090 class** configuration. Training alone used much less memory in this run; an

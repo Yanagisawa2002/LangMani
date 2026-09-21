@@ -1,8 +1,8 @@
 # M4A: one language-independent ACT baseline
 
 This implementation starts from main `6920b52c1f48c278e669cd71b69b8949dd900f3a` (M3B), on
-`codex/m4a-act-baseline`. Later historical experiment branches are not dependencies. Unrecoverable
-historical data must be regenerated on a new AutoDL native Linux instance. Generated-array tests
+`codex/m4a-act-baseline`. Later historical experiment branches are not dependencies. A new formal
+dataset was regenerated on an AutoDL native Linux instance after the historical data was lost. Generated-array tests
 are explicitly fixtures, never substitutes for that archive, formal training, or physical evaluation.
 
 ## Architecture inspected before implementation
@@ -100,8 +100,9 @@ python environment/verify_m3b.py --target-full \
 ```
 
 Stop if a gate fails; repair the actual infrastructure/expert issue before collection or training.
-The original Linux mplib/NumPy ABI and Vulkan conditions remain to be physically checked on the new
-instance. No runtime is provisioned or claimed verified by this local implementation.
+The native Linux mplib/NumPy ABI and Vulkan conditions were verified on the new RTX 4090 instance;
+D-029/D-030 retain the original failures, narrow repairs and ordered target-gate acceptance.
+The complete formal dataset and learned-policy chain are recorded in `M4A_DELIVERY.md`.
 
 The exact validation, split, smoke, full training and paired evaluation commands are in README's
 **M4A — ACT Baseline** section. To resume an interrupted full run, use its last *completed* checkpoint:
@@ -145,7 +146,7 @@ results/act_baseline/<run-id>/
   checkpoint_metadata.json    # final step, model/processor hashes, reload, workload/timing
   status.json                 # training completion flags
   training/checkpoints/...    # upstream models, processors, optimizer and RNG state
-  evaluation-seed42000/
+  evaluation-seed42000-native-gripper-v2/
     config.json               # explicit reset schedule, runtime and evaluator provenance
     split.json
     episodes.csv              # one row per controller/seed, outcomes, reasons, pairing hashes
@@ -158,8 +159,11 @@ requires a real finalized M3B source that passes the source target gate and exha
 validation. `full ACT trained` requires the declared full run and a reloaded saved checkpoint.
 `closed-loop evaluated` requires all scheduled real simulator episodes, matching reset hashes and
 no infrastructure errors and actual ACT environment steps. Formal data validation and full training
-completed on native Linux at `915d823`. Final evaluation is being rerun at `0dafc31` after the
+completed on native Linux at `915d823`. Final evaluation passed at `0dafc31` after the
 D-031 native-gripper interface repair; the original zero-step failure is preserved separately.
+ACT succeeded 10/20 and the expert 20/20 on exactly paired fresh states, with 3,311 ACT environment
+steps and no infrastructure errors. The ten ACT failures were 200-step timeouts. This completes
+the pipeline milestone without claiming that ACT matches the expert or understands language.
 No fabricated `metrics.json` or success rates are committed. All result trees are Git-ignored.
 
 ## Workload and GPU planning
@@ -183,4 +187,6 @@ peak or a portable minimum-VRAM requirement. The last-step/reload PyTorch alloca
 **1,036,664,320 bytes**; upstream resets the counter each step, so it is not run-wide.
 These measurements supersede the earlier conservative 12–16 GB planning estimate for this exact
 configuration. Dataset size affects storage, decoding and reuse frequency; it does not by itself
-determine VRAM. Evaluation/rendering memory and wall time are reported separately.
+determine VRAM. The accepted evaluation command took 972 seconds including its exhaustive data
+preflight; 191 five-second samples recorded a maximum of 1,460 MiB and 11% GPU utilization.
+The [delivery record](M4A_DELIVERY.md) gives recovery artifact hashes and hardware planning scope.

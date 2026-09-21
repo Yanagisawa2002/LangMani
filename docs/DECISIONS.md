@@ -885,3 +885,58 @@ At 2026-09-21 15:44:57 UTC the final checkpoint recovery archive was verified lo
 (619,200,513 bytes) matched their remote hashes and sizes. This includes optimizer, RNG and step
 state as well as the model/processors. Raw and derived datasets were already locally hash-verified.
 All large artifacts remain outside Git.
+
+## D-032 — Close M4A with measured full-training and paired-evaluation evidence
+
+All five statuses are complete for this run: implementation complete, real-data smoke tested,
+full dataset validated, full ACT trained, and closed-loop evaluated. The accepted final evaluation
+completed at 2026-09-21 15:56:06 UTC; its command and continuation both exited zero.
+
+Formal data and training retain execution commit `915d8233c2b8897b63c3c46121794021caa31d25`.
+M3A contains 60 accepted scene groups/360 episodes, with independent replay of every accepted
+trajectory. Full M3B validation and exhaustive M4A validation passed on 64,548 frames. The one
+selected task has 48 training episodes/8,588 frames, six held-out episodes/1,073 frames, and six
+excluded test episodes/1,077 frames. The complete dataset export identity is
+`sha256:6aae506d96affd17884a306e8812ba179e534c35185e068e16e5ffcfeed11c5f`; split SHA-256 is
+`d6c593866c2a9c0aefb4a4f1224101474c35c5daba68b5e7f6f3a2e492671209`.
+
+Upstream ACT completed 100,000 steps, batch 8, seed 0, and final checkpoint reload. This is 800,000
+sample presentations or 93.153237 equivalent passes over the selected training frames. Training
+invocation time was 17,200.8279 seconds, excluding prior exhaustive data preflight. The 3,533
+five-second full-stage NVIDIA samples reached 1,634 MiB and 22% GPU utilization; they are sampled
+maxima, not exact peaks. The 1,036,664,320-byte PyTorch peak covers only the last step/reload because
+the upstream trainer resets that counter. The final checkpoint model SHA-256 remains the value
+recorded in D-031; neither training nor checkpoint selection was repeated after the interface repair.
+
+Evaluation commit `0dafc315c90d68751027621dd396f71ecd5f0187` used the unchanged M1 task, 200-step
+horizon and schedule RNG seed 42000. The exact 20-scene schedule matched the original failed
+attempt and excluded all source scene seeds. All ACT/expert reset-state hash pairs matched.
+ACT succeeded **10/20 (50%)** and the privileged expert **20/20 (100%)**: a **50 percentage point**
+absolute gap. ACT executed 3,311 environment steps; its ten failures were 200-step timeouts.
+Episode length mean/population standard deviation was 165.55/34.544862 for ACT and
+178.00/5.830952 for the expert. No target went off-table and no infrastructure error occurred.
+There were 464 audited native gripper saturations, with maximum overshoot 0.0211760998, and no
+arm-bound rejection. The accepted evaluation command took 972 seconds including dataset preflight;
+191 five-second GPU samples reached 1,460 MiB and 11% utilization.
+
+Local independent verification recomputed all required metrics from the 40 CSV rows, checked all
+20 initial-state pairs, original seed schedule, excluded source seeds and unchanged final model.
+The evaluation recovery archive SHA-256 is
+`b801d17da24b86ba7bdeed61b71c6aae55712a2b224718e36a06e9c38d1290f4`; all 80 evidence file hashes
+and sizes passed verification. Metrics SHA-256 is
+`4373be2f3d3922405b42e47f6851a162adbe11a5b9e2aa69b851e7e65623e780`; episode CSV SHA-256 is
+`563fec209fa60a06a96a40674e822174bb1ead4a72990853bf986b04fd57a6f2`. Real raw/derived data, the
+final model plus optimizer/RNG/step, exact configurations, runtime records and original failures
+are recoverable from separately hash-verified local archives under `outputs/m4a-review/`.
+
+The implementation passed 412 local CPU-safe tests (five native-only skips, five GPU/rendering
+deselections), 415 native main-runtime tests and two native planner tests, Ruff and package build.
+The earlier ordered M0/M1/M2 target gates remain distinct from these tests. M2's 177/180 result is
+only a prerequisite; it is not the ACT comparison reported above. All 32 changed source/doc paths
+are enumerated in `M4A_DELIVERY.md`; no datasets, models or generated result files enter Git.
+
+This closes the requested pipeline milestone, with no unresolved execution blocker. One task,
+one training seed and 20 fresh scenes do not establish broader policy quality or language
+generalization. The exact physical causes of the ten timeouts remain uninvestigated. SmolVLA was
+not started. Pause the existing continuation after final evidence/document delivery and push;
+leave the server running and retain the task.
