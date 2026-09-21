@@ -763,6 +763,8 @@ the comparison, and no privileged observation crosses into ACT action selection.
 Native benchmark acceptance still requires the actual ordered target gates and
 new real data; local fixtures cannot supply that evidence.
 
-Local compatibility regression: 402 passed, five native-Linux skips and five
+Local compatibility regression: 403 passed, five native-Linux skips and five
 GPU/rendering deselections. This includes worker interpreter/path/reset identity
 and failure handling, PhysX verifier isolation and virtualenv launcher tests.
+The launcher tests cover both explicit selection and the default interpreter;
+neither test dereferences a Linux virtualenv symlink.

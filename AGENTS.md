@@ -116,6 +116,20 @@ CUDA_VISIBLE_DEVICES=0 python environment/verify_m3b.py --target-full \
 
 The exact environment creation commands are maintained in `README.md`.
 
+On native Linux, run the two in-process expert smoke modules in the planner
+interpreter, since constructing mplib in the main NumPy-2 interpreter is rejected:
+
+```bash
+python -m pytest -m "not gpu and not rendering" \
+  --ignore=tests/smoke/test_m2_expert_physical.py \
+  --ignore=tests/smoke/test_m3a_collection_physical.py
+"$LANGMANI_PLANNER_PYTHON" -m pytest \
+  tests/smoke/test_m2_expert_physical.py tests/smoke/test_m3a_collection_physical.py
+```
+
+Together these cover the complete non-GPU/non-rendering suite. GPU/rendering
+acceptance remains the separate ordered native target commands above.
+
 ## Change rules
 
 - Add or update tests for every behavioral change.

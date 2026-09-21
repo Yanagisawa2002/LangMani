@@ -21,7 +21,7 @@ def test_planner_python_defaults_to_current_interpreter_and_honors_explicit_env(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.delenv(PLANNER_PYTHON_ENV, raising=False)
-    assert resolve_planner_python() == str(Path(sys.executable).resolve())
+    assert resolve_planner_python() == str(Path(sys.executable).absolute())
 
     side_python = tmp_path / "side-python"
     side_python.write_text("placeholder", encoding="utf-8")
@@ -33,20 +33,24 @@ def test_planner_python_defaults_to_current_interpreter_and_honors_explicit_env(
         resolve_planner_python()
 
 
+@pytest.mark.parametrize("explicit", [False, True])
 def test_planner_python_preserves_virtual_environment_launcher_path(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    explicit: bool,
 ) -> None:
     side_python = tmp_path / "side-python"
     side_python.write_text("placeholder", encoding="utf-8")
     expected = str(side_python.absolute())
+    monkeypatch.delenv(PLANNER_PYTHON_ENV, raising=False)
+    monkeypatch.setattr(sys, "executable", str(side_python))
     monkeypatch.setattr(
         Path,
         "resolve",
         lambda self: (_ for _ in ()).throw(AssertionError("must not dereference venv symlink")),
     )
 
-    assert resolve_planner_python(side_python) == expected
+    assert resolve_planner_python(side_python if explicit else None) == expected
 
 
 def test_runtime_probe_returns_the_complete_stable_version_mapping() -> None:
