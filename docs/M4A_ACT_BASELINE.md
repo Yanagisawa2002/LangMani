@@ -157,25 +157,30 @@ must name its scope (generated CPU fixture versus real-data/Linux smoke). `full 
 requires a real finalized M3B source that passes the source target gate and exhaustive consumer
 validation. `full ACT trained` requires the declared full run and a reloaded saved checkpoint.
 `closed-loop evaluated` requires all scheduled real simulator episodes, matching reset hashes and
-no infrastructure errors. These last three are **pending execution** for the new formal dataset.
+no infrastructure errors and actual ACT environment steps. Formal data validation and full training
+completed on native Linux at `915d823`. Final evaluation is being rerun at `0dafc31` after the
+D-031 native-gripper interface repair; the original zero-step failure is preserved separately.
 No fabricated `metrics.json` or success rates are committed. All result trees are Git-ignored.
 
 ## Workload and GPU planning
 
-The new formal dataset does not exist yet, so its actual frame count, measured GPU memory and
-wall-clock training time are **unavailable**. Historical frame counts must not be reused. After
-regeneration, `split.json` records actual `train_frames`, `held_out_frames`, `excluded_test_frames`,
-selected-task `total_frames` and `dataset_total_frames`. The completed checkpoint receipt reports:
+The new formal dataset contains **64,548 frames** across 360 episodes. The selected task has
+10,738 frames: **8,588 train**, 1,073 held-out validation and 1,077 excluded test frames.
+These are measured from the new validated dataset and retained in `split.json`.
+The completed checkpoint receipt reports:
 
 - Sample presentations = `steps × batch_size` (default 100,000 × 8 = **800,000** anchors).
-- Equivalent train passes = `800,000 / actual_train_frames`.
+- Equivalent train passes = `800,000 / 8,588` = **93.153237**.
 - At most 40 million action target positions before episode-end padding; upstream masks pads.
 - Actual elapsed training invocation time and last-step/reload peak CUDA allocated bytes (null
   for CPU). Upstream resets its CUDA peak counter each optimization step, so this is not a run-wide peak.
 
-For planning, budget **12–16 GB VRAM** for batch 8, one 256×256 view, FP32 ACT; this is an estimate,
-not a measured requirement. A 24 GB instance leaves additional space for simulation and decoding.
-Choose after the real-data smoke measures allocation and throughput. Dataset size primarily affects
-storage, decoding and reuse frequency; do not infer VRAM or hours simply from frame count. A fresh
-non-resumed smoke measures setup-inclusive timing only; use steady-state trainer logs to estimate
-`100000 / measured_steps_per_second`, and retain rendering/evaluation time separately.
+On this RTX 4090, the full training invocation took **17,200.8279 seconds** (about 4 h 46 min 41 s),
+after a separate dataset preflight. The last logged loss was 0.021. Five-second `nvidia-smi`
+sampling over the full stage, including preflight, collected **3,533 samples** with a maximum
+of **1,634 MiB** and maximum sampled GPU utilization of 22%. This is a sampled maximum, not an exact
+peak or a portable minimum-VRAM requirement. The last-step/reload PyTorch allocated peak was
+**1,036,664,320 bytes**; upstream resets the counter each step, so it is not run-wide.
+These measurements supersede the earlier conservative 12–16 GB planning estimate for this exact
+configuration. Dataset size affects storage, decoding and reuse frequency; it does not by itself
+determine VRAM. Evaluation/rendering memory and wall time are reported separately.

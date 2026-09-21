@@ -3,10 +3,10 @@
 | Stage | Status and evidence boundary |
 | --- | --- |
 | implementation complete | Implemented and tested on the isolated M3B-based branch |
-| smoke tested | **ACT generated-array CPU fixture on Windows and Linux**: official ACT optimization/save/reload/resume; separately, real M3A six-episode collection/replay passed. Actual-data ACT smoke is pending |
-| full dataset validated | **In progress**: real 60-group/360-episode M3A regeneration is running; full M3B acceptance is pending |
-| full ACT trained | **Pending execution** |
-| closed-loop evaluated | **Pending execution**: no real environment rollout in this delivery |
+| smoke tested | **Passed real-data Linux CUDA smoke**: three optimizer steps, save/reload and three paired closed-loop scenes; ACT 0/3 timeout with 600 executed steps, expert 3/3. Generated-array fixtures are separate compatibility tests |
+| full dataset validated | **Passed**: real 60-group/360-episode M3A collection and independent replay; complete M3B export/validation; exhaustive M4A validation and inherited split |
+| full ACT trained | **Passed**: 100,000 steps, batch 8, seed 0; final checkpoint saved, hashed and reloaded |
+| closed-loop evaluated | **Final baseline pending rerun**: original full-checkpoint evaluation executed zero ACT steps because of a gripper interface mismatch; D-031 repair preserves the checkpoint and exact 20-scene schedule |
 
 SmolVLA was not started. No generated benchmark, dataset or checkpoint is committed.
 
@@ -24,7 +24,7 @@ The [technical guide](M4A_ACT_BASELINE.md) records the inspected source map and 
 | --- | --- |
 | `.gitignore` | Ignore all generated `results/` artifacts |
 | `AGENTS.md` | Define the authorized M4A scope and five separate completion states |
-| `README.md` | Add the conservative M4A section, exact commands and pending benchmark table |
+| `README.md` | Add the M4A section, exact commands, measured workload and explicit benchmark status |
 | `environment/environment.yml` | Activate LeRobot's official training dependencies on Linux |
 | `environment/planner-runtime.txt` | Pin the isolated NumPy-1/SciPy/OpenCV overlay required by native mplib |
 | `environment/verify_m1.py` | Run CPU and GPU PhysX target checks in separate processes |
@@ -40,9 +40,9 @@ The [technical guide](M4A_ACT_BASELINE.md) records the inspected source map and 
 | `src/langmani/policies/__init__.py` | Declare the small policy package |
 | `src/langmani/policies/m4a_data.py` | Exhaustive read-only row/video validation, no-download guard, hashes, statistics, semantic/scene checks and single-task split manifest |
 | `src/langmani/policies/m4a_training.py` | Stock ACT configuration, train-only normalization, official trainer integration, resume and checkpoint/processor reload |
-| `src/langmani/policies/m4a_evaluation.py` | Closed-loop action queue, strict action bounds, paired seeds/reset audit, expert reference and JSON/CSV metrics |
+| `src/langmani/policies/m4a_evaluation.py` | Closed-loop queue, strict arm bounds, audited native gripper saturation, paired reset audit, expert reference and JSON/CSV metrics |
 | `scripts/act_baseline.py` | `validate`, `split`, `train`, `evaluate` CLI with provenance and safe output/checkpoint paths |
-| `tests/unit/test_m4a_baseline.py` | Malformed/valid datasets, no leakage, deterministic splits, source identity, metrics/pairing, path safety and action rejection |
+| `tests/unit/test_m4a_baseline.py` | Malformed/valid datasets, no leakage, deterministic splits, source identity, metrics/pairing, path safety, arm rejection, gripper saturation and zero-step rejection |
 | `tests/integration/test_m4a_upstream.py` | Real generated-video LeRobot readback and upstream ACT optimizer/save/reload/resume compatibility |
 | `tests/unit/test_m1_commands.py` | Cover isolated CPU/GPU PhysX verification commands |
 | `tests/unit/test_m2_commands.py` | Cover planner-runtime checks and interpreter selection |
@@ -51,7 +51,7 @@ The [technical guide](M4A_ACT_BASELINE.md) records the inspected source map and 
 | `tests/unit/test_planner_adapter.py` | Cover the native NumPy ABI guard |
 | `tests/unit/test_pick_place_expert.py` | Cover tracking-residual rejection, preserved final task authority and absence of redundant holds |
 | `tests/unit/test_planner_runtime.py` | Cover effective version probes and virtualenv launcher preservation |
-| `docs/DECISIONS.md` | D-027 through D-030 rationale, dependency boundaries and observed evidence |
+| `docs/DECISIONS.md` | D-027 through D-031 rationale, dependency boundaries, failures and observed evidence |
 | `docs/M4A_ACT_BASELINE.md` | Architecture, formal regeneration order, resume, result schema and workload guidance |
 | `docs/M4A_DELIVERY.md` | This delivery inventory and execution status |
 
@@ -63,7 +63,7 @@ The command actually tested locally, after installing this checkout in a CPU rev
 python -m pytest tests/unit/test_m4a_baseline.py tests/integration/test_m4a_upstream.py -q
 ```
 
-The real-data Linux smoke is **pending**, and requires the existing full M3A/M3B target gates first:
+The real-data Linux smoke **passed**, after the existing full M3A/M3B target gates:
 
 ```bash
 DATA=outputs/datasets/m3b/langmani-pick-place-lerobot-v1
@@ -72,12 +72,12 @@ python scripts/act_baseline.py validate --dataset-root "$DATA" \
 python scripts/act_baseline.py split --dataset-root "$DATA" \
   --output results/act_baseline/split.json
 python scripts/act_baseline.py train --dataset-root "$DATA" \
-  --split results/act_baseline/split.json --output results/act_baseline/smoke-seed0 \
+  --split results/act_baseline/split.json --output results/act_baseline/native-smoke-seed0 \
   --mode smoke --device cuda --batch-size 8 --steps 3 --seed 0
 python scripts/act_baseline.py evaluate --dataset-root "$DATA" \
   --split results/act_baseline/split.json \
-  --checkpoint results/act_baseline/smoke-seed0/training/checkpoints/000003/pretrained_model \
-  --output results/act_baseline/smoke-seed0/evaluation-seed42000 \
+  --checkpoint results/act_baseline/native-smoke-seed0/training/checkpoints/000003/pretrained_model \
+  --output results/act_baseline/native-smoke-seed0/evaluation-seed42000 \
   --device cuda --episodes 3 --seed 42000 --sim-backend physx_cpu
 ```
 
@@ -102,18 +102,24 @@ python scripts/act_baseline.py evaluate \
   --dataset-root outputs/datasets/m3b/langmani-pick-place-lerobot-v1 \
   --split results/act_baseline/split.json \
   --checkpoint results/act_baseline/full-seed0/training/checkpoints/100000/pretrained_model \
-  --output results/act_baseline/full-seed0/evaluation-seed42000 \
+  --output results/act_baseline/full-seed0/evaluation-seed42000-native-gripper-v2 \
   --device cuda --episodes 20 --seed 42000 --sim-backend physx_cpu
 ```
 
 Produces 20 expert + 20 ACT episode rows on identical reset seeds, plus `metrics.json` with both
 success rates, failures, episode length mean/std, termination counts, reset pairing validity and
-absolute/signed success-rate gaps. The explicit bounds policy is rejection, never silent clipping.
+absolute/signed success-rate gaps. Arm violations are rejected; normalized gripper saturation
+matches the native controller and records its count and maximum overshoot. Nonfinite actions are
+rejected. The original `evaluation-seed42000` directory remains unchanged as failure evidence.
+Commands describe recorded runs; choose new output paths for a future independent replication.
 
 ## F. Test evidence
 
 - CPU-safe regression after the native-runtime/expert compatibility changes: **406 passed, 5 skipped,
   5 deselected**. The skips require native Linux; deselections are GPU/rendering tests.
+- After the D-031 evaluator repair at `0dafc31`: Windows **412 passed, 5 skipped, 5 deselected**;
+  Linux main runtime **415 passed, 5 deselected**, plus **2 native planner tests passed**
+  (417 total). Ruff format/lint and wheel/sdist build passed.
 - M3B standalone verifier: **114 passed**. Real generated video/Parquet/DataLoader fixture included.
 - Installation, M1, M2 and M3A non-target diagnostics: passed, with physical work explicitly skipped.
 - Ruff lint/format and wheel/sdist build: passed; logs are generated under
@@ -124,7 +130,7 @@ absolute/signed success-rate gaps. The explicit bounds policy is rejection, neve
   passed**. Five GPU/rendering pytest cases were deselected; hardware acceptance was instead
   exercised by the separate ordered M0/M1/M2 target commands, all passing. M2 scored **177/180**,
   with three classified planning failures and no crashes. Real M3A smoke collected and independently
-  replayed all six episodes. This is not a full-dataset or ACT closed-loop result.
+  replayed all six episodes. The M2 score is a prerequisite, not the ACT comparison.
 - Native runtime: Ubuntu 22.04, Python 3.12.13, torch 2.11.0+cu128, NVIDIA RTX 4090
   (24,564 MiB), driver 595.71.05, SAPIEN 3.0.3, ManiSkill 3.0.1 and LeRobot 0.6.0.
   Main NumPy is 2.2.6; planner NumPy is 1.26.4. Exact main/planner freezes and diagnostic
@@ -132,25 +138,63 @@ absolute/signed success-rate gaps. The explicit bounds policy is rejection, neve
 
 ## G. Remaining blockers
 
-The old formal data cannot be recovered. The new native target gates and M3A smoke now pass;
-D-029/D-030 retain the original failure, repair and fresh acceptance evidence. The server's
-`full-chain.sh` is running on the clean execution commit `915d823`, and proceeds only after each
-gate passes: full M3A collection/replay, full M3B export/validation, M4A validation/split, actual-data
-smoke, 100,000-step training, then 20 paired ACT/expert evaluation episodes. A failed stage stops
-the chain with its log and exit code. Source remains frozen on the server during execution;
-later documentation commits do not change that run's identity.
+Formal data and training ran at `915d8233c2b8897b63c3c46121794021caa31d25`. M3A accepted 60 scene
+groups (360 episodes), rejected five candidate groups, and independently replayed every accepted
+episode. M3B produced 64,548 frames across six tasks. The selected task has 60 episodes/10,738 frames,
+split into 48/8,588 train, 6/1,073 held-out and 6/1,077 excluded test episodes/frames.
 
-Full frame count, completed ACT training and ACT closed-loop metrics are still unavailable.
-No new unresolved infrastructure blocker is known at this snapshot; the full stages are running
-or queued. Optional online W&B is wired but was not exercised. The current-task follow-up checks
-progress every 15 minutes and reports only meaningful changes. The local computer and desktop app
-must remain running for those follow-ups; the server's screen job runs independently.
+Full training completed at **2026-09-21 15:05:30 UTC**, with final model SHA-256
+`542d66bfbe6f0d1431bc639281c0f8ac905bafd6e616b61bd488867aa45410cf`.
+The first final evaluation then rejected all 20 initial ACT gripper predictions (1.0011–1.0105)
+before any environment step. The native gripper controller would have saturated them to 1; its
+physical targets were verified identical before/after saturation. This was an interface failure,
+not an executed ACT benchmark result. The original chain exited 1 and remains preserved.
+
+D-031's narrow repair is committed as `0dafc315c90d68751027621dd396f71ecd5f0187`; it changes only
+evaluation behavior and associated tests/docs. `eval-resume-v2.sh` verifies all original checkpoint
+file hashes, reruns native planner tests, and evaluates the same final checkpoint and exact 20-seed
+schedule in a new directory. It does not repeat data generation or training. Final paired metrics
+and evaluation acceptance remain pending. Optional online W&B was not exercised.
+
+Recovery evidence is stored outside Git in local `outputs/m4a-review/`:
+
+| Artifact | Local verification |
+| --- | --- |
+| `m3a-full-validated-backup.tar.gz` | Archive SHA-256 and all 20 raw file hashes/sizes passed |
+| `m3b-full-validated-backup.tar.gz` | Archive SHA-256 and all 14 derived file hashes/sizes passed |
+| `native-act-smoke-evidence.tar.gz` | Hash, three exact reset pairs and source-seed exclusion passed |
+| `act-full-strict-bounds-failure.tar.gz` | Remote/local archive SHA-256 matched; original zero-step failure retained |
+| `action-bounds-diagnostic.json` | Remote/local SHA-256 matched; all 20 first predictions and native equivalence retained |
+| `act-full-100000-backup.tar.gz` | Archive SHA-256 and all 11 checkpoint file hashes/sizes passed; includes model/processors, optimizer/RNG/step, configs/logs/runtime/GPU evidence |
+
+The final checkpoint archive is 553,733,411 bytes; its SHA-256 is
+`29d6cd6d3c9cf9b5d6daf5a6800f7becbcc194dba646b4922e9880478e4ffd90`.
+Local verification at 2026-09-21 15:44:57 UTC checked all 619,200,513 uncompressed checkpoint bytes.
+`act-full-backup-verification.json` records each file hash. The raw/derived backup receipts,
+validation/split reports and exact run configuration are alongside it. The final evaluation archive
+will be added after the active rerun finishes.
+
+The current-task heartbeat checks the active continuation every 15 minutes and reports meaningful
+changes. The local computer/app must remain running for follow-ups; the screen job runs independently.
+The server remains running. No shutdown or reboot is authorized.
 
 ## H. GPU and workload
 
-Planning estimate: **12–16 GB VRAM**, with 24 GB allowing more room for simulation; target usage is
-unmeasured. Default training is **100,000 steps × batch 8 = 800,000 sample presentations**.
-Equivalent passes are `800000 / split.json:train_frames`. The new actual frame count remains
-unavailable until regeneration; the split and checkpoint receipts calculate and preserve it from
-real data. Estimate hours only after measuring target throughput. See the guide for padding,
-timing and memory-counter limits.
+Measured full training: **100,000 steps × batch 8 = 800,000 sample presentations**, equivalent to
+**93.153237 passes** over the actual 8,588 training frames. ACT has 51,576,712 parameters and predicts
+50 action targets per sampled anchor; at most 40 million target positions precede episode-end padding.
+The upstream training invocation took **17,200.8279 s** (4 h 46 min 41 s), excluding the preceding
+dataset preflight and final evaluation. The final logged loss was 0.021; loss is not a success rate.
+
+The full stage has **3,533 five-second NVIDIA samples**, including preflight, with a maximum
+**1,634 MiB** and sampled maximum GPU utilization **22%**. These are sampled maxima, not exact peaks
+or minimum hardware requirements. PyTorch reports **1,036,664,320 bytes** peak allocated during the
+last step/reload only, because upstream resets the counter each optimization step. Evaluation memory
+will be reported separately. These actual measurements replace the earlier 12–16 GB planning estimate
+for this exact batch-8, single-256×256-view configuration.
+
+For reproducing the entire validated generation/training/simulation chain, use the tested
+**24 GB RTX 4090 class** configuration. Training alone used much less memory in this run; an
+**8 GB training-only budget** would leave substantial margin over the observed allocation, but
+it is a planning estimate and has not been validated on an 8 GB device. No smaller-device or
+throughput claim follows from these measurements.

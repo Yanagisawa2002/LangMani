@@ -4,8 +4,9 @@ LangMani is a language-conditioned robotic manipulation research repository. M0 
 runtime foundation, M1 added the environment/language contracts, M2 added a deterministic
 privileged Panda expert, and M3A implemented the authoritative ManiSkill-native raw archive.
 M3B deterministically derives accepted episodes into a validated local LeRobotDataset v3.
-M4A adds a single-task upstream ACT baseline; formal data and physical evaluation await regeneration
-on native Linux. Its generated-array CPU fixture is not a manipulation benchmark.
+M4A adds a single-task upstream ACT baseline. Native Linux formal M3A/M3B validation and
+100,000-step ACT training are complete; final paired evaluation is being rerun after the
+native gripper interface repair described in D-031. Generated-array fixtures are not benchmarks.
 
 M3B does not train ACT or SmolVLA, publish to the Hub, change M3A acceptance, export failure
 trajectories, add sensors or language paraphrases, use multiprocessing, or change the M1/M2 task.
@@ -462,7 +463,7 @@ ACT does **not** test language understanding. The dataset retains all six `canon
 and TaskSpec metadata. This baseline selects one task by metadata and supplies no sentence,
 task token, oracle one-hot feature, or custom language encoder to the policy.
 
-The intended source is a **new, real, complete M3B export** at
+The validated source is a **new, real, complete M3B export** at
 `outputs/datasets/m3b/langmani-pick-place-lerobot-v1`, derived from the separately regenerated M3A
 archive. Its repo ID, export fingerprint, exact file checksums and frame counts are read from
 the actual source, never inferred from historical runs. The existing 48/6/6 scene split yields
@@ -492,7 +493,7 @@ python scripts/act_baseline.py train --dataset-root "$DATA" \
 python scripts/act_baseline.py evaluate --dataset-root "$DATA" \
   --split results/act_baseline/split.json \
   --checkpoint results/act_baseline/full-seed0/training/checkpoints/100000/pretrained_model \
-  --output results/act_baseline/full-seed0/evaluation-seed42000 \
+  --output results/act_baseline/full-seed0/evaluation-seed42000-native-gripper-v2 \
   --device cuda --episodes 20 --seed 42000 --sim-backend physx_cpu
 ```
 
@@ -507,23 +508,32 @@ Run directories contain `config.json`, `split.json`, `validation.json`, `normali
 `checkpoint_metadata.json`, `status.json` and upstream `training/checkpoints/`. Evaluation adds
 `metrics.json`, `episodes.csv`, config and split copies. Success rate, length mean/population
 standard deviation, termination reasons, paired initial-state hashes, expert rate and absolute
-rate gap are recorded. Out-of-bounds predictions fail before stepping; actions are not clipped.
+rate gap are recorded. Invalid/nonfinite predictions and out-of-bounds arm joints fail before
+stepping. The normalized gripper saturates to `[-1, 1]`, matching the native controller exactly;
+saturation counts and maximum overshoot are recorded. A zero-ACT-step evaluation fails acceptance.
 All `results/` artifacts, datasets, videos and checkpoints are ignored by Git.
 
 | Formal benchmark | Expert | ACT | Absolute gap |
 | --- | --- | --- | --- |
-| Regenerated real M3B, red cube → left bin | pending execution | pending execution | pending execution |
+| Regenerated real M3B, red cube → left bin | paired rerun pending | paired rerun pending | pending |
 
 On 2026-09-21, execution commit `915d823` passed 411 native Linux regression tests,
 the ordered M0/M1/M2 target gates, and real six-episode M3A collection/replay smoke.
 The M2 gate scored 177/180 across its six tasks; this is an expert prerequisite,
-not the later ACT/expert comparison. Formal 360-episode regeneration is running.
-Full M3B validation, actual-data ACT smoke, full training and closed-loop evaluation
-remain pending. See [the delivery record](docs/M4A_DELIVERY.md) for evidence boundaries.
+not the later ACT/expert comparison. Formal M3A collection and independent replay of all 360 episodes,
+full M3B validation (64,548 frames), and exhaustive M4A validation passed. The selected task has
+8,588 training frames, 1,073 held-out frames and 1,077 excluded test frames. Actual-data CUDA smoke
+passed, including three paired 200-step ACT rollouts (0/3 success; expert 3/3).
+Full ACT training completed 100,000 steps with batch 8, seed 0 and checkpoint reload: 800,000
+sample presentations, 93.153 equivalent train-frame passes, 17,200.83 seconds of training.
+The original final evaluation rejected the first gripper action in every scene and executed zero
+ACT steps, so it is not an executed closed-loop baseline. Evaluation commit `0dafc31` repairs that
+native-controller mismatch and reruns the same checkpoint and 20-scene schedule in a new directory.
+See [the delivery record](docs/M4A_DELIVERY.md) for evidence and preserved failure details.
 
 Track **implementation complete**, **smoke tested**, **full dataset validated**, **full ACT trained**
 and **closed-loop evaluated** separately. Generated fixtures test code and upstream compatibility;
-the last three remain pending until the new AutoDL Linux runtime and formal data are exercised.
+the first four are complete, while final **closed-loop evaluated** remains pending this rerun.
 SmolVLA is outside M4A.
 
 ## Target-machine setup

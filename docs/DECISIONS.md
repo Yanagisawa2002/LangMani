@@ -870,3 +870,18 @@ Use the same final checkpoint and exact seed schedule in a new evaluation output
 directory after tests pass. Record the evaluation fix commit separately from the
 unchanged dataset/training execution commit. Full training must not be repeated.
 Final closed-loop acceptance remains pending until that real rerun completes.
+
+The repair was committed and pushed as `0dafc315c90d68751027621dd396f71ecd5f0187`.
+Windows regression passed 412 tests (five native-only skips and five GPU/rendering deselections);
+native Linux passed 415 main-runtime tests plus two planner-runtime tests. Ruff and wheel/sdist
+build passed. The evaluation-only continuation began at 2026-09-21 15:39:08 UTC and entered its
+exhaustive dataset preflight at 15:39:54 UTC. The original dataset/training commit, checkpoint,
+failed evaluation directory and original chain exit remain unchanged. The active status helper
+now reports `eval-resume-v2` separately from the retained original failure.
+
+At 2026-09-21 15:44:57 UTC the final checkpoint recovery archive was verified locally:
+553,733,411 compressed bytes, SHA-256
+`29d6cd6d3c9cf9b5d6daf5a6800f7becbcc194dba646b4922e9880478e4ffd90`, and all 11 checkpoint files
+(619,200,513 bytes) matched their remote hashes and sizes. This includes optimizer, RNG and step
+state as well as the model/processors. Raw and derived datasets were already locally hash-verified.
+All large artifacts remain outside Git.
