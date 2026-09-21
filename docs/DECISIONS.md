@@ -835,3 +835,38 @@ seed 0, and evaluate 20 fresh paired seeds starting at 42000. Five-second GPU
 samples retain stage labels; they are sampled observations, not exact memory peaks.
 Full-dataset acceptance, completed full ACT training and ACT closed-loop results
 remain pending at this entry. The server stays running; no shutdown was authorized.
+
+## D-031 — Match native normalized gripper saturation during ACT evaluation
+
+The original execution commit `915d823` completed formal M3A/M3B validation and
+100,000 ACT optimizer steps (batch 8, seed 0) on 8,588 train frames. The final model
+SHA-256 is `542d66bfbe6f0d1431bc639281c0f8ac905bafd6e616b61bd488867aa45410cf`.
+The first 20-scene evaluation then rejected every first ACT action before any
+environment step; the expert succeeded 20/20. The full-chain assertion correctly
+failed because `closed_loop_evaluated` was false. These zero-step ACT rows are an
+interface failure, not an executed closed-loop success-rate baseline. Preserve
+the original output directory and `act-full-strict-bounds-failure.tar.gz`
+(SHA-256 `c5828b8ac88457efeb22bab6d68b16c9fb8836f0f9db166026c3a5b4bc5fa42a`).
+
+A read-only first-action diagnostic over the same 20 seeds found only index 7
+outside the action space: normalized gripper values 1.0011295 through 1.0105474.
+All seven absolute arm joint targets were in bounds. The installed ManiSkill
+3.0.1 `PDJointPosMimicController` normalizes the gripper and clips to `[-1, 1]`
+before scaling; the arm `PDJointPosController` does not normalize its commands.
+Applying the native gripper preprocessor to the raw first prediction and its
+bounded counterpart produced exactly equal physical finger targets. The diagnostic
+retains all raw predictions, controller modes, bounds, and the equality check.
+
+Evaluation v2 therefore saturates only the normalized gripper, exactly matching
+that native controller. It retains strict shape/dtype/finiteness checks and rejects
+absolute arm-joint violations. Per-episode and aggregate saturation counts and
+maximum overshoots make the interface behavior inspectable. It does not binarize
+gripper commands, change observations, alter the success predicate or 200-step
+horizon, rescue policy actions with the expert, or modify data/model bytes.
+Additionally, an evaluation with zero total ACT environment steps now fails the
+CLI comparison gate, rather than relying only on the outer full-chain assertion.
+
+Use the same final checkpoint and exact seed schedule in a new evaluation output
+directory after tests pass. Record the evaluation fix commit separately from the
+unchanged dataset/training execution commit. Full training must not be repeated.
+Final closed-loop acceptance remains pending until that real rerun completes.

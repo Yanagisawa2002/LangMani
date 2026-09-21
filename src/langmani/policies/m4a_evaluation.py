@@ -93,6 +93,8 @@ def aggregate(episodes: list[dict[str, Any]]) -> dict[str, Any]:
         "std_episode_length": float(lengths.std(ddof=0)),
         "termination_reason_counts": dict(Counter(ep["termination_reason"] for ep in episodes)),
         "target_off_table_count": sum(ep["target_off_table"] for ep in episodes),
+        "gripper_saturation_count": sum(ep.get("gripper_saturation_count", 0) for ep in episodes),
+        "gripper_max_overshoot": max(ep.get("gripper_max_overshoot", 0.0) for ep in episodes),
     }
 
 
@@ -151,10 +153,14 @@ def run_act(
         "length": 0,
         "termination_reason": "timeout",
         "target_off_table": False,
+        "gripper_saturation_count": 0,
+        "gripper_max_overshoot": 0.0,
     }
     space = env.unwrapped.single_action_space
     if tuple(space.shape) != (8,):
         raise ValueError("environment action dimension changed")
+    if space.low[7] != -1 or space.high[7] != 1:
+        raise ValueError("expected the Panda normalized gripper action in [-1, 1]")
     with torch.inference_mode():
         for step in range(max_steps):
             rgb = extract_base_camera_rgb(observation)
@@ -169,10 +175,19 @@ def run_act(
             ):
                 result["termination_reason"] = "invalid_action"
                 break
-            if (action[0] < space.low).any() or (action[0] > space.high).any():
+            action = action[0].copy()
+            if (action[:7] < space.low[:7]).any() or (action[:7] > space.high[:7]).any():
                 result["termination_reason"] = "action_out_of_bounds"
                 break
-            observation, _, terminated, truncated, info = env.step(action[0])
+            # ManiSkill's normalized mimic controller clips before scaling to finger targets.
+            # Preserve that native behavior; absolute arm joint commands remain unmodified.
+            raw_gripper = float(action[7])
+            action[7] = np.clip(action[7], -1.0, 1.0)
+            overshoot = abs(raw_gripper - float(action[7]))
+            if overshoot:
+                result["gripper_saturation_count"] += 1
+                result["gripper_max_overshoot"] = max(result["gripper_max_overshoot"], overshoot)
+            observation, _, terminated, truncated, info = env.step(action)
             result["length"] = step + 1
             result["success"] = bool_value(info["success"])
             result["target_off_table"] = bool_value(info["target_off_table"])
@@ -230,7 +245,7 @@ def evaluate(
         raise FileExistsError("evaluation output exists; choose a new run directory")
     seeds = evaluation_seeds(split, count, seed)
     config = {
-        "schema_version": "langmani-m4a-evaluation-v1",
+        "schema_version": "langmani-m4a-evaluation-v2",
         "seed": seed,
         "seeds": seeds,
         "distribution": "M1 reset(seed), source scenes excluded, paired exact state hashes",
@@ -238,7 +253,10 @@ def evaluate(
         "device": device,
         "sim_backend": sim_backend,
         "max_episode_steps": 200,
-        "action_bounds": "reject before env.step; no clipping",
+        "action_bounds": (
+            "reject invalid/nonfinite or out-of-bounds absolute arm joints; "
+            "saturate normalized gripper to [-1, 1] exactly as the native controller; audit every saturation"
+        ),
         "checkpoint": str(checkpoint.resolve()),
         "provenance": provenance,
         "schedule_sha256": digest(seeds),
@@ -262,6 +280,8 @@ def evaluate(
                 "initial_state_sha256": None,
                 "error": None,
                 "expert_status": None,
+                "gripper_saturation_count": 0,
+                "gripper_max_overshoot": 0.0,
             }
             try:
                 if controller == "expert" and environment_factory is None:
@@ -308,8 +328,8 @@ def evaluate(
         for i in range(0, len(rows), 2)
     )
     infrastructure_errors = sum(row["error"] is not None for row in rows)
-    valid = paired and infrastructure_errors == 0
     act_steps = sum(row["length"] for row in rows if row["controller"] == "act")
+    valid = paired and infrastructure_errors == 0 and act_steps > 0
     gap = summaries["expert"]["success_rate"] - summaries["act"]["success_rate"]
     metrics = {
         "schema_version": "langmani-m4a-metrics-v1",

@@ -351,6 +351,77 @@ def test_rollout_observation_allowlist_resets_queue_and_rejects_invalid_action(
     assert result["length"] == 0 and result["termination_reason"] == "action_out_of_bounds"
 
 
+@pytest.mark.parametrize("gripper", [1.01, -1.2, 0.4, float("nan"), float("inf")])
+def test_rollout_native_gripper_saturation_preserves_arm_and_audits(
+    monkeypatch: pytest.MonkeyPatch, gripper: float
+) -> None:
+    import langmani.datasets.observation_reconstruction as reconstruction
+    import langmani.datasets.policy_state as state_module
+
+    monkeypatch.setattr(
+        reconstruction, "extract_base_camera_rgb", lambda obs: np.zeros((256, 256, 3), np.uint8)
+    )
+    monkeypatch.setattr(
+        state_module, "extract_panda_policy_state_v0", lambda robot: np.zeros(9, np.float32)
+    )
+    prediction = torch.tensor([[0.1, -0.2, 0.3, -0.4, 0.5, -0.6, 0.7, gripper]])
+    original = prediction.clone()
+    actions: list[np.ndarray] = []
+
+    class Policy:
+        def reset(self) -> None:
+            pass
+
+        def select_action(self, batch: dict[str, Any]) -> torch.Tensor:
+            assert set(batch) == {IMAGE, STATE}
+            return prediction
+
+    class Processor:
+        def reset(self) -> None:
+            pass
+
+        def __call__(self, value: Any) -> Any:
+            return value
+
+    def step(action: np.ndarray) -> tuple[Any, ...]:
+        actions.append(action.copy())
+        return (
+            {},
+            0.0,
+            np.array(False),
+            np.array(len(actions) == 2),
+            {
+                "success": np.array(False),
+                "target_off_table": np.array(False),
+            },
+        )
+
+    env = SimpleNamespace(
+        unwrapped=SimpleNamespace(
+            single_action_space=SimpleNamespace(shape=(8,), low=np.full(8, -1), high=np.ones(8)),
+            agent=SimpleNamespace(robot=object()),
+        ),
+        step=step,
+    )
+    result = run_act(env, {}, Policy(), Processor(), Processor(), max_steps=2)
+    np.testing.assert_equal(prediction.numpy(), original.numpy())
+    if not np.isfinite(gripper):
+        assert not actions
+        assert result["termination_reason"] == "invalid_action" and result["length"] == 0
+        assert result["gripper_saturation_count"] == 0
+        return
+    assert result["length"] == 2 and result["termination_reason"] == "timeout"
+    for action in actions:
+        assert action.dtype == np.float32
+        np.testing.assert_array_equal(action[:7], original.numpy()[0, :7])
+        assert action[7] == pytest.approx(max(-1.0, min(1.0, gripper)))
+    assert result["gripper_saturation_count"] == (2 if abs(gripper) > 1 else 0)
+    assert result["gripper_max_overshoot"] == pytest.approx(max(0.0, abs(gripper) - 1))
+    summary = aggregate([result])
+    assert summary["gripper_saturation_count"] == result["gripper_saturation_count"]
+    assert summary["gripper_max_overshoot"] == result["gripper_max_overshoot"]
+
+
 def test_moments_matches_numpy() -> None:
     x = np.random.default_rng(0).normal(size=(23, 9))
     moments = Moments(9)
@@ -445,11 +516,12 @@ def test_local_dataset_guard_forbids_automatic_repair() -> None:
             LeRobotDatasetMetadata._pull_from_repo(None)
 
 
-@pytest.mark.parametrize("mismatch", [False, True])
+@pytest.mark.parametrize("mismatch,act_steps", [(False, 10), (True, 10), (False, 0)])
 def test_paired_evaluation_artifacts_and_invalid_comparison(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     mismatch: bool,
+    act_steps: int,
 ) -> None:
     import langmani.experts as experts
     import langmani.policies.m4a_evaluation as evaluation
@@ -494,7 +566,7 @@ def test_paired_evaluation_artifacts_and_invalid_comparison(
         "run_act",
         lambda *args: {
             "success": False,
-            "length": 10,
+            "length": act_steps,
             "termination_reason": "timeout",
             "target_off_table": False,
         },
@@ -511,8 +583,9 @@ def test_paired_evaluation_artifacts_and_invalid_comparison(
         environment_factory=Environment,
     )
     assert sequence[0] == sequence[1] and sequence[2] == sequence[3]
-    assert result["passed"] is not mismatch
+    valid = not mismatch and act_steps > 0
+    assert result["passed"] is valid
     assert result["closed_loop_evaluated"] is False
-    assert result["absolute_success_rate_gap"] == (None if mismatch else 1.0)
+    assert result["absolute_success_rate_gap"] == (1.0 if valid else None)
     assert (tmp_path / "eval/metrics.json").is_file()
     assert len((tmp_path / "eval/episodes.csv").read_text().splitlines()) == 5

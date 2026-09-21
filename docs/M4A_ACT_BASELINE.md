@@ -42,8 +42,13 @@ produce null gaps, and return a nonzero command exit. A valid zero-success evalu
 
 ACT predicts 50 future actions; `select_action` queues ten, then queries again using the latest
 observation. `policy.reset()` and both processors reset on every episode. Returned actions are
-unnormalized before `env.step`. Invalid/nonfinite/out-of-bounds actions end the episode explicitly;
-no clipping, projection, expert rescue, binary-gripper replacement or custom action formulation is used.
+unnormalized before `env.step`. Invalid/nonfinite actions and out-of-bounds absolute arm joint
+commands end the episode explicitly. The normalized gripper command saturates to `[-1, 1]`,
+matching ManiSkill's existing mimic-controller preprocessing exactly; arm commands are not clipped.
+Per-episode and aggregate saturation counts and maximum overshoots are recorded. This is continuous
+native gripper saturation, with no binary replacement or expert rescue. An evaluation with zero ACT
+environment steps fails and cannot report a valid comparison. See D-031 for the retained original
+strict-rejection failure and the native-controller equivalence diagnostic.
 
 ## Upstream compatibility and reproducibility
 
