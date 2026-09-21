@@ -26,8 +26,17 @@ The [technical guide](M4A_ACT_BASELINE.md) records the inspected source map and 
 | `AGENTS.md` | Define the authorized M4A scope and five separate completion states |
 | `README.md` | Add the conservative M4A section, exact commands and pending benchmark table |
 | `environment/environment.yml` | Activate LeRobot's official training dependencies on Linux |
+| `environment/planner-runtime.txt` | Pin the isolated NumPy-1/SciPy/OpenCV overlay required by native mplib |
+| `environment/verify_m1.py` | Run CPU and GPU PhysX target checks in separate processes |
+| `environment/verify_m2.py` | Verify and select the isolated planner interpreter for expert target gates |
+| `environment/verify_m3a.py` | Use the selected planner runtime for real collection and independent action replay |
+| `environment/verify_planner_runtime.py` | Record imported runtime pins and exercise native Panda planner construction |
 | `pyproject.toml` | Keep package dependency extras aligned with the environment declaration |
 | `src/langmani/datasets/observation_reconstruction.py` | Expose the existing RGB extraction contract through a public wrapper |
+| `src/langmani/datasets/types.py` | Include effective planner dependency versions in authoritative collection provenance |
+| `src/langmani/experts/planner.py` | Reject an incompatible NumPy ABI before constructing mplib |
+| `src/langmani/experts/pick_place.py` | Remove redundant waypoint holds and accommodate measured native tracking residuals within the unchanged task/horizon contract |
+| `src/langmani/experts/runtime.py` | Select the virtualenv launcher without dereferencing symlinks and probe imported versions |
 | `src/langmani/policies/__init__.py` | Declare the small policy package |
 | `src/langmani/policies/m4a_data.py` | Exhaustive read-only row/video validation, no-download guard, hashes, statistics, semantic/scene checks and single-task split manifest |
 | `src/langmani/policies/m4a_training.py` | Stock ACT configuration, train-only normalization, official trainer integration, resume and checkpoint/processor reload |
@@ -35,7 +44,14 @@ The [technical guide](M4A_ACT_BASELINE.md) records the inspected source map and 
 | `scripts/act_baseline.py` | `validate`, `split`, `train`, `evaluate` CLI with provenance and safe output/checkpoint paths |
 | `tests/unit/test_m4a_baseline.py` | Malformed/valid datasets, no leakage, deterministic splits, source identity, metrics/pairing, path safety and action rejection |
 | `tests/integration/test_m4a_upstream.py` | Real generated-video LeRobot readback and upstream ACT optimizer/save/reload/resume compatibility |
-| `docs/DECISIONS.md` | D-027 rationale, dependency boundary and observed non-physical evidence |
+| `tests/unit/test_m1_commands.py` | Cover isolated CPU/GPU PhysX verification commands |
+| `tests/unit/test_m2_commands.py` | Cover planner-runtime checks and interpreter selection |
+| `tests/unit/test_m3a_commands.py` | Cover planner interpreter propagation through collection and replay gates |
+| `tests/unit/test_m3a_types_schedule.py` | Cover the expanded authoritative runtime fingerprint |
+| `tests/unit/test_planner_adapter.py` | Cover the native NumPy ABI guard |
+| `tests/unit/test_pick_place_expert.py` | Cover tracking-residual rejection, preserved final task authority and absence of redundant holds |
+| `tests/unit/test_planner_runtime.py` | Cover effective version probes and virtualenv launcher preservation |
+| `docs/DECISIONS.md` | D-027/D-028/D-029 rationale, dependency boundaries and observed evidence |
 | `docs/M4A_ACT_BASELINE.md` | Architecture, formal regeneration order, resume, result schema and workload guidance |
 | `docs/M4A_DELIVERY.md` | This delivery inventory and execution status |
 
@@ -96,8 +112,8 @@ absolute/signed success-rate gaps. The explicit bounds policy is rejection, neve
 
 ## F. Test evidence
 
-- CPU-safe regression: **390 passed, 5 skipped, 5 deselected**. The skips require native Linux;
-  deselections are GPU/rendering tests. New M4A coverage contributes 30 tests.
+- CPU-safe regression after the native-runtime/expert compatibility changes: **406 passed, 5 skipped,
+  5 deselected**. The skips require native Linux; deselections are GPU/rendering tests.
 - M3B standalone verifier: **114 passed**. Real generated video/Parquet/DataLoader fixture included.
 - Installation, M1, M2 and M3A non-target diagnostics: passed, with physical work explicitly skipped.
 - Ruff lint/format and wheel/sdist build: passed; logs are generated under
@@ -107,8 +123,10 @@ absolute/signed success-rate gaps. The explicit bounds policy is rejection, neve
 
 ## G. Remaining blockers
 
-The formal data cannot be recovered. Provision the new native Linux AutoDL runtime, pass the
-existing CUDA/Vulkan/planner gates, regenerate and independently replay real M3A trajectories, and
+The formal data cannot be recovered. The new native Linux AutoDL runtime has passed M0/M1 target
+checks, including CUDA, Vulkan and real RGB simulation. Original M2 expert acceptance failed;
+D-029 records its bounded diagnosis and minimal repair. The repaired M2 target gate remains
+pending. Pass that gate, regenerate and independently replay real M3A trajectories, and
 export/validate full M3B before actual-data smoke/full training/evaluation. No full frame count,
 trained benchmark or real closed-loop success rate is available. Optional online W&B is wired but
 was not exercised. This delivery makes no physical acceptance or model-quality claim.

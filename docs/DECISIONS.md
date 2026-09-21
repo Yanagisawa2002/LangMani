@@ -768,3 +768,37 @@ GPU/rendering deselections. This includes worker interpreter/path/reset identity
 and failure handling, PhysX verifier isolation and virtualenv launcher tests.
 The launcher tests cover both explicit selection and the default interpreter;
 neither test dereferences a Linux virtualenv symlink.
+
+## D-029 — Repair the existing native expert before formal regeneration
+
+On 2026-09-21 the new Python 3.12.13 / torch 2.11.0+cu128 / RTX 4090 runtime
+passed the actual ordered M0 and M1 target checks, including CPU/GPU PhysX,
+RGB rendering and the policy observation contract. Original commit 07b1103
+then failed M2's seed-0 gate: 3/6 tasks succeeded; two failed motion tracking
+and one reached the unchanged 200-step limit. The red-cube/left-bin failure
+reported 11.7 mm of TCP position error against the expert's internal 10 mm
+waypoint tolerance. This was not a task-success-predicate failure or an ACT run.
+
+A bounded diagnostic crossed 0/2 final waypoint holds with 10/15 mm tracking
+tolerance on seeds 0 and 1, all six existing tasks. Success counts were 6/12
+(2 holds, 10 mm), 9/12 (2 holds, 15 mm), 8/12 (0 holds, 10 mm), and 12/12
+(0 holds, 15 mm). The isolated scripts and detailed episode results are retained
+under the run's operations directory. These trials are diagnostic evidence;
+they are not the 180-episode M2 acceptance gate, a formal dataset or an ACT metric.
+
+Apply only the two expert constants already present in historical cceacb2:
+zero redundant final holds and a 15 mm internal tracking tolerance. New tests
+retain rejection at 16 mm, verify that a 12 mm residual does not override an
+unsuccessful final environment predicate, and enforce one execution per sampled
+waypoint. Task semantics, six sentences, trajectory time alignment, controller,
+environment success predicate and 200-step episode limit remain unchanged.
+Rerun the complete ordered target chain before creating the formal archive.
+
+The first native regression also exposed one unit fixture comparing main-runtime
+versions against the configured planner overlay. Stub the version probe in this
+identity unit test, retaining its explicit drift-rejection assertion. Production
+archive identity still uses the actual selected planner interpreter's imports.
+
+Local regression after the repair: 406 passed, five native-Linux skips and five
+GPU/rendering deselections. The new native M2 acceptance result remains pending;
+the bounded 12/12 diagnostic must not be substituted for it.

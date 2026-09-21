@@ -345,13 +345,20 @@ def test_full_archive_requires_explicit_creation_and_never_replaces_existing_roo
     assert report.failed
 
 
-def test_full_archive_reuse_requires_the_complete_default_identity(tmp_path: Path) -> None:
+def test_full_archive_reuse_requires_the_complete_default_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     verifier = _load_script(
         "langmani_test_verify_m3a_full_identity",
         "environment/verify_m3a.py",
     )
     dataset_root = (tmp_path / "dataset").resolve()
     expected = CollectionConfig(raw_output_root=str(dataset_root))
+    # This contract test must not compare the caller's packages with an external
+    # LANGMANI_PLANNER_PYTHON environment selected by the machine running pytest.
+    monkeypatch.setattr(
+        verifier, "query_planner_runtime_versions", lambda: dict(expected.runtime_versions)
+    )
 
     assert verifier._is_expected_full_config(expected, dataset_root)
     assert not verifier._is_expected_full_config(

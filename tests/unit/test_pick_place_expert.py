@@ -97,6 +97,7 @@ class _FakeEnv:
         self.terminate_on_step: int | None = None
         self.terminate_on_success = False
         self.corrupt_tcp_orientation = False
+        self.tcp_position_offset = 0.0
 
         self.object_actors = {
             semantic_id: _PoseActor((*position, 1.0, 0.0, 0.0, 0.0))
@@ -176,6 +177,7 @@ class _FakeEnv:
 
         if self.pending_target_pose is not None:
             target_pose = self.pending_target_pose.copy()
+            target_pose[0] += self.tcp_position_offset
             if self.corrupt_tcp_orientation:
                 target_pose[3:] = (1.0, 0.0, 0.0, 0.0)
             self.tcp.set_pose(target_pose)
@@ -314,6 +316,36 @@ def test_all_six_semantic_tasks_complete_all_twelve_phases(
     assert {float(action[-1]) for action in env.actions} == {-1.0, 1.0}
 
 
+@pytest.mark.parametrize(
+    ("offset", "reject_final_state", "expected_status"),
+    [
+        (0.012, False, ExpertStatus.SUCCESS),
+        (0.016, False, ExpertStatus.EXECUTION_FAILURE),
+        (0.012, True, ExpertStatus.VERIFICATION_FAILURE),
+    ],
+)
+def test_tracking_residual_keeps_final_success_and_step_budget_authoritative(
+    offset: float, reject_final_state: bool, expected_status: ExpertStatus
+) -> None:
+    env = _FakeEnv()
+    env.tcp_position_offset = offset
+    env.force_success_false = reject_final_state
+
+    result, _ = _run(env)
+
+    assert result.status is expected_status
+    assert result.success is (expected_status is ExpertStatus.SUCCESS)
+    # Each fake plan contains one sample. Do not insert redundant final holds.
+    assert all(
+        phase.environment_steps == 1 for phase in result.phase_results if phase.planning_calls > 0
+    )
+    if expected_status is ExpertStatus.EXECUTION_FAILURE:
+        assert "TCP position error" in result.phase_results[-1].message
+    if reject_final_state:
+        assert result.failed_phase is ExpertPhase.VERIFY_TASK
+        assert not result.final_environment_evaluation["success"]
+
+
 def test_top_grasp_and_placement_geometry_contracts() -> None:
     assert TOP_GRASP_APPROACH_DIRECTION == (0.0, 0.0, -1.0)
     assert TOP_GRASP_CLOSING_DIRECTION == (0.0, -1.0, 0.0)
@@ -435,7 +467,7 @@ def test_planner_failure_classification(
         (
             lambda env: None,
             ExpertConfig(max_episode_steps=1),
-            ExpertPhase.MOVE_TO_PREGRASP,
+            ExpertPhase.APPROACH_TARGET,
             ExpertStatus.TIMEOUT,
         ),
         (
