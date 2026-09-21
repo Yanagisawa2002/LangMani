@@ -802,3 +802,36 @@ archive identity still uses the actual selected planner interpreter's imports.
 Local regression after the repair: 406 passed, five native-Linux skips and five
 GPU/rendering deselections. The new native M2 acceptance result remains pending;
 the bounded 12/12 diagnostic must not be substituted for it.
+
+## D-030 — Native prerequisites accepted; formal execution started
+
+Fresh execution of commit `915d8233c2b8897b63c3c46121794021caa31d25` on the new
+Ubuntu 22.04 RTX 4090 host passed the ordered M0/M1/M2 target chain. Observed
+runtime: Python 3.12.13, torch 2.11.0+cu128, torchvision 0.26.0+cu128, SAPIEN
+3.0.3, ManiSkill 3.0.1, LeRobot 0.6.0, NVIDIA driver 595.71.05 and 24,564 MiB VRAM.
+The recorded main environment includes NumPy 2.2.6, PyArrow 25.0.1 and Accelerate
+1.15.0; the verified planner overlay imports NumPy 1.26.4, SciPy 1.15.3 and
+OpenCV 4.11.0. Full package freezes accompany the evidence.
+
+Native regressions passed 409 main-runtime tests and two physical planner tests.
+Five GPU/rendering pytest cases remained deselected, while the independent target
+commands actually exercised CUDA, CPU/GPU PhysX, RGB rendering and observation
+contracts. M2 repeated seed-0 six-task smoke twice with identical signatures;
+its balanced gate then scored 177/180, with three classified planning failures,
+all six tasks scoring at least 29/30, no wrong-object/wrong-bin successes and no
+crashes. Its rendered rollout saved all 12 phase frames. M3A smoke accepted and
+independently replayed six real episodes with identical initial states per group.
+
+Preserved and copied the original failed diagnostic and accepted preflight
+archives to local `outputs/m4a-review/`. Their SHA-256 values are respectively
+`8a708d333ec567f48a434ee845b3e1d1a5e43c9766fb14f4172dd7ab81ca2105` and
+`07b3a4853ba5077bbeaf8b8fe169f30222270bd9d01a81d66ebc5af738b14533`.
+
+The full chain started at 2026-09-21 07:41:22 UTC on the clean execution commit.
+It requires successful same-commit prerequisite and regression receipts before
+creating the formal 60-group/360-episode archive. Subsequent stages validate full
+M3B, smoke ACT on that data, train the user-authorized 100,000 steps at batch 8,
+seed 0, and evaluate 20 fresh paired seeds starting at 42000. Five-second GPU
+samples retain stage labels; they are sampled observations, not exact memory peaks.
+Full-dataset acceptance, completed full ACT training and ACT closed-loop results
+remain pending at this entry. The server stays running; no shutdown was authorized.

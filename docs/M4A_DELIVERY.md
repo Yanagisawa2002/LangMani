@@ -3,8 +3,8 @@
 | Stage | Status and evidence boundary |
 | --- | --- |
 | implementation complete | Implemented and tested on the isolated M3B-based branch |
-| smoke tested | **Generated-array CPU fixture only**: official ACT forward/backward, optimizer, save, processor/model reload and step-1 → step-2 resume |
-| full dataset validated | **Pending execution**: regenerate real M3A/M3B on the new AutoDL Linux instance |
+| smoke tested | **ACT generated-array CPU fixture on Windows and Linux**: official ACT optimization/save/reload/resume; separately, real M3A six-episode collection/replay passed. Actual-data ACT smoke is pending |
+| full dataset validated | **In progress**: real 60-group/360-episode M3A regeneration is running; full M3B acceptance is pending |
 | full ACT trained | **Pending execution** |
 | closed-loop evaluated | **Pending execution**: no real environment rollout in this delivery |
 
@@ -51,7 +51,7 @@ The [technical guide](M4A_ACT_BASELINE.md) records the inspected source map and 
 | `tests/unit/test_planner_adapter.py` | Cover the native NumPy ABI guard |
 | `tests/unit/test_pick_place_expert.py` | Cover tracking-residual rejection, preserved final task authority and absence of redundant holds |
 | `tests/unit/test_planner_runtime.py` | Cover effective version probes and virtualenv launcher preservation |
-| `docs/DECISIONS.md` | D-027/D-028/D-029 rationale, dependency boundaries and observed evidence |
+| `docs/DECISIONS.md` | D-027 through D-030 rationale, dependency boundaries and observed evidence |
 | `docs/M4A_ACT_BASELINE.md` | Architecture, formal regeneration order, resume, result schema and workload guidance |
 | `docs/M4A_DELIVERY.md` | This delivery inventory and execution status |
 
@@ -120,16 +120,31 @@ absolute/signed success-rate gaps. The explicit bounds policy is rejection, neve
   `outputs/m4a-review/`.
 - Runtime used: Windows Python 3.12.10, torch 2.11.0+cpu, LeRobot 0.6.0, Accelerate 1.14.0.
   A visible RTX 4090 does not make this CPU-only PyTorch environment GPU-validated.
+- New native Linux execution at `915d823`: **409 main-runtime tests + 2 planner-runtime tests
+  passed**. Five GPU/rendering pytest cases were deselected; hardware acceptance was instead
+  exercised by the separate ordered M0/M1/M2 target commands, all passing. M2 scored **177/180**,
+  with three classified planning failures and no crashes. Real M3A smoke collected and independently
+  replayed all six episodes. This is not a full-dataset or ACT closed-loop result.
+- Native runtime: Ubuntu 22.04, Python 3.12.13, torch 2.11.0+cu128, NVIDIA RTX 4090
+  (24,564 MiB), driver 595.71.05, SAPIEN 3.0.3, ManiSkill 3.0.1 and LeRobot 0.6.0.
+  Main NumPy is 2.2.6; planner NumPy is 1.26.4. Exact main/planner freezes and diagnostic
+  reports are retained in `outputs/m4a-review/native-accepted-preflight.tar.gz`.
 
 ## G. Remaining blockers
 
-The formal data cannot be recovered. The new native Linux AutoDL runtime has passed M0/M1 target
-checks, including CUDA, Vulkan and real RGB simulation. Original M2 expert acceptance failed;
-D-029 records its bounded diagnosis and minimal repair. The repaired M2 target gate remains
-pending. Pass that gate, regenerate and independently replay real M3A trajectories, and
-export/validate full M3B before actual-data smoke/full training/evaluation. No full frame count,
-trained benchmark or real closed-loop success rate is available. Optional online W&B is wired but
-was not exercised. This delivery makes no physical acceptance or model-quality claim.
+The old formal data cannot be recovered. The new native target gates and M3A smoke now pass;
+D-029/D-030 retain the original failure, repair and fresh acceptance evidence. The server's
+`full-chain.sh` is running on the clean execution commit `915d823`, and proceeds only after each
+gate passes: full M3A collection/replay, full M3B export/validation, M4A validation/split, actual-data
+smoke, 100,000-step training, then 20 paired ACT/expert evaluation episodes. A failed stage stops
+the chain with its log and exit code. Source remains frozen on the server during execution;
+later documentation commits do not change that run's identity.
+
+Full frame count, completed ACT training and ACT closed-loop metrics are still unavailable.
+No new unresolved infrastructure blocker is known at this snapshot; the full stages are running
+or queued. Optional online W&B is wired but was not exercised. The current-task follow-up checks
+progress every 15 minutes and reports only meaningful changes. The local computer and desktop app
+must remain running for those follow-ups; the server's screen job runs independently.
 
 ## H. GPU and workload
 

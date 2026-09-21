@@ -514,6 +514,13 @@ All `results/` artifacts, datasets, videos and checkpoints are ignored by Git.
 | --- | --- | --- | --- |
 | Regenerated real M3B, red cube → left bin | pending execution | pending execution | pending execution |
 
+On 2026-09-21, execution commit `915d823` passed 411 native Linux regression tests,
+the ordered M0/M1/M2 target gates, and real six-episode M3A collection/replay smoke.
+The M2 gate scored 177/180 across its six tasks; this is an expert prerequisite,
+not the later ACT/expert comparison. Formal 360-episode regeneration is running.
+Full M3B validation, actual-data ACT smoke, full training and closed-loop evaluation
+remain pending. See [the delivery record](docs/M4A_DELIVERY.md) for evidence boundaries.
+
 Track **implementation complete**, **smoke tested**, **full dataset validated**, **full ACT trained**
 and **closed-loop evaluated** separately. Generated fixtures test code and upstream compatibility;
 the last three remain pending until the new AutoDL Linux runtime and formal data are exercised.
