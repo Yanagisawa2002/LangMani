@@ -29,6 +29,9 @@ from langmani.policies.m4c_training import (
     LanguageSamples,
     consolidate_samples,
     model_state_hash,
+    position_loader,
+    sample_count,
+    sample_step,
 )
 
 
@@ -154,7 +157,7 @@ def test_resume_consolidation_preserves_failed_tail_and_original_initialization(
     m, s = make_manifest(split()), split()
     for attempt, start, count in ((0, 0, 24), (2, 8, 8)):
         path = tmp_path / "language_invocations" / f"attempt-{attempt:02d}"
-        samples = LanguageSamples(path / "samples.csv", m, "L10", s, start)
+        samples = LanguageSamples(path / "samples.csv", m, "L10", s, start, start // 8)
         for i in range(start, start + count):
             samples.relabel(raw_row(i))
         for _ in range(count // 8):
@@ -178,6 +181,123 @@ def test_resume_consolidation_preserves_failed_tail_and_original_initialization(
     assert file_digest(original) == before  # abandoned rows are never truncated
     with (tmp_path / "samples-verified.csv").open(newline="") as f:
         assert [int(r["ordinal"]) for r in csv.DictReader(f)] == list(range(16))
+
+
+def test_actual_sample_budget_includes_only_upstream_short_batches() -> None:
+    assert [sample_count(n, 17149) for n in (2143, 2144, 2145, 20000)] == [
+        17144,
+        17149,
+        17157,
+        159973,
+    ]
+    assert [sample_step(n, 17149) for n in (17143, 17144, 17148, 17149)] == [2142, 2143, 2143, 2144]
+    assert sample_count(3, 5) == 15
+    with pytest.raises(ValueError):
+        sample_count(-1, 17149)
+
+
+def small_source() -> tuple[dict, list[dict]]:
+    source = split()
+    source["train_frames"] = 13
+    source["episodes"][0]["frames"] = 7
+    source["episodes"][1]["frames"] = 6
+    rows = []
+    for i in range(13):
+        ep, frame = (0, i) if i < 7 else (1, i - 7)
+        rows.append(
+            {
+                **raw_row(i),
+                "episode_index": torch.tensor(ep),
+                "frame_index": torch.tensor(frame),
+                "task": source["episodes"][ep]["instruction"],
+            }
+        )
+    return source, rows
+
+
+def test_accelerate_partial_batches_and_resume_preserve_native_sampler(tmp_path: Path) -> None:
+    from accelerate.data_loader import prepare_data_loader
+    from lerobot.datasets.sampler import EpisodeAwareSampler, compute_sampler_state
+    from lerobot.utils.utils import cycle
+
+    source, rows = small_source()
+    manifest = make_manifest(source)
+
+    def loader(dataset, start=0):
+        sampler = EpisodeAwareSampler([0, 7], [7, 13], shuffle=True, seed=0)
+        if start:
+            sampler.load_state_dict(compute_sampler_state(start, 13, 8, 1))
+        result = prepare_data_loader(
+            torch.utils.data.DataLoader(dataset, batch_size=8, sampler=sampler, drop_last=False),
+            num_processes=1,
+            process_index=0,
+        )
+        position_loader(result, start, 13)
+        return cycle(result)
+
+    reference = loader(rows)
+    batches = [next(reference) for _ in range(8)]
+    assert [len(b["action"]) for b in batches] == [8, 5] * 4
+    for level in ("L1", "L5", "L10"):
+        for start in (0, 1, 2, 3, 5):
+            samples = LanguageSamples(
+                tmp_path / f"{level}-{start}.csv",
+                manifest,
+                level,
+                source,
+                sample_count(start, 13),
+                start,
+            )
+            stream = loader(LanguageDataset(rows, samples), start)
+            try:
+                for expected in batches[start:]:
+                    batch = next(stream)
+                    for key in expected.keys() - {"task"}:
+                        assert torch.equal(batch[key], expected[key])
+                    if level == "L1":
+                        assert batch["task"] == expected["task"]
+                    samples.consume(len(batch["action"]))
+                assert samples.receipt()["sample_presentations"] == 52 - sample_count(start, 13)
+            finally:
+                samples.close()
+
+
+def test_resume_consolidation_across_short_batch_retains_evidence(tmp_path: Path) -> None:
+    source, rows = small_source()
+    manifest = make_manifest(source)
+    for attempt, start, end in ((0, 0, 5), (1, 3, 6)):
+        path = tmp_path / "language_invocations" / f"attempt-{attempt:02d}"
+        samples = LanguageSamples(
+            path / "samples.csv",
+            manifest,
+            "L5",
+            source,
+            sample_count(start, 13),
+            start,
+        )
+        for step in range(start, end):
+            first, last = sample_count(step, 13), sample_count(step + 1, 13)
+            for ordinal in range(first, last):
+                samples.relabel(rows[ordinal % 13])
+            if step % 2:
+                with pytest.raises(RuntimeError, match="actual=8, expected=5"):
+                    samples.consume(8)
+            samples.consume(last - first)
+        samples.close()
+        write_json(
+            path / "initial_model.json",
+            {"start_step": start, "model_state_sha256": str(attempt) * 64},
+        )
+        write_json(
+            path / "runtime.json", {"seconds": 1, "completed_optimizer_updates": end - start}
+        )
+    original = tmp_path / "language_invocations/attempt-00/samples.csv"
+    before = file_digest(original)
+    result = consolidate_samples(tmp_path, manifest, "L5", source, 6)
+    assert result["sample_presentations"] == 39
+    assert result["nominal_sample_presentations"] == 48 and result["short_batches"] == 3
+    assert result["source_segments"][0]["end"] == 21
+    assert result["initial_model_state_sha256"] == "0" * 64 and file_digest(original) == before
 
 
 def test_model_hash_reads_bfloat16_without_changing_weights_or_rng() -> None:

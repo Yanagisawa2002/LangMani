@@ -11,8 +11,10 @@ scenes, ACT succeeded 10/20 and the privileged expert 20/20. Generated-array fix
 M4B.1 diagnostic decomposition is separately complete at `3104578`; see
 [the diagnostic delivery](docs/M4B1_DELIVERY.md). Canonical destination approach40/40 and paraphrase
 32/40 remain distinct from full success15/40 and0/40. M4C now compares L1/L5/L10 language diversity
-over identical robot trajectories and optimizer budgets; its real-data smoke, full training and
-evaluation are pending. See [the fixed protocol](docs/M4C_PROTOCOL.md) and
+over identical robot trajectories and optimizer budgets; implementation, real-data smoke and full
+source-data/language validation passed. Complete training and evaluation are pending. The first L1
+attempt stopped on a sample-audit error at its5-frame epoch tail; recovery preserves short batches,
+20,000 updates and159,973 actual samples per group. See [the fixed protocol](docs/M4C_PROTOCOL.md) and
 [M4C delivery status](docs/M4C_DELIVERY.md). Frozen M4A/M4B evidence remains unchanged.
 
 M3B does not train ACT or SmolVLA, publish to the Hub, change M3A acceptance, export failure

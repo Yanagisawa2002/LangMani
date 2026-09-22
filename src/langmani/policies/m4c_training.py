@@ -17,6 +17,25 @@ from langmani.policies.m4b_training import train_official
 from langmani.policies.m4c_language import sample_expression
 
 
+def sample_count(steps: int, frames: int, batch_size: int = 8) -> int:
+    """Actual samples with upstream single-process drop_last=False, including short tails."""
+    if steps < 0 or frames < 1 or batch_size < 1:
+        raise ValueError("invalid optimizer/data budget")
+    epochs, within_epoch = divmod(steps, (frames + batch_size - 1) // batch_size)
+    return epochs * frames + within_epoch * batch_size
+
+
+def sample_step(ordinal: int, frames: int, batch_size: int = 8) -> int:
+    epoch, offset = divmod(ordinal, frames)
+    return epoch * ((frames + batch_size - 1) // batch_size) + offset // batch_size
+
+
+def position_loader(loader: Any, start_step: int, frames: int) -> None:
+    """Keep Accelerate's epoch counter aligned with the official sampler's resume offset."""
+    if start_step:
+        loader.set_epoch(start_step // ((frames + 7) // 8))
+
+
 def model_state_hash(policy: Any) -> str:
     """Hash exact tensor storage, including BF16, without consuming a random number."""
     hasher = hashlib.sha256()
@@ -37,6 +56,7 @@ class LanguageSamples:
         level: str,
         split: dict[str, Any],
         start_ordinal: int = 0,
+        start_step: int = 0,
     ) -> None:
         self.manifest, self.level = manifest, level
         self.episodes = {
@@ -46,10 +66,15 @@ class LanguageSamples:
         }
         self.ordinal = start_ordinal
         self.start_ordinal = start_ordinal
+        self.step = start_step
+        self.frames = split["train_frames"]
+        if start_ordinal != sample_count(start_step, self.frames):
+            raise ValueError("start ordinal differs from actual consumed sample count")
         self.pending: deque[dict[str, Any]] = deque()
         self.robot_hash = hashlib.sha256()
         self.consumed = 0
         self.counts: Counter[str] = Counter()
+        self.batch_sizes: Counter[int] = Counter()
         path.parent.mkdir(parents=True, exist_ok=True)
         self.stream = path.open("x", newline="", encoding="utf-8")
         self.writer = csv.DictWriter(
@@ -62,6 +87,7 @@ class LanguageSamples:
                 "template_id",
                 "paraphrase_family",
                 "instruction_text",
+                "optimizer_step",
             ],
         )
         self.writer.writeheader()
@@ -83,17 +109,23 @@ class LanguageSamples:
         return {**row, "task": chosen["instruction_text"]}
 
     def consume(self, batch_size: int) -> None:
-        if batch_size != 8 or len(self.pending) < batch_size:
-            raise RuntimeError("optimizer batch or sample FIFO changed")
+        expected = sample_count(self.step + 1, self.frames) - sample_count(self.step, self.frames)
+        if batch_size != expected or len(self.pending) < batch_size:
+            raise RuntimeError(
+                f"optimizer batch/FIFO changed at step {self.step}: "
+                f"actual={batch_size}, expected={expected}, pending={len(self.pending)}"
+            )
         for _ in range(batch_size):
             row = self.pending.popleft()
             if row["ordinal"] != self.start_ordinal + self.consumed:
                 raise RuntimeError("non-contiguous sample presentation order")
-            self.writer.writerow(row)
+            self.writer.writerow({**row, "optimizer_step": self.step})
             self.robot_hash.update(f"{row['episode_id']}:{row['frame_index']}\n".encode())
             self.counts[f"{row['semantic_goal_id']}/{row['template_id']}"] += 1
             self.consumed += 1
-        if self.consumed % 800 == 0:
+        self.batch_sizes[batch_size] += 1
+        self.step += 1
+        if self.step % 100 == 0:
             self.stream.flush()
 
     def close(self) -> None:
@@ -107,6 +139,7 @@ class LanguageSamples:
             "sample_presentations": self.consumed,
             "robot_sample_sequence_sha256": self.robot_hash.hexdigest(),
             "language_counts": dict(sorted(self.counts.items())),
+            "batch_size_counts": dict(sorted(self.batch_sizes.items())),
             "unused_prefetched_samples": len(self.pending),
             "note": "unused Accelerate lookahead is excluded from presentation counts/hashes",
         }
@@ -143,7 +176,7 @@ def consolidate_samples(
                 raise ValueError("trained attempt lost its initialization receipt")
             continue
         initial = read_json(invocation / "initial_model.json")
-        start = initial["start_step"] * 8
+        start = sample_count(initial["start_step"], split["train_frames"])
         active = [(n, p) for n, p in active if n < start]
         active.append((start, invocation))
     if not active or active[0][0] != 0:
@@ -161,7 +194,11 @@ def consolidate_samples(
     with target.open("x", encoding="utf-8", newline="") as destination:
         writer = None
         for i, (start, invocation) in enumerate(active):
-            end = active[i + 1][0] if i + 1 < len(active) else steps * 8
+            end = (
+                active[i + 1][0]
+                if i + 1 < len(active)
+                else sample_count(steps, split["train_frames"])
+            )
             path = invocation / "samples.csv"
             with path.open(encoding="utf-8", newline="") as stream:
                 reader = csv.DictReader(stream)
@@ -174,6 +211,8 @@ def consolidate_samples(
                         break
                     if ordinal != expected_ordinal or ordinal < start:
                         raise ValueError("missing/duplicate resumed sample ordinal")
+                    if int(row["optimizer_step"]) != sample_step(ordinal, split["train_frames"]):
+                        raise ValueError("sample belongs to a different optimizer batch")
                     episode, frame = int(row["episode_id"]), int(row["frame_index"])
                     ep = episodes[episode]
                     chosen = sample_expression(
@@ -200,6 +239,10 @@ def consolidate_samples(
         "start_step": 0,
         "sample_presentations": expected_ordinal,
         "optimizer_updates": steps,
+        "nominal_sample_presentations": steps * 8,
+        "short_batches": steps // ((split["train_frames"] + 7) // 8)
+        if split["train_frames"] % 8
+        else 0,
         "source_segments": segments,
         "samples_csv_sha256": file_digest(target),
         "robot_sample_sequence_sha256": hasher.hexdigest(),
@@ -236,10 +279,22 @@ def train_language(
     attempt = len(list(invocations.glob("attempt-*"))) if invocations.exists() else 0
     invocation = invocations / f"attempt-{attempt:02d}-step-{start_step:06d}"
     invocation.mkdir(parents=True, exist_ok=False)
-    samples = LanguageSamples(invocation / "samples.csv", manifest, level, split, start_step * 8)
+    samples = LanguageSamples(
+        invocation / "samples.csv",
+        manifest,
+        level,
+        split,
+        sample_count(start_step, split["train_frames"]),
+        start_step,
+    )
     factory, update = upstream.make_train_eval_datasets, upstream.update_policy
+    cycle = upstream.cycle
     factory_calls = updates = 0
     initial_hash = None
+
+    def audited_cycle(loader: Any) -> Any:
+        position_loader(loader, start_step, split["train_frames"])
+        return cycle(loader)
 
     def language_factory(config: Any) -> tuple[Any, Any]:
         nonlocal factory_calls
@@ -281,6 +336,7 @@ def train_language(
         with (
             patch.object(upstream, "make_train_eval_datasets", language_factory),
             patch.object(upstream, "update_policy", audited_update),
+            patch.object(upstream, "cycle", audited_cycle),
         ):
             result = train_official(
                 root=root,
@@ -297,7 +353,10 @@ def train_language(
                 resume=resume,
             )
         receipt = samples.receipt()
-        if updates != steps - start_step or samples.consumed != (steps - start_step) * 8:
+        expected_samples = sample_count(steps, split["train_frames"]) - sample_count(
+            start_step, split["train_frames"]
+        )
+        if updates != steps - start_step or samples.consumed != expected_samples:
             raise RuntimeError("optimizer/sample budget differs")
         completed = True
     finally:
@@ -309,6 +368,8 @@ def train_language(
                 "completed": completed,
                 "completed_optimizer_updates": updates,
                 "start_step": start_step,
+                "logged_sample_presentations": samples.consumed,
+                "batch_size_counts": dict(samples.batch_sizes),
             },
         )
     receipt.update(
@@ -328,6 +389,9 @@ def train_language(
         language=combined,
         language_invocation=str(invocation.relative_to(output)),
         language_samples_file="samples-verified.csv",
+        actual_sample_presentations=combined["sample_presentations"],
+        actual_equivalent_train_passes=combined["sample_presentations"] / split["train_frames"],
+        sample_presentations_definition="upstream top-level value is nominal steps*8; language/actual fields count consumed rows",
     )
     write_json(output / "m4c_training_metadata.json", result)
     return result

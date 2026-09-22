@@ -15,6 +15,7 @@ from langmani.policies.m4b_data import check_split
 from langmani.policies.m4b_protocol import make_schedule as m4b_schedule
 from langmani.policies.m4b_training import train_official, verify_assets
 from langmani.policies.m4c_language import check_manifest, make_manifest, make_schedule
+from langmani.policies.m4c_training import sample_count
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -110,6 +111,7 @@ def compare_runs(
     if {m["language"]["level"] for m in metadata} != {"L1", "L5", "L10"} or len(metadata) != 3:
         raise ValueError("one complete run for each L1/L5/L10 is required")
     steps = 20 if smoke else 20000
+    expected_samples = sample_count(steps, manifest["views"]["L1"]["unique_robot_frames"])
     identities = []
     for run, m in zip(runs, metadata, strict=True):
         _, frozen = checkpoint(run)
@@ -129,7 +131,7 @@ def compare_runs(
             m["steps"] != steps
             or frozen["steps"] != steps
             or m["language"]["start_step"] != 0
-            or m["language"]["sample_presentations"] != steps * 8
+            or m["language"]["sample_presentations"] != expected_samples
             or m["language"]["language_manifest_sha256"] != manifest["language_manifest_sha256"]
         ):
             raise ValueError("incomplete or incompatible fixed-budget group")
@@ -173,7 +175,8 @@ def compare_runs(
         "identical_robot_sample_sequence_sha256": metadata[0]["language"][
             "robot_sample_sequence_sha256"
         ],
-        "sample_presentations_per_group": steps * 8,
+        "sample_presentations_per_group": expected_samples,
+        "nominal_sample_presentations_per_group": steps * 8,
         "l1_unwrapped_checkpoint_match": matched,
     }
 

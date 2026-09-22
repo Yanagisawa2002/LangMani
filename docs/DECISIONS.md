@@ -1085,3 +1085,23 @@ M4C native preflight at `3bfdfd9` passed453 main plus2 planner tests and ordered
 schedule path was passed as a string to the Path-only JSON reader. Preserve the failed log/exit;
 convert that boundary to Path and add a focused serialized-config regression test. Resume from
 protocol preparation with fresh stage logs; the successful unchanged native gates remain valid.
+
+## D038 — Preserve upstream partial batches and measure actual M4C sample use
+
+The first full L1 attempt at `b9308c6` stopped after2,143 completed updates, before any scheduled
+checkpoint. Its786.099s invocation and raw evidence are retained. Native LeRobot0.6/Accelerate1.15
+single-process loading uses `drop_last=False`, producing2,143 batches of8 and one batch of5 per
+17,149-frame epoch. The M4C FIFO audit incorrectly rejected that last batch. Preserve the upstream
+data order, short batches and20,000-update budget; do not pad/drop data to satisfy the audit.
+There are159,973 actual sample presentations,160,000 nominal `steps*8`, and nine short batches.
+Keep frozen M4B metadata untouched; add explicitly named actual M4C fields and optimizer-step CSV
+indices. All three groups must match the actual consumed sequence, including epoch tails.
+
+For compatible future resume, align Accelerate's loader epoch with the official saved sampler
+epoch before iteration so it does not reset later epochs to zero. Tests compare every non-text
+tensor with unwrapped native sampling through multiple short batches and resumed positions;
+they also test consolidation across tails while preserving abandoned evidence. Local16 M4C tests
+pass; the full local suite passed454 tests with5 native skips and5 GPU/rendering deselections
+(28.47s), Ruff format/check and wheel/sdist build passed. Native formal-data boundary acceptance is required before starting fresh recovery output
+paths under `results/m4c-v2`. Prior source/asset hashes and20-step numerical-control evidence remain
+valid; no completed long training is repeated and no evaluation result informs this correction.

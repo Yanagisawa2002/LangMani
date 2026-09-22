@@ -30,7 +30,11 @@ changes only the returned `task` string. For sample ordinal n, select a text usi
 of language seed, n, source episode and source frame, modulo the group's diversity. This draws
 from all allowed realizations with replacement, without touching Python/NumPy/Torch RNG. The
 wrapper logs every actual sample to CSV. All groups must have identical robot-sample sequence
-hashes and 160,000 sample presentations; text realization counts are reported separately.
+hashes and 159,973 actual sample presentations; text realization counts are reported separately.
+The configured batch size is 8, but upstream single-process `drop_last=False` preserves a final
+5-frame batch each epoch: 2,144 updates traverse 17,149 frames. In 20,000 updates there are nine
+short batches, giving 159,973 actual samples versus the nominal `20,000 * 8 = 160,000`.
+This corrects sample accounting without padding, dropping frames or changing the optimizer budget.
 The original LeRobot files and physical observation/action tensors remain unchanged.
 
 Accelerate prefetches one batch even with zero workers. A FIFO logs samples at optimizer use;
@@ -38,6 +42,10 @@ unused lookahead is excluded from presentation counts. Each invocation retains i
 A compatible interrupted run resumes the official optimizer/RNG and sampler state from a saved
 checkpoint; a separate consolidated CSV keeps each logical sample prefix once and preserves
 abandoned post-checkpoint evidence. Never overwrite later checkpoints or repeat a completed run.
+Align Accelerate's loader epoch counter with the official resumed sampler epoch before iteration;
+otherwise it would reset a later-epoch sampler to epoch zero. CSV optimizer-step indices and actual
+sample ordinals account for short batches. Sample-order equivalence does not by itself establish
+bitwise equivalence of all optimizer/model randomness after interruption.
 
 ## Leakage and initialization gates
 
