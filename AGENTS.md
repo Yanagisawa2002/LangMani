@@ -1,5 +1,18 @@
 # LangMani contributor instructions
 
+## Active milestones after frozen M4B
+
+The user's M4B.1/M4C request supersedes older milestone scope restrictions below only for
+these two milestones. Freeze M4A at `717a07d` and M4B at `99139de`; reuse their modules,
+data, model assets and evidence read-only. Add separate diagnostic and language-diversity
+modules, tests, commands and outputs. Complete, validate, summarize and separately commit
+M4B.1 before starting M4C. M4C compares L1/L5/L10 seed 0 with identical trajectories,
+initialization, 20,000 optimizer steps, batch 8, learning rate 1e-4 and paired scene/noise
+protocol. Persist disjoint language manifests. Never tune on evaluation outcomes, change
+the environment/success predicate/200-step horizon, overwrite evidence or fabricate signals.
+Do not use Computer Use, delegate to agents, send external messages, or shut down/reboot
+the server. Stop after M4C delivery; additional milestones require a new user request.
+
 ## Purpose
 
 LangMani supports language-conditioned robotic manipulation in ManiSkill. M0 through M3A are

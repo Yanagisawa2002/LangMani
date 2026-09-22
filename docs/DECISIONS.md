@@ -1012,3 +1012,21 @@ Each archive's outer and per-file hashes matched; the raw/derived M4A recovery r
 rehash-verified. Delivery details and justified limitations are in M4B_DELIVERY.md. Generated data,
 models and evidence stay outside Git. Preserve M4A's modules/tests/data/checkpoints and original
 claims; finish by pausing only the M4B continuation and leaving the server and task available.
+
+## D035 — M4B.1 observational decomposition before language-diversity experiments
+
+The next user-authorized stage freezes M4B at `99139de`. New `m4b1_diagnostics` and
+`m4b1_runtime` modules observe the existing scene without altering physics, policy inputs,
+M1 success scoring or the 200-step horizon. The protocol in M4B1_PROTOCOL.md fixes thresholds
+before diagnostic results. Red-object approach/contact/grasp and left/right destination
+selection remain distinct: touching the common object does not identify the instructed side.
+Use installed native Panda grasp predicates and sampled pairwise finger forces; disclose that
+control-boundary sampling can miss short contacts. No new dependencies or environment changes.
+
+Replay the original 100 applied-action arrays into fresh output paths, binding results to reset
+hashes, original final flags, termination, action counts and identical re-encoded videos. An
+observational wrapper also permits frozen-checkpoint inference, with action/video equivalence
+checks. Independent uninstrumented replays and before/after state hashes test noninterference.
+Keep no-selection failures indeterminate about semantic misunderstanding. A measured negative
+result is valid. M4C implementation is prohibited until this diagnostic stage is validated,
+summarized and separately committed. Hardware acceptance remains pending until native receipts.
