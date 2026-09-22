@@ -1057,3 +1057,25 @@ wrong-side paraphrase approach qualifies only at step200 and is explicitly a wea
 event. Original M4A/M4B sources, tests, checkpoints and evidence remain unchanged. Preserve this
 completed result in its own commit before beginning M4C; report destination behavior, red-object
 interaction and complete success separately in the forthcoming fixed-budget language experiment.
+
+## D037 — M4C controlled language views after separately completed M4B.1
+
+M4B.1 delivery `3104578` was committed/pushed before M4C implementation began. Add independent
+M4C language/training/evaluation modules while importing frozen M4B infrastructure and M4B.1
+diagnostics unchanged. L1/L5/L10 seed0 use identical96 trajectories/17,149 frames, initialization,
+20,000 steps, batch8 and LR1e-4. Per-frame deterministic text replacement does not consume model
+or sampler RNG. Record every optimizer-consumed robot-frame identity, language realization,
+initial model hash and checkpoint inventory. Accelerate's one-batch prefetch is excluded from
+consumed-sample counts. A real-data20-step L1 smoke must match the unwrapped official checkpoint;
+all three groups must share initialization, sample sequence and normalization hashes.
+
+The committed catalog spans lexical, syntactic, referential, polite/prefix and natural families;
+L5 and L10 differ in both expression count and coverage. Reject normalized-text and template-ID
+leakage, including original M4B held-out strings. Persist trajectory-label manifests and check the
+pinned tokenizer's48-token limit. Evaluation shares canonical seen wording and12 held-out texts
+across all models, on original20 M4B scenes:180 physical rollouts/240 scoring rows per model.
+Swapped and blank reuse are explicit. Report both destination approach and full success, with
+red-contact/grasp and deterministic failure taxonomies. Invalid policy actions are separate from
+infrastructure failures, and counts/termination/final flags must be coherent. No new dependencies,
+threshold tuning, robot data, extra optimization budget or automatic additional seed sweep.
+Implementation tests are not real-data smoke or full training/evaluation evidence.

@@ -8,6 +8,13 @@ M4A closes the single-task upstream ACT baseline on native Linux: formal M3A/M3B
 100,000-step training and paired closed-loop evaluation are complete. On 20 fresh red-cube/left-bin
 scenes, ACT succeeded 10/20 and the privileged expert 20/20. Generated-array fixtures are not benchmarks.
 
+M4B.1 diagnostic decomposition is separately complete at `3104578`; see
+[the diagnostic delivery](docs/M4B1_DELIVERY.md). Canonical destination approach40/40 and paraphrase
+32/40 remain distinct from full success15/40 and0/40. M4C now compares L1/L5/L10 language diversity
+over identical robot trajectories and optimizer budgets; its real-data smoke, full training and
+evaluation are pending. See [the fixed protocol](docs/M4C_PROTOCOL.md) and
+[M4C delivery status](docs/M4C_DELIVERY.md). Frozen M4A/M4B evidence remains unchanged.
+
 M3B does not train ACT or SmolVLA, publish to the Hub, change M3A acceptance, export failure
 trajectories, add sensors or language paraphrases, use multiprocessing, or change the M1/M2 task.
 
