@@ -17,7 +17,8 @@ All positions are world meters. Left/right refer to semantic bins, not image coo
   first events are ambiguous, never broken by target identity.
 * First approached goal / primary selected goal: TCP XY distance to a bin floor center
   at most 0.12 m, TCP height from floor between 0 and 0.20 m, XY distance reduced by
-  at least 0.08 m from reset, for three consecutive samples (0.15 s). First bin meeting
+  at least 0.08 m from reset, for three consecutive samples (0.10 s between first and last
+  sample at 20 Hz). First bin meeting
   this rule; an empty hand still reveals destination-directed motion. This is a proxy,
   not proof of intent, and is reported independently of successful placement.
 * Object first contact: either Panda finger's pairwise resultant force with a cube has

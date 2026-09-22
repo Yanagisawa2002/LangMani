@@ -765,3 +765,15 @@ the 0/40 figure above scores the original opposite request. There are 100 physic
 and 160 explicitly linked scoring rows, with 85 physical timeouts and no infrastructure errors.
 This supports limited template-dependent goal selection; 0/40 paraphrase success establishes no
 robustness to the tested reformulations. M4A remains frozen and is not a direct architecture comparison.
+
+## M4B.1: separate destination choice from object interaction
+
+The [diagnostic decomposition](docs/M4B1_DELIVERY.md) is complete. All 100 frozen M4B trajectories
+replayed with identical videos and original outcomes; read-only sensor and frozen-policy inference
+checks passed. Fixed geometric destination-approach accuracy is 40/40 for canonical text and
+32/40 for tested paraphrases, while red first-contact rates are 27/40 and 0/40 respectively.
+Full success remains 15/40 and 0/40. Canonical paired approach switching is 20/20, versus 6/20
+pairs completing both tasks. Empty-handed bin-directed motion is not full instruction understanding.
+The largest timeout category is correct destination approach without red contact (45/85).
+M4A/M4B evidence and success claims remain frozen; see the diagnostic document for proxy limits,
+the original-versus-supplied swapped distinction, all failure categories and recovery evidence.

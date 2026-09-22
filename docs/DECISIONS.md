@@ -1030,3 +1030,30 @@ checks. Independent uninstrumented replays and before/after state hashes test no
 Keep no-selection failures indeterminate about semantic misunderstanding. A measured negative
 result is valid. M4C implementation is prohibited until this diagnostic stage is validated,
 summarized and separately committed. Hardware acceptance remains pending until native receipts.
+
+## D036 — M4B.1 validated diagnostic result, separate from complete task success
+
+Execution `86e6d8eae210e5ce3d57b4b4331125c6e090d959` passed local438 tests (5 native skips,
+5 GPU/rendering deselections), native441 plus planner2 tests, and the ordered M0/M1/M2 target
+gate (M2 remains177/180). Five prompt-ID smoke controls matched every public simulator state
+with instrumentation disabled/enabled. Frozen SmolVLA inference matched original action/video
+hashes. All100 recorded trajectories then replayed identically:19,080 actions,19,180 video frames,
+original15 successes and85 timeouts. Smoke73.951s; full replay426.100s. No new training or GPU
+peak measurement. Local raw-telemetry, CSV/JSON metric and video audits passed. The395-file
+diagnostic archive and five frozen recovery references were hash-verified locally.
+
+Precommitted destination-approach proxy: canonical40/40; paraphrase32/40. Canonical red contact
+27/40 and grasp20/40 narrow to15/40 full success. Paraphrase red contact/grasp/success remain0/40.
+Canonical paired approach switching20/20 is distinct from6/20 complete-task pairs; paraphrase
+approach switching12/20 is distinct from0/20 complete-task pairs. Supplied-swapped approach40/40
+and original-request-swapped0/40 reuse canonical trials. Dominant physical timeout category is
+correct-side approach without red contact45/85. Do not interpret destination approach, including
+empty hands, as comprehension of the complete instruction. In particular, paraphrase's missing
+pickup can reflect subtask grounding or control; this decomposition cannot identify internal cause.
+
+No thresholds changed after viewing telemetry. The documentation clarifies three20-Hz samples
+span0.10s between first/last samples; the implemented three-sample rule never changed. The lone
+wrong-side paraphrase approach qualifies only at step200 and is explicitly a weak late geometric
+event. Original M4A/M4B sources, tests, checkpoints and evidence remain unchanged. Preserve this
+completed result in its own commit before beginning M4C; report destination behavior, red-object
+interaction and complete success separately in the forthcoming fixed-budget language experiment.
