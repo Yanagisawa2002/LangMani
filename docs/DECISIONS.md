@@ -1079,3 +1079,9 @@ red-contact/grasp and deterministic failure taxonomies. Invalid policy actions a
 infrastructure failures, and counts/termination/final flags must be coherent. No new dependencies,
 threshold tuning, robot data, extra optimization budget or automatic additional seed sweep.
 Implementation tests are not real-data smoke or full training/evaluation evidence.
+
+M4C native preflight at `3bfdfd9` passed453 main plus2 planner tests and ordered M0/M1/M2
+(M2 remains177/180). Protocol preparation then stopped before training because the serialized
+schedule path was passed as a string to the Path-only JSON reader. Preserve the failed log/exit;
+convert that boundary to Path and add a focused serialized-config regression test. Resume from
+protocol preparation with fresh stage logs; the successful unchanged native gates remain valid.

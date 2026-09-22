@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import copy
 import csv
+import importlib.util
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
 import torch
 
-from langmani.policies.m4a_data import file_digest, write_json
+from langmani.policies.m4a_data import digest, file_digest, write_json
 from langmani.policies.m4b_protocol import GOALS
 from langmani.policies.m4c_evaluation import diagnostics, metrics, scored_rows, validate_rollout
 from langmani.policies.m4c_language import (
@@ -276,3 +278,50 @@ def test_trajectory_coherence_rejects_early_timeouts_and_false_success() -> None
     ):
         with pytest.raises(ValueError, match="incoherent"):
             validate_rollout({**row, **changes})
+
+
+def test_cli_source_config_roundtrips_serialized_paths(tmp_path: Path, monkeypatch) -> None:
+    spec = importlib.util.spec_from_file_location(
+        "m4c_cli_fixture", Path(__file__).resolve().parents[2] / "scripts/m4c_baseline.py"
+    )
+    cli = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cli)
+    # Only the filesystem/config boundary is under test; these mocked gates are not data evidence.
+    source = {
+        "train_episode_ids": list(range(96)),
+        "train_frames": 17149,
+        "dataset_total_frames": 64548,
+        "all_source_scene_seeds": [],
+    }
+    schedule = {"excluded_m4a_seeds": [], "schedule_sha256": "fixture"}
+    episodes = [{"fixture": True}]
+    write_json(tmp_path / "schedule.json", schedule)
+    write_json(tmp_path / "gate/schedule.json", schedule)
+    write_json(tmp_path / "gate/episodes.json", {"episodes": episodes})
+    write_json(
+        tmp_path / "gate/gate.json",
+        {
+            "passed": True,
+            "schedule_sha256": "fixture",
+            "episodes_sha256": digest(episodes),
+        },
+    )
+    monkeypatch.setattr(cli, "check_split", lambda *args: (source, None))
+    monkeypatch.setattr(
+        cli,
+        "load_manifest",
+        lambda *_: SimpleNamespace(config=SimpleNamespace(mode=SimpleNamespace(value="full"))),
+    )
+    monkeypatch.setattr(cli, "m4b_schedule", lambda *args: schedule)
+    monkeypatch.setattr(cli, "verify_assets", lambda path: {"fixture_path": str(path)})
+    result = cli.source_data(
+        {
+            "dataset_root": str(tmp_path),
+            "split": str(tmp_path / "split.json"),
+            "validation": str(tmp_path / "validation.json"),
+            "m4b_schedule": str(tmp_path / "schedule.json"),
+            "gate": str(tmp_path / "gate"),
+            "assets": str(tmp_path / "assets.json"),
+        }
+    )
+    assert result[0] == source and result[1] == schedule

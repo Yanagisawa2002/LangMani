@@ -47,7 +47,7 @@ def source_data(config: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any],
         or split["dataset_total_frames"] != 64548
     ):
         raise ValueError("formal frozen M4B robot-data view required")
-    schedule = read_json(config["m4b_schedule"])
+    schedule = read_json(Path(config["m4b_schedule"]))
     if schedule != m4b_schedule(
         split["all_source_scene_seeds"], schedule["excluded_m4a_seeds"], 20, 43000
     ):
