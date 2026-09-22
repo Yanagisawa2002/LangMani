@@ -969,3 +969,46 @@ Implementation preflight: Windows CPU-safe suite passed 430 tests, with five nat
 and five GPU/rendering deselections. Ruff, formatting, wheel and sdist build passed. Git comparison
 confirmed frozen M4A policy modules, tests and M4A_DELIVERY.md unchanged. These checks do not establish
 native SmolVLA execution, which remains the next gate.
+
+## D-034 — M4B measured language selection and evidence closeout
+
+Execution of clean commit `1b2d76cd994197b064bbd364e44a215cb7b68bbf` completed on native Linux/RTX 4090
+on 2026-09-22. The isolated M4B overlay passed ordered M0→M1→M2 acceptance, 433 CPU-safe main tests
+and 2 planner tests. M2's 177/180 is only its original prerequisite. Full M4B data validation decoded
+all 360 episodes/64,548 frames and confirmed the frozen source content hash. The selected red-destination
+subset is 120 episodes/21,459 frames: train 96/17,149, validation 12/2,154, excluded test 12/2,156.
+All 60 source left/right first-frame/qpos pairs were exactly equal; native 20-scene state/RGB/qpos
+pairing passed. The separate expert reference was 39/40, preserving seed 659916340 right-bin
+planning_failure at 92 steps.
+
+Real-data smoke for 3 steps, checkpoint reload, resume to 4 steps and common-noise deterministic
+inference passed. A fresh full SmolVLA run then completed 20,000 steps/batch 8/LR 1e-4/seed 0, with
+no restart or checkpoint selection. Upstream logged scaling its scheduler from 1,000/30,000 to
+666/20,000 warmup/decay steps. Training invocation was 6,768.605 s; 160,000 sample presentations/
+17,149 train frames gives 9.32999 equivalent passes. Optimizer-step allocator peak was
+2,845,703,680 bytes; 1,361 five-second GPU samples peaked at 3,376 MiB. Final model SHA256 is
+`4aabc676a85bc1b521ed4098678723c21d238d79bcb4454cbe489a8121a7243e`.
+
+The unchanged final checkpoint completed 100 physical rollouts/160 scored rows on the 20 frozen new
+scenes. Correct requested-goal success was 15/40 (left 8/20, right 7/20); swapped, blank and held-out
+paraphrase each scored 0/40. Swapped supplied-prompt success was 15/40, since the same canonical
+rollouts are scored against the opposite requested goal. Six of 20 scene pairs reached the instructed
+left AND right goals when only text changed. Action trajectories differed in 20/20 pairs, which alone
+is not sufficient evidence. Paraphrase pair following and canonical/paraphrase non-null agreement
+were zero. These data support limited template-dependent goal choice, not robust language use.
+Do not tune away the negative paraphrase result or infer architecture superiority over frozen M4A.
+
+Physical outcomes were 15 goal-reached and 85 timeouts, with zero infrastructure, invalid-action,
+arm-bound or off-table failures. Swapped's 15 wrong-request scoring outcomes are not 15 new physical
+rollouts. All 100 videos decoded locally into 19,180 frames for 19,080 actions plus 100 initial frames;
+action hashes, gripper saturations and all paired input/noise identities passed independent checks.
+Inspected timeout frames and final static-object flags do not establish a cause for every failure.
+Evaluation's rollout loop took 1,022.165 s; 212 GPU samples peaked at 1,929 MiB. No evaluation allocator
+peak was measured. Full training, evaluation and backup chains all exited 0.
+
+Local recovery verification passed: preflight 234 files, pinned assets 18 files, final checkpoint 12
+files and final evidence 566 files, including optimizer/RNG state, configs, schedule, CSV, JSON and videos.
+Each archive's outer and per-file hashes matched; the raw/derived M4A recovery references were also
+rehash-verified. Delivery details and justified limitations are in M4B_DELIVERY.md. Generated data,
+models and evidence stay outside Git. Preserve M4A's modules/tests/data/checkpoints and original
+claims; finish by pausing only the M4B continuation and leaving the server and task available.

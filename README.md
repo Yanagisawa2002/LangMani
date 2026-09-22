@@ -745,8 +745,23 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for planned boundaries and
 
 ## M4B: paired destination selection with SmolVLA
 
-M4B is being implemented separately from the frozen M4A ACT baseline. It uses the red cube and two
+M4B is implemented separately from the frozen M4A ACT baseline. It uses the red cube and two
 existing destinations to test whether changing only text changes goal choice. See
 [the frozen protocol](docs/M4B_PROTOCOL.md) and [commands and evidence status](docs/M4B_DELIVERY.md).
-Use the optional `m4b` extra only in an isolated environment. Full training and language-ablation
-results remain pending; no M4A result is replaced or reinterpreted.
+Use the optional `m4b` extra only in an isolated environment. The full dataset, native input pairing,
+real-data smoke and checkpoint resume have passed validation. Full training (20,000 steps/batch 8/
+seed 0), paired language evaluation and local recovery verification are complete.
+
+| Language condition | Original requested-goal success |
+| --- | ---: |
+| Correct canonical instruction | 15/40 (37.5%) |
+| Swapped canonical instruction | 0/40 |
+| Blank | 0/40 |
+| Held-out paraphrase | 0/40 |
+
+In **6/20 identical-scene pairs**, changing only the canonical instruction caused the corresponding
+successful left/right goal change. Swapped text reached its supplied goal in 15/40 scored rows;
+the 0/40 figure above scores the original opposite request. There are 100 physical policy rollouts
+and 160 explicitly linked scoring rows, with 85 physical timeouts and no infrastructure errors.
+This supports limited template-dependent goal selection; 0/40 paraphrase success establishes no
+robustness to the tested reformulations. M4A remains frozen and is not a direct architecture comparison.
