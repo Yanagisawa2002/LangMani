@@ -742,3 +742,11 @@ target-machine GPU/rendering verification; the `--target` command is the authori
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for planned boundaries and
 [docs/DECISIONS.md](docs/DECISIONS.md) for tested assumptions and unresolved risks.
+
+## M4B: paired destination selection with SmolVLA
+
+M4B is being implemented separately from the frozen M4A ACT baseline. It uses the red cube and two
+existing destinations to test whether changing only text changes goal choice. See
+[the frozen protocol](docs/M4B_PROTOCOL.md) and [commands and evidence status](docs/M4B_DELIVERY.md).
+Use the optional `m4b` extra only in an isolated environment. Full training and language-ablation
+results remain pending; no M4A result is replaced or reinterpreted.

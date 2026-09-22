@@ -940,3 +940,32 @@ one training seed and 20 fresh scenes do not establish broader policy quality or
 generalization. The exact physical causes of the ten timeouts remain uninvestigated. SmolVLA was
 not started. Pause the existing continuation after final evidence/document delivery and push;
 leave the server running and retain the task.
+
+## D-033 — M4B paired language intervention without changing M4A
+
+The user explicitly authorized upstream SmolVLA after M4A completion. Start a separate M4B worktree
+from frozen commit 717a07d. Preserve all M4A modules, tests, raw/derived data, checkpoints and claims.
+The minimal destination-selection protocol uses red_cube:left_bin and red_cube:right_bin with the
+existing environment and success predicate. Existing six-task formal data provides 60 demonstrations
+per selected goal; inherit scene partitions and train only 96 episodes. Validate decoded content
+exhaustively once and rehash the complete source inventory before subsequent commands.
+
+Use lerobot[smolvla]==0.6.0 in a separate overlay, with transformers 5.5.4/tokenizers 0.22.2. Pin both
+public model and backbone/tokenizer revisions and actual file hashes. Retain upstream fine-tuning,
+normalization, optimizer, schedule, checkpoint and resume behavior. New official processors adapt
+only the robot schema/statistics; no custom language encoder or VLA is introduced. Full budget is
+20,000 steps/batch 8/LR 1e-4/seed 0, after native input pairing and real-data smoke/resume.
+
+Freeze 20 new scenes from schedule seed 43000 excluding all source scenes and M4A final evaluation.
+Five physical prompt rollouts per scene produce eight explicitly linked scored rows. Use the same
+per-scene/per-chunk inference noise and reset state/RGB/qpos, preserving hashes and videos. A shared
+rollout ends at either original M1 goal success or native failure/horizon; score requested-goal and
+prompt-goal achievement separately. This prevents misreading obedience to swapped text as language
+failure. Record pair-following metrics with no invented performance threshold. Expert outcomes are
+reported, while exact pairing and infrastructure validity are required. Native execution and measured
+results are pending; fixture tests alone establish no benchmark result.
+
+Implementation preflight: Windows CPU-safe suite passed 430 tests, with five native-only skips
+and five GPU/rendering deselections. Ruff, formatting, wheel and sdist build passed. Git comparison
+confirmed frozen M4A policy modules, tests and M4A_DELIVERY.md unchanged. These checks do not establish
+native SmolVLA execution, which remains the next gate.

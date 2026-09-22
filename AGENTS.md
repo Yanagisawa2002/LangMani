@@ -7,14 +7,28 @@ implemented. The M3B scope is deterministic, audited derivation of accepted M3A 
 into one local LeRobotDataset v3 with reconstructed policy observations, scene-level splits,
 source-to-derived provenance, staged finalization, independent validation, and target gates.
 
-The active M4A milestone adds one language-independent red-cube/left-bin ACT baseline using
+The completed M4A milestone adds one language-independent red-cube/left-bin ACT baseline using
 upstream LeRobot 0.6 training, exhaustive derived-data validation, inherited episode/scene splits,
 and paired ACT/expert evaluation. M4A may train ACT and evaluate this one existing task; the M3B
-prohibitions below continue to describe M3B itself. Do not start SmolVLA or alter existing tasks,
+prohibitions below continue to describe M3B itself. Do not alter existing tasks,
 the six canonical sentences, observations, raw authority, success predicates, or M3B export.
 Track implementation complete, smoke tested, full dataset validated, full ACT trained, and
 closed-loop evaluated separately. Generated-array fixture tests never validate a physical dataset
 or benchmark. Full runs need a clean Git commit and regenerated real Linux M3A/M3B data.
+
+M4B is now authorized: upstream LeRobot 0.6 SmolVLA, restricted to red-cube destination selection
+between the existing left and right bins. Freeze M4A at `717a07d`: do not change its modules, tests,
+dataset, checkpoints or benchmark claims. Reuse the accepted M3A/M3B archive read-only; retain all
+six canonical sentences. Add separate M4B modules, CLI, tests and output paths. Evaluate identical
+initial states under canonical left/right, blank, and held-out paraphrase prompts. Score both the
+requested semantic goal and the prompt-selected goal; record exact state/image/qpos and action
+hashes, fixed inference noise, checkpoints, versions and videos. No custom VLA or environment
+redesign. A negative language-use finding is a valid measured result; never tune on final eval.
+
+Remote execution uses the user-authorized SSH server already recorded in local execution state,
+with a separate `/root/autodl-tmp/langmani-m4b` checkout and `langmani-m4b-ops` logs. Never store
+credentials. Use an isolated M4B dependency overlay; keep M4A's base and planner environments
+unchanged. `code_sync: git`; optional W&B defaults off. Never shut down or reboot the server.
 
 The native expert uses the NumPy-1 overlay in `environment/planner-runtime.txt`.
 Set `LANGMANI_PLANNER_PYTHON` to its virtualenv launcher (do not resolve the Python

@@ -1,0 +1,6 @@
+# Install in a separate system-site-packages overlay of the accepted native M4A runtime.
+# Do not change the M4A base or NumPy-1 planner environment.
+lerobot[smolvla]==0.6.0
+transformers==5.5.4
+tokenizers==0.22.2
+num2words==0.5.14
