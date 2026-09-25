@@ -1105,3 +1105,27 @@ pass; the full local suite passed454 tests with5 native skips and5 GPU/rendering
 (28.47s), Ruff format/check and wheel/sdist build passed. Native formal-data boundary acceptance is required before starting fresh recovery output
 paths under `results/m4c-v2`. Prior source/asset hashes and20-step numerical-control evidence remain
 valid; no completed long training is repeated and no evaluation result informs this correction.
+
+## D039 — Close M4C seed 0 from full paired evidence; retain operational shutdown uncertainty
+
+Execution f8781c2 completed all three 20,000-update models before their common 20-scene evaluations.
+Independent local audits verified 479,919 consumed samples, identical initialization/robot order/
+normalization/fixed configuration, and 540 physical rollouts / 720 score rows / 99,853 actions /
+100,393 decoded frames. All raw evaluation events, per-goal and cumulative metrics, pair categories,
+CSV identities and cross-model initial/noise hashes agree. Full success for L1/L5/L10 is 15/20/24
+of40 seen, 2/15/22 lexical, 0/0/9 syntactic and 0/4/12 natural. Report those separately from the
+already-high destination-approach proxy, which can include empty-handed motion. Single seed and
+joint changes in expression count/family coverage preclude broad NLP or per-family causal claims.
+
+All three 22-file final model/state archives and the 3,062-file final evidence archive passed outer
+and per-file hashes, safe extraction and saved-state recovery audit. Visual keyframe inspection
+covers12 sheets /15 physical trajectories, including both runs in the first successful seen pair
+for each model. It is not full manual playback. Earlier failed path/short-batch attempts and the
+frozen expert39/40 failure remain preserved; no completed long run or evaluation was repeated.
+
+README and A–Q delivery are finalized from these receipts; no runtime changes or extra experiments
+are introduced at closeout. The user explicitly authorized power-off once local recovery, delivery,
+and a fresh idle-job check pass, superseding the older no-shutdown rule. On2026-09-25 the prior
+helper session was unavailable and SSH TCP connections were refused. This does not prove power-off
+or cessation of billing; no shutdown command has been accepted. Keep the existing continuation
+for this operational remainder, preserve connection evidence, and never restart the server.

@@ -9,13 +9,17 @@ M4A closes the single-task upstream ACT baseline on native Linux: formal M3A/M3B
 scenes, ACT succeeded 10/20 and the privileged expert 20/20. Generated-array fixtures are not benchmarks.
 
 M4B.1 diagnostic decomposition is separately complete at `3104578`; see
-[the diagnostic delivery](docs/M4B1_DELIVERY.md). Canonical destination approach40/40 and paraphrase
-32/40 remain distinct from full success15/40 and0/40. M4C now compares L1/L5/L10 language diversity
-over identical robot trajectories and optimizer budgets; implementation, real-data smoke and full
-source-data/language validation passed. Complete training and evaluation are pending. The first L1
-attempt stopped on a sample-audit error at its5-frame epoch tail; recovery preserves short batches,
-20,000 updates and159,973 actual samples per group. See [the fixed protocol](docs/M4C_PROTOCOL.md) and
-[M4C delivery status](docs/M4C_DELIVERY.md). Frozen M4A/M4B evidence remains unchanged.
+[the diagnostic delivery](docs/M4B1_DELIVERY.md). M4C L1/L5/L10 seed 0 is now fully trained,
+closed-loop evaluated and locally hash-verified, with [A–Q delivery](docs/M4C_DELIVERY.md).
+Each model used the same 96 trajectories, 20,000 updates and 159,973 actual samples.
+Across 540 physical rollouts / 720 scoring rows, L1/L5/L10 full successes are 15/20/24 of 40 seen,
+2/15/22 of 40 lexical, 0/0/9 of 40 syntactic, and 0/4/12 of 40 natural requests.
+Independent audits checked 99,853 actions and 100,393 video frames; all three final model/state
+archives and the full evidence archive passed local recovery checks. Destination approach is
+reported separately and can include empty hands. These single-training-seed results do not establish
+general language understanding. [The fixed protocol](docs/M4C_PROTOCOL.md) and frozen M4A/M4B
+evidence remain unchanged. No additional seed or milestone is started. Authorized idle-server
+shutdown remains operationally unverified because the SSH endpoint currently refuses connections.
 
 M3B does not train ACT or SmolVLA, publish to the Hub, change M3A acceptance, export failure
 trajectories, add sensors or language paraphrases, use multiprocessing, or change the M1/M2 task.
